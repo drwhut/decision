@@ -1,0 +1,11 @@
+#!/bin/bash
+
+source ../test_functions.sh
+
+# IfThen + IfThenElse
+testdecision if_statements.dc if_statements.out
+testdecisioncompile if_statements.dc if_statements.out
+
+# Ternary
+testdecision ternary.dc ternary.out
+testdecisioncompile ternary.dc ternary.out

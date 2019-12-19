@@ -1,0 +1,52 @@
+< Library variables >
+[Variable(libInteger, Integer, 69)]
+[Variable(libFloat, Float, 3.14159)]
+[Variable(libString, String, "G'day mate.")]
+[Variable(libBoolean, Boolean, true)]
+
+< Library function >
+[Function(Quadratic)]
+[FunctionInput(Quadratic, Float)] < a >
+[FunctionInput(Quadratic, Float)] < b >
+[FunctionInput(Quadratic, Float)] < c >
+[FunctionInput(Quadratic, Float)] < x >
+[FunctionOutput(Quadratic, Float)] < ax^2 + bx + c >
+
+Define(Quadratic)~#1, #2, #3, #4
+Multiply(#1, #4, #4)~#5
+Multiply(#2, #4)~#6
+Add(#5, #6, #3)~#7
+Return(Quadratic, #7)
+
+< Library subroutine >
+[Subroutine(IsPowerOfTwo)]
+[FunctionInput(IsPowerOfTwo, Integer)]
+[FunctionOutput(IsPowerOfTwo, Boolean)]
+
+[Variable(_num, Integer, 0)]
+[Variable(_isPowerOfTwo, Boolean, true)]
+
+Define(IsPowerOfTwo)~#10, #11
+Set(_num, #10, #11)~#12
+Set(_isPowerOfTwo, #12, true)~#13
+
+_num~#14
+_isPowerOfTwo~#15
+NotEqual(#14, 1)~#16
+And(#15, #16)~#17
+
+While(#13, #17)~#18, #19
+Mod(#14, 2)~#20
+Equal(#20, 1)~#21
+IfThenElse(#18, #21)~#22, #23
+
+Set(_isPowerOfTwo, #22, false)
+
+Div(#14, 2)~#24
+Set(_num, #23, #24)
+
+Return(IsPowerOfTwo, #19, #15)
+
+< So we can test if the sheet compiles >
+Start~#100
+Print(#100, "Hey!")

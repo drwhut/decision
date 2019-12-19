@@ -1,0 +1,15 @@
+#!/bin/bash
+
+source ../test_functions.sh
+
+testdecision collatz_conjecture.dc collatz_conjecture.out
+testdecisioncompile collatz_conjecture.dc collatz_conjecture.out
+
+testdecision factorial.dc factorial.out
+testdecisioncompile factorial.dc factorial.out
+
+testdecision fibonacci.dc fibonacci.out
+testdecisioncompile fibonacci.dc fibonacci.out
+
+testdecision hello_world.dc hello_world.out
+testdecisioncompile hello_world.dc hello_world.out

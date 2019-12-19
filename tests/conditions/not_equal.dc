@@ -1,0 +1,25 @@
+Start~#1
+
+< 2 integers not equal = true >
+NotEqual(69, 69)~#2
+Print(#1, #2)~#3
+
+< 2 integers not equal = false >
+NotEqual(69, 420)~#4
+Print(#3, #4)~#5
+
+< 2 floats not equal = true >
+NotEqual(3.14159, 3.14159)~#6
+Print(#5, #6)~#7
+
+< 2 floats not equal = false >
+NotEqual(-2.4, 2.4)~#8
+Print(#7, #8)~#9
+
+< 2 strings not equal = true >
+NotEqual("Hello, world!", "Hello, world!")~#10
+Print(#9, #10)~#11
+
+< 2 strings not equal = false >
+NotEqual("Hello, world!", "Goodbye, world!")~#12
+Print(#11, #12)~#13

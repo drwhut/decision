@@ -1,0 +1,55 @@
+name: Documentation
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          ref: gh-pages
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install doxygen
+          sudo pip3 install -U sphinx sphinx_rtd_theme breathe
+      - name: Copy files from master branch
+        run: |
+          git checkout origin/master -- docs/ Doxyfile src/
+      - name: Run Doxygen
+        run: |
+          doxygen Doxyfile
+      - name: Build the developer manual
+        run: |
+          pushd docs/developer
+          make html
+          popd
+      - name: Build the user manual
+        run: |
+          pushd docs/user
+          make html
+          popd
+      - name: Move the built documentation
+        run: |
+          mkdir -p developer user
+          cp -R docs/developer/build/html/* developer/
+          cp -R docs/user/build/html/* user/
+      - name: Cleanup
+        run: |
+          rm -R docs/ Doxyfile src/
+      - name: Commit if there are changes
+        run: |
+          git config user.email "drwhut@gmail.com"
+          git config user.name "drwhut"
+          git add .
+          git diff --quiet && git diff --staged --quiet || git commit -m "Built documentation."
+      - name: Push to Github Pages
+        uses: ad-m/github-push-action@v0.5.0
+        with:
+          github_token: ${{ secrets.GITHUB_ACCESS_TOKEN }}
+          branch: gh-pages

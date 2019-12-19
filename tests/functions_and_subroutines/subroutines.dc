@@ -1,0 +1,53 @@
+< subroutine that only has standard execution input and output >
+[Subroutine(SayHi)]
+
+Define(SayHi)~#1
+Print(#1, "Hi!")
+
+< subroutine that takes another input >
+[Subroutine(CountTo)]
+[FunctionInput(CountTo, Integer)]
+
+Define(CountTo)~#10, #11
+For(#10, 1, #11, 1)~#12, #13
+Print(#12, #13)
+
+< subroutine that takes an input and returns an output >
+[Subroutine(IsPrime)]
+[FunctionInput(IsPrime, Integer)]
+[FunctionOutput(IsPrime, Boolean)]
+
+[Variable(_isPrime, Boolean, true)]
+
+Define(IsPrime)~#20, #21
+
+Equal(#21, 1)~#22
+IfThen(#20, #22)~#23, #24
+Return(IsPrime, #23, false)
+
+Equal(#21, 2)~#25
+IfThen(#24, #25)~#26, #27
+Return(IsPrime, #26, true)
+
+Set(_isPrime, #27, true)~#28
+
+Div(#21, 2)~#29
+For(#28, 2, #29, 1)~#30, #31, #32
+Mod(#21, #31)~#33
+Equal(#33, 0)~#34
+IfThen(#30, #34)~#35
+Set(_isPrime, #35, false)
+
+_isPrime~#36
+Return(IsPrime, #32, #36)
+
+< using the subroutines >
+Start~#100
+
+SayHi(#100)~#101
+
+CountTo(#101, 10)~#102
+
+IsPrime(#102, 531467)~#103, #104
+Ternary(#104, "531467 is prime", "531467 is not prime")~#105
+Print(#103, #105)

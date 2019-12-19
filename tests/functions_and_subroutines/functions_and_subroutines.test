@@ -1,0 +1,9 @@
+#!/bin/bash
+
+source ../test_functions.sh
+
+testdecision functions.dc functions.out
+testdecisioncompile functions.dc functions.out
+
+testdecision subroutines.dc subroutines.out
+testdecisioncompile subroutines.dc subroutines.out

@@ -1,0 +1,36 @@
+name: Decision
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          ref: master
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install build-essential cmake
+      - name: Create CMake project
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+      - name: Build Decision
+        run: |
+          cd build
+          make
+      - name: Print Decision version
+        run: |
+          cd build
+          ./decision -v
+      - name: Run tests
+        run: |
+          chmod +x tests/run_tests.sh
+          EXECUTABLE="$(pwd)/build/decision" ./tests/run_tests.sh

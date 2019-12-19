@@ -1,0 +1,17 @@
+Start~#1
+
+< Mod 2 positive integers >
+Mod(1651, 7)~#2
+Print(#1, #2)~#3
+
+< Mod a negative integer from a positive one >
+Mod(12, -3)~#4
+Print(#3, #4)~#5
+
+< Mod a positive integer from a negative one >
+Mod(-100, 18)~#6
+Print(#5, #6)~#7
+
+< Mod 2 negative integers >
+Mod(-713, -9)~#8
+Print(#7, #8)~#9

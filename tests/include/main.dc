@@ -1,0 +1,29 @@
+[Include("library.dc")]
+
+Start~#1
+
+< Set the library's variables >
+Set(libInteger, #1, 9000)~#2
+Set(libFloat, #2, 0.5)~#3
+Set(libString, #3, "Wow.")~#4
+Set(libBoolean, #4, true)~#5
+
+< Print the library's variables >
+libInteger~#6
+Print(#5, #6)~#7
+
+libFloat~#8
+Print(#7, #8)~#9
+
+libString~#10
+Print(#9, #10)~#11
+
+libBoolean~#12
+Print(#11, #12)~#13
+
+< Use the library's function >
+IsEven(56783956)~#14
+Print(#13, #14)~#15
+
+< Use the library's subroutine >
+SendLetter(#15, "Happy Birthday!", "drwhut")~#16

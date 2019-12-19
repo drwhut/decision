@@ -1,0 +1,27 @@
+#!/bin/bash
+
+source ../test_functions.sh
+
+# Equal
+testdecision equal.dc equal.out
+testdecisioncompile equal.dc equal.out
+
+# NotEqual
+testdecision not_equal.dc not_equal.out
+testdecisioncompile not_equal.dc not_equal.out
+
+# LessThan
+testdecision less_than.dc less_than.out
+testdecisioncompile less_than.dc less_than.out
+
+# LessThanOrEqual
+testdecision less_than_or_equal.dc less_than_or_equal.out
+testdecisioncompile less_than_or_equal.dc less_than_or_equal.out
+
+# MoreThan
+testdecision more_than.dc more_than.out
+testdecisioncompile more_than.dc more_than.out
+
+# MoreThanOrEqual
+testdecision more_than_or_equal.dc more_than_or_equal.out
+testdecisioncompile more_than_or_equal.dc more_than_or_equal.out

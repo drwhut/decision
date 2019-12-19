@@ -1,0 +1,27 @@
+# Use the defaults from the LLVM convention, except have an indent width of 4.
+BasedOnStyle: LLVM
+IndentWidth: 4
+
+# Cpp targets C and C++.
+Language: Cpp
+
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: true
+AlignConsecutiveMacros: true
+AlignEscapedNewlines: Left
+AlignTrailingComments: true
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+IndentCaseLabels: true
+IndentPPDirectives: None
+MaxEmptyLinesToKeep: 1
+PointerAlignment: Right
+SpaceAfterCStyleCast: false
+SpaceAfterLogicalNot: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeParens: ControlStatements
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+

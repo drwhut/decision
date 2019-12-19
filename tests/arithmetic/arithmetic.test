@@ -1,0 +1,27 @@
+#!/bin/bash
+
+source ../test_functions.sh
+
+# Add
+testdecision add.dc add.out
+testdecisioncompile add.dc add.out
+
+# Multiply
+testdecision multiply.dc multiply.out
+testdecisioncompile multiply.dc multiply.out
+
+# Subtract
+testdecision subtract.dc subtract.out
+testdecisioncompile subtract.dc subtract.out
+
+# Divide
+testdecision divide.dc divide.out
+testdecisioncompile divide.dc divide.out
+
+# Div
+testdecision div.dc div.out
+testdecisioncompile div.dc div.out
+
+# Mod
+testdecision mod.dc mod.out
+testdecisioncompile mod.dc mod.out

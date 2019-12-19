@@ -1,0 +1,16 @@
+#!/bin/bash
+
+source ../test_functions.sh
+
+testdecision library.dc library.out
+testdecisioncompile library.dc library.out
+
+testdecision main.dc main.out
+testdecisioncompile main.dc main.out
+
+# This sheet needs to be compiled before main_compiled.
+testdecision library_compiled.dc library_compiled.out
+testdecisioncompile library_compiled.dc library_compiled.out
+
+testdecision main_compiled.dc main_compiled.out
+testdecisioncompile main_compiled.dc main_compiled.out

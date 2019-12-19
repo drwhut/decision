@@ -1,0 +1,19 @@
+#!/bin/bash
+
+source ../test_functions.sh
+
+# And
+testdecision and.dc and.out
+testdecisioncompile and.dc and.out
+
+# Or
+testdecision or.dc or.out
+testdecisioncompile or.dc or.out
+
+# Not
+testdecision not.dc not.out
+testdecisioncompile not.dc not.out
+
+# Xor
+testdecision xor.dc xor.out
+testdecisioncompile xor.dc xor.out

@@ -1,0 +1,74 @@
+< function that takes no input >
+[Function(myStrings)]
+[FunctionOutput(myStrings, String)]
+[FunctionOutput(myStrings, String)]
+
+Return(myStrings, "bleep", "boop")
+
+< function that takes one input >
+[Function(Double)]
+[FunctionInput(Double, Float)]
+[FunctionOutput(Double, Float)]
+
+Define(Double)~#1
+Multiply(#1, 2)~#2
+Return(Double, #2)
+
+< function that uses another function >
+[Function(Quadruple)]
+[FunctionInput(Quadruple, Float)]
+[FunctionOutput(Quadruple, Float)]
+
+Define(Quadruple)~#10
+Double(#10)~#11
+Double(#11)~#12
+Return(Quadruple, #12)
+
+< function that takes 2 inputs >
+[Function(IsDivisor)]
+[FunctionInput(IsDivisor, Integer)]
+[FunctionInput(IsDivisor, Integer)]
+[FunctionOutput(IsDivisor, Boolean)]
+
+Define(IsDivisor)~#20, #21
+Mod(#20, #21)~#22
+Equal(#22, 0)~#23
+Return(IsDivisor, #23)
+
+< function that uses Ternary node >
+[Function(CanDrink)]
+[FunctionInput(CanDrink, Integer)] < age >
+[FunctionOutput(CanDrink, Boolean)] < can they drink? >
+[FunctionOutput(CanDrink, Integer)] < how many years until they can drink? >
+
+Define(CanDrink)~#30
+MoreThanOrEqual(#30, 18)~#31
+Subtract(18, #30)~#32
+Ternary(#31, 0, #32)~#33
+Return(CanDrink, #31, #33)
+
+< using the functions >
+Start~#100
+
+Print(#100, "my strings:")~#101
+myStrings~#102, #103
+Print(#101, #102)~#104
+Print(#104, #103)~#105
+
+Double(125.5)~#106
+Print(#105, #106)~#107
+
+Quadruple(10.0)~#108
+Print(#107, #108)~#109
+
+IsDivisor(360, 40)~#110
+IfThenElse(#109, #110)~#111, #112
+Print(#111, "40 is a divisor of 360")~#113
+Print(#112, "40 is not a divisor of 360")~#113
+
+CanDrink(15)~#114, #115
+IfThenElse(#113, #114)~#116, #117
+Print(#116, "A 15 year old can drink in the UK")~#118
+Print(#117, "A 15 year old cannot drink in the UK")~#118
+Print(#118, "They will need to wait this many years until they can drink:")~#119
+Print(#119, #115)

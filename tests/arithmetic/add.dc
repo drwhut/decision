@@ -1,0 +1,29 @@
+Start~#1
+
+< Adding 2 positive integers >
+Add(99, 1)~#2
+Print(#1, #2)~#3
+
+< Adding a positive and negative integer >
+Add(10, -10)~#4
+Print(#3, #4)~#5
+
+< Adding 2 negative integers >
+Add(-500, -500)~#6
+Print(#5, #6)~#7
+
+< Adding 2 positive floats >
+Add(9.56, 52.004)~#8
+Print(#7, #8)~#9
+
+< Adding a positive and negative float >
+Add(10.0, -12.5)~#10
+Print(#9, #10)~#11
+
+< Adding 2 negative floats >
+Add(-1.234, -5.678)~#12
+Print(#11, #12)~#13
+
+< Adding an integer and a float >
+Add(10, 5.5)~#14
+Print(#13, #14)~#15

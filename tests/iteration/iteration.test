@@ -1,0 +1,11 @@
+#!/bin/bash
+
+source ../test_functions.sh
+
+# For
+testdecision for_loops.dc for_loops.out
+testdecisioncompile for_loops.dc for_loops.out
+
+# While
+testdecision while_loops.dc while_loops.out
+testdecisioncompile while_loops.dc while_loops.out

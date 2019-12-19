@@ -1,0 +1,41 @@
+<
+    This function takes an integer, and if it is even, it halves it, and if it
+    is odd, it multiplies it by 3 and adds 1 to it.
+>
+[Function(Collatz)]
+[FunctionInput(Collatz, Integer)]
+[FunctionOutput(Collatz, Integer)]
+
+Define(Collatz)~#1
+Mod(#1, 2)~#2
+Equal(#2, 0)~#3
+
+Div(#1, 2)~#4
+
+Multiply(#1, 3)~#5
+Add(#5, 1)~#6
+
+Ternary(#3, #4, #6)~#7
+Return(Collatz, #7)
+
+<
+    This subroutine keeps applying the Collatz function to an integer until the
+    integer reaches 1.
+>
+[Subroutine(PrintCollatz)]
+[FunctionInput(PrintCollatz, Integer)]
+
+[Variable(_collatz, Integer, 100)]
+
+Define(PrintCollatz)~#10, #11
+_collatz~#12
+
+NotEqual(#12, 1)~#13
+While(#10, #13)~#14
+Collatz(#12)~#15
+Set(_collatz, #14, #15)~#16
+Print(#16, #12)
+
+< Using the PrintCollatz subroutine. >
+Start~#100
+PrintCollatz(#100, 100)

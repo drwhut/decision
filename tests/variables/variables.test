@@ -1,0 +1,9 @@
+#!/bin/bash
+
+source ../test_functions.sh
+
+testdecision getting_values.dc getting_values.out
+testdecisioncompile getting_values.dc getting_values.out
+
+testdecision setting_values.dc setting_values.out
+testdecisioncompile setting_values.dc setting_values.out
