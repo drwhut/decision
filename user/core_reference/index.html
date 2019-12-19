@@ -1,0 +1,566 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Core Reference &mdash; Decision 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Importing Sheets" href="../getting_started/extending_your_knowledge/importing_sheets.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Decision
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/index.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Core Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#core-functions">Core Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#core-subroutines">Core Subroutines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#core-properties">Core Properties</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Decision</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Core Reference</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/core_reference/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="core-reference">
+<h1>Core Reference<a class="headerlink" href="#core-reference" title="Permalink to this headline">¶</a></h1>
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<p>This page was created manually.
+Find a suitable method to automatically generate this page.</p>
+</div>
+<div class="section" id="core-functions">
+<h2>Core Functions<a class="headerlink" href="#core-functions" title="Permalink to this headline">¶</a></h2>
+<dl>
+<dt><code class="docutils literal notranslate"><span class="pre">Add</span></code></dt><dd><p>Calculate the addition of all number inputs.</p>
+<p>Inputs:</p>
+<ul class="simple">
+<li><p>Any number of <code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code> inputs.</p></li>
+</ul>
+<p>Outputs:</p>
+<ol class="arabic simple">
+<li><p>The addition of all of the inputs. Is a <code class="docutils literal notranslate"><span class="pre">Float</span></code> if at least one of
+the inputs was a <code class="docutils literal notranslate"><span class="pre">Float</span></code>, otherwise it is an <code class="docutils literal notranslate"><span class="pre">Integer</span></code>.</p></li>
+</ol>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">And</span></code></dt><dd><p>Output the bitwise AND of two boolean values.</p>
+<p>Inputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The first boolean.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The second boolean.</p></li>
+</ol>
+<p>Outputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The bitwise AND of the two inputs.</p></li>
+</ol>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">Div</span></code></dt><dd><p>Take the division of two numbers, and truncate the answer.</p>
+<p>Inputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>: The numerator.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>: The denominator.</p></li>
+</ol>
+<p>Outputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>: The truncated division.</p></li>
+</ol>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">Divide</span></code></dt><dd><p>Take the division of two numbers.</p>
+<p>Inputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>: The numerator.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>: The denominator.</p></li>
+</ol>
+<p>Outputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Float</span></code>: The division.</p></li>
+</ol>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">Equal</span></code></dt><dd><p>Check if two numbers or two strings are equal in value.</p>
+<p>Inputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>: The first value.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>: The second value.</p></li>
+</ol>
+<p>Outputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: <code class="docutils literal notranslate"><span class="pre">true</span></code> if the values were equal, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p></li>
+</ol>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">LessThan</span></code></dt><dd><p>Check if a number or string is less in value than a second number or
+string.</p>
+<p>Inputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>: The first value.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>: The second value.</p></li>
+</ol>
+<p>Outputs:</p>
+<p>1. <code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: <code class="docutils literal notranslate"><span class="pre">true</span></code> if the first value was less than the second,
+<code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">LessThanOrEqual</span></code></dt><dd><p>Check if a number or string is less than or equal in value than a second
+number or string.</p>
+<p>Inputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>: The first value.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>: The second value.</p></li>
+</ol>
+<p>Outputs:</p>
+<p>1. <code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: <code class="docutils literal notranslate"><span class="pre">true</span></code> if the first value was less than or equal to the
+second, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">Mod</span></code></dt><dd><p>Calculate the remainder after division of two integers.</p>
+<p>Inputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>: The numerator.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>: The denominator.</p></li>
+</ol>
+<p>Outputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>: The remainder after division.</p></li>
+</ol>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">MoreThan</span></code></dt><dd><p>Check if a number or string is more in value than a second number or
+string.</p>
+<p>Inputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>: The first value.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>: The second value.</p></li>
+</ol>
+<p>Outputs:</p>
+<p>1. <code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: <code class="docutils literal notranslate"><span class="pre">true</span></code> if the first value was more than the second,
+<code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">MoreThanOrEqual</span></code></dt><dd><p>Check if a number or string is more than or equal in value than a second
+number or string.</p>
+<p>Inputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>: The first value.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>: The second value.</p></li>
+</ol>
+<p>Outputs:</p>
+<p>1. <code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: <code class="docutils literal notranslate"><span class="pre">true</span></code> if the first value was more than or equal to the
+second, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">Multiply</span></code></dt><dd><p>Calculate the multiplication of all number inputs.</p>
+<p>Inputs:</p>
+<ul class="simple">
+<li><p>Any number of <code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code> inputs.</p></li>
+</ul>
+<p>Outputs:</p>
+<ol class="arabic simple">
+<li><p>The multiplication of all of the inputs. Is a <code class="docutils literal notranslate"><span class="pre">Float</span></code> if at least one
+of the inputs was a <code class="docutils literal notranslate"><span class="pre">Float</span></code>, otherwise it is an <code class="docutils literal notranslate"><span class="pre">Integer</span></code>.</p></li>
+</ol>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">Not</span></code></dt><dd><p>Output the bitwise NOT of a boolean input.</p>
+<p>Inputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The input.</p></li>
+</ol>
+<p>Outputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The inverse of the input.</p></li>
+</ol>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">NotEqual</span></code></dt><dd><p>Check if two numbers or two strings are not equal in value.</p>
+<p>Inputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>: The first value.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>: The second value.</p></li>
+</ol>
+<p>Outputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: <code class="docutils literal notranslate"><span class="pre">true</span></code> if the values were not equal, <code class="docutils literal notranslate"><span class="pre">false</span></code>
+otherwise.</p></li>
+</ol>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">Or</span></code></dt><dd><p>Output the bitwise OR of two boolean values.</p>
+<p>Inputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The first boolean.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The second boolean.</p></li>
+</ol>
+<p>Outputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The bitwise OR of the two inputs.</p></li>
+</ol>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">Subtract</span></code></dt><dd><p>Take the subtraction of two numbers.</p>
+<p>Inputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>: The first number.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>: The second number.</p></li>
+</ol>
+<p>Outputs:</p>
+<ol class="arabic simple">
+<li><p>The subtraction of the second number from the first number. Is a
+<code class="docutils literal notranslate"><span class="pre">Float</span></code> if at least one of the inputs was a <code class="docutils literal notranslate"><span class="pre">Float</span></code>, otherwise it
+is an <code class="docutils literal notranslate"><span class="pre">Integer</span></code>.</p></li>
+</ol>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">Ternary</span></code></dt><dd><p>Return one value or another depending on a condition.</p>
+<p>Inputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The condition to evaluate.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>/<code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The value to return if the
+condition is true.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>/<code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The value to return if the
+condition is false.</p></li>
+</ol>
+<p>Outputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>/<code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The selected input.</p></li>
+</ol>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">Xor</span></code></dt><dd><p>Output the bitwise XOR of two boolean values.</p>
+<p>Inputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The first boolean.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The second boolean.</p></li>
+</ol>
+<p>Outputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The bitwise XOR of the two inputs.</p></li>
+</ol>
+</dd>
+</dl>
+</div>
+<div class="section" id="core-subroutines">
+<h2>Core Subroutines<a class="headerlink" href="#core-subroutines" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>“Standard execution input” means the execution socket that needs to be
+activated in order for the execution node to activate.</p>
+<p>“Standard execution output” means the execution socket that is activated
+by the execution node once the node is done with it’s action.</p>
+</div>
+<dl>
+<dt><code class="docutils literal notranslate"><span class="pre">For</span></code></dt><dd><p>For each iteration of a numerical value, activate an execution path.</p>
+<p>Inputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The standard execution input.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>: The starting value of the numerical value.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>: The ending value of the numerical value.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>: The increment/decrement amount of the numerical
+value.</p></li>
+</ol>
+<p>Outputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The exection socket to activate every iteration.</p></li>
+<li><p>The numerical value. Is a <code class="docutils literal notranslate"><span class="pre">Float</span></code> if at least one of the numerical
+inputs is a <code class="docutils literal notranslate"><span class="pre">Float</span></code>, otherwise it is an <code class="docutils literal notranslate"><span class="pre">Integer</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The standard execution output.</p></li>
+</ol>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">IfThen</span></code></dt><dd><p>Activate an execution path if a condition is true.</p>
+<p>Inputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The standard execution input.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The condition to evaluate.</p></li>
+</ol>
+<p>Outputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The execution socket to activate is the condition is
+true.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The standard execution output.</p></li>
+</ol>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">IfThenElse</span></code></dt><dd><p>Activate an execution path if a condition is true, and another if the
+condition is false.</p>
+<p>Inputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The standard execution input.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The condition to evaluate.</p></li>
+</ol>
+<p>Outputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The execution socket to activate if the condition is
+true.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The execution socket to activate if the condition is
+false.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The standard execution output.</p></li>
+</ol>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">Print</span></code></dt><dd><p>Print a value to the standard output.</p>
+<p>Inputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The standard execution input.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>/<code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The value to print.</p></li>
+</ol>
+<p>Outputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The standard execution output.</p></li>
+</ol>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">Set</span></code></dt><dd><p>Set the value of a variable.</p>
+<p>Inputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Name</span></code>: The name of the variable to set.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The standard execution input.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>/<code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The value to set the
+variable to - must be the same type as the variable being set.</p></li>
+</ol>
+<p>Outputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The standard execution output.</p></li>
+</ol>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">While</span></code></dt><dd><p>Repeat an execution path while a condition is true.</p>
+<p>Inputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The standard execution input.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The condition to evaluate at the start of every loop.</p></li>
+</ol>
+<p>Outputs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The execution socket to activate every loop.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The standard execution output.</p></li>
+</ol>
+</dd>
+</dl>
+</div>
+<div class="section" id="core-properties">
+<h2>Core Properties<a class="headerlink" href="#core-properties" title="Permalink to this headline">¶</a></h2>
+<dl>
+<dt><code class="docutils literal notranslate"><span class="pre">Variable</span></code></dt><dd><p>Define a variable in the sheet.</p>
+<p>Arguments:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Name</span></code>: The name of the variable.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Type</span></code>: The data type of the variable.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Literal</span></code>: The default value of the variable. Technically optional,
+but highly recommended to set a default value.</p></li>
+</ol>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">Include</span></code></dt><dd><p>Include the functions, subroutine and variables of another sheet.</p>
+<p>Arguments:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Name</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>: The file path of the sheet.</p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Standard libraries will eventually be implemented by providing a name
+rather than a string literal, but this is not yet functional.</p>
+</div>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">Function</span></code></dt><dd><p>Create a custom function in the sheet.</p>
+<p>Arguments:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Name</span></code>: The name of the function.</p></li>
+</ol>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">Subroutine</span></code></dt><dd><p>Create a custom subroutine in the sheet.</p>
+<p>By default it will have an input and output execution socket, representing
+the standard execution input and output respectively.</p>
+<p>Arguments:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Name</span></code>: The name of the subroutine.</p></li>
+</ol>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">FunctionInput</span></code></dt><dd><p>Add an input socket to a function (or subroutine).</p>
+<p>Arguments:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Name</span></code>: The name of the function/subroutine to add an input to.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Type</span></code>: The data type of the input.</p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>There are also optional arguments for the name of the input and it’s
+default value, but these are not yet functional.</p>
+</div>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">FunctionOutput</span></code></dt><dd><p>Add an output socket to a function (or subroutine).</p>
+<p>Arguments:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Name</span></code>: The name of the function/subroutine to add an output to.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Type</span></code>: The data type of the output.</p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>There is also an optional argument for the nmae of the output, but this
+is not yet functional.</p>
+</div>
+</dd>
+</dl>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="../getting_started/extending_your_knowledge/importing_sheets.html" class="btn btn-neutral float-left" title="Importing Sheets" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Benjamin Beddows
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

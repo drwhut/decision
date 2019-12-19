@@ -1,0 +1,295 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Importing Sheets &mdash; Decision 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Core Reference" href="../../core_reference/index.html" />
+    <link rel="prev" title="Functions and Subroutines" href="functions_and_subroutines.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Decision
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Getting Started</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../install_decision.html">Installing Decision</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../your_first_decision_script.html">Your First Decision Script</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Extending Your Knowledge</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="comments.html">Comments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arithmetic.html">Arithmetic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="conditions.html">Conditions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="condition_arithmetic.html">Condition Arithmetic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="changing_flow_with_conditions.html">Changing Flow with Conditions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="variables.html">Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="iteration.html">Iteration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="functions_and_subroutines.html">Functions and Subroutines</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Importing Sheets</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../core_reference/index.html">Core Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Decision</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Getting Started</a> &raquo;</li>
+        
+          <li><a href="index.html">Extending Your Knowledge</a> &raquo;</li>
+        
+      <li>Importing Sheets</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/getting_started/extending_your_knowledge/importing_sheets.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="importing-sheets">
+<h1>Importing Sheets<a class="headerlink" href="#importing-sheets" title="Permalink to this headline">¶</a></h1>
+<p>Once you start creating lots and lots of functions and subroutines, you’ll
+want to start using them in other sheets you create as well. Why create it
+multiple times when you can create it once and use it elsewhere?</p>
+<p>This is why the <code class="docutils literal notranslate"><span class="pre">Include</span></code> property exists. With it, you can include another
+sheet by using either it’s absolute path, or it’s path relative to the sheet
+including it. Once you do, you then have access to <strong>all of the sheet’s
+functions, subroutines, and variables</strong>.</p>
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>&lt; my_math.dc &gt;
+
+[Function(IsEven)]
+[FunctionInput(IsEven, Integer)]
+[FunctionOutput(IsEven, Boolean)]
+
+Define(IsEven)~#1
+Mod(#1, 2)~#2
+Return(IsEven, #2)
+
+[Function(IsOdd)]
+[FunctionInput(IsOdd, Integer)]
+[FunctionOutput(IsOdd, Boolean)]
+
+Define(IsOdd)~#3
+IsEven(#3)~#4
+Not(#4)~#5
+Return(IsOdd, #5)
+
+[Variable(PI, Float, 3.14159)]
+
+[Subroutine(AreaOfCircle)]
+[FunctionInput(AreaOfCircle, Float)]
+
+Define(AreaOfCircle)~#10, #11
+PI~#12
+Multiply(#11, #11, #12)~#13
+Print(#10, &quot;Given a circle with radius:&quot;)~#14
+Print(#14, #11)~#15
+Print(#15, &quot;It&#39;s area is:&quot;)~#16
+Print(#16, #13)
+</pre></div>
+</div>
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>&lt; main.dc &gt;
+
+[Include(&quot;my_math.dc&quot;)]
+
+Start~#1
+IsEven(6)~#2
+IsOdd(6)~#3
+
+Print(#1, #2)~#4
+Print(#4, #3)~#5
+
+Print(#5, &quot;PI is approximately:&quot;)~#6
+PI~#7
+Print(#6, #7)~#8
+
+AreaOfCircle(#8, 2.5)
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ decision main.dc
+
+true
+false
+PI is approximately:
+3.14159
+Given a circle with radius:
+2.5
+It&#39;s area is:
+19.6349
+</pre></div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../../core_reference/index.html" class="btn btn-neutral float-right" title="Core Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="functions_and_subroutines.html" class="btn btn-neutral float-left" title="Functions and Subroutines" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Benjamin Beddows
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

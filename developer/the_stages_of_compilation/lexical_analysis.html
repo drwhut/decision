@@ -1,0 +1,356 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Lexical Analysis &mdash; Decision 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Syntax Analysis" href="syntax_analysis.html" />
+    <link rel="prev" title="The Stages of Compilation" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Decision
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../the_language/index.html">The Language</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">The Stages of Compilation</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Lexical Analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#structures">Structures</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="syntax_analysis.html">Syntax Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="semantic_analysis.html">Semantic Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="error_reporting.html">Error Reporting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="code_generation.html">Code Generation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optimisation.html">Optimisation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../linking/index.html">Linking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../the_virtual_machine/index.html">The Virtual Machine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Decision</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">The Stages of Compilation</a> &raquo;</li>
+        
+      <li>Lexical Analysis</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/the_stages_of_compilation/lexical_analysis.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="lexical-analysis">
+<span id="id1"></span><h1>Lexical Analysis<a class="headerlink" href="#lexical-analysis" title="Permalink to this headline">¶</a></h1>
+<p>Lexical Analysis is performed in <code class="docutils literal notranslate"><span class="pre">dlex.c</span></code> and <code class="docutils literal notranslate"><span class="pre">dlex.h</span></code>.</p>
+<p>The aim of Lexical Analysis is to change the way the source code is
+represented in memory, such that the later compilation stages have an
+easier job understanding what they are reading. Lexical Analysis essentially
+abstracts the source code (by ignoring comments and whitespace) and
+categorises it such that we can identify what a particular section of the
+source code represents in one comparison (Is it an integer? Is it the name of
+something? Is it a plane?).</p>
+<div class="section" id="structures">
+<h2>Structures<a class="headerlink" href="#structures" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">LexType</span></code></dt><dd><p>An <code class="docutils literal notranslate"><span class="pre">enum</span></code> representing the type of data a token represents. The values
+range from very basic (<code class="docutils literal notranslate"><span class="pre">TK_COMMA</span></code>) to representing a large amount of
+characters (<code class="docutils literal notranslate"><span class="pre">TK_INTEGERLITERAL</span></code>).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">LexData</span></code></dt><dd><p>A <code class="docutils literal notranslate"><span class="pre">union</span></code> of the most basic data types, which are strings (<code class="docutils literal notranslate"><span class="pre">char*</span></code>),
+integers (<code class="docutils literal notranslate"><span class="pre">dint</span></code>), floats (<code class="docutils literal notranslate"><span class="pre">dfloat</span></code>), and booleans (<code class="docutils literal notranslate"><span class="pre">bool</span></code>). This
+union is used for a token to store important information it needs to save
+for later, for example, the name of a node, or the value of a literal.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">dint</span></code> and <code class="docutils literal notranslate"><span class="pre">dfloat</span></code> are defined in <code class="docutils literal notranslate"><span class="pre">dcfg.h</span></code> and represent different
+sizes depending on whether the pre-processor macro <code class="docutils literal notranslate"><span class="pre">DECISION_32</span></code> is
+defined.</p>
+</div>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">LexToken</span></code></dt><dd><p>A <code class="docutils literal notranslate"><span class="pre">struct</span></code> that contains <code class="docutils literal notranslate"><span class="pre">LexType</span></code> and <code class="docutils literal notranslate"><span class="pre">LexData</span></code> elements.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">LexStream</span></code></dt><dd><p>A list of <code class="docutils literal notranslate"><span class="pre">LexToken</span></code>.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<p>Most of the functions declared in <code class="docutils literal notranslate"><span class="pre">dlex.h</span></code> are to help identify characters
+or to help group up some characters into say, a string literal.</p>
+<p>These functions are ultimately used by:</p>
+<dl class="function">
+<dt>
+<a class="reference internal" href="../reference/index.html#_CPPv49LexStream" title="LexStream">LexStream</a> <code class="sig-name descname">d_lex_create_stream</code><span class="sig-paren">(</span><em class="property">const</em> char *<em>source</em>, <em class="property">const</em> char *<em>filePath</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Create a stream of lexical tokens from some source text that you can extract tokens from. </p>
+<p><strong>NOTE:</strong> The source code needs to have a newline (<code class="docutils literal notranslate"><span class="pre">\n</span></code>) as it’s last non-NULL character!</p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>A new malloc’d <code class="docutils literal notranslate"><span class="pre">LexStream</span></code>. If there was an error, <code class="docutils literal notranslate"><span class="pre">numTokens</span> <span class="pre">=</span> <span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">tokenArray</span> <span class="pre">=</span> <span class="pre">NULL</span></code>.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">source</span></code>: The source text. Can be text read from a source file. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">filePath</span></code>: In case we error, say what the file path was. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>to create a <code class="docutils literal notranslate"><span class="pre">LexStream</span></code> from some source code <code class="docutils literal notranslate"><span class="pre">source</span></code>. It is essentially
+a giant for loop that iterates over the characters of the source string and
+builds up a <code class="docutils literal notranslate"><span class="pre">LexToken</span></code> each iteration to add to the <code class="docutils literal notranslate"><span class="pre">LexStream</span></code>.
+<code class="docutils literal notranslate"><span class="pre">filePath</span></code> is used in producing compilation errors, if any should occur.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>For safety reasons, the <code class="docutils literal notranslate"><span class="pre">source</span></code> string NEEDS a newline character (<code class="docutils literal notranslate"><span class="pre">\n</span></code>)
+as the last non-null character for the function to work without producing
+any errors.</p>
+</div>
+<p>Since <code class="docutils literal notranslate"><span class="pre">LexStream</span></code> is a dynamic list, and this is C, once you are done with
+the list, you will need to free it from memory with this function, because
+hell on Earth actually exists:</p>
+<dl class="function">
+<dt>
+void <code class="sig-name descname">d_lex_free_stream</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv49LexStream" title="LexStream">LexStream</a> <em>stream</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Frees the token array from a stream. The stream should not be used after this function is called on it. </p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">stream</span></code>: The stream to free from memory. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">d_lex_free_stream</span></code> frees the list of tokens, but not anything that may
+have been allocated inside the tokens themselves, i.e. string names and
+literals inside of <code class="docutils literal notranslate"><span class="pre">LexData</span></code>. These will need to be freed later on.</p>
+</div>
+<p>If you want to dump the contents of a <code class="docutils literal notranslate"><span class="pre">LexStream</span></code> into <code class="docutils literal notranslate"><span class="pre">stdout</span></code>, you can
+use the function:</p>
+<dl class="function">
+<dt>
+void <code class="sig-name descname">d_lex_dump_stream</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv49LexStream" title="LexStream">LexStream</a> <em>stream</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Print the contents of a <code class="docutils literal notranslate"><span class="pre">LexStream</span></code>. </p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">stream</span></code>: The stream to print to the screen. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>to do so. The output of this function for a section of source code that prints
+“Hello, world!” to the screen may look like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>i     type  data
+...
+17    0     Start (00000127F23739A0)
+18    11
+19    12
+20    6     1
+21    15
+22    0     Print (00000127F2376700)
+23    17
+24    12
+25    6     1
+26    13
+27    8     Hello, world! (00000127F2376720)
+28    20
+29    15
+...
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This table gets printed whenever you compile source code with a
+<code class="docutils literal notranslate"><span class="pre">VERBOSE_LEVEL</span></code> of 4 or higher.</p>
+</div>
+<p>The first column states the index of the <code class="docutils literal notranslate"><span class="pre">LexToken</span></code> in the <code class="docutils literal notranslate"><span class="pre">LexStream</span></code>,
+the second column states the <code class="docutils literal notranslate"><span class="pre">LexType</span></code> value (you can look up what each value
+corresponds to which type in <code class="docutils literal notranslate"><span class="pre">dlex.h</span></code>), and the third column states the
+value in <code class="docutils literal notranslate"><span class="pre">LexData</span></code> (for specific types). Strings in the third columns are
+also given alongside their pointer values, which can help with debugging.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="syntax_analysis.html" class="btn btn-neutral float-right" title="Syntax Analysis" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="The Stages of Compilation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Benjamin Beddows
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

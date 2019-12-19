@@ -1,0 +1,282 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Error Reporting &mdash; Decision 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Code Generation" href="code_generation.html" />
+    <link rel="prev" title="Semantic Analysis" href="semantic_analysis.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Decision
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../the_language/index.html">The Language</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">The Stages of Compilation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="lexical_analysis.html">Lexical Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="syntax_analysis.html">Syntax Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="semantic_analysis.html">Semantic Analysis</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Error Reporting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="code_generation.html">Code Generation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optimisation.html">Optimisation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../linking/index.html">Linking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../the_virtual_machine/index.html">The Virtual Machine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Decision</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">The Stages of Compilation</a> &raquo;</li>
+        
+      <li>Error Reporting</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/the_stages_of_compilation/error_reporting.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="error-reporting">
+<span id="id1"></span><h1>Error Reporting<a class="headerlink" href="#error-reporting" title="Permalink to this headline">¶</a></h1>
+<p>Error reporting is perfomed in <code class="docutils literal notranslate"><span class="pre">derror.c</span></code> and <code class="docutils literal notranslate"><span class="pre">derror.h</span></code>.</p>
+<p>Throughout the compilation process, we are checking to see if the program the
+user has written is <em>correct</em>. If it is not, we need to let the user know why.</p>
+<p>Thankfully, there are functions to allow errors and warnings to get to the
+user:</p>
+<dl class="function">
+<dt>
+void <code class="sig-name descname">d_error_compiler_push</code><span class="sig-paren">(</span><em class="property">const</em> char *<em>message</em>, <em class="property">const</em> char *<em>filePath</em>, size_t <em>lineNum</em>, bool <em>isError</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Push a compile-time error message to the error list. </p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">message</span></code>: The error message itself. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">filePath</span></code>: The file where the error occured. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lineNum</span></code>: The line number of the error. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">isError</span></code>: If <code class="docutils literal notranslate"><span class="pre">true</span></code>, show ERROR, otherwise, show WARNING. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>This function adds an error message to a list of error messages to be reported
+to the user. If you want to give a more detailed error however, there is an
+alternative macro function for you to use:</p>
+<dl class="macro">
+<dt>
+<code class="sig-name descname">ERROR_COMPILER</code><span class="sig-paren">(</span>filePath, lineNum, isError, ...<span class="sig-paren">)</span></dt>
+<dd><p>A macro function to be able to print formatted error messages. </p>
+<p>If you don’t need the error to be formatted, it is more efficient to directly use <code class="docutils literal notranslate"><span class="pre">d_error_compiler_push</span></code>. </p>
+</dd></dl>
+
+<p>The arguments after <code class="docutils literal notranslate"><span class="pre">isError</span></code> are put directly into an <code class="docutils literal notranslate"><span class="pre">sprintf</span></code> call, so
+you can fill out the arguments like any format call. For example:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">ERROR_COMPILER</span><span class="p">(</span><span class="s">&quot;main.dc&quot;</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="nb">true</span><span class="p">,</span> <span class="s">&quot;My friend %s did a bad.&quot;</span><span class="p">,</span> <span class="s">&quot;Bob&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>We can then call:</p>
+<dl class="function">
+<dt>
+bool <code class="sig-name descname">d_error_report</code><span class="sig-paren">(</span><span class="sig-paren">)</span><br /></dt>
+<dd><p>Report if there were any compile-time errors or warnings to <code class="docutils literal notranslate"><span class="pre">stdout</span></code>. </p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p><code class="docutils literal notranslate"><span class="pre">true</span></code> if there were errors (warnings do not count as errors), <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise. </p>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>to print all of the errors and warnings we’ve stored to <code class="docutils literal notranslate"><span class="pre">stdout</span></code>. It also
+returns true if there was at least one error.</p>
+<dl class="function">
+<dt>
+void <code class="sig-name descname">d_error_free</code><span class="sig-paren">(</span><span class="sig-paren">)</span><br /></dt>
+<dd><p>Free any compile-time error messages saved. </p>
+<p>Should be called at the end of compilation. </p>
+</dd></dl>
+
+<p>This function needs to be called after we report errors, to free the error
+messages themselves from memory. We love you, C.</p>
+<p>Whenever you load a string or a file, after <a class="reference internal" href="semantic_analysis.html#semantic-analysis"><span class="std std-ref">Semantic Analysis</span></a> is
+complete (or <a class="reference internal" href="syntax_analysis.html#syntax-analysis"><span class="std std-ref">Syntax Analysis</span></a>, depending on which went wrong first),
+<code class="docutils literal notranslate"><span class="pre">d_error_report()</span></code> is called to report errors. If there were errors, i.e.
+it returned true, then <strong>the compiler does not bother generating bytecode</strong>
+with <a class="reference internal" href="code_generation.html#code-generation"><span class="std std-ref">Code Generation</span></a>.</p>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="code_generation.html" class="btn btn-neutral float-right" title="Code Generation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="semantic_analysis.html" class="btn btn-neutral float-left" title="Semantic Analysis" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Benjamin Beddows
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,337 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Syntax Rules &mdash; Decision 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Semantic Rules" href="semantics.html" />
+    <link rel="prev" title="Decision Definitions" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Decision
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">The Language</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../fundamentals.html">Decision Fundamentals</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Decision Definitions</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Syntax Rules</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#comments">Comments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#statements">Statements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#property-statements">Property Statements</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="semantics.html">Semantic Rules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../the_stages_of_compilation/index.html">The Stages of Compilation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../linking/index.html">Linking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../the_virtual_machine/index.html">The Virtual Machine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Decision</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">The Language</a> &raquo;</li>
+        
+          <li><a href="index.html">Decision Definitions</a> &raquo;</li>
+        
+      <li>Syntax Rules</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/the_language/definitions/syntax.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="syntax-rules">
+<h1>Syntax Rules<a class="headerlink" href="#syntax-rules" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="comments">
+<h2>Comments<a class="headerlink" href="#comments" title="Permalink to this headline">¶</a></h2>
+<p>Comments are defined as everything including and in between the <code class="docutils literal notranslate"><span class="pre">&lt;</span></code> and
+<code class="docutils literal notranslate"><span class="pre">&gt;</span></code> characters. Comments should be ignored by the compiler. They can be
+freely used by the programmer, but their main purpose is for GUI editors to
+store graphical information in them, like the positions of nodes for example.</p>
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>&lt; This is a single-line comment! &gt;
+
+&lt;
+    This is a multi-line comment!
+    See? This is another line!
+&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="statements">
+<h2>Statements<a class="headerlink" href="#statements" title="Permalink to this headline">¶</a></h2>
+<p>Each statement represents a node in the sheet. Statements cannot span more
+than one line.</p>
+<p>The most atomic syntax for a node is the name of the node on its own:</p>
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>Start
+</pre></div>
+</div>
+<p>This Start node has no connected inputs or outputs.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Names are defined as any combination of alphanumeric and underscore (<code class="docutils literal notranslate"><span class="pre">_</span></code>)
+characters, but only if the name starts with a letter or an underscore.</p>
+</div>
+<div class="section" id="wire-identifiers-and-node-outputs">
+<h3>Wire Identifiers and Node Outputs<a class="headerlink" href="#wire-identifiers-and-node-outputs" title="Permalink to this headline">¶</a></h3>
+<p>Outputs of nodes are given as <strong>wire identifiers</strong>, which let inputs to other
+nodes know which output to get their input from. They are given as a hashtag
+(<code class="docutils literal notranslate"><span class="pre">#</span></code>), followed by a positive integer.</p>
+<p>Wire identifiers can then be defined as the outputs of nodes, in a
+comma-seperated list after the <code class="docutils literal notranslate"><span class="pre">~</span></code> symbol, like so:</p>
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>&lt;
+    #1 is an execution wire, since it is coming out of the Start node
+    socket.
+&gt;
+Start~#1
+</pre></div>
+</div>
+</div>
+<div class="section" id="arguments-and-node-inputs">
+<h3>Arguments and Node Inputs<a class="headerlink" href="#arguments-and-node-inputs" title="Permalink to this headline">¶</a></h3>
+<p>To provide inputs into nodes, you provide a comma-seperated list of either
+<em>literals</em> or <em>wire identifiers</em> surrounded by <code class="docutils literal notranslate"><span class="pre">(</span></code> and <code class="docutils literal notranslate"><span class="pre">)</span></code> symbols
+straight after the name of the node, like so:</p>
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>NodeName(666, 3.14, &quot;Hello, world!&quot;, true, #4, ...)
+</pre></div>
+</div>
+<p>However, if there are no arguments you wish to give, then the brackets are not
+nessesary.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In some nodes, you need to provide <em>names</em> as arguments.</p>
+</div>
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>&lt;
+    The node Set sets the value of a variable.
+    integerVariableName is the name of the variable to set.
+    #5 is the input execution wire.
+    99 is the value to set.
+    #6 is the execution wire to activate after we&#39;ve set the value.
+&gt;
+
+Set(integerVariableName, #5, 99)~#6
+</pre></div>
+</div>
+</div>
+<div class="section" id="general-statement-syntax">
+<h3>General Statement Syntax<a class="headerlink" href="#general-statement-syntax" title="Permalink to this headline">¶</a></h3>
+<p>Bringing the outputs and inputs together, this is what a statement will
+look like:</p>
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>NodeName(arg1, arg2, ...) ~ #1, #2, ...
+</pre></div>
+</div>
+<p>In order to seperate statements, they will need to either have <code class="docutils literal notranslate"><span class="pre">;</span></code> symbols
+or newlines <code class="docutils literal notranslate"><span class="pre">\n</span></code> between them:</p>
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>Start~#1; Print(#1, &quot;Hello, world!&quot;)~#2
+Print(#2, &quot;Hi!&quot;)
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Whitespace should never matter.</p>
+</div>
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>Print ( # 9 , &quot;Hello, world!&quot; ) ~ # 56
+&lt; Is equivalent to... &gt;
+Print(#9,&quot;Hello, world!&quot;)~#56
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="property-statements">
+<h2>Property Statements<a class="headerlink" href="#property-statements" title="Permalink to this headline">¶</a></h2>
+<p>Each property is represented by the name of the property and a list of
+comma-seperated arguments surrounded by <code class="docutils literal notranslate"><span class="pre">(</span></code> and <code class="docutils literal notranslate"><span class="pre">)</span></code>. Both of these items
+are surrounded by <code class="docutils literal notranslate"><span class="pre">[</span></code> and <code class="docutils literal notranslate"><span class="pre">]</span></code>:</p>
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>[PropertyName(arg1, arg2, ...)]
+</pre></div>
+</div>
+<p>Property arguments however cannot include wire identifiers. They can be names,
+literals, or <em>keyword representations of data types</em>:</p>
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>&lt;
+    This creates a global variable called integerVariableName, which is an
+    Integer, with starting value 200.
+&gt;
+[Variable(integerVariableName, Integer, 200)]
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="semantics.html" class="btn btn-neutral float-right" title="Semantic Rules" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="Decision Definitions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Benjamin Beddows
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

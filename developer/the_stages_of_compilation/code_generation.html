@@ -1,0 +1,1061 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Code Generation &mdash; Decision 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Optimisation" href="optimisation.html" />
+    <link rel="prev" title="Error Reporting" href="error_reporting.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Decision
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../the_language/index.html">The Language</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">The Stages of Compilation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="lexical_analysis.html">Lexical Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="syntax_analysis.html">Syntax Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="semantic_analysis.html">Semantic Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="error_reporting.html">Error Reporting</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Code Generation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#definition-nodes">Definition Nodes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#subroutines">Subroutines</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#execution-nodes">Execution Nodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#non-execution-nodes">Non-Execution Nodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#calling-convention">Calling Convention</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id3">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#structures">Structures</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sockets">Sockets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linking-functions">Linking Functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#generation-functions">Generation Functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#conclusion">Conclusion</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#output">Output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#object-sections">Object Sections</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="optimisation.html">Optimisation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../linking/index.html">Linking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../the_virtual_machine/index.html">The Virtual Machine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Decision</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">The Stages of Compilation</a> &raquo;</li>
+        
+      <li>Code Generation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/the_stages_of_compilation/code_generation.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="code-generation">
+<span id="id1"></span><h1>Code Generation<a class="headerlink" href="#code-generation" title="Permalink to this headline">¶</a></h1>
+<p>Code Generation is perfomed in <code class="docutils literal notranslate"><span class="pre">dcodegen.c</span></code> and <code class="docutils literal notranslate"><span class="pre">dcodegen.h</span></code>.</p>
+<p>After we’ve made a model of the sheet in memory, and after we’ve checked that
+everything the user has made is syntactically and semantically correct,
+we now need to generate the <strong>bytecode</strong> for <a class="reference internal" href="../the_virtual_machine/index.html#the-virtual-machine"><span class="std std-ref">The Virtual Machine</span></a> to
+run.</p>
+<p>So far, the difference between <em>execution</em> and <em>non-execution</em> nodes has
+only been that execution nodes have execution sockets - the main difference
+will be explained in this section.</p>
+<div class="section" id="definition-nodes">
+<h2>Definition Nodes<a class="headerlink" href="#definition-nodes" title="Permalink to this headline">¶</a></h2>
+<p>For definition nodes, the first thing we do is generate a return instruction
+before generating anything else. This essentially acts as a “bookmark” for
+the function in the bytecode, which the linker can later point to.</p>
+<div class="section" id="subroutines">
+<h3>Subroutines<a class="headerlink" href="#subroutines" title="Permalink to this headline">¶</a></h3>
+<p>For subroutines like <code class="docutils literal notranslate"><span class="pre">Start</span></code>, the code generator will recurse through the
+execution wires and generate the bytecode for each execution node in sequence.</p>
+</div>
+<div class="section" id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h3>
+<p>For functions, the code generator will try and find the <code class="docutils literal notranslate"><span class="pre">Return</span></code> node for
+the function, and recurse backwards to generate the bytecode to calculate
+the return values. The reason for this is because we don’t have an order of
+execution as we do for execution nodes.</p>
+</div>
+</div>
+<div class="section" id="execution-nodes">
+<h2>Execution Nodes<a class="headerlink" href="#execution-nodes" title="Permalink to this headline">¶</a></h2>
+<p>When an execution node is reached, it will first generate the bytecode to get
+the inputs. If the inputs are literals, then this is trivial. But if there
+is a connection to the input’s socket, then we need to follow the connection
+and recursively generate the bytecode for the node that starts the connection.</p>
+<p>Secondly, bytecode is generated depending on the node itself, using the
+inputs. If the node is a core function, then we can directly insert the
+bytecode in. Otherwise, we make use of the calling abilities of
+<a class="reference internal" href="../the_virtual_machine/index.html#the-virtual-machine"><span class="std std-ref">The Virtual Machine</span></a> by saving current unsafe values onto the stack,
+then adding the arguments onto the stack, then calling the function itself.
+When we return from the function, we then pop the returned values out from
+the stack, and then restore the saved unsafe values.</p>
+<p>Lastly, it will check to see if the last output execution socket has a
+connection. If it does, then there is something more to do after this node
+is finished. We then recursively generate the bytecode for the next execution
+node and add it on to the bytecode we’ve already generated. Otherwise, we may
+want to put a return instruction at the end of the sequence to say that we
+are done. In some cases, however, this is not needed, like inside <code class="docutils literal notranslate"><span class="pre">For</span></code>
+loops.</p>
+<p>When getting output from an execution node, the generator will copy the output
+into another register to preserve the original value.</p>
+</div>
+<div class="section" id="non-execution-nodes">
+<h2>Non-Execution Nodes<a class="headerlink" href="#non-execution-nodes" title="Permalink to this headline">¶</a></h2>
+<p>When a non-execution node is reached, it will first generate the bytecode to
+get the inputs, like with execution nodes.</p>
+<p>Next, bytecode is generated depending on the node itself, using the inputs.
+This process is almost exactly the same as with execution nodes, including
+if the function is not a core function.</p>
+<p>However, unlike execution nodes, it does <em>not</em> generate any more bytecode past
+the current node. This is because non-execution nodes are purely meant to be
+called upon from execution nodes.</p>
+<p>When getting output from a non-execution node, it will be used by the node
+getting the input, then the register will be freed. This ensures that if
+values change over time, then the calculations will produce different results
+over time as well. Non-execution nodes are purely meant to just manipulate
+the inputs to execution nodes.</p>
+</div>
+<div class="section" id="calling-convention">
+<span id="id2"></span><h2>Calling Convention<a class="headerlink" href="#calling-convention" title="Permalink to this headline">¶</a></h2>
+<p>If we see a node with a name that isn’t a core function, it needs to be
+<em>called</em>. How we call functions is important and should be as efficient as
+possible since there could be lots of calls during execution, especially
+if the call is inside a loop.</p>
+<p>Arguments and return values are easy - the arguments are pushed onto the
+general stack in reverse order just before the call and the return values are
+poped out of the general stack in order just after the call.</p>
+<p>What isn’t so easy is the registers themselves. A problem that needed to be
+solved was that a called functions will most likely use the same registers as
+its caller. The initial solution was to save registers that needed to be
+saved into the general stack before pushing the arguments, and popping the
+saved values back afterwards, but I’m going to be honest: <strong>This solution
+sucked.</strong></p>
+<p>So here is the current solution: We split the virtual machine registers into
+2 categories:</p>
+<ul class="simple">
+<li><p><strong>Safe registers</strong> (callee-saved): No matter what function you call, these
+registers will <em>always</em> retain the value they had before calling. This is
+guaranteed by having the callee save the safe registers it knows it will use
+into the general stack at the start of the function, and popping them back
+out at the end of the function, before pushing the return values.</p></li>
+<li><p><strong>Temporary / Unsafe registers</strong> (caller-saved): If you call another
+function, there is a chance that these register values can change by the end
+of the call. In this case, if you want to save the value inside a temporary
+register, you’ll need to manually save the register into the stack yourself.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>There is no difference between safe and temporary registers in terms of how
+they are implemented in the virtual machine - it’s how we treat them in the
+bytecode that is different, hence why it is called a <strong>convention</strong>.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A bug that came from this that took (in my opinion) too long to find was
+that some functions that saved safe registers at the start of the function
+would pop them back out into their correct registers (as intended), but
+there was a chance that in doing that it would overwrite a return value
+stored at that register. So because of this, <strong>any return values stored in
+safe registers get transferred to a temporary register before being pushed
+onto the stack.</strong></p>
+</div>
+<div class="section" id="id3">
+<h3>Functions<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<p>So we’ve got some <em>safe</em> registers thanks to this calling convention, but we
+should use the safe registers sparingly… so how do we know if we need to use
+a safe register or not? Simple. There are recursive functions that tell you
+if a call is coming up:</p>
+<dl class="function">
+<dt>
+bool <code class="sig-name descname">d_does_input_involve_call</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv410_sheetNode" title="_sheetNode">_sheetNode</a> *<em>node</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Does getting the input of a node require calling another function? </p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>The answer to the above question.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">node</span></code>: The node whose inputs to query. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>Checks input nodes starting from <code class="docutils literal notranslate"><span class="pre">node</span></code> to see if any of them involve a call.</p>
+<dl class="function">
+<dt>
+bool <code class="sig-name descname">d_does_output_involve_call</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv410_sheetNode" title="_sheetNode">_sheetNode</a> *<em>node</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Does the execution sequence starting from node require a call? </p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>The answer to the above question.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">node</span></code>: The node to start querying from. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>Checks output nodes (i.e. an execution sequence) starting from <code class="docutils literal notranslate"><span class="pre">node</span></code> to see
+if any of them involve a call.</p>
+<p>Both of these functions call:</p>
+<dl class="function">
+<dt>
+bool <code class="sig-name descname">d_is_node_call</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv410_sheetNode" title="_sheetNode">_sheetNode</a> *<em>node</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Is the node a function that needs to be called? </p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>The answer to the question above.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">node</span></code>: The node to query. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>To see if <code class="docutils literal notranslate"><span class="pre">node</span></code> is a function that needs to be called, i.e. it isn’t a core
+function.</p>
+</div>
+</div>
+<div class="section" id="structures">
+<h2>Structures<a class="headerlink" href="#structures" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">BCode</span></code></dt><dd><p>Essentially a list of <code class="docutils literal notranslate"><span class="pre">char</span></code>. Its purpose is to store bytecode and be
+a convenient way to build up the bytecode. It also stores alongside the
+code a list of instruction indexes and what they should be linked to,
+as well as a list of indexes to say where functions start pushing
+return values onto the stack.</p>
+</dd>
+</dl>
+<p>There are 3 convenient functions for <code class="docutils literal notranslate"><span class="pre">BCode</span></code>:</p>
+<dl class="function">
+<dt>
+<a class="reference internal" href="../reference/index.html#_CPPv45BCode" title="BCode">BCode</a> <code class="sig-name descname">d_malloc_bytecode</code><span class="sig-paren">(</span>size_t <em>size</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Create a malloc’d BCode object, with a set number of bytes. </p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>The BCode object with malloc’d elements.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">size</span></code>: The number of bytes. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>Automatically allocates memory to store bytecode for you.</p>
+<p>Likewise, there is a function to free the memory:</p>
+<dl class="function">
+<dt>
+void <code class="sig-name descname">d_free_bytecode</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv45BCode" title="BCode">BCode</a> *<em>bcode</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Free malloc’d elements of bytecode. </p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">bcode</span></code>: The bytecode to free. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>Arguably the most useful function however is:</p>
+<dl class="function">
+<dt>
+void <code class="sig-name descname">d_concat_bytecode</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv45BCode" title="BCode">BCode</a> *<em>base</em>, <a class="reference internal" href="../reference/index.html#_CPPv45BCode" title="BCode">BCode</a> *<em>after</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Append bytecode to the end of another set of bytecode. </p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">base</span></code>: The bytecode to be added to. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">after</span></code>: The bytecode to append. Not changed. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>Concatenates <code class="docutils literal notranslate"><span class="pre">after</span></code> onto the end of <code class="docutils literal notranslate"><span class="pre">base</span></code>, which makes building up the
+bytecode simple.</p>
+<p>There is an alternate function for attaching bytecode to one another:</p>
+<dl class="function">
+<dt>
+void <code class="sig-name descname">d_insert_bytecode</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv45BCode" title="BCode">BCode</a> *<em>base</em>, <a class="reference internal" href="../reference/index.html#_CPPv45BCode" title="BCode">BCode</a> *<em>insertCode</em>, size_t <em>insertIndex</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Insert some bytecode into another set of bytecode at a particular point. </p>
+<p>This is a modification of <a class="reference internal" href="../reference/index.html#doptimize_8h_1a8a777129416c8fad55ee6d8ed851d7dd"><span class="std std-ref">d_optimize_remove_bytecode()</span></a></p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">base</span></code>: The bytecode to insert into. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">insertCode</span></code>: The bytecode to insert. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">insertIndex</span></code>: The index to insert indexCode into base, i.e. when the operation is complete, this index will contain the start of insertCode. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>Takes some bytecode <code class="docutils literal notranslate"><span class="pre">insertCode</span></code> and inserts it into the bytecode <code class="docutils literal notranslate"><span class="pre">base</span></code>,
+starting at the index <code class="docutils literal notranslate"><span class="pre">insertIndex</span></code>, i.e. the bytecode at index
+<code class="docutils literal notranslate"><span class="pre">insertIndex</span></code> of <code class="docutils literal notranslate"><span class="pre">base</span></code> after the function is called should be the
+start of the bytecode <code class="docutils literal notranslate"><span class="pre">insertCode</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">d_insert_bytecode</span></code> is a lot more expensive computationally than
+<code class="docutils literal notranslate"><span class="pre">d_concat_bytecode</span></code>, and thus should be used sparingly. This is because
+it needs to fix data like links and relative jumps after the insertion.</p>
+</div>
+<dl>
+<dt><code class="docutils literal notranslate"><span class="pre">BuildContext</span></code></dt><dd><p>Contains useful information used by the code generator to help make the
+most efficient bytecode possible. Only one instance is made at the
+beginning of Bytecode Generation, and it is passed around by reference
+throughout.</p>
+<p>It also stores a section of memory for data like variables and string
+literals, which will be stored in the sheet, and also keeps track of
+links to those items.</p>
+<p>One thing we want to guarantee when creating the bytecode is that
+<a class="reference internal" href="../the_virtual_machine/index.html#the-virtual-machine"><span class="std std-ref">The Virtual Machine</span></a> is using the least amount of registers
+possible, since there is a finite amount of them. We also don’t want to
+store values that aren’t going to be used anymore. The way we do this is
+by storing a list of bits, one for each register, and set the bit to 1 if
+the register is currently in use, and 0 if it is free. We also store 2
+extra variables to say what the next available integer register is, and
+what the next available float register is.</p>
+<p>When we generate bytecode for a non-execution node, we typically free all
+of the input registers and use a register for the output (most of the time
+we use the first input register as the output register).</p>
+<p>When we generate bytecode for an execution node that involves a loop, we
+don’t free the output register until the loop bytecode has been generated,
+so the loop can get its value. Only after do we free the register.</p>
+<p>This freedom of choosing when registers are freed allows us to keep values
+in memory for as long as they are needed.</p>
+</dd>
+</dl>
+<p>There are a few functions that control the use of registers in <code class="docutils literal notranslate"><span class="pre">BuildContext</span></code>:</p>
+<dl class="function">
+<dt>
+reg_t <code class="sig-name descname">d_next_general_reg</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv412BuildContext" title="BuildContext">BuildContext</a> *<em>context</em>, bool <em>safe</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Return the next available general register index, and increment it afterwards. </p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>The next available general register.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: The build context. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">safe</span></code>: Should the register be a safe register? </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>Takes the index of the next available integer register, and outputs it.
+It also takes the time to find the next available register by incrementing
+until it finds one. You can also specify if you want a <em>safe</em> register rather
+than a <em>temporary</em> one, to follow the <a class="reference internal" href="#calling-convention"><span class="std std-ref">Calling Convention</span></a>.</p>
+<dl class="function">
+<dt>
+reg_t <code class="sig-name descname">d_next_float_reg</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv412BuildContext" title="BuildContext">BuildContext</a> *<em>context</em>, bool <em>safe</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Return the next available float register index, and increment it afterwards. </p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>The next available float register.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: The build context. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">safe</span></code>: Should the register be a safe register? </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>Does the same thing as <code class="docutils literal notranslate"><span class="pre">d_next_general_reg</span></code>, but for float registers.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Bear in mind if you want a safe register, <strong>you are not guaranteed to get
+one.</strong> If the context has run out of safe registers, it will give you the
+next available temporary one.</p>
+</div>
+<p>Both of the above functions call a more generic one:</p>
+<dl class="function">
+<dt>
+reg_t <code class="sig-name descname">d_next_reg</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv412BuildContext" title="BuildContext">BuildContext</a> *<em>context</em>, reg_t *<em>nextRegInContext</em>, reg_t <em>end</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Return the next available register index, and increment it afterwards. </p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>The next available register.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: The build context. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nextRegInContext</span></code>: A pointer to the next register variable in the context. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">end</span></code>: The ending register index of the section we want to get. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>Where <code class="docutils literal notranslate"><span class="pre">nextRegInContext</span></code> points to a <code class="docutils literal notranslate"><span class="pre">reg_t</span></code> variable in <code class="docutils literal notranslate"><span class="pre">context</span></code> that
+represents which register is the next free register, and <code class="docutils literal notranslate"><span class="pre">end</span></code> says to the
+function what the last register it can use is - if it goes over this value,
+it will produce a warning.</p>
+<dl class="function">
+<dt>
+void <code class="sig-name descname">d_free_reg</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv412BuildContext" title="BuildContext">BuildContext</a> *<em>context</em>, reg_t <em>reg</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Free a register. </p>
+<p>It will automatically call either <code class="docutils literal notranslate"><span class="pre">d_free_general_reg</span></code> or <code class="docutils literal notranslate"><span class="pre">d_free_float_reg</span></code>.</p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: The build context. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reg</span></code>: The register to free in the build context. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>Frees a given register. If the given register’s index is less than the current
+next available register, the next available register is set to <code class="docutils literal notranslate"><span class="pre">reg</span></code>. Again,
+this is to make sure we use the least amount of registers possible.</p>
+</div>
+<div class="section" id="sockets">
+<h2>Sockets<a class="headerlink" href="#sockets" title="Permalink to this headline">¶</a></h2>
+<p>One important thing to note is how a node knows which input corresponds to
+which register.</p>
+<p>Inside the <code class="docutils literal notranslate"><span class="pre">SheetSocket</span></code> structure defined in <code class="docutils literal notranslate"><span class="pre">dsheet.h</span></code>, there is a
+property called <code class="docutils literal notranslate"><span class="pre">_reg</span></code>. Only Code Generation uses this property. If the
+socket is an output socket, it is set during the generation of the bytecode
+of the node to the index of the register containing that output value. If
+the socket is an input socket, and if the socket has a connection, it is set
+to the connected output socket’s register to guarantee that the value is
+transferred along the wire to the correct input socket. If there is no
+connection, then a register may or may not be assigned for the literal value,
+depending on if we want to use the literal value as an immediate or not.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>See <a class="reference internal" href="../the_virtual_machine/index.html#the-virtual-machine"><span class="std std-ref">The Virtual Machine</span></a> to see what I mean by an <em>immediate</em> value.</p>
+</div>
+<p>This way, registers are passed along from socket to socket, so that the next
+node knows which register its input is in.</p>
+</div>
+<div class="section" id="linking-functions">
+<h2>Linking Functions<a class="headerlink" href="#linking-functions" title="Permalink to this headline">¶</a></h2>
+<p>The whole process of linking is explained in <a class="reference internal" href="../linking/index.html#linking"><span class="std std-ref">Linking</span></a>, but in order for
+it to work, we need to do 2 things:</p>
+<ol class="arabic simple">
+<li><p>We need to know what things we need to link to, like variables or
+functions.</p></li>
+<li><p>We need to say which instructions need to point to which link.</p></li>
+</ol>
+<dl class="function">
+<dt>
+void <code class="sig-name descname">d_add_link_to_ins</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv412BuildContext" title="BuildContext">BuildContext</a> *<em>context</em>, <a class="reference internal" href="../reference/index.html#_CPPv45BCode" title="BCode">BCode</a> *<em>bcode</em>, size_t <em>insIndex</em>, <a class="reference internal" href="../reference/index.html#_CPPv48LinkMeta" title="LinkMeta">LinkMeta</a> <em>linkMeta</em>, size_t *<em>indexInList</em>, bool *<em>wasDuplicate</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Add a future link to an instruction in bytecode. </p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: The context needed to store the link. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bcode</span></code>: The bytecode containing the instruction to link. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">insIndex</span></code>: The index of the LOADUI instruction to replace when linking is taking place. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">linkMeta</span></code>: The link metadata. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">indexInList</span></code>: Stores in the reference the index of the new metadata in the list. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">wasDuplicate</span></code>: Sets the reference to true if a matching linkMeta was already found in the array, false otherwise. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>This function puts information into <code class="docutils literal notranslate"><span class="pre">context</span></code> to say which instruction in
+<code class="docutils literal notranslate"><span class="pre">bcode</span></code> (index <code class="docutils literal notranslate"><span class="pre">insIndex</span></code>) needs to point to some link <code class="docutils literal notranslate"><span class="pre">linkMeta</span></code>. If
+<code class="docutils literal notranslate"><span class="pre">linkMeta</span></code> is a duplicate of a previously linked <code class="docutils literal notranslate"><span class="pre">linkMeta</span></code>, then the
+instruction points to the <em>original version</em>, and the new version is ignored.</p>
+<p><code class="docutils literal notranslate"><span class="pre">indexInList</span></code> is replaced with the index of <code class="docutils literal notranslate"><span class="pre">linkMeta</span></code> in the list of
+<code class="docutils literal notranslate"><span class="pre">LinkMeta</span></code> in <code class="docutils literal notranslate"><span class="pre">context</span></code>, and <code class="docutils literal notranslate"><span class="pre">wasDuplicate</span></code> is replaced with a boolean
+representing if <code class="docutils literal notranslate"><span class="pre">linkMeta</span></code> was already found in <code class="docutils literal notranslate"><span class="pre">context</span></code>.</p>
+<dl class="function">
+<dt>
+char *<code class="sig-name descname">d_allocate_from_data_section</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv412BuildContext" title="BuildContext">BuildContext</a> *<em>context</em>, size_t <em>size</em>, size_t *<em>index</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Allocate a number of bytes from the data section for some data. That data could be a string literal, variable, etc. </p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>A pointer to the start of the new allocation. Returns NULL if size is 0.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: The context that contains the built-up data section. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">size</span></code>: The size of the allocation in bytes. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code>: Overwrites with the index of the start of the allocation from the start of the data section. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>Allocates a chunk of memory for the data section in <code class="docutils literal notranslate"><span class="pre">context</span></code>. <code class="docutils literal notranslate"><span class="pre">size</span></code> is
+the size of the allocation in bytes, and <code class="docutils literal notranslate"><span class="pre">index</span></code> is replaced with the index
+of the start of the allocation, which is useful when creating links. The
+function returns a <em>pointer</em> to the start of the allocation, rather than the
+<em>index</em>. This makes copying data into the allocation easy.</p>
+<dl class="function">
+<dt>
+size_t <code class="sig-name descname">d_allocate_string_literal_in_data</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv412BuildContext" title="BuildContext">BuildContext</a> *<em>context</em>, <a class="reference internal" href="../reference/index.html#_CPPv45BCode" title="BCode">BCode</a> *<em>linkCode</em>, size_t <em>insIndex</em>, char *<em>stringLiteral</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Given a string literal, allocate memory from the data section to store the literal. </p>
+<p>If there is a duplicate string literal found, the links to string literal passed are pointed to the literal already stored in the data section. <strong>NOTE:</strong> If the string was a duplicate, it is freed!</p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>The index of the data section where the string literal starts.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: The context containing the built-up data section. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">linkCode</span></code>: The bytecode to link to the string literal in the data section. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">insIndex</span></code>: The index of the LOADUI instruction to replace when linking is taking place. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stringLiteral</span></code>: The string literal to place in the data section. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>Allocated memory for the data section of <code class="docutils literal notranslate"><span class="pre">context</span></code> in order to fit the
+length of <code class="docutils literal notranslate"><span class="pre">stringLiteral</span></code>. This function automatically links an instruction
+from <code class="docutils literal notranslate"><span class="pre">linkCode</span></code> (index <code class="docutils literal notranslate"><span class="pre">insIndex</span></code>) to the string literal’s new location.</p>
+<dl class="function">
+<dt>
+void <code class="sig-name descname">d_allocate_variable</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv412BuildContext" title="BuildContext">BuildContext</a> *<em>context</em>, <em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv414_sheetVariable" title="_sheetVariable">_sheetVariable</a> *<em>variable</em>, size_t <em>size</em>, size_t <em>indexInLinkMeta</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Allocate memory from the data section to store a variable. </p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: The context containing the built-up data section. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">variable</span></code>: The variable data. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">size</span></code>: How many bytes to allocate for the variable. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">indexInLinkMeta</span></code>: The index of the variable’s LinkMeta entry in the build context. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>Allocates memory for the data section of <code class="docutils literal notranslate"><span class="pre">context</span></code>, in order to fit the
+content of a variable <code class="docutils literal notranslate"><span class="pre">variable</span></code>. You can specify a size, which is usually
+<code class="docutils literal notranslate"><span class="pre">sizeof(dint)</span></code>, all you need to provide is the index of the variable’s entry
+in the <code class="docutils literal notranslate"><span class="pre">LinkMeta</span></code> list in <code class="docutils literal notranslate"><span class="pre">context</span></code>.</p>
+</div>
+<div class="section" id="generation-functions">
+<h2>Generation Functions<a class="headerlink" href="#generation-functions" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt>
+<a class="reference internal" href="../reference/index.html#_CPPv45BCode" title="BCode">BCode</a> <code class="sig-name descname">d_convert_between_number_types</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv412_sheetSocket" title="_sheetSocket">_sheetSocket</a> *<em>socket</em>, <a class="reference internal" href="../reference/index.html#_CPPv412BuildContext" title="BuildContext">BuildContext</a> *<em>context</em>, <a class="reference internal" href="../reference/index.html#_CPPv44DIns" title="DIns">DIns</a> <em>opcode</em>, bool <em>useSafeReg</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Generate bytecode to convert from one number type to the other, i.e. Integer -&gt; Float or Float -&gt; Integer. </p>
+<p>The new register is placed in the socket.</p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>The bytecode generated to convert.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">socket</span></code>: The input socket to convert. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: The context needed to generate the bytecode. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">opcode</span></code>: The opcode to use to convert. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">useSafeReg</span></code>: Specifies if the output should be in a safe register. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>Takes a numbered socket (Integer or Float), and generates bytecode to convert
+it to the other discrete type, how it does so depends on the opcode you provide.</p>
+<p>If you provide <code class="docutils literal notranslate"><span class="pre">OP_MVTF</span></code> or <code class="docutils literal notranslate"><span class="pre">OP_MVTI</span></code>, it will just move the raw value to
+that type of register.</p>
+<p>If you provide <code class="docutils literal notranslate"><span class="pre">OP_CVTF</span></code> or <code class="docutils literal notranslate"><span class="pre">OP_CVTI</span></code>, it will convert the value into that
+type so that it represents the same value (truncated).</p>
+<p>This function automatically sets the socket’s new register.</p>
+<dl class="function">
+<dt>
+void <code class="sig-name descname">d_setup_input</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv412_sheetSocket" title="_sheetSocket">_sheetSocket</a> *<em>socket</em>, <a class="reference internal" href="../reference/index.html#_CPPv412BuildContext" title="BuildContext">BuildContext</a> *<em>context</em>, bool <em>forceFloat</em>, bool <em>useSafeReg</em>, <a class="reference internal" href="../reference/index.html#_CPPv45BCode" title="BCode">BCode</a> *<em>addTo</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Given an input socket, do what is nessesary to set it up for use in a node. </p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">socket</span></code>: The socket corresponding to the input. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: The context needed to build bytecode. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">forceFloat</span></code>: Always convert the input to a float if it isn’t already. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">useSafeReg</span></code>: Specifies if the input should be in a safe register. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">addTo</span></code>: If any extra bytecode is needed to setup the input, add it onto this bytecode. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>Builds on <code class="docutils literal notranslate"><span class="pre">d_generate_bytecode_for_literal</span></code> and also sets up inputs that are
+a part of a connection. <strong>This function does not generate the bytecode for the
+nodes that contribute to the input!</strong> The function also automatically adds any
+bytecode it needed to generate onto <code class="docutils literal notranslate"><span class="pre">addTo</span></code>, and sets the value of
+<code class="docutils literal notranslate"><span class="pre">inputReg</span></code> to the register containing the input value. Like
+<code class="docutils literal notranslate"><span class="pre">d_generate_bytecode_for_literal</span></code>, you can specify if you want your integers
+to be converted to floats with <code class="docutils literal notranslate"><span class="pre">forceFloat</span></code>.</p>
+<dl class="function">
+<dt>
+void <code class="sig-name descname">d_setup_arguments</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv410_sheetNode" title="_sheetNode">_sheetNode</a> *<em>defineNode</em>, <a class="reference internal" href="../reference/index.html#_CPPv412BuildContext" title="BuildContext">BuildContext</a> *<em>context</em>, <a class="reference internal" href="../reference/index.html#_CPPv45BCode" title="BCode">BCode</a> *<em>addTo</em>, bool <em>isSubroutine</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Given a Define node, generate bytecode to pop the arguments from the stack. </p>
+<p>The node’s sockets are provided with their registers.</p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">defineNode</span></code>: The Define node to get the arguments of. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: The context needed to generate the bytecode. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">addTo</span></code>: Where to add the extra bytecode onto. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">isSubroutine</span></code>: Info needed to make sure the execution socket is not “poped”. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>If you are generating the bytecode for a function, then this function pops the
+arguments needed from the stack, puts them in the correct registers, and
+assigns those registers to their respective sockets. The bytecode to do this
+is added onto <code class="docutils literal notranslate"><span class="pre">addTo</span></code>.</p>
+<dl class="function">
+<dt>
+void <code class="sig-name descname">d_setup_returns</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv410_sheetNode" title="_sheetNode">_sheetNode</a> *<em>returnNode</em>, <a class="reference internal" href="../reference/index.html#_CPPv412BuildContext" title="BuildContext">BuildContext</a> *<em>context</em>, <a class="reference internal" href="../reference/index.html#_CPPv45BCode" title="BCode">BCode</a> *<em>addTo</em>, bool <em>isSubroutine</em>, bool <em>retAtEnd</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Given a Return node, generate bytecode to push the return values onto the stack. </p>
+<p>If you want, a RET instruction is also added at the end.</p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">returnNode</span></code>: The Return node to get the return values from. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: The context needed to generate the bytecode. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">addTo</span></code>: Where to add the extra bytecode onto. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">isSubroutine</span></code>: Info needed to make sure the execution socket is not “pushed”. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">retAtEnd</span></code>: If true, this adds a RET instruction after. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>If you are generating the bytecode for a function, then this function pushes
+the return values onto the stack, and if <code class="docutils literal notranslate"><span class="pre">retAtEnd</span></code> is true, also places a
+return instruction at the end of the bytecode. The bytecode to do this is
+added onto <code class="docutils literal notranslate"><span class="pre">addTo</span></code>.</p>
+<dl class="function">
+<dt>
+<a class="reference internal" href="../reference/index.html#_CPPv45BCode" title="BCode">BCode</a> <code class="sig-name descname">d_generate_bytecode_for_literal</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv412_sheetSocket" title="_sheetSocket">_sheetSocket</a> *<em>socket</em>, <a class="reference internal" href="../reference/index.html#_CPPv412BuildContext" title="BuildContext">BuildContext</a> *<em>context</em>, bool <em>cvtFloat</em>, bool <em>useSafeReg</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Given a socket, generate the bytecode to load the literal value. </p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>The malloc’d bytecode generated to get the literal value.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">socket</span></code>: The socket to get the literal value from. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: The context needed to generate the bytecode. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cvtFloat</span></code>: If true, and if the literal is an integer, convert it into a float. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">useSafeReg</span></code>: If true, the output will be placed in a safe register. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>Generates the bytecode needed to load in a literal value. It will
+automatically set the register the literal value is now in into socket.
+If the literal is an integer, and you want it converted to a float, you can
+specify that in <code class="docutils literal notranslate"><span class="pre">cvtFloat</span></code>.</p>
+<dl class="function">
+<dt>
+<code class="sig-name descname">DECISION_API BCode d_generate_bytecode_for_inputs(struct  _sheetNode  * node, BuildContext  * context, bool inLoop, bool forceLiterals)</code></dt>
+<dd></dd></dl>
+
+<p>Generates the bytecode for all nodes that contribute to an input to a node.
+<code class="docutils literal notranslate"><span class="pre">inLoop</span></code> is used for optimization purposes.</p>
+<dl class="function">
+<dt>
+<a class="reference internal" href="../reference/index.html#_CPPv45BCode" title="BCode">BCode</a> <code class="sig-name descname">d_generate_bytecode_for_variable</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv410_sheetNode" title="_sheetNode">_sheetNode</a> *<em>node</em>, <a class="reference internal" href="../reference/index.html#_CPPv412BuildContext" title="BuildContext">BuildContext</a> *<em>context</em>, <em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv414_sheetVariable" title="_sheetVariable">_sheetVariable</a> *<em>variable</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Given a node that is a getter for a variable, generate bytecode to get its value. </p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>The malloc’d bytecode generated the get the value of the variable.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">node</span></code>: The node that is the getter of a variable. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: The context needed to generate the bytecode. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">variable</span></code>: The variable data needed to generate the bytecode. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>Generates the bytecode for a node that is the getter of a variable
+<code class="docutils literal notranslate"><span class="pre">variable</span></code>. It essentially loads its value from the data section of the
+sheet. This function also consequently adds a link to that bytecode to the
+location of the variable.</p>
+<dl class="function">
+<dt>
+<a class="reference internal" href="../reference/index.html#_CPPv45BCode" title="BCode">BCode</a> <code class="sig-name descname">d_generate_bytecode_for_call</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv410_sheetNode" title="_sheetNode">_sheetNode</a> *<em>node</em>, <a class="reference internal" href="../reference/index.html#_CPPv412BuildContext" title="BuildContext">BuildContext</a> *<em>context</em>, bool <em>isSubroutine</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Given a node needs to be “called”, generate the bytecode and link info to call that function. </p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>The malloc’d bytecode generated to call the node.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">node</span></code>: The “unknown” function to call. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: The context needed to generate the bytecode. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">isSubroutine</span></code>: Info needed to make sure we ignore the execution sockets. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>Generates the bytecode to call a custom function or subroutine. The bytecode
+does a number of things:</p>
+<ol class="arabic simple">
+<li><p>It saves temporary registers that haven’t been freed yet by pushing them
+onto the stack.</p></li>
+<li><p>It then pushes the argument values on afterwards (in reverse order, because
+stacks)</p></li>
+<li><p>It then calls the function by pushing the current program counter onto a
+call stack, and jumping to the function’s location.</p></li>
+<li><p>When the function returns, it first pops the return values into available
+registers that aren’t going to be overwritten with the previously pushed
+saved values.</p></li>
+<li><p>It then pops the saved temporary values back into the register that it was
+originally in, just in case a node expects it to be in that register later
+on.</p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you know that a call is coming, and you need to save a register for
+after the call, <strong>put it in a safe register</strong>. This is more efficient,
+especially if the call is being executed in a loop.</p>
+</div>
+<dl class="function">
+<dt>
+<a class="reference internal" href="../reference/index.html#_CPPv45BCode" title="BCode">BCode</a> <code class="sig-name descname">d_generate_bytecode_for_operator</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv410_sheetNode" title="_sheetNode">_sheetNode</a> *<em>node</em>, <a class="reference internal" href="../reference/index.html#_CPPv412BuildContext" title="BuildContext">BuildContext</a> *<em>context</em>, <a class="reference internal" href="../reference/index.html#_CPPv44DIns" title="DIns">DIns</a> <em>opcode</em>, <a class="reference internal" href="../reference/index.html#_CPPv44DIns" title="DIns">DIns</a> <em>fopcode</em>, <a class="reference internal" href="../reference/index.html#_CPPv44DIns" title="DIns">DIns</a> <em>iopcode</em>, bool <em>oneInput</em>, bool <em>infiniteInputs</em>, bool <em>forceFloat</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Given an operator node, generate the bytecode for it. </p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>The malloc’d bytecode generated to get the result.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">node</span></code>: The node to get the result from. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: The context needed to generate the bytecode. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">opcode</span></code>: The operator instruction. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fopcode</span></code>: The float variant of the instruction. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">iopcode</span></code>: The immediate variant of the instruction. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">oneInput</span></code>: Is there only one input? </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">infiniteInputs</span></code>: Does this node take an infinite amount of inputs? </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">forceFloat</span></code>: Should the output always be a float? </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>Generates bytecode for a generic operator node. Based on the inputs, it will
+automatically deal with the types for you, unless you set <code class="docutils literal notranslate"><span class="pre">forceFloat</span></code>
+to true.</p>
+<dl class="function">
+<dt>
+<a class="reference internal" href="../reference/index.html#_CPPv45BCode" title="BCode">BCode</a> <code class="sig-name descname">d_generate_bytecode_for_comparator</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv410_sheetNode" title="_sheetNode">_sheetNode</a> *<em>node</em>, <a class="reference internal" href="../reference/index.html#_CPPv412BuildContext" title="BuildContext">BuildContext</a> *<em>context</em>, <a class="reference internal" href="../reference/index.html#_CPPv44DIns" title="DIns">DIns</a> <em>opcode</em>, <a class="reference internal" href="../reference/index.html#_CPPv44DIns" title="DIns">DIns</a> <em>fopcode</em>, <a class="reference internal" href="../reference/index.html#_CPPv44DIns" title="DIns">DIns</a> <em>sopcode</em>, bool <em>notAfter</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Given an comparator node, generate the bytecode for it. </p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>The malloc’d bytecode generated to get the result.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">node</span></code>: The node to get the result from. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: The context needed to generate the bytecode. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">opcode</span></code>: The operator instruction. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fopcode</span></code>: The float variant of the instruction. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sopcode</span></code>: The string variant of the instruction. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">notAfter</span></code>: After the comparison is done, do we invert the answer? </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>Generates bytecode for a generic comparator node that outputs a boolean.
+Since the VM does not have an opcode for “not equals”, a <code class="docutils literal notranslate"><span class="pre">notAfter</span></code>
+argument is provided to invert the answer.</p>
+<dl class="function">
+<dt>
+<a class="reference internal" href="../reference/index.html#_CPPv45BCode" title="BCode">BCode</a> <code class="sig-name descname">d_generate_bytecode_for_nonexecution_node</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv410_sheetNode" title="_sheetNode">_sheetNode</a> *<em>node</em>, <a class="reference internal" href="../reference/index.html#_CPPv412BuildContext" title="BuildContext">BuildContext</a> *<em>context</em>, bool <em>inLoop</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Given a node, generate the bytecode to get the correct output. </p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>The malloc’d bytecode it generated.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">node</span></code>: The non-execution node to generate the bytecode for. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: The context needed to generate the bytecode. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">inLoop</span></code>: Is this node being run from inside a loop? </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>Generates the bytecode for any non-execution node, regardless of if it’s a
+core function or not.</p>
+<dl class="function">
+<dt>
+<a class="reference internal" href="../reference/index.html#_CPPv45BCode" title="BCode">BCode</a> <code class="sig-name descname">d_generate_bytecode_for_execution_node</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv410_sheetNode" title="_sheetNode">_sheetNode</a> *<em>node</em>, <a class="reference internal" href="../reference/index.html#_CPPv412BuildContext" title="BuildContext">BuildContext</a> *<em>context</em>, bool <em>retAtEnd</em>, bool <em>inLoop</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Given a node, generate the bytecode to carry out it’s instruction. </p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>The malloc’d bytecode it generated.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">node</span></code>: The execution node to generate the bytecode for. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: The context needed to generate the bytecode. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">retAtEnd</span></code>: If true, and if the node is at the end of the chain of execution, put a OP_RET instruction at the end of the bytecode for this node. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">inLoop</span></code>: Should be false if this is a top-level node, true if it is being run inside a loop. This prevents a RET being put at the end of the sequence of instructions. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>Generates the bytecode for any execution node, regardless of if it’s a core
+function or not. If <code class="docutils literal notranslate"><span class="pre">retAtEnd</span></code> is true, it will place a return instruction
+at the end of the sequence, unless <code class="docutils literal notranslate"><span class="pre">inLoop</span></code> is true. <code class="docutils literal notranslate"><span class="pre">inLoop</span></code> should be
+true if the node is being executed inside a loop like <code class="docutils literal notranslate"><span class="pre">For</span></code> or <code class="docutils literal notranslate"><span class="pre">While</span></code>.
+<code class="docutils literal notranslate"><span class="pre">inLoop</span></code> will always stop a return instruction from being generated, so the
+program does not return at the end of one loop.</p>
+<dl class="function">
+<dt>
+<a class="reference internal" href="../reference/index.html#_CPPv45BCode" title="BCode">BCode</a> <code class="sig-name descname">d_generate_bytecode_for_function</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv414_sheetFunction" title="_sheetFunction">_sheetFunction</a> *<em>func</em>, <a class="reference internal" href="../reference/index.html#_CPPv412BuildContext" title="BuildContext">BuildContext</a> *<em>context</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Given a function, generate the bytecode for it. </p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>The bytecode generated for the function.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">func</span></code>: The function to generate the bytecode for. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: The context needed to generate the bytecode. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>Generates the bytecode for any custom function or subroutine.</p>
+</div>
+<div class="section" id="conclusion">
+<h2>Conclusion<a class="headerlink" href="#conclusion" title="Permalink to this headline">¶</a></h2>
+<p>In order to do all of the above, all you need is the function:</p>
+<dl class="function">
+<dt>
+void <code class="sig-name descname">d_codegen_compile</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv46_sheet" title="_sheet">_sheet</a> *<em>sheet</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Given that Semantic Analysis has taken place, generate the bytecode for a given sheet. </p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sheet</span></code>: The sheet to generate the bytecode for. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>Which takes a sheet, generates the bytecode, and inserts it into the sheet
+once it’s done.</p>
+<div class="section" id="output">
+<h3>Output<a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h3>
+<p>By the end of compilation, if everything succeeds, then you should have a
+<code class="docutils literal notranslate"><span class="pre">Sheet</span></code> with the contents of an <strong>object file</strong>. An object file is made up
+of multiple sections that contain different data.</p>
+<p>The functionality to save, load and dump Decision object files can be found
+in <code class="docutils literal notranslate"><span class="pre">dasm.h</span></code>.</p>
+</div>
+<div class="section" id="object-sections">
+<h3>Object Sections<a class="headerlink" href="#object-sections" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">.text</span></code>: A list of instructions for <a class="reference internal" href="../the_virtual_machine/index.html#the-virtual-machine"><span class="std std-ref">The Virtual Machine</span></a> to execute.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.main</span></code>: An integer which says which instruction in <code class="docutils literal notranslate"><span class="pre">.text</span></code> should be
+the one to execute first if this sheet is where we start executing. It
+essentially points to the compiled <code class="docutils literal notranslate"><span class="pre">Start</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.data</span></code>: An allocated section of memory with items like variables and
+string literals contained inside.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.lmeta</span></code>: Essentially a list of <code class="docutils literal notranslate"><span class="pre">ListMeta</span></code>, which contains data on what
+and where something is.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.link</span></code>: A table of what instructions point to which index in the
+<code class="docutils literal notranslate"><span class="pre">.lmeta</span></code> section.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.func</span></code>: Essentially a list of <code class="docutils literal notranslate"><span class="pre">SheetFunction</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.var</span></code>: Essentially a list of <code class="docutils literal notranslate"><span class="pre">SheetVariable</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.incl</span></code>: A list of paths to sheets that this sheet includes.</p></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="optimisation.html" class="btn btn-neutral float-right" title="Optimisation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="error_reporting.html" class="btn btn-neutral float-left" title="Error Reporting" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Benjamin Beddows
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

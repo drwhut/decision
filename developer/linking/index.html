@@ -1,0 +1,366 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Linking &mdash; Decision 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="The Virtual Machine" href="../the_virtual_machine/index.html" />
+    <link rel="prev" title="Optimisation" href="../the_stages_of_compilation/optimisation.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Decision
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../the_language/index.html">The Language</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../the_stages_of_compilation/index.html">The Stages of Compilation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Linking</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#object-sections">Object Sections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#structures">Structures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../the_virtual_machine/index.html">The Virtual Machine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Decision</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Linking</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/linking/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="linking">
+<span id="id1"></span><h1>Linking<a class="headerlink" href="#linking" title="Permalink to this headline">¶</a></h1>
+<p>This chapter describes how linking objects before runtime works. Linking
+functionality can be found in <code class="docutils literal notranslate"><span class="pre">dlink.c</span></code> and <code class="docutils literal notranslate"><span class="pre">dlink.h</span></code>.</p>
+<p>Decision is a <strong>compiled language</strong>, and you compile individual sheets into
+their respective <strong>objects</strong>. Most of the time you will want to just run a
+sheet straight from the terminal. But sometimes, especially if the sheet is
+very big, it may be worth your while to compile the sheet into an <strong>object
+file</strong> to increase performance (since it doesn’t compile the program every
+time).</p>
+<p>The fact that you can compile a sheet to an object file is the reason why
+we need to link. Every time you load an object from an object file in memory,
+it is <strong>very likely</strong> that it will not be places into the same memory address
+every time. So, we will need to change where the instructions in the <code class="docutils literal notranslate"><span class="pre">.text</span></code>
+section point to, and that is exactly what we do when linking.</p>
+<div class="section" id="object-sections">
+<h2>Object Sections<a class="headerlink" href="#object-sections" title="Permalink to this headline">¶</a></h2>
+<p>Objects have 2 sections that are purely used for linking:</p>
+<p><code class="docutils literal notranslate"><span class="pre">.lmeta</span></code></p>
+<blockquote>
+<div><p>A list of <code class="docutils literal notranslate"><span class="pre">LinkMeta</span></code>, where each <code class="docutils literal notranslate"><span class="pre">LinkMeta</span></code> describes a thing like a
+variable, function, or string literal, and where you can find it (if it’s
+defined on the same sheet).</p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">.link</span></code></p>
+<blockquote>
+<div><p>A table of instruction indexes and which <code class="docutils literal notranslate"><span class="pre">LinkMeta</span></code> they link to.</p>
+</div></blockquote>
+</div>
+<div class="section" id="structures">
+<h2>Structures<a class="headerlink" href="#structures" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">LinkType</span></code></p>
+<blockquote>
+<div><p>An <em>enum</em> which describes what kind of thing a link points to, whether it
+be a variable, function, or something else.</p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">LinkMeta</span></code></p>
+<blockquote>
+<div><p>A <em>struct</em> that describes a link. It includes a <code class="docutils literal notranslate"><span class="pre">LinkType</span></code>, and the
+<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char*</span></code> name of the item it is linking to. In the case of string
+literals, the name is the content of the literal. It also contains a
+generic <code class="docutils literal notranslate"><span class="pre">void*</span></code> pointer that is designed to point to a struct that
+contains metadata for the object being linked to, i.e. a <code class="docutils literal notranslate"><span class="pre">SheetVariable</span></code>
+or <code class="docutils literal notranslate"><span class="pre">SheetFunction</span></code>. It also contains a generic <code class="docutils literal notranslate"><span class="pre">char*</span></code> pointer which
+serves different purposes depending on what the <code class="docutils literal notranslate"><span class="pre">LinkType</span></code> is:</p>
+<ul class="simple">
+<li><p>If it is a link to an item in the object’s own <code class="docutils literal notranslate"><span class="pre">.data</span></code> section, the
+pointer’s value is the starting index of the item in the <code class="docutils literal notranslate"><span class="pre">.data</span></code>
+section.</p></li>
+<li><p>If it is a link to an item in the object’s own <code class="docutils literal notranslate"><span class="pre">.text</span></code> section, the
+pointer’s value is the starting index of the item in the <code class="docutils literal notranslate"><span class="pre">.text</span></code>
+section.</p></li>
+</ul>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">LinkMetaList</span></code></p>
+<blockquote>
+<div><p>A <em>struct</em> that is a list of <code class="docutils literal notranslate"><span class="pre">LinkMeta</span></code>.</p>
+</div></blockquote>
+</div>
+<div class="section" id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt>
+<a class="reference internal" href="../reference/index.html#_CPPv48LinkMeta" title="LinkMeta">LinkMeta</a> <code class="sig-name descname">d_link_new_meta</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv48LinkType" title="LinkType">LinkType</a> <em>type</em>, <em class="property">const</em> char *<em>name</em>, void *<em>meta</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Create a new LinkMeta structure. </p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>A new <code class="docutils literal notranslate"><span class="pre">LinkMeta</span></code> with the given parameters.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">type</span></code>: The type of object this link will point to. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the object this link will point to. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">meta</span></code>: A pointer to the metadata of the object the link points to. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p><code class="docutils literal notranslate"><span class="pre">LinkMetaList</span></code> by itself has a few helper functions to help create it, free
+it, and to manipulate it’s contents:</p>
+<dl class="function">
+<dt>
+<a class="reference internal" href="../reference/index.html#_CPPv412LinkMetaList" title="LinkMetaList">LinkMetaList</a> <code class="sig-name descname">d_link_new_meta_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><br /></dt>
+<dd><p>Create an empty LinkMetaList. </p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>An empty LinkMetaList. </p>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt>
+void <code class="sig-name descname">d_link_meta_list_push</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv412LinkMetaList" title="LinkMetaList">LinkMetaList</a> *<em>list</em>, <a class="reference internal" href="../reference/index.html#_CPPv48LinkMeta" title="LinkMeta">LinkMeta</a> <em>item</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Add a LinkMeta item to a list. </p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">list</span></code>: The list to push the item onto. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">item</span></code>: The item to push onto. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt>
+void <code class="sig-name descname">d_link_free_list</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv412LinkMetaList" title="LinkMetaList">LinkMetaList</a> *<em>list</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Free a LinkMetaList object. </p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">list</span></code>: The list to free. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt>
+void <code class="sig-name descname">d_link_replace_load_ins</code><span class="sig-paren">(</span>char *<em>ins</em>, char *<em>ptr</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Change a LOADUI/ORI instruction combination to load a specific pointer. </p>
+<p><strong>NOTE:</strong> If you don’t like the fact that you can’t run 32-bit Decision code on 64-bit machines and vice versa, blame it on this function.</p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ins</span></code>: A pointer to first byte of the LOADUI instruction. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ptr</span></code>: The memory address for the instructions to load. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>This function is what actually changes the instructions in <code class="docutils literal notranslate"><span class="pre">.text</span></code> to point
+to the correct items. Since we use pointers to set links, the instructions
+need to load either 32-bit or 64-bit addresses into a register. This is always
+done with a <code class="docutils literal notranslate"><span class="pre">LOADUI</span></code> / <code class="docutils literal notranslate"><span class="pre">ORI</span></code> combination.</p>
+<dl class="function">
+<dt>
+void <code class="sig-name descname">d_link_self</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv46_sheet" title="_sheet">_sheet</a> *<em>sheet</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Link a sheet’s properties from itself to itself and included sheets. </p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sheet</span></code>: The sheet to link. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>Takes a compiled sheet, gets the information it needs to link from the
+<code class="docutils literal notranslate"><span class="pre">.lmeta</span></code> and <code class="docutils literal notranslate"><span class="pre">.link</span></code> sections, and uses it to call
+<code class="docutils literal notranslate"><span class="pre">d_link_replace_load_ins</span></code> to replace all of the instructions that need
+linking.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../the_virtual_machine/index.html" class="btn btn-neutral float-right" title="The Virtual Machine" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../the_stages_of_compilation/optimisation.html" class="btn btn-neutral float-left" title="Optimisation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Benjamin Beddows
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

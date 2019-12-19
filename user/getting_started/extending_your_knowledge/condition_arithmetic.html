@@ -1,0 +1,334 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Condition Arithmetic &mdash; Decision 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Changing Flow with Conditions" href="changing_flow_with_conditions.html" />
+    <link rel="prev" title="Conditions" href="conditions.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Decision
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Getting Started</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../install_decision.html">Installing Decision</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../your_first_decision_script.html">Your First Decision Script</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Extending Your Knowledge</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="comments.html">Comments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arithmetic.html">Arithmetic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="conditions.html">Conditions</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Condition Arithmetic</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#and">And</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#or">Or</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#not">Not</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#xor">Xor</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="changing_flow_with_conditions.html">Changing Flow with Conditions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="variables.html">Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="iteration.html">Iteration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="functions_and_subroutines.html">Functions and Subroutines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="importing_sheets.html">Importing Sheets</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../core_reference/index.html">Core Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Decision</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Getting Started</a> &raquo;</li>
+        
+          <li><a href="index.html">Extending Your Knowledge</a> &raquo;</li>
+        
+      <li>Condition Arithmetic</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/getting_started/extending_your_knowledge/condition_arithmetic.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="condition-arithmetic">
+<h1>Condition Arithmetic<a class="headerlink" href="#condition-arithmetic" title="Permalink to this headline">¶</a></h1>
+<p>Since conditions are just booleans, you can perform some simple bitwise
+operations on conditions:</p>
+<div class="section" id="and">
+<h2>And<a class="headerlink" href="#and" title="Permalink to this headline">¶</a></h2>
+<p>Outputs <code class="docutils literal notranslate"><span class="pre">true</span></code> if and only if the two inputs are both <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>Start~#1
+
+And(false, false)~#2
+Print(#1, #2)~#3
+
+And(false, true)~#4
+Print(#3, #4)~#5
+
+And(true, false)~#6
+Print(#5, #6)~#7
+
+And(true, true)~#8
+Print(#7, #8)
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ decision and.dc
+
+false
+false
+false
+true
+</pre></div>
+</div>
+</div>
+<div class="section" id="or">
+<h2>Or<a class="headerlink" href="#or" title="Permalink to this headline">¶</a></h2>
+<p>Outputs <code class="docutils literal notranslate"><span class="pre">true</span></code> if and only if either of the two inputs are <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>Start~#1
+
+Or(false, false)~#2
+Print(#1, #2)~#3
+
+Or(false, true)~#4
+Print(#3, #4)~#5
+
+Or(true, false)~#6
+Print(#5, #6)~#7
+
+Or(true, true)~#8
+Print(#7, #8)
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ decision or.dc
+
+false
+true
+true
+true
+</pre></div>
+</div>
+</div>
+<div class="section" id="not">
+<h2>Not<a class="headerlink" href="#not" title="Permalink to this headline">¶</a></h2>
+<p>Outputs <code class="docutils literal notranslate"><span class="pre">true</span></code> if the input is <code class="docutils literal notranslate"><span class="pre">false</span></code>, and outputs <code class="docutils literal notranslate"><span class="pre">false</span></code> if the input
+is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>Start~#1
+
+Not(false)~#2
+Print(#1, #2)~#3
+
+Not(true)~#4
+Print(#3, #4)
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ decision not.dc
+
+true
+false
+</pre></div>
+</div>
+</div>
+<div class="section" id="xor">
+<h2>Xor<a class="headerlink" href="#xor" title="Permalink to this headline">¶</a></h2>
+<p>Outputs <code class="docutils literal notranslate"><span class="pre">true</span></code> if and only if only one if the inputs is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>Start~#1
+
+Xor(false, false)~#2
+Print(#1, #2)~#3
+
+Xor(false, true)~#4
+Print(#3, #4)~#5
+
+Xor(true, false)~#6
+Print(#5, #6)~#7
+
+Xor(true, true)~#8
+Print(#7, #8)
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ decision xor.dc
+
+false
+true
+true
+false
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="changing_flow_with_conditions.html" class="btn btn-neutral float-right" title="Changing Flow with Conditions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="conditions.html" class="btn btn-neutral float-left" title="Conditions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Benjamin Beddows
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

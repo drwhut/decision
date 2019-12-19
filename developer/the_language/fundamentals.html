@@ -1,0 +1,325 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Decision Fundamentals &mdash; Decision 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Decision Definitions" href="definitions/index.html" />
+    <link rel="prev" title="The Language" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Decision
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">The Language</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Decision Fundamentals</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sockets">Sockets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wires">Wires</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nodes">Nodes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#execution-nodes">Execution nodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#non-execution-nodes">Non-execution nodes</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#sheets">Sheets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#properties">Properties</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="definitions/index.html">Decision Definitions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../the_stages_of_compilation/index.html">The Stages of Compilation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../linking/index.html">Linking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../the_virtual_machine/index.html">The Virtual Machine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Decision</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">The Language</a> &raquo;</li>
+        
+      <li>Decision Fundamentals</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/the_language/fundamentals.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="decision-fundamentals">
+<h1>Decision Fundamentals<a class="headerlink" href="#decision-fundamentals" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="sockets">
+<h2>Sockets<a class="headerlink" href="#sockets" title="Permalink to this headline">¶</a></h2>
+<p>Sockets contain data of a pre-determined type (essentially data types):</p>
+<dl class="simple">
+<dt>Execution</dt><dd><p>These kinds of sockets don’t hold <em>data</em>, but they determine what actions
+occur when they are <em>activated</em>. If an input execution socket is
+activated, the <strong>node’s</strong> action is performed. If an output execution
+socket is activated, it passes the execution of the program to the
+connected input execution socket.</p>
+</dd>
+<dt>Integer</dt><dd><p>These sockets hold integer (whole number) values.</p>
+</dd>
+<dt>Float</dt><dd><p>These sockets hold floating-point values.</p>
+</dd>
+<dt>String</dt><dd><p>These sockets hold strings, essentially an array of characters.</p>
+</dd>
+<dt>Boolean</dt><dd><p>These sockets hold <em>true</em> (1) or <em>false</em> (0) values.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The following data types have not been implemented yet. But they will be.
+Soon. Maybe.</p>
+</div>
+<dl class="simple">
+<dt>Collection</dt><dd><p>These sockets hold a collection of data.</p>
+</dd>
+<dt>Programmer-defined Structure</dt><dd><p>These sockets hold defined structures of data.</p>
+</dd>
+<dt>Programmer-defined Class</dt><dd><p>These sockets hold objects instantiated from classes.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Integers, floats, and booleans are passed from socket-to-socket by <strong>value</strong>,
+whereas strings, collections, structures and classes are passed from
+socket-to-socket by <strong>reference</strong>. This is because of the way these values
+are represented in memory.</p>
+</div>
+</div>
+<div class="section" id="wires">
+<h2>Wires<a class="headerlink" href="#wires" title="Permalink to this headline">¶</a></h2>
+<p>Wires connect 2 <strong>sockets</strong> together. The sockets they connect must be of the
+same data type, however. Wires allow data to be transferred between <strong>nodes</strong>,
+allowing you to take whatever output you want and <em>feed</em> it into the input of
+your choice.</p>
+<p>An alternative to wires (if you know an input is always going to be the same
+value) are <strong>literals</strong>, which is data (that is the same data type as the
+input socket) that the socket uses instead of getting the value from a wire.</p>
+<p>Wires are analogous to <em>local variables</em> in most common programming languages.</p>
+</div>
+<div class="section" id="nodes">
+<h2>Nodes<a class="headerlink" href="#nodes" title="Permalink to this headline">¶</a></h2>
+<p>Nodes are the building blocks of the Decision language. They dictate what
+happens when they are activated, and what calculations happen. They are
+analogous to <em>statements</em> in most common programming languages.</p>
+<p>All nodes have inputs and outputs in the form of <strong>sockets</strong>. What the node
+does with the inputs and what it outputs depends on the node.</p>
+<div class="section" id="execution-nodes">
+<h3>Execution nodes<a class="headerlink" href="#execution-nodes" title="Permalink to this headline">¶</a></h3>
+<p>Execution nodes are nodes that have at least one <strong>execution socket</strong>. These
+nodes perform an action once their primary input execution socket has been
+activated. Once that action is done, the node will then activate it’s primary
+output execution socket to pass the execution of the program to the next
+execution node.</p>
+<div class="section" id="definition-nodes">
+<h4>Definition nodes<a class="headerlink" href="#definition-nodes" title="Permalink to this headline">¶</a></h4>
+<p>Definition nodes are execution nodes that do not have any input sockets. These
+nodes are therefore the start of a path of execution. Essentially, they define
+what functions do.</p>
+</div>
+</div>
+<div class="section" id="non-execution-nodes">
+<h3>Non-execution nodes<a class="headerlink" href="#non-execution-nodes" title="Permalink to this headline">¶</a></h3>
+<p>Non-execution nodes have no <strong>execution sockets</strong>. These nodes perform a
+calculation on their inputs without affecting the state of the program. These
+nodes are used to manipulate values before they are fed into execution nodes.</p>
+</div>
+</div>
+<div class="section" id="sheets">
+<h2>Sheets<a class="headerlink" href="#sheets" title="Permalink to this headline">¶</a></h2>
+<p>Every Decision source file represents a sheet. Sheets are essentially a
+collection of <strong>nodes</strong>, <strong>wires</strong> and <strong>properties</strong>. (The fact that they are
+a collection of nodes and wires means you can model sheets as directed graphs,
+for you mathematicians out there)</p>
+</div>
+<div class="section" id="properties">
+<h2>Properties<a class="headerlink" href="#properties" title="Permalink to this headline">¶</a></h2>
+<p>Properties aren’t necessarily <em>stored</em> in sheets, but they manipulate the
+sheet’s metadata to provide extra information, or to specify something about
+the sheet. For example:</p>
+<ul class="simple">
+<li><p>Properties can define <strong>global variables</strong> that nodes can get and set the
+value of.</p></li>
+<li><p>Properties can define <strong>functions/subroutines</strong>, and what their inputs and
+outputs are.</p></li>
+<li><p>Properties can be used to <strong>import other sheets</strong>, which allows you to use
+other people’s programs or libraries for your convenience.</p></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="definitions/index.html" class="btn btn-neutral float-right" title="Decision Definitions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="The Language" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Benjamin Beddows
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
