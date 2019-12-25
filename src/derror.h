@@ -25,7 +25,7 @@
 #ifndef DERROR_H
 #define DERROR_H
 
-#include "dbool.h"
+#include <stdbool.h>
 #include "dcfg.h"
 
 #include <stddef.h>

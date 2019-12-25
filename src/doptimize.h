@@ -26,7 +26,7 @@
 #ifndef DOPTIMIZE_H
 #define DOPTIMIZE_H
 
-#include "dbool.h"
+#include <stdbool.h>
 #include "dcfg.h"
 
 #include <stddef.h>

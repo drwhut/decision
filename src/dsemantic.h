@@ -24,7 +24,7 @@
 #ifndef DSEMANTIC_H
 #define DSEMANTIC_H
 
-#include "dbool.h"
+#include <stdbool.h>
 #include "dcfg.h"
 #include "dcore.h"
 #include "dlex.h"

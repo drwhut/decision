@@ -25,7 +25,7 @@
 #ifndef DVM_H
 #define DVM_H
 
-#include "dbool.h"
+#include <stdbool.h>
 #include "dcfg.h"
 #include "derror.h"
 

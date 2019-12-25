@@ -35,7 +35,6 @@ dvm.c
 
 set (HDRS
 dasm.h
-dbool.h
 dcfg.h
 dcodegen.h
 dcore.h

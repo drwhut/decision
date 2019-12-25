@@ -24,7 +24,7 @@
 #ifndef DSHEET_H
 #define DSHEET_H
 
-#include "dbool.h"
+#include <stdbool.h>
 #include "dcfg.h"
 #include "dlex.h"
 #include "dlink.h"
