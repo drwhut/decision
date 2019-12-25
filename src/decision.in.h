@@ -26,7 +26,7 @@
 #ifndef DECISION_H
 #define DECISION_H
 
-#include "dbool.h"
+#include <stdbool.h>
 #include "dcfg.h"
 
 #include <stdio.h>

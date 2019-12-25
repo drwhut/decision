@@ -25,7 +25,7 @@
 #ifndef DCODEGEN_H
 #define DCODEGEN_H
 
-#include "dbool.h"
+#include <stdbool.h>
 #include "dcfg.h"
 #include "dlink.h"
 #include "dvm.h"

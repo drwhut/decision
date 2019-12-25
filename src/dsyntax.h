@@ -25,7 +25,7 @@
 #ifndef DSYNTAX_H
 #define DSYNTAX_H
 
-#include "dbool.h"
+#include <stdbool.h>
 #include "dcfg.h"
 
 #include <stddef.h>

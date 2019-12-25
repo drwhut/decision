@@ -36,4 +36,4 @@ Set(_fib1, #21, #22)     < _fib1 = _temp >
 
 < Using the Fibonacci subroutine to print the first 50 fibonacci numbers >
 Start~#100
-Fibonacci(#100, 50)
+Fibonacci(#100, 25)
