@@ -15,7 +15,7 @@ It is also available to build from the project. See the
 
 ## Branches
 
-* `master` (0.1.0): The stable branch, which contains the "safest" version to
+* `master` (0.1.1): The stable branch, which contains the "safest" version to
 use.
 * `development`: The development branch, which contains the latest and greatest
 features, but may not be stable as it is being actively worked on by developers.
