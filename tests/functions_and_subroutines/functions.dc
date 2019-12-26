@@ -58,7 +58,11 @@ Print(#104, #103)~#105
 Double(125.5)~#106
 Print(#105, #106)~#107
 
-Quadruple(10.0)~#108
+<
+    We are also testing here if an integer literal will be changed to a float
+    literal by the compiler automatically.
+>
+Quadruple(10)~#108
 Print(#107, #108)~#109
 
 IsDivisor(360, 40)~#110
