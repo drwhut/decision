@@ -1,3 +1,6 @@
+* Compiler now automatically converts integer literals to float literals if the
+socket is a float-only socket.
+
 # Decision v0.1.1 - 25th December 2019
 
 * Changed the `bool` definition to the one in `stdbool.h`, which makes it

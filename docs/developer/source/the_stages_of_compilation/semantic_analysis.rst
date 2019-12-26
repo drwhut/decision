@@ -82,6 +82,12 @@ find out:
    code, e.g. In ``Print(#1, "Hello, world!")``, ``"Hello, world!"`` is the
    literal.
 
+.. note::
+
+   If an integer literal was given to a socket that is exclusively for floats,
+   then the compiler *should* automatically convert the integer literal to a
+   float literal for convenience.
+
 Afterwards, we take the input and output sockets and connect them. While
 connecting them, we check to see if the data types of both sockets match,
 and we check that an output execution socket doesn't have more than one

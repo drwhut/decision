@@ -1,7 +1,7 @@
 Start~#1
 
 [Variable(myIntegerVar, Integer, 69)]
-[Variable(myFloatVar, Float, 420.69)]
+[Variable(myFloatVar, Float, 420)] < the compiler should automatically convert this integer literal into a float literal >
 [Variable(myStringVar, String, "Hello, world!")]
 [Variable(myBooleanVar, Boolean, true)]
 
