@@ -222,6 +222,43 @@ bool d_run_sheet(Sheet *sheet) {
 }
 
 /**
+ * \fn bool d_run_function(Sheet *sheet, const char *funcName)
+ * \brief Run the specified function/subrouutine in a given sheet, given the
+ * sheet has gone through `d_codegen_compile`.
+ * 
+ * \return If the function/subroutine ran without any errors.
+ * 
+ * \param sheet The sheet the function lives in.
+ * \param funcName The name of the function/subroutine to run.
+ */
+bool d_run_function(struct _sheet *sheet, const char *funcName) {
+    if (sheet->_text != NULL && sheet->_textSize > 0 && sheet->_isCompiled) {
+        if (sheet->_isLinked) {
+            // We need to make sure the function/subroutine exists, and it has
+            // a valid pointer.
+            
+            /*
+            if (sheet->_main > 0) // A Start function exists.
+            {
+                DVM vm;
+                d_vm_reset(&vm);
+                return d_vm_run(&vm, sheet->_text + sheet->_main);
+            } else {
+                printf("Fatal: Sheet %s has no Start function defined",
+                       sheet->filePath);
+            }
+            */
+        } else {
+            printf("Fatal: Sheet %s has not been linked", sheet->filePath);
+        }
+    } else {
+        printf("Fatal: Sheet %s has not been compiled", sheet->filePath);
+    }
+
+    return false;
+}
+
+/**
  * \fn Sheet *d_load_string(const char *source, const char *name)
  * \brief Take Decision source code and compile it into bytecode, but do not
  * run it.

@@ -610,7 +610,7 @@ DECISION_API BCode d_generate_bytecode_for_literal(struct _sheetSocket *socket,
  * \param context The context needed to generate the bytecode.
  * \param inLoop Are the inputs being gotten from a node that is being run
  * inside a loop?
- * \param forceLiterals Force the bytecode for literals to be generated. You
+ * \param forceLiteral Force the bytecode for literals to be generated. You
  * may not want this if you want to optimise later by using immediate
  * instructions.
  */

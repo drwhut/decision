@@ -25,9 +25,9 @@
 #ifndef DVM_H
 #define DVM_H
 
-#include <stdbool.h>
 #include "dcfg.h"
 #include "derror.h"
+#include <stdbool.h>
 
 #include <stdint.h>
 
@@ -317,6 +317,78 @@ DECISION_API void d_vm_runtime_error(DVM *vm, const char *error);
         d_vm_runtime_error((vm), errMsg); \
     }
 #endif // DECISION_SAFE_FUNCTIONS
+
+/**
+ * \fn dint d_vm_pop_stack(DVM *vm)
+ * \brief Pop an integer off the top of a VM's general stack.
+ *
+ * **NOTE:** If the general stack is empty, a runtime error will occur.
+ *
+ * \return The integer at the top of the general stack.
+ *
+ * \param vm The VM to pop from.
+ */
+DECISION_API dint d_vm_pop_stack(DVM *vm);
+
+/**
+ * \fn dfloat d_vm_pop_stack_float(DVM *vm)
+ * \brief Pop a float off the top of a VM's general stack.
+ *
+ * **NOTE:** If the general stack is empty, a runtime error will occur.
+ *
+ * \return The float at the top of the general stack.
+ *
+ * \param vm The VM to pop from.
+ */
+DECISION_API dfloat d_vm_pop_stack_float(DVM *vm);
+
+/**
+ * \fn void *d_vm_pop_stack_ptr(DVM *vm)
+ * \brief Pop a pointer off the top of a VM's general stack.
+ *
+ * **NOTE:** If the general stack is empty, a runtime error will occur.
+ *
+ * \return The generic pointer at the top of the general stack.
+ *
+ * \param vm The VM to pop from.
+ */
+DECISION_API void *d_vm_pop_stack_ptr(DVM *vm);
+
+/**
+ * \fn void d_vm_push_stack(DVM *vm, dint value)
+ * \brief Push an integer onto the top of a VM's general stack.
+ *
+ * **NOTE:** If the general stack has already reached it's capacity, a runtime
+ * error will occur when this function is called.
+ *
+ * \param vm The VM to push onto.
+ * \param value The value to push onto the general stack.
+ */
+DECISION_API void d_vm_push_stack(DVM *vm, dint value);
+
+/**
+ * \fn void d_vm_push_stack_float(DVM *vm, dfloat value)
+ * \brief Push a float onto the top of a VM's general stack.
+ *
+ * **NOTE:** If the general stack has already reached it's capacity, a runtime
+ * error will occur when this function is called.
+ *
+ * \param vm The VM to push onto.
+ * \param value The value to push onto the general stack.
+ */
+DECISION_API void d_vm_push_stack_float(DVM *vm, dfloat value);
+
+/**
+ * \fn void d_vm_push_stack_ptr(DVM *vm, void *ptr)
+ * \brief Push a generic pointer onto the top of a VM's general stack.
+ *
+ * **NOTE:** If the general stack has already reached it's capacity, a runtime
+ * error will occur when this function is called.
+ *
+ * \param vm The VM to push onto.
+ * \param ptr The pointer to push onto the general stack.
+ */
+DECISION_API void d_vm_push_stack_ptr(DVM *vm, void *ptr);
 
 /**
  * \fn void d_vm_parse_ins_at_pc(DVM *vm)

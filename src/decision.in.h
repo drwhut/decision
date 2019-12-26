@@ -82,6 +82,18 @@ struct _sheet;
 DECISION_API bool d_run_sheet(struct _sheet *sheet);
 
 /**
+ * \fn bool d_run_function(Sheet *sheet, const char *funcName)
+ * \brief Run the specified function/subrouutine in a given sheet, given the
+ * sheet has gone through `d_codegen_compile`.
+ * 
+ * \return If the function/subroutine ran without any errors.
+ * 
+ * \param sheet The sheet the function lives in.
+ * \param funcName The name of the function/subroutine to run.
+ */
+DECISION_API bool d_run_function(struct _sheet *sheet, const char *funcName);
+
+/**
  * \fn Sheet *d_load_string(const char *source, const char *name)
  * \brief Take Decision source code and compile it into bytecode, but do not
  * run it.
