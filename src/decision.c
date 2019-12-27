@@ -223,31 +223,79 @@ bool d_run_sheet(Sheet *sheet) {
 
 /**
  * \fn bool d_run_function(Sheet *sheet, const char *funcName)
- * \brief Run the specified function/subrouutine in a given sheet, given the
+ * \brief Run the specified function/subroutine in a given sheet, given the
  * sheet has gone through `d_codegen_compile`.
- * 
+ *
  * \return If the function/subroutine ran without any errors.
- * 
+ *
  * \param sheet The sheet the function lives in.
  * \param funcName The name of the function/subroutine to run.
  */
 bool d_run_function(Sheet *sheet, const char *funcName) {
     if (sheet->_text != NULL && sheet->_textSize > 0 && sheet->_isCompiled) {
         if (sheet->_isLinked) {
-            // We need to make sure the function/subroutine exists, and it has
-            // a valid pointer.
+            void *funcPtr = NULL;
 
-            /*
-            if (sheet->_main > 0) // A Start function exists.
-            {
+            // Firstly check that the name we've been given isn't that of a
+            // core function/subroutine.
+            CoreFunction isCoreFunc = d_core_find_name(funcName);
+            if ((int)isCoreFunc != -1) {
+                printf("Fatal: %s is a core function", funcName);
+                return false;
+            }
+
+            // If the function is already in the meta list of the sheet, we
+            // might as well use that pointer.
+            for (size_t metaIndex = 0; metaIndex < sheet->_link.size;
+                 metaIndex++) {
+                LinkMeta meta = sheet->_link.list[metaIndex];
+
+                if (meta.type == LINK_FUNCTION) {
+                    if (strcmp(meta.name, funcName) == 0) {
+                        SheetFunction *func = (SheetFunction *)meta.meta;
+                        Sheet *extSheet     = func->sheet;
+
+                        if (sheet == extSheet) {
+                            // If the function lives inside this sheet, then
+                            // the pointer is actually an index.
+                            funcPtr = sheet->_text + (size_t)meta._ptr;
+                        } else {
+                            // Otherwise, the pointer should be accurate
+                            // already.
+                            funcPtr = meta._ptr;
+                        }
+
+                        break;
+                    }
+                }
+            }
+
+            // If we couldn't find it in our link list, then this sheet didn't
+            // use the function. So, we're going to have to find out manually
+            // where this sheet is and run it there.
+            if (funcPtr == NULL) {
+                AllNameDefinitions nameDefs =
+                    d_semantic_get_name_definitions(sheet, funcName);
+
+                NameDefinition definition;
+                if (d_semantic_select_name_definition(funcName, nameDefs,
+                                                      &definition)) {
+                    if (definition.type == NAME_FUNCTION) {
+                        Sheet *extSheet = definition.sheet;
+                        return d_run_function(extSheet, funcName);
+                    }
+                } else {
+                    printf("Fatal: Sheet %s has no function %s defined",
+                           sheet->filePath, funcName);
+                }
+
+                d_semantic_free_name_definitions(nameDefs);
+            } else {
+                // We know where it lives, so we can run it!
                 DVM vm;
                 d_vm_reset(&vm);
-                return d_vm_run(&vm, sheet->_text + sheet->_main);
-            } else {
-                printf("Fatal: Sheet %s has no Start function defined",
-                       sheet->filePath);
+                return d_vm_run(&vm, funcPtr);
             }
-            */
         } else {
             printf("Fatal: Sheet %s has not been linked", sheet->filePath);
         }

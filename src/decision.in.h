@@ -83,7 +83,7 @@ DECISION_API bool d_run_sheet(struct _sheet *sheet);
 
 /**
  * \fn bool d_run_function(Sheet *sheet, const char *funcName)
- * \brief Run the specified function/subrouutine in a given sheet, given the
+ * \brief Run the specified function/subroutine in a given sheet, given the
  * sheet has gone through `d_codegen_compile`.
  * 
  * \return If the function/subroutine ran without any errors.
