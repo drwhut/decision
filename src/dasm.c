@@ -33,15 +33,15 @@
 
 /* An array of mnemonics, where the index matches the opcode. */
 static const char *MNEMONICS[NUM_OPCODES] = {
-    "RET",     "ADD",      "ADDF",  "ADDI",   "AND",     "ANDI",    "CALL",
-    "CALLR",   "CEQ",      "CEQF",  "CEQS",   "CLEQ",    "CLEQF",   "CLEQS",
-    "CLT",     "CLTF",     "CLTS",  "CMEQ",   "CMEQF",   "CMEQS",   "CMT",
-    "CMTF",    "CMTS",     "CVTF",  "CVTI",   "DIV",     "DIVF",    "DIVI",
-    "J",       "JCON",     "JR",    "JRCON",  "LOAD",    "LOADADR", "LOADADRB",
-    "LOADARG", "LOADARGI", "LOADF", "LOADI",  "LOADUI",  "MOD",     "MODI",
-    "MUL",     "MULF",     "MULI",  "MVTF",   "MVTI",    "NOT",     "OR",
-    "ORI",     "POP",      "PUSH",  "STOADR", "STOADRB", "SUB",     "SUBF",
-    "SUBI",    "SYSCALL",  "XOR",   "XORI"};
+    "RET",      "ADD",     "ADDF",     "ADDI",  "AND",    "ANDI",    "CALL",
+    "CALLC",    "CALLR",   "CEQ",      "CEQF",  "CEQS",   "CLEQ",    "CLEQF",
+    "CLEQS",    "CLT",     "CLTF",     "CLTS",  "CMEQ",   "CMEQF",   "CMEQS",
+    "CMT",      "CMTF",    "CMTS",     "CVTF",  "CVTI",   "DIV",     "DIVF",
+    "DIVI",     "J",       "JCON",     "JR",    "JRCON",  "LOAD",    "LOADADR",
+    "LOADADRB", "LOADARG", "LOADARGI", "LOADF", "LOADI",  "LOADUI",  "MOD",
+    "MODI",     "MUL",     "MULF",     "MULI",  "MVTF",   "MVTI",    "NOT",
+    "OR",       "ORI",     "POP",      "PUSH",  "STOADR", "STOADRB", "SUB",
+    "SUBF",     "SUBI",    "SYSCALL",  "XOR",   "XORI"};
 
 /**
  * \fn void d_asm_text_dump(char *code, size_t size)
@@ -93,6 +93,7 @@ DECISION_API void d_asm_text_dump(char *code, size_t size) {
 
             // 1 general register.
             case OP_CALL:
+            case OP_CALLC:
             case OP_J:
             case OP_NOT:
             case OP_POP:

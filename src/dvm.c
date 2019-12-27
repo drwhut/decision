@@ -18,6 +18,7 @@
 
 #include "dvm.h"
 
+#include "dcfunc.h"
 #include "dmalloc.h"
 
 #include <stdio.h>
@@ -33,6 +34,7 @@ static const unsigned char VM_INS_SIZE[NUM_OPCODES] = {
     3,                  // OP_AND
     2 + IMMEDIATE_SIZE, // OP_ANDI
     2,                  // OP_CALL
+    2,                  // OP_CALLC
     1 + IMMEDIATE_SIZE, // OP_CALLR
     4,                  // OP_CEQ
     4,                  // OP_CEQF
@@ -347,6 +349,14 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
 
                 vm->_inc_pc = 0;
             }
+            break;
+
+        case OP_CALLC:;
+            DecisionCFunction cFunc =
+                (void *)(intptr_t)(vm->registers[GET_BYTEN(vm->pc, 1)]);
+            
+            // Call the C function.
+            cFunc(vm);
             break;
 
         case OP_CALLR:;
