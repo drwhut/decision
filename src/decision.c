@@ -222,16 +222,19 @@ bool d_run_sheet(Sheet *sheet) {
 }
 
 /**
- * \fn bool d_run_function(Sheet *sheet, const char *funcName)
+ * \fn bool d_run_function(DVM *vm, Sheet *sheet, const char *funcName)
  * \brief Run the specified function/subroutine in a given sheet, given the
  * sheet has gone through `d_codegen_compile`.
- *
+ * 
  * \return If the function/subroutine ran without any errors.
- *
+ * 
+ * \param vm The VM to run the function on. The reason it is a seperate
+ * argument is because it allows you to push and pop arguments and return values
+ * seperately.
  * \param sheet The sheet the function lives in.
  * \param funcName The name of the function/subroutine to run.
  */
-bool d_run_function(Sheet *sheet, const char *funcName) {
+bool d_run_function(DVM *vm, Sheet *sheet, const char *funcName) {
     if (sheet->_text != NULL && sheet->_textSize > 0 && sheet->_isCompiled) {
         if (sheet->_isLinked) {
             void *funcPtr = NULL;
@@ -282,7 +285,7 @@ bool d_run_function(Sheet *sheet, const char *funcName) {
                                                       &definition)) {
                     if (definition.type == NAME_FUNCTION) {
                         Sheet *extSheet = definition.sheet;
-                        return d_run_function(extSheet, funcName);
+                        return d_run_function(vm, extSheet, funcName);
                     }
                 } else {
                     printf("Fatal: Sheet %s has no function %s defined",
@@ -292,9 +295,7 @@ bool d_run_function(Sheet *sheet, const char *funcName) {
                 d_semantic_free_name_definitions(nameDefs);
             } else {
                 // We know where it lives, so we can run it!
-                DVM vm;
-                d_vm_reset(&vm);
-                return d_vm_run(&vm, funcPtr);
+                return d_vm_run(vm, funcPtr);
             }
         } else {
             printf("Fatal: Sheet %s has not been linked", sheet->filePath);

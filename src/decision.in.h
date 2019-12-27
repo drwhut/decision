@@ -26,8 +26,9 @@
 #ifndef DECISION_H
 #define DECISION_H
 
-#include <stdbool.h>
 #include "dcfg.h"
+#include <stdbool.h>
+
 
 #include <stdio.h>
 
@@ -66,6 +67,9 @@ extern char VERBOSE_LEVEL;
 /* A forward declaration of the Sheet struct from dsheet.h */
 struct _sheet;
 
+/* A forward declaration of the DVM struct from dvm.h */
+struct _DVM;
+
 /*
 === FUNCTIONS =============================================
 */
@@ -82,16 +86,20 @@ struct _sheet;
 DECISION_API bool d_run_sheet(struct _sheet *sheet);
 
 /**
- * \fn bool d_run_function(Sheet *sheet, const char *funcName)
+ * \fn bool d_run_function(DVM *vm, Sheet *sheet, const char *funcName)
  * \brief Run the specified function/subroutine in a given sheet, given the
  * sheet has gone through `d_codegen_compile`.
- * 
+ *
  * \return If the function/subroutine ran without any errors.
- * 
+ *
+ * \param vm The VM to run the function on. The reason it is a seperate
+ * argument is because it allows you to push and pop arguments and return values
+ * seperately.
  * \param sheet The sheet the function lives in.
  * \param funcName The name of the function/subroutine to run.
  */
-DECISION_API bool d_run_function(struct _sheet *sheet, const char *funcName);
+DECISION_API bool d_run_function(struct _DVM *vm, struct _sheet *sheet,
+                                 const char *funcName);
 
 /**
  * \fn Sheet *d_load_string(const char *source, const char *name)
