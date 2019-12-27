@@ -4,6 +4,8 @@
 if the socket is a float-only socket.
 * Added `d_run_function` to `decision.h`, which allows for running Decision
 functions and subroutines from C.
+* Added `dcfunc.c` and `dcfunc.h`, which allow for running C functions from
+Decision.
 * Added `d_vm_pop_stack`, `d_vm_pop_stack_float` and `d_vm_pop_stack_ptr` to
 `dvm.h`.
 * Added `d_vm_push_stack`, `d_vm_push_stack_float` and `d_vm_push_stack_ptr` to
@@ -12,6 +14,7 @@ functions and subroutines from C.
 first step in running a string.
 * Optimised by adding a stage in linking dedicated to pre-calculating the
 memory locations of external variables and pointers.
+* Fixed a bug where compiled sheets maintained their external pointers.
 
 ## Documentation
 

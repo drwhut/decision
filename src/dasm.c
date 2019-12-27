@@ -584,7 +584,28 @@ const char *d_asm_generate_object(Sheet *sheet, size_t *size) {
         memcpy(ptr, lm.name, sizeOfNamePlusNull);
         ptr += sizeOfNamePlusNull;
 
-        memcpy(ptr, &lm._ptr, sizeof(dint));
+        // If the object is in another sheet, we can't store the pointer as it
+        // is now! We will need to re-calculate it when we run the object after
+        // it is built.
+        char *newPtr = lm._ptr;
+
+        if (lm.type == LINK_VARIABLE || lm.type == LINK_VARIABLE_POINTER) {
+            SheetVariable *var = (SheetVariable *)lm.meta;
+            Sheet *extSheet    = var->sheet;
+
+            if (sheet != extSheet) {
+                newPtr = (char *)-1;
+            }
+        } else if (lm.type == LINK_FUNCTION) {
+            SheetFunction *func = (SheetFunction *)lm.meta;
+            Sheet *extSheet     = func->sheet;
+
+            if (sheet != extSheet) {
+                newPtr = (char *)-1;
+            }
+        }
+
+        memcpy(ptr, &newPtr, sizeof(dint));
         ptr += sizeof(dint);
     }
 
