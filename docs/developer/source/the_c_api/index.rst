@@ -15,31 +15,17 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-Welcome to the Decision Developer Manual!
-=========================================
+*********
+The C API
+*********
 
-This developer manual is designed for developers who:
-
-* Are curious as to how the compiler works.
-* Want to fix a bug or problem.
-* Want to add a feature.
-* Want to help maintain the project.
+Since Decision is made in C, if you are writing a program in either C or C++,
+you can include Decision as en embeddable programming language! This chapter
+describes in detail how you can do so, and what you can do once you've
+embedded it into your program.
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Contents:
+   :maxdepth: 3
 
-   introduction/index.rst
-   the_language/index.rst
-   the_stages_of_compilation/index.rst
-   linking/index.rst
-   the_virtual_machine/index.rst
-   the_c_api/index.rst
-   reference/index.rst
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   embedding_decision.rst
+   running_decision_from_c.rst
