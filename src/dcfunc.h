@@ -83,7 +83,7 @@ DECISION_API void d_create_c_function(const char *name,
  *                                DType *inputs, DType *outputs)
  * \brief Create a subroutine that calls a C function. Any sheets that are
  * loaded after this call can use this new subroutine.
- * 
+ *
  * \param name The name of the subroutine.
  * \param function The C function to call when the node is activated.
  * \param inputs A `TYPE_NONE`-terminated array of the input data types. Note
@@ -94,6 +94,27 @@ DECISION_API void d_create_c_function(const char *name,
 DECISION_API void d_create_c_subroutine(const char *name,
                                         DecisionCFunction function,
                                         DType *inputs, DType *outputs);
+
+/**
+ * \fn size_t d_get_num_c_functions()
+ * \brief Get the current number of C functions.
+ *
+ * **NOTE:** Use `d_get_c_functions` to get the items in the list.
+ *
+ * \return The number of C functions added.
+ */
+DECISION_API size_t d_get_num_c_functions();
+
+/**
+ * \fn const CFunction *d_get_c_functions()
+ * \brief Get the current list of C functions.
+ *
+ * **NOTE:** Use `d_get_num_c_functions` to get the number of items in this
+ * list.
+ *
+ * \return The current list of C functions.
+ */
+DECISION_API const CFunction *d_get_c_functions();
 
 /**
  * \fn void d_free_c_functions()

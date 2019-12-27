@@ -18,6 +18,7 @@
 
 #include "dsemantic.h"
 
+#include "dcfunc.h"
 #include "decision.h"
 #include "derror.h"
 #include "dmalloc.h"
@@ -99,11 +100,12 @@ static void get_name_definitions_recursive(Sheet *sheet, const char *name,
 
     if ((int)coreFunc > -1) {
         NameDefinition definition;
-        definition.sheet    = sheet;
-        definition.type     = NAME_CORE;
-        definition.coreFunc = coreFunc;
-        definition.variable = NULL;
-        definition.function = NULL;
+        definition.sheet     = sheet;
+        definition.type      = NAME_CORE;
+        definition.coreFunc  = coreFunc;
+        definition.variable  = NULL;
+        definition.function  = NULL;
+        definition.cFunction = NULL;
 
         add_name_definition(state, definition);
 
@@ -120,11 +122,12 @@ static void get_name_definitions_recursive(Sheet *sheet, const char *name,
                 hits++;
 
                 NameDefinition definition;
-                definition.sheet    = sheet;
-                definition.type     = NAME_VARIABLE;
-                definition.coreFunc = -1;
-                definition.variable = &(sheet->variables[i]);
-                definition.function = NULL;
+                definition.sheet     = sheet;
+                definition.type      = NAME_VARIABLE;
+                definition.coreFunc  = -1;
+                definition.variable  = &(sheet->variables[i]);
+                definition.function  = NULL;
+                definition.cFunction = NULL;
 
                 add_name_definition(state, definition);
             }
@@ -145,11 +148,12 @@ static void get_name_definitions_recursive(Sheet *sheet, const char *name,
                 hits++;
 
                 NameDefinition definition;
-                definition.sheet    = sheet;
-                definition.type     = NAME_FUNCTION;
-                definition.coreFunc = -1;
-                definition.variable = NULL;
-                definition.function = &(sheet->functions[i]);
+                definition.sheet     = sheet;
+                definition.type      = NAME_FUNCTION;
+                definition.coreFunc  = -1;
+                definition.variable  = NULL;
+                definition.function  = &(sheet->functions[i]);
+                definition.cFunction = NULL;
 
                 add_name_definition(state, definition);
             }
@@ -160,6 +164,35 @@ static void get_name_definitions_recursive(Sheet *sheet, const char *name,
         VERBOSE(
             5,
             "Not checking if a function, no functions defined in this sheet.\n")
+    }
+
+    // It could also be a C function.
+    size_t numCFunctions = d_get_num_c_functions();
+
+    if (numCFunctions > 0) {
+        const CFunction *cFunctionList = d_get_c_functions();
+
+        size_t hits = 0;
+        for (size_t i = 0; i < numCFunctions; i++) {
+            if (strcmp(cFunctionList[i].name, name) == 0) {
+                hits++;
+
+                NameDefinition definition;
+                definition.sheet     = sheet;
+                definition.type      = NAME_CFUNCTION;
+                definition.coreFunc  = -1;
+                definition.variable  = NULL;
+                definition.function  = NULL;
+                definition.cFunction = (CFunction *)cFunctionList + i;
+
+                add_name_definition(state, definition);
+            }
+        }
+
+        VERBOSE(5, "C Function: %zu\n", hits);
+    } else {
+        VERBOSE(5,
+                "Not checking if a C function, no C function are defined.\n");
     }
 
     // Please sir... may I have some more names? (If it isn't a core function)
@@ -481,9 +514,27 @@ NodeTrueProperties d_semantic_get_node_properties(struct _sheet *sheet,
 
                     break;
 
+                // Specifically, the calling of a C function.
+                case NAME_CFUNCTION:;
+
+                    const CFunction *cFunction = definition->cFunction;
+
+                    // This one is simple, all the info we need is in the
+                    // CFunction struct.
+                    out._mallocd = false;
+
+                    out.inputTypes = cFunction->inputs;
+                    out.numInputs  = (long)cFunction->numInputs;
+
+                    out.outputTypes = cFunction->outputs;
+                    out.numOutputs  = (long)cFunction->numOutputs;
+
+                    break;
+
                 default:
                     d_error_compiler_push("Name definition is not that of a "
-                                          "core function, variable or function",
+                                          "core function, variable, function "
+                                          "or C function",
                                           sheet->filePath, lineNum, true);
                     break;
             }

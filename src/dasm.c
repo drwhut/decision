@@ -590,15 +590,15 @@ const char *d_asm_generate_object(Sheet *sheet, size_t *size) {
         char *newPtr = lm._ptr;
 
         if (lm.type == LINK_VARIABLE || lm.type == LINK_VARIABLE_POINTER) {
-            SheetVariable *var = (SheetVariable *)lm.meta;
-            Sheet *extSheet    = var->sheet;
+            SheetVariable *extVar = (SheetVariable *)lm.meta;
+            Sheet *extSheet       = extVar->sheet;
 
             if (sheet != extSheet) {
                 newPtr = (char *)-1;
             }
         } else if (lm.type == LINK_FUNCTION) {
-            SheetFunction *func = (SheetFunction *)lm.meta;
-            Sheet *extSheet     = func->sheet;
+            SheetFunction *extFunc = (SheetFunction *)lm.meta;
+            Sheet *extSheet        = extFunc->sheet;
 
             if (sheet != extSheet) {
                 newPtr = (char *)-1;

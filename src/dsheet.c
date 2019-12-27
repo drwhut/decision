@@ -18,6 +18,7 @@
 
 #include "dsheet.h"
 
+#include "dcfunc.h"
 #include "decision.h"
 #include "derror.h"
 #include "dmalloc.h"
@@ -663,12 +664,12 @@ void d_sheet_free(Sheet *sheet) {
                     if (sheet == extSheet) {
                         char *varLoc = (char *)sheet->_data + (size_t)meta._ptr;
 
-                        // We needed to convert it from a char* so it shifted the
-                        // corrent amount.
+                        // We needed to convert it from a char* so it shifted
+                        // the corrent amount.
                         char *strPtr = *((char **)varLoc);
 
-                        // Make sure it doesn't point to somewhere else in the .data
-                        // section, we can't free it then!
+                        // Make sure it doesn't point to somewhere else in the
+                        // .data section, we can't free it then!
                         if (strPtr < sheet->_data ||
                             strPtr >= sheet->_data + (size_t)sheet->_dataSize) {
                             if (strPtr != NULL) {
@@ -858,11 +859,15 @@ void d_sheet_dump(Sheet *sheet) {
                                        ? node->definition.function->name
                                        : "NULL";
 
-            printf(
-                "\n\tDefinition:\n\t\tSheet: %s\n\t\tType: %d"
-                "\n\t\tCore Function: %d\n\t\tVariable: %s\n\t\tFunction: %s\n",
-                sheetName, node->definition.type, node->definition.coreFunc,
-                varName, funcName);
+            const char *cFuncName = (node->definition.cFunction != NULL)
+                                        ? node->definition.cFunction->name
+                                        : "NULL";
+
+            printf("\n\tDefinition:\n\t\tSheet: %s\n\t\tType: %d"
+                   "\n\t\tCore Function: %d\n\t\tVariable: %s\n\t\tFunction: "
+                   "%s\n\t\tC Function: %s\n",
+                   sheetName, node->definition.type, node->definition.coreFunc,
+                   varName, funcName, cFuncName);
 
             printf("\n");
         }

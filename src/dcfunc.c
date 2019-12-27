@@ -133,6 +133,31 @@ void d_create_c_subroutine(const char *name, DecisionCFunction function,
 }
 
 /**
+ * \fn size_t d_get_num_c_functions()
+ * \brief Get the current number of C functions.
+ *
+ * **NOTE:** Use `d_get_c_functions` to get the items in the list.
+ *
+ * \return The number of C functions added.
+ */
+size_t d_get_num_c_functions() {
+    return numCFunctions;
+}
+
+/**
+ * \fn const CFunction *d_get_c_functions()
+ * \brief Get the current list of C functions.
+ *
+ * **NOTE:** Use `d_get_num_c_functions` to get the number of items in this
+ * list.
+ *
+ * \return The current list of C functions.
+ */
+const CFunction *d_get_c_functions() {
+    return (const CFunction *)cFunctionList;
+}
+
+/**
  * \fn void d_free_c_functions()
  * \brief If any functions or subroutines have been created that call C
  * functions, free them.
