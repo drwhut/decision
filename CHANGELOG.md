@@ -1,5 +1,17 @@
-* Compiler now automatically converts integer literals to float literals if the
-socket is a float-only socket.
+* The compiler now automatically converts integer literals to float literals
+if the socket is a float-only socket.
+* Added `d_run_function` to `decision.h`, which allows for running Decision
+functions and subroutines from C.
+* Added `d_vm_pop_stack`, `d_vm_pop_stack_float` and `d_vm_pop_stack_ptr` to
+`dvm.h`.
+* Added `d_vm_push_stack`, `d_vm_push_stack_float` and `d_vm_push_stack_ptr` to
+`dvm.h`.
+* Moved the linking stage to the last step in loading a string instead of the
+first step in running a string.
+* Added note in the user manual about semi-colons being valid end of statement
+symbols.
+* Optimised by adding a stage in linking dedicated to pre-calculating the
+memory locations of external variables and pointers.
 
 # Decision v0.1.1 - 25th December 2019
 
