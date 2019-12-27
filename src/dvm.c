@@ -352,11 +352,15 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             break;
 
         case OP_CALLC:;
-            DecisionCFunction cFunc =
-                (void *)(intptr_t)(vm->registers[GET_BYTEN(vm->pc, 1)]);
-            
+            union _ptrToC {
+                DecisionCFunction func;
+                intptr_t ptr;
+            } funcPtr;
+
+            funcPtr.ptr = (intptr_t)(vm->registers[GET_BYTEN(vm->pc, 1)]);
+
             // Call the C function.
-            cFunc(vm);
+            funcPtr.func(vm);
             break;
 
         case OP_CALLR:;
