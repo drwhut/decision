@@ -231,12 +231,12 @@ bool d_run_sheet(Sheet *sheet) {
  * \param sheet The sheet the function lives in.
  * \param funcName The name of the function/subroutine to run.
  */
-bool d_run_function(struct _sheet *sheet, const char *funcName) {
+bool d_run_function(Sheet *sheet, const char *funcName) {
     if (sheet->_text != NULL && sheet->_textSize > 0 && sheet->_isCompiled) {
         if (sheet->_isLinked) {
             // We need to make sure the function/subroutine exists, and it has
             // a valid pointer.
-            
+
             /*
             if (sheet->_main > 0) // A Start function exists.
             {
