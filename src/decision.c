@@ -357,6 +357,9 @@ Sheet *d_load_string(const char *source, const char *name) {
 
                 VERBOSE(1, "--- STAGE 5: Optimising bytecode...\n")
                 d_optimize_all(sheet);
+
+                VERBOSE(1, "--- STAGE 6: Linking...\n")
+                d_link_sheet(sheet);
             }
 
             // Only free the tree if syntax analysis was successful, as
@@ -393,8 +396,6 @@ bool d_run_string(const char *source, const char *name) {
     bool hadErrors = sheet->hasErrors;
 
     if (!hadErrors) {
-        d_link_sheet(sheet);
-
         if (VERBOSE_LEVEL >= 3)
             d_asm_dump_all(sheet);
 
