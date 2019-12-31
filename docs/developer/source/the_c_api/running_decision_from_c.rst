@@ -133,6 +133,8 @@ To run a Decision file directly, use:
        return 0;
    }
 
+.. _decision-functions:
+
 Decision Functions
 ==================
 
