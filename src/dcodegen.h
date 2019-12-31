@@ -659,7 +659,7 @@ d_generate_bytecode_for_variable(struct _sheetNode *node, BuildContext *context,
 /**
  * \fn BCode d_generate_bytecode_for_call(SheetNode *node,
  *                                        BuildContext *context,
- *                                        bool isSubroutine)
+ *                                        bool isSubroutine, bool isCFunction)
  * \brief Given a node needs to be "called", generate the bytecode and link
  * info to call that function.
  *
@@ -668,10 +668,12 @@ d_generate_bytecode_for_variable(struct _sheetNode *node, BuildContext *context,
  * \param node The "unknown" function to call.
  * \param context The context needed to generate the bytecode.
  * \param isSubroutine Info needed to make sure we ignore the execution sockets.
+ * \param isCFunction Is the call to a C function?
  */
 DECISION_API BCode d_generate_bytecode_for_call(struct _sheetNode *node,
                                                 BuildContext *context,
-                                                bool isSubroutine);
+                                                bool isSubroutine,
+                                                bool isCFunction);
 
 /**
  * \fn BCode d_generate_bytecode_for_operator(

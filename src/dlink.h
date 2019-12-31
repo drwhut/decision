@@ -50,6 +50,7 @@ typedef enum _linkType {
     LINK_VARIABLE_STRING_DEFAULT_VALUE, ///< The default value of a string
                                         ///< variable.
     LINK_FUNCTION,                      ///< A function.
+    LINK_CFUNCTION,                     ///< A C function.
 } LinkType;
 
 /**

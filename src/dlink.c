@@ -18,6 +18,7 @@
 
 #include "dlink.h"
 
+#include "dcfunc.h"
 #include "dmalloc.h"
 #include "dsheet.h"
 #include "dvm.h"
@@ -169,6 +170,9 @@ void d_link_precalculate_ptr(struct _sheet *sheet) {
                             break;
                         }
                     }
+                } else if (meta->type == LINK_CFUNCTION) {
+                    CFunction *cFunc = (CFunction *)meta->meta;
+                    meta->_ptr = (char *)cFunc->function;
                 }
             }
         }
@@ -232,6 +236,11 @@ void d_link_self(Sheet *sheet) {
                 }
 
                 d_link_replace_load_ins(ins, textPtr);
+            }
+            // C functions need to link to the C function pointer.
+            else if (meta.type == LINK_CFUNCTION) {
+                CFunction *cFunc = (CFunction *)meta.meta;
+                d_link_replace_load_ins(ins, (char *)cFunc->function);
             }
         }
 

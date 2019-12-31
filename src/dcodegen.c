@@ -1737,7 +1737,7 @@ BCode d_generate_bytecode_for_variable(SheetNode *node, BuildContext *context,
 /**
  * \fn BCode d_generate_bytecode_for_call(SheetNode *node,
  *                                        BuildContext *context,
- *                                        bool isSubroutine)
+ *                                        bool isSubroutine, bool isCFunction)
  * \brief Given a node needs to be "called", generate the bytecode and link
  * info to call that function.
  *
@@ -1746,9 +1746,10 @@ BCode d_generate_bytecode_for_variable(SheetNode *node, BuildContext *context,
  * \param node The "unknown" function to call.
  * \param context The context needed to generate the bytecode.
  * \param isSubroutine Info needed to make sure we ignore the execution sockets.
+ * \param isCFunction Is the call to a C function?
  */
 BCode d_generate_bytecode_for_call(SheetNode *node, BuildContext *context,
-                                   bool isSubroutine) {
+                                   bool isSubroutine, bool isCFunction) {
     VERBOSE(5, "Generating bytecode to call %s...\n", node->name);
     BCode out    = (BCode){NULL, 0};
     BCode action = (BCode){NULL, 0};
@@ -1858,8 +1859,10 @@ BCode d_generate_bytecode_for_call(SheetNode *node, BuildContext *context,
     reg_t adrReg = d_next_general_reg(context, false);
     d_free_reg(context, adrReg);
 
+    DIns callOp = (isCFunction) ? OP_CALLC : OP_CALL;
+
     action = d_malloc_bytecode((size_t)d_vm_ins_size(OP_LOADUI) +
-                               d_vm_ins_size(OP_ORI) + d_vm_ins_size(OP_CALL));
+                               d_vm_ins_size(OP_ORI) + d_vm_ins_size(callOp));
     d_bytecode_set_byte(action, 0, OP_LOADUI);
     d_bytecode_set_byte(action, 1, (char)adrReg);
 
@@ -1869,7 +1872,7 @@ BCode d_generate_bytecode_for_call(SheetNode *node, BuildContext *context,
 
     d_bytecode_set_byte(
         action, (size_t)d_vm_ins_size(OP_LOADUI) + d_vm_ins_size(OP_ORI),
-        OP_CALL);
+        callOp);
     d_bytecode_set_byte(
         action, (size_t)d_vm_ins_size(OP_LOADUI) + d_vm_ins_size(OP_ORI) + 1,
         (char)adrReg);
@@ -1878,10 +1881,13 @@ BCode d_generate_bytecode_for_call(SheetNode *node, BuildContext *context,
     // affect how we allocate data in the data section or anything like that.
     size_t _dummyMeta;
     bool _dummyBool;
-    d_add_link_to_ins(
-        context, &action, 0,
-        d_link_new_meta(LINK_FUNCTION, node->name, node->definition.function),
-        &_dummyMeta, &_dummyBool);
+
+    LinkType linkType = (isCFunction) ? LINK_CFUNCTION : LINK_FUNCTION;
+    void *metaData    = (isCFunction) ? (void *)node->definition.cFunction
+                                   : (void *)node->definition.function;
+
+    LinkMeta meta = d_link_new_meta(linkType, node->name, metaData);
+    d_add_link_to_ins(context, &action, 0, meta, &_dummyMeta, &_dummyBool);
 
     d_concat_bytecode(&out, &action);
     d_free_bytecode(&action);
@@ -2510,7 +2516,11 @@ BCode d_generate_bytecode_for_nonexecution_node(SheetNode *node,
                 action = d_generate_bytecode_for_variable(
                     node, context, node->definition.variable);
             } else if (node->definition.type == NAME_FUNCTION) {
-                action = d_generate_bytecode_for_call(node, context, false);
+                action =
+                    d_generate_bytecode_for_call(node, context, false, false);
+            } else if (node->definition.type == NAME_CFUNCTION) {
+                action =
+                    d_generate_bytecode_for_call(node, context, false, true);
             }
         }
 
@@ -3169,7 +3179,8 @@ BCode d_generate_bytecode_for_execution_node(SheetNode *node,
         d_setup_returns(node, context, &action, true, true);
     } else {
         // Put arguments into the stack and call the subroutine.
-        action = d_generate_bytecode_for_call(node, context, true);
+        action = d_generate_bytecode_for_call(
+            node, context, true, node->definition.type == NAME_CFUNCTION);
     }
 
     d_concat_bytecode(&out, &action);
