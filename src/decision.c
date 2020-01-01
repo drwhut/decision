@@ -474,8 +474,6 @@ bool d_run_source_file(const char *filePath) {
     bool hadErrors = sheet->hasErrors;
 
     if (!hadErrors) {
-        d_link_sheet(sheet);
-
         if (VERBOSE_LEVEL >= 3)
             d_asm_dump_all(sheet);
 
@@ -530,6 +528,10 @@ Sheet *d_load_object_file(const char *filePath) {
     if (obj != NULL) {
         out = d_asm_load_object(obj, size, filePath);
         free((char *)obj);
+
+        if (!out->hasErrors) {
+            d_link_sheet(out);
+        }
     } else {
         // We errored loading the file.
         out            = d_sheet_create(filePath);
@@ -553,8 +555,6 @@ bool d_run_object_file(const char *filePath) {
     bool hadErrors = sheet->hasErrors;
 
     if (!hadErrors) {
-        d_link_sheet(sheet);
-
         if (VERBOSE_LEVEL >= 3)
             d_asm_dump_all(sheet);
 

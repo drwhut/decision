@@ -94,4 +94,15 @@ int flag;
         }                                      \
     }
 
+/**
+ * \def ASSERT_EQUAL(int1, int2)
+ * \brief If `int1` != `int2`, return 1.
+ */
+#define ASSERT_EQUAL(int1, int2) \
+    {                            \
+        if (int1 != int2) {      \
+            return 1;            \
+        }                        \
+    }
+
 #endif // ASSERT_H

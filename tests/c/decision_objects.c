@@ -1,4 +1,4 @@
-#[[
+/*
     Decision
     Copyright (C) 2019  Benjamin Beddows
 
@@ -14,26 +14,34 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-]]
+*/
 
-cmake_minimum_required(VERSION 2.6)
-project(Decision)
+#include <decision.h>
+#include <dsheet.h>
 
-set (Decision_VERSION 0.1.1)
+#include "assert.h"
 
-# Since the built files are added in the src/ directory,
-# the files by default would go into a src/ directory.
-# This statement stops that.
-set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+int main() {
+    // d_compile_string
+    d_compile_string("Start~#1; Print(#1, 'Hello, world!');", "main.dco");
 
-add_subdirectory(src)
+    // d_load_object_file
+    Sheet *sheet = d_load_object_file("main.dco");
 
-# Only create the tests if the user wants to.
-option(COMPILER_C_TESTS "Do you want to enable C API tests?" OFF)
+    // d_run_sheet
+    START_CAPTURE_STDOUT()
+    d_run_sheet(sheet);
+    STOP_CAPTURE_STDOUT()
+    ASSERT_CAPTURED_STDOUT("Hello, world!\n")
 
-if(COMPILER_C_TESTS)
-    enable_testing()
-    add_subdirectory(tests/c)
-endif(COMPILER_C_TESTS)
+    // d_sheet_free
+    d_sheet_free(sheet);
+
+    // d_run_object_file
+    START_CAPTURE_STDOUT()
+    d_run_object_file("main.dco");
+    STOP_CAPTURE_STDOUT()
+    ASSERT_CAPTURED_STDOUT("Hello, world!\n")
+    
+    return 0;
+}

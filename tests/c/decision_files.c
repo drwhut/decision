@@ -16,16 +16,32 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <dcfg.h>
 #include <decision.h>
 #include <dsheet.h>
 
-#include "../assert.h"
+#include "assert.h"
+
+#include <stdio.h>
+
+void write_source_file() {
+    FILE *file;
+#ifdef DECISION_SAFE_FUNCTIONS
+    fopen_s(&file, "main.dc", "w");
+#else
+    file = fopen("main.dc", "w");
+#endif // DECISION_SAFE_FUNCTIONS
+
+    fprintf(file, "Start~#1\nPrint(#1, 'Hello, world!')");
+    fclose(file);
+}
 
 int main() {
-    // d_load_string
-    Sheet *sheet =
-        d_load_string("Start~#1; Print(#1, 'Hello, world!');", NULL);
-    
+    write_source_file();
+
+    // d_load_source_file
+    Sheet *sheet = d_load_source_file("main.dc");
+
     // d_run_sheet
     START_CAPTURE_STDOUT()
     d_run_sheet(sheet);
@@ -35,18 +51,42 @@ int main() {
     // d_sheet_free
     d_sheet_free(sheet);
 
-    // d_run_string
+    // d_run_source_file
     START_CAPTURE_STDOUT()
-    d_run_string("Start~#1; Print(#1, 'Hello, world!');", NULL);
+    d_run_source_file("main.dc");
     STOP_CAPTURE_STDOUT()
     ASSERT_CAPTURED_STDOUT("Hello, world!\n")
 
-    // d_compile_string
-    d_compile_string("Start~#1; Print(#1, 'Hello, world!');", "main.dco");
+    // d_compile_file
+    d_compile_file("main.dc", "main.dco");
 
     // d_run_object_file
     START_CAPTURE_STDOUT()
     d_run_object_file("main.dco");
+    STOP_CAPTURE_STDOUT()
+    ASSERT_CAPTURED_STDOUT("Hello, world!\n")
+
+    // d_is_object_file
+    short isObj = d_is_object_file("main.dc");
+    ASSERT_EQUAL(isObj, 0)
+    isObj = d_is_object_file("main.dco");
+    ASSERT_EQUAL(isObj, 1)
+
+    // d_load_file
+    sheet = d_load_file("main.dc");
+
+    // d_run_sheet
+    START_CAPTURE_STDOUT()
+    d_run_sheet(sheet);
+    STOP_CAPTURE_STDOUT()
+    ASSERT_CAPTURED_STDOUT("Hello, world!\n")
+
+    // d_sheet_free
+    d_sheet_free(sheet);
+
+    // d_run_file
+    START_CAPTURE_STDOUT()
+    d_run_file("main.dco");
     STOP_CAPTURE_STDOUT()
     ASSERT_CAPTURED_STDOUT("Hello, world!\n")
 

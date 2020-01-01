@@ -2,6 +2,14 @@
 
 * The compiler now automatically converts integer literals to float literals
 if the socket is a float-only socket.
+* Moved the linking stage to the last step in loading a string instead of the
+first step in running a string.
+* Optimised by adding a stage in linking dedicated to pre-calculating the
+memory locations of external variables and pointers.
+* Fixed a bug where compiled sheets maintained their external pointers.
+
+## The C API
+
 * Added `d_run_function` to `decision.h`, which allows for running Decision
 functions and subroutines from C.
 * Added `dcfunc.c` and `dcfunc.h`, which allow for running C functions from
@@ -13,11 +21,7 @@ defined C functions in `dcfunc.c` to find one.
 `dvm.h`.
 * Added `d_vm_push_stack`, `d_vm_push_stack_float` and `d_vm_push_stack_ptr` to
 `dvm.h`.
-* Moved the linking stage to the last step in loading a string instead of the
-first step in running a string.
-* Optimised by adding a stage in linking dedicated to pre-calculating the
-memory locations of external variables and pointers.
-* Fixed a bug where compiled sheets maintained their external pointers.
+* Added tests for the C API to the CMake project.
 
 ## Documentation
 

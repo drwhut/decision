@@ -106,7 +106,7 @@ void d_create_c_subroutine(const char *name, DecisionCFunction function,
     // For this function, we're just going to prepend TYPE_EXECUTION to each
     // of the input and output arrays, and pass that onto d_create_c_function.
 
-    size_t numInputs = 0, numOutputs = 1; // Including the TYPE_NONE!
+    size_t numInputs = 1, numOutputs = 1; // Including the TYPE_NONE!
     DType *inputPtr, *outputPtr;
 
     for (inputPtr = inputs; *inputPtr != TYPE_NONE; inputPtr++) {
