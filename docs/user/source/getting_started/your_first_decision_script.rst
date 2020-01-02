@@ -144,3 +144,12 @@ Great! You now have a working script! You can now save the file, e.g. as
    $ decision hello_world.dc
 
    Hello, world!
+
+.. note::
+
+   As well as having nodes on seperate lines, if you want to, you can have
+   nodes on the same line but seperated with a semi-colon:
+
+   .. code-block:: decision
+
+      Start~#1 ; Print(#1, "Hello, world!")

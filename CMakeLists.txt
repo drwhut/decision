@@ -29,3 +29,11 @@ set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 add_subdirectory(src)
+
+# Only create the tests if the user wants to.
+option(COMPILER_C_TESTS "Do you want to enable C API tests?" OFF)
+
+if(COMPILER_C_TESTS)
+    enable_testing()
+    add_subdirectory(tests/c)
+endif(COMPILER_C_TESTS)

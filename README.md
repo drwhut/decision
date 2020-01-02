@@ -96,6 +96,17 @@ argument:
 cmake -DCOMPILER_DLL=ON ..
 ```
 
+#### Enable C API Tests
+
+If you want to test Decision's C API, add this argument:
+
+```bash
+cmake -DCOMPILER_C_TESTS=ON ..
+```
+
+Note that this option will generate a lot more executables than usual.
+See [tests/README.md](tests/README.md) for more details.
+
 ## License
 
 Decision
