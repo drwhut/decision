@@ -528,3 +528,5 @@ Object Sections
 * ``.func``: Essentially a list of ``SheetFunction``.
 * ``.var``: Essentially a list of ``SheetVariable``.
 * ``.incl``: A list of paths to sheets that this sheet includes.
+* ``.c``: A list of specifications of C functions the sheet uses.
+  See :ref:`running-c-from-decision`.

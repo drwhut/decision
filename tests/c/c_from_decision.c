@@ -101,7 +101,7 @@ int main() {
                 "Print(#8, #9)\n";
 
     char *answer = "50.0625\nfalse\nYou do not have a license.\n3628800\n";
-
+    
     // d_run_string
     START_CAPTURE_STDOUT()
     d_run_string(src, NULL);
@@ -128,15 +128,12 @@ int main() {
     // d_compile_string
     d_compile_string(src, "main.dco");
 
-    /*
-    TODO: MAKE THIS WORK!
     // d_run_file
     START_CAPTURE_STDOUT()
     d_run_file("main.dco");
     STOP_CAPTURE_STDOUT()
     ASSERT_CAPTURED_STDOUT(answer)
-    */
-
+    
     d_free_c_functions();
 
     return 0;

@@ -15,6 +15,8 @@ functions and subroutines from C.
 * Added `dcfunc.c` and `dcfunc.h`, which allow for running C functions from
 Decision.
 * Added new opcode `OP_CALLC` to the VM.
+* Added a `.c` section to compiled object files to store the specifications of
+C functions the sheet uses.
 * The compiler, as part of finding the definition of a name, will look at
 defined C functions in `dcfunc.c` to find one.
 * Added `d_vm_pop_stack`, `d_vm_pop_stack_float` and `d_vm_pop_stack_ptr` to

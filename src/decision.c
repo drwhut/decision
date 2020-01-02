@@ -529,6 +529,8 @@ Sheet *d_load_object_file(const char *filePath) {
         out = d_asm_load_object(obj, size, filePath);
         free((char *)obj);
 
+        out->hasErrors = d_error_report();
+
         if (!out->hasErrors) {
             d_link_sheet(out);
         }
