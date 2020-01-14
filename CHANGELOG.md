@@ -32,6 +32,7 @@ defined C functions in `dcfunc.c` to find one.
 
 ## Documentation
 
+* Added "String Manipulation" section to the user manual.
 * Added "The C API" chapter to the developer manual.
 * Added note in the user manual about semi-colons being valid end of statement
 symbols.
