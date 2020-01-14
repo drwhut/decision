@@ -1,3 +1,8 @@
+## Strings
+
+* Added the `Length` core function, which returns the number of characters in
+  a given string.
+
 ## Compiler
 
 * The compiler now automatically converts integer literals to float literals

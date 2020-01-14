@@ -1,0 +1,7 @@
+#!/bin/bash
+
+source ../test_functions.sh
+
+# Length
+testdecision length.dc length.out
+testdecisioncompile length.dc length.out
