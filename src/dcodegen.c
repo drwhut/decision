@@ -2453,6 +2453,109 @@ BCode d_generate_bytecode_for_nonexecution_node(SheetNode *node,
                         node, context, OP_MUL, OP_MULF, OP_MULI, false, true,
                         false);
                     break;
+                case CORE_LENGTH:;
+                    // For the length of a string, we're essentially going to
+                    // do in Decision bytecode what strlen() does, which is
+                    // loop through the string until we find the terminating
+                    // NULL, and return how many characters there were.
+
+                    // Firstly, copy the string pointer. This is the pointer
+                    // we'll be using to check the characters.
+                    reg_t ptrReg = d_next_general_reg(context, false);
+
+                    SheetSocket *inputSock = node->sockets[0];
+
+                    d_setup_input(inputSock, context, false, false, &action);
+
+                    BCode loadPtr = d_malloc_bytecode(d_vm_ins_size(OP_LOAD));
+                    d_bytecode_set_byte(loadPtr, 0, OP_LOAD);
+                    d_bytecode_set_byte(loadPtr, 1, (char)ptrReg);
+                    d_bytecode_set_byte(loadPtr, 2, (char)inputSock->_reg);
+
+                    d_concat_bytecode(&action, &loadPtr);
+                    d_free_bytecode(&loadPtr);
+
+                    // Secondly, we make the loop bytecode. Here we get the
+                    // character the pointer points to, check if it is 0, if
+                    // it is, we exit the loop.
+                    reg_t charReg = d_next_general_reg(context, false);
+
+                    BCode loop = d_malloc_bytecode(d_vm_ins_size(OP_LOADADRB));
+                    d_bytecode_set_byte(loop, 0, OP_LOADADRB);
+                    d_bytecode_set_byte(loop, 1, (char)charReg);
+                    d_bytecode_set_byte(loop, 2, (char)ptrReg);
+
+                    reg_t cmpReg = d_next_general_reg(context, false);
+                    d_free_reg(context, cmpReg);
+                    d_free_reg(context, charReg);
+
+                    BCode loopAdd = d_malloc_bytecode(d_vm_ins_size(OP_LOADI));
+                    d_bytecode_set_byte(loopAdd, 0, OP_LOADI);
+                    d_bytecode_set_byte(loopAdd, 1, (char)cmpReg);
+                    d_bytecode_set_immediate(loopAdd, 2, 0);
+
+                    d_concat_bytecode(&loop, &loopAdd);
+                    d_free_bytecode(&loopAdd);
+
+                    loopAdd = d_malloc_bytecode(d_vm_ins_size(OP_CEQ));
+                    d_bytecode_set_byte(loopAdd, 0, OP_CEQ);
+                    d_bytecode_set_byte(loopAdd, 1, (char)cmpReg);
+                    d_bytecode_set_byte(loopAdd, 2, (char)charReg);
+                    d_bytecode_set_byte(loopAdd, 3, (char)cmpReg);
+
+                    d_concat_bytecode(&loop, &loopAdd);
+                    d_free_bytecode(&loopAdd);
+
+                    immediate_t jmpToAfterLoop = d_vm_ins_size(OP_JRCON) +
+                                                 d_vm_ins_size(OP_ADDI) +
+                                                 d_vm_ins_size(OP_JR);
+
+                    loopAdd = d_malloc_bytecode(d_vm_ins_size(OP_JRCON));
+                    d_bytecode_set_byte(loopAdd, 0, OP_JRCON);
+                    d_bytecode_set_byte(loopAdd, 1, (char)cmpReg);
+                    d_bytecode_set_immediate(loopAdd, 2, jmpToAfterLoop);
+
+                    d_concat_bytecode(&loop, &loopAdd);
+                    d_free_bytecode(&loopAdd);
+
+                    loopAdd = d_malloc_bytecode(d_vm_ins_size(OP_ADDI));
+                    d_bytecode_set_byte(loopAdd, 0, OP_ADDI);
+                    d_bytecode_set_byte(loopAdd, 1, (char)ptrReg);
+                    d_bytecode_set_immediate(loopAdd, 2, 1);
+
+                    d_concat_bytecode(&loop, &loopAdd);
+                    d_free_bytecode(&loopAdd);
+
+                    immediate_t jmpToStart = -((immediate_t)loop.size);
+
+                    loopAdd = d_malloc_bytecode(d_vm_ins_size(OP_JR));
+                    d_bytecode_set_byte(loopAdd, 0, OP_JR);
+                    d_bytecode_set_immediate(loopAdd, 1, jmpToStart);
+
+                    d_concat_bytecode(&loop, &loopAdd);
+                    d_free_bytecode(&loopAdd);
+
+                    d_concat_bytecode(&action, &loop);
+                    d_free_bytecode(&loop);
+
+                    // Now the pointer is pointing to the terminating NULL
+                    // at the end of the string. So if we want the length,
+                    // we can just subtract the pointer from the string
+                    // pointer!
+                    BCode subPtr = d_malloc_bytecode(d_vm_ins_size(OP_SUB));
+                    d_bytecode_set_byte(subPtr, 0, OP_SUB);
+                    d_bytecode_set_byte(subPtr, 1, (char)ptrReg);
+                    d_bytecode_set_byte(subPtr, 2, (char)inputSock->_reg);
+
+                    d_concat_bytecode(&action, &subPtr);
+                    d_free_bytecode(&subPtr);
+
+                    SheetSocket *outputSock = node->sockets[1];
+                    outputSock->_reg        = ptrReg;
+
+                    d_free_reg(context, inputSock->_reg);
+
+                    break;
                 case CORE_LESS_THAN:;
                     action = d_generate_bytecode_for_comparator(
                         node, context, OP_CLT, OP_CLTF, OP_CLTS, false);

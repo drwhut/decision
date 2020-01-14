@@ -53,21 +53,22 @@ typedef enum _coreFunction {
     CORE_FOR,                // = 5
     CORE_IF_THEN,            // = 6
     CORE_IF_THEN_ELSE,       // = 7
-    CORE_LESS_THAN,          // = 8
-    CORE_LESS_THAN_OR_EQUAL, // = 9
-    CORE_MOD,                // = 10
-    CORE_MORE_THAN,          // = 11
-    CORE_MORE_THAN_OR_EQUAL, // = 12
-    CORE_MULTIPLY,           // = 13
-    CORE_NOT,                // = 14
-    CORE_NOT_EQUAL,          // = 15
-    CORE_OR,                 // = 16
-    CORE_PRINT,              // = 17
-    CORE_SET,                // = 18
-    CORE_SUBTRACT,           // = 19
-    CORE_TERNARY,            // = 20
-    CORE_WHILE,              // = 21
-    CORE_XOR,                // = 22
+    CORE_LENGTH,             // = 8
+    CORE_LESS_THAN,          // = 9
+    CORE_LESS_THAN_OR_EQUAL, // = 10
+    CORE_MOD,                // = 11
+    CORE_MORE_THAN,          // = 12
+    CORE_MORE_THAN_OR_EQUAL, // = 13
+    CORE_MULTIPLY,           // = 14
+    CORE_NOT,                // = 15
+    CORE_NOT_EQUAL,          // = 16
+    CORE_OR,                 // = 17
+    CORE_PRINT,              // = 18
+    CORE_SET,                // = 19
+    CORE_SUBTRACT,           // = 20
+    CORE_TERNARY,            // = 21
+    CORE_WHILE,              // = 22
+    CORE_XOR,                // = 23
 } CoreFunction;
 
 /**
