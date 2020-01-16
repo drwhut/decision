@@ -2,7 +2,7 @@
 
 * Added the `Length` core function, which returns the number of characters in
   a given string.
-* Added tests for all new string functions.
+* Added tests for the `Length` function.
 
 ## Compiler
 
