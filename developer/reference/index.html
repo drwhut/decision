@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Reference &mdash; Decision 0.1.1 documentation</title>
+  <title>Reference &mdash; Decision 0.2.0 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="prev" title="The Virtual Machine" href="../the_virtual_machine/index.html" /> 
+    <link rel="prev" title="Running C from Decision" href="../the_c_api/running_c_from_decision.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -86,6 +86,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../the_stages_of_compilation/index.html">The Stages of Compilation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../linking/index.html">Linking</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../the_virtual_machine/index.html">The Virtual Machine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../the_c_api/index.html">The C API</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#index">Index</a></li>
 </ul>
@@ -283,6 +284,45 @@ project.</p>
 <span id="_CPPv3N13_buildContext15dataSectionSizeE"></span><span id="_CPPv2N13_buildContext15dataSectionSizeE"></span><span id="_buildContext::dataSectionSize__s"></span><span class="target" id="struct__build_context_1ab5cb126274b4890a749e3158f658090d"></span>size_t <code class="sig-name descname">dataSectionSize</code><a class="headerlink" href="#_CPPv4N13_buildContext15dataSectionSizeE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>The size of the data section. </p>
 </dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="_CPPv410_cFunction">
+<span id="_CPPv310_cFunction"></span><span id="_CPPv210_cFunction"></span><span id="_cFunction"></span><span class="target" id="struct__c_function"></span><em class="property">struct </em><code class="sig-name descname">_cFunction</code><a class="headerlink" href="#_CPPv410_cFunction" title="Permalink to this definition">¶</a><br /></dt>
+<dd><em>#include &lt;dcfunc.h&gt;</em><p>A structure describing the semantics of a C function that Decision can call. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Members</p>
+<dl class="member">
+<dt id="_CPPv4N10_cFunction4nameE">
+<span id="_CPPv3N10_cFunction4nameE"></span><span id="_CPPv2N10_cFunction4nameE"></span><span id="_cFunction::name__cCP"></span><span class="target" id="struct__c_function_1ace7825c2f08399c94cdc9df348816318"></span><em class="property">const</em> char *<code class="sig-name descname">name</code><a class="headerlink" href="#_CPPv4N10_cFunction4nameE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N10_cFunction8functionE">
+<span id="_CPPv3N10_cFunction8functionE"></span><span id="_CPPv2N10_cFunction8functionE"></span><span id="_cFunction::function__DecisionCFunction"></span><span class="target" id="struct__c_function_1a2a5baa782149d55634ed5e541896def9"></span><a class="reference internal" href="#_CPPv417DecisionCFunction" title="DecisionCFunction">DecisionCFunction</a> <code class="sig-name descname">function</code><a class="headerlink" href="#_CPPv4N10_cFunction8functionE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N10_cFunction6inputsE">
+<span id="_CPPv3N10_cFunction6inputsE"></span><span id="_CPPv2N10_cFunction6inputsE"></span><span id="_cFunction::inputs__DTypeCP"></span><span class="target" id="struct__c_function_1ada2237b5127b38ac2bf3efb5157e504c"></span><em class="property">const</em> <a class="reference internal" href="#_CPPv45DType" title="DType">DType</a> *<code class="sig-name descname">inputs</code><a class="headerlink" href="#_CPPv4N10_cFunction6inputsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N10_cFunction9numInputsE">
+<span id="_CPPv3N10_cFunction9numInputsE"></span><span id="_CPPv2N10_cFunction9numInputsE"></span><span id="_cFunction::numInputs__s"></span><span class="target" id="struct__c_function_1a4943f3ca9b5c1bad21905feb7bd05509"></span>size_t <code class="sig-name descname">numInputs</code><a class="headerlink" href="#_CPPv4N10_cFunction9numInputsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N10_cFunction7outputsE">
+<span id="_CPPv3N10_cFunction7outputsE"></span><span id="_CPPv2N10_cFunction7outputsE"></span><span id="_cFunction::outputs__DTypeCP"></span><span class="target" id="struct__c_function_1a0e65eac31d3adf6f55928e11f77d68ee"></span><em class="property">const</em> <a class="reference internal" href="#_CPPv45DType" title="DType">DType</a> *<code class="sig-name descname">outputs</code><a class="headerlink" href="#_CPPv4N10_cFunction7outputsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N10_cFunction10numOutputsE">
+<span id="_CPPv3N10_cFunction10numOutputsE"></span><span id="_CPPv2N10_cFunction10numOutputsE"></span><span id="_cFunction::numOutputs__s"></span><span class="target" id="struct__c_function_1a46daf1c4f9b1de2a24ad62420fa611b9"></span>size_t <code class="sig-name descname">numOutputs</code><a class="headerlink" href="#_CPPv4N10_cFunction10numOutputsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
 
 </div>
 </dd></dl>
@@ -550,6 +590,11 @@ project.</p>
 <dl class="member">
 <dt id="_CPPv4N15_nameDefinition8functionE">
 <span id="_CPPv3N15_nameDefinition8functionE"></span><span id="_CPPv2N15_nameDefinition8functionE"></span><span id="_nameDefinition::function___sheetFunctionP"></span><span class="target" id="struct__name_definition_1a88f0c8058a83da559de3d685c84d8d51"></span><em class="property">struct</em> <a class="reference internal" href="#_CPPv414_sheetFunction" title="_sheetFunction">_sheetFunction</a> *<code class="sig-name descname">function</code><a class="headerlink" href="#_CPPv4N15_nameDefinition8functionE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N15_nameDefinition9cFunctionE">
+<span id="_CPPv3N15_nameDefinition9cFunctionE"></span><span id="_CPPv2N15_nameDefinition9cFunctionE"></span><span id="_nameDefinition::cFunction___cFunctionP"></span><span class="target" id="struct__name_definition_1a71cc15f6bec71a739f9f22c57e581887"></span><em class="property">struct</em> <a class="reference internal" href="#_CPPv410_cFunction" title="_cFunction">_cFunction</a> *<code class="sig-name descname">cFunction</code><a class="headerlink" href="#_CPPv4N15_nameDefinition9cFunctionE" title="Permalink to this definition">¶</a><br /></dt>
 <dd></dd></dl>
 
 </div>
@@ -1179,6 +1224,91 @@ project.</p>
 
 <dl class="file">
 <dt>
+<span class="target" id="dcfunc_8h"></span><em>file</em> <code class="sig-name descname">dcfunc.h</code></dt>
+<dd><em>#include “dcfg.h”</em><em>#include “dtype.h”</em><p>This header file deals with C functions that Decision code can call. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Typedefs</p>
+<dl class="type">
+<dt id="_CPPv417DecisionCFunction">
+<span id="_CPPv317DecisionCFunction"></span><span id="_CPPv217DecisionCFunction"></span><span id="DecisionCFunction"></span><span class="target" id="dcfunc_8h_1ad4bf3125bf71e7681c84c47fd4eaee1f"></span><em class="property">typedef </em>void (*<code class="sig-name descname">DecisionCFunction</code>)<span class="sig-paren">(</span><a class="reference internal" href="#_CPPv43DVM" title="DVM">DVM</a> *vm<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv417DecisionCFunction" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>This function prototype describes what C functions that are called by Decision should look like. </p>
+</dd></dl>
+
+<dl class="type">
+<dt id="_CPPv49CFunction">
+<span id="_CPPv39CFunction"></span><span id="_CPPv29CFunction"></span><span id="CFunction"></span><span class="target" id="dcfunc_8h_1a7cfe186c45a40e53450c5faa9251a504"></span><em class="property">typedef </em><em class="property">struct</em> <a class="reference internal" href="#_CPPv410_cFunction" title="_cFunction">_cFunction</a> <code class="sig-name descname">CFunction</code><a class="headerlink" href="#_CPPv49CFunction" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Functions</p>
+<dl class="function">
+<dt id="_CPPv419d_create_c_functionPKc17DecisionCFunctionP5DTypeP5DType">
+<span id="_CPPv319d_create_c_functionPKc17DecisionCFunctionP5DTypeP5DType"></span><span id="_CPPv219d_create_c_functionPKc17DecisionCFunctionP5DTypeP5DType"></span><span id="d_create_c_function__cCP.DecisionCFunction.DTypeP.DTypeP"></span><span class="target" id="dcfunc_8h_1ac0f00332257af516d9763f0eb788a7a6"></span>void <code class="sig-name descname">d_create_c_function</code><span class="sig-paren">(</span><em class="property">const</em> char *<em>name</em>, <a class="reference internal" href="#_CPPv417DecisionCFunction" title="DecisionCFunction">DecisionCFunction</a> <em>function</em>, <a class="reference internal" href="#_CPPv45DType" title="DType">DType</a> *<em>inputs</em>, <a class="reference internal" href="#_CPPv45DType" title="DType">DType</a> *<em>outputs</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv419d_create_c_functionPKc17DecisionCFunctionP5DTypeP5DType" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Create a function that calls a C function. Any sheets that are loaded after this call can use this new function. </p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the function. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">function</span></code>: The C function to call when the node is activated. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">inputs</span></code>: A <code class="docutils literal notranslate"><span class="pre">TYPE_NONE</span></code>-terminated array of the input data types. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">outputs</span></code>: A <code class="docutils literal notranslate"><span class="pre">TYPE_NONE</span></code>-terminated array of the output data types. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv421d_create_c_subroutinePKc17DecisionCFunctionP5DTypeP5DType">
+<span id="_CPPv321d_create_c_subroutinePKc17DecisionCFunctionP5DTypeP5DType"></span><span id="_CPPv221d_create_c_subroutinePKc17DecisionCFunctionP5DTypeP5DType"></span><span id="d_create_c_subroutine__cCP.DecisionCFunction.DTypeP.DTypeP"></span><span class="target" id="dcfunc_8h_1acb7ee490fc1a6b2aff6bff0accf9be86"></span>void <code class="sig-name descname">d_create_c_subroutine</code><span class="sig-paren">(</span><em class="property">const</em> char *<em>name</em>, <a class="reference internal" href="#_CPPv417DecisionCFunction" title="DecisionCFunction">DecisionCFunction</a> <em>function</em>, <a class="reference internal" href="#_CPPv45DType" title="DType">DType</a> *<em>inputs</em>, <a class="reference internal" href="#_CPPv45DType" title="DType">DType</a> *<em>outputs</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv421d_create_c_subroutinePKc17DecisionCFunctionP5DTypeP5DType" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Create a subroutine that calls a C function. Any sheets that are loaded after this call can use this new subroutine. </p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the subroutine. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">function</span></code>: The C function to call when the node is activated. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">inputs</span></code>: A <code class="docutils literal notranslate"><span class="pre">TYPE_NONE</span></code>-terminated array of the input data types. Note that this array should not include a <code class="docutils literal notranslate"><span class="pre">TYPE_EXECUTION</span></code> type. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">outputs</span></code>: A <code class="docutils literal notranslate"><span class="pre">TYPE_NONE</span></code>-terminated array of the output data types. Note that this array should not include a <code class="docutils literal notranslate"><span class="pre">TYPE_EXECUTION</span></code> type. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv421d_get_num_c_functionsv">
+<span id="_CPPv321d_get_num_c_functionsv"></span><span id="_CPPv221d_get_num_c_functionsv"></span><span id="d_get_num_c_functions"></span><span class="target" id="dcfunc_8h_1a8ecdd4e9e79a2f2e3fd1a1bdbf66e786"></span>size_t <code class="sig-name descname">d_get_num_c_functions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv421d_get_num_c_functionsv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Get the current number of C functions. </p>
+<p><strong>NOTE:</strong> Use <code class="docutils literal notranslate"><span class="pre">d_get_c_functions</span></code> to get the items in the list.</p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>The number of C functions added. </p>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv417d_get_c_functionsv">
+<span id="_CPPv317d_get_c_functionsv"></span><span id="_CPPv217d_get_c_functionsv"></span><span id="d_get_c_functions"></span><span class="target" id="dcfunc_8h_1a81d2f8a82677391f09976efd5667b1d3"></span><em class="property">const</em> <a class="reference internal" href="#_CPPv49CFunction" title="CFunction">CFunction</a> *<code class="sig-name descname">d_get_c_functions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv417d_get_c_functionsv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Get the current list of C functions. </p>
+<p><strong>NOTE:</strong> Use <code class="docutils literal notranslate"><span class="pre">d_get_num_c_functions</span></code> to get the number of items in this list.</p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>The current list of C functions. </p>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv418d_free_c_functionsv">
+<span id="_CPPv318d_free_c_functionsv"></span><span id="_CPPv218d_free_c_functionsv"></span><span id="d_free_c_functions"></span><span class="target" id="dcfunc_8h_1ad7b6df89b9667da91cdee33cc72736d2"></span>void <code class="sig-name descname">d_free_c_functions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv418d_free_c_functionsv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>If any functions or subroutines have been created that call C functions, free them. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="file">
+<dt>
 <span class="target" id="dcodegen_8h"></span><em>file</em> <code class="sig-name descname">dcodegen.h</code></dt>
 <dd><em>#include &lt;stdbool.h&gt;</em><em>#include “dcfg.h”</em><em>#include “dlink.h”</em><em>#include “dvm.h”</em><em>#include &lt;stddef.h&gt;</em><p>This header generates the bytecode from the user’s source code, so that it can be run on a Decision VM. </p>
 <div class="breathe-sectiondef docutils container">
@@ -1727,7 +1857,7 @@ project.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">socket</span></code>: The socket to get the input for. </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: The context needed to generate the bytecode. </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">inLoop</span></code>: Are the inputs being gotten from a node that is being run inside a loop? </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">forceLiterals</span></code>: Force the bytecode for literals to be generated. You may not want this if you want to optimise later by using immediate instructions. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">forceLiteral</span></code>: Force the bytecode for literals to be generated. You may not want this if you want to optimise later by using immediate instructions. </p></li>
 </ul>
 </dd>
 </dl>
@@ -1757,8 +1887,8 @@ project.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv428d_generate_bytecode_for_callP10_sheetNodeP12BuildContextb">
-<span id="_CPPv328d_generate_bytecode_for_callP10_sheetNodeP12BuildContextb"></span><span id="_CPPv228d_generate_bytecode_for_callP10_sheetNodeP12BuildContextb"></span><span id="d_generate_bytecode_for_call___sheetNodeP.BuildContextP.b"></span><span class="target" id="dcodegen_8h_1a7146d80d76ff64be9505edd80eccf808"></span><a class="reference internal" href="#_CPPv45BCode" title="BCode">BCode</a> <code class="sig-name descname">d_generate_bytecode_for_call</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="#_CPPv410_sheetNode" title="_sheetNode">_sheetNode</a> *<em>node</em>, <a class="reference internal" href="#_CPPv412BuildContext" title="BuildContext">BuildContext</a> *<em>context</em>, bool <em>isSubroutine</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv428d_generate_bytecode_for_callP10_sheetNodeP12BuildContextb" title="Permalink to this definition">¶</a><br /></dt>
+<dt id="_CPPv428d_generate_bytecode_for_callP10_sheetNodeP12BuildContextbb">
+<span id="_CPPv328d_generate_bytecode_for_callP10_sheetNodeP12BuildContextbb"></span><span id="_CPPv228d_generate_bytecode_for_callP10_sheetNodeP12BuildContextbb"></span><span id="d_generate_bytecode_for_call___sheetNodeP.BuildContextP.b.b"></span><span class="target" id="dcodegen_8h_1a527a6bc0a6adc3d9866e9a7fbcbae5e6"></span><a class="reference internal" href="#_CPPv45BCode" title="BCode">BCode</a> <code class="sig-name descname">d_generate_bytecode_for_call</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="#_CPPv410_sheetNode" title="_sheetNode">_sheetNode</a> *<em>node</em>, <a class="reference internal" href="#_CPPv412BuildContext" title="BuildContext">BuildContext</a> *<em>context</em>, bool <em>isSubroutine</em>, bool <em>isCFunction</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv428d_generate_bytecode_for_callP10_sheetNodeP12BuildContextbb" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Given a node needs to be “called”, generate the bytecode and link info to call that function. </p>
 <p><dl class="simple">
 <dt><strong>Return</strong></dt><dd><p>The malloc’d bytecode generated to call the node.</p>
@@ -1767,6 +1897,7 @@ project.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">node</span></code>: The “unknown” function to call. </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: The context needed to generate the bytecode. </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">isSubroutine</span></code>: Info needed to make sure we ignore the execution sockets. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">isCFunction</span></code>: Is the call to a C function? </p></li>
 </ul>
 </dd>
 </dl>
@@ -1965,6 +2096,11 @@ project.</p>
 <dl class="enumerator">
 <dt id="_CPPv417CORE_IF_THEN_ELSE">
 <span id="_CPPv317CORE_IF_THEN_ELSE"></span><span id="_CPPv217CORE_IF_THEN_ELSE"></span><span class="target" id="dcore_8h_1aea54b3a1e50d5b73d33cba3888cfe892a78a7425be4bc4292ebe7b3637771a1b7"></span><code class="sig-name descname">CORE_IF_THEN_ELSE</code><a class="headerlink" href="#_CPPv417CORE_IF_THEN_ELSE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="enumerator">
+<dt id="_CPPv411CORE_LENGTH">
+<span id="_CPPv311CORE_LENGTH"></span><span id="_CPPv211CORE_LENGTH"></span><span class="target" id="dcore_8h_1aea54b3a1e50d5b73d33cba3888cfe892a023c45bfe43876997a81bba2290eb358"></span><code class="sig-name descname">CORE_LENGTH</code><a class="headerlink" href="#_CPPv411CORE_LENGTH" title="Permalink to this definition">¶</a><br /></dt>
 <dd></dd></dl>
 
 <dl class="enumerator">
@@ -2611,6 +2747,12 @@ project.</p>
 <dd><p>A function. </p>
 </dd></dl>
 
+<dl class="enumerator">
+<dt id="_CPPv414LINK_CFUNCTION">
+<span id="_CPPv314LINK_CFUNCTION"></span><span id="_CPPv214LINK_CFUNCTION"></span><span class="target" id="dlink_8h_1a1d8d2a8dafd8da488bbccc2d65d22f45a201be124c08888f58ab3a9713d310db2"></span><code class="sig-name descname">LINK_CFUNCTION</code><a class="headerlink" href="#_CPPv414LINK_CFUNCTION" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>A C function. </p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -2687,6 +2829,19 @@ project.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="_CPPv423d_link_precalculate_ptrP6_sheet">
+<span id="_CPPv323d_link_precalculate_ptrP6_sheet"></span><span id="_CPPv223d_link_precalculate_ptrP6_sheet"></span><span id="d_link_precalculate_ptr___sheetP"></span><span class="target" id="dlink_8h_1a9acad8bd534bbe279f25468aa9c6c4a1"></span>void <code class="sig-name descname">d_link_precalculate_ptr</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="#_CPPv46_sheet" title="_sheet">_sheet</a> *<em>sheet</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv423d_link_precalculate_ptrP6_sheet" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Precalculate the pointers to external variables and functions for linking. </p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sheet</span></code>: The sheet to precalculate the pointers for. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="_CPPv411d_link_selfP6_sheet">
 <span id="_CPPv311d_link_selfP6_sheet"></span><span id="_CPPv211d_link_selfP6_sheet"></span><span id="d_link_self___sheetP"></span><span class="target" id="dlink_8h_1a821a8d8358fa7ba5570f4b448cc26032"></span>void <code class="sig-name descname">d_link_self</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="#_CPPv46_sheet" title="_sheet">_sheet</a> *<em>sheet</em><span class="sig-paren">)</span><br /></dt>
 <dd><p>Link a sheet’s properties from itself to itself and included sheets. </p>
@@ -2728,7 +2883,7 @@ project.</p>
 <dl class="function">
 <dt id="_CPPv412d_link_sheetP6_sheet">
 <span id="_CPPv312d_link_sheetP6_sheet"></span><span id="_CPPv212d_link_sheetP6_sheet"></span><span id="d_link_sheet___sheetP"></span><span class="target" id="dlink_8h_1a27498765a88ee294c2fef9e1903bf933"></span>void <code class="sig-name descname">d_link_sheet</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="#_CPPv46_sheet" title="_sheet">_sheet</a> *<em>sheet</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv412d_link_sheetP6_sheet" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Call <code class="docutils literal notranslate"><span class="pre">d_link_find_included</span></code>, <code class="docutils literal notranslate"><span class="pre">d_link_self</span></code>, and <code class="docutils literal notranslate"><span class="pre">d_link_includes_recursive</span></code> on a sheet. </p>
+<dd><p>Call <code class="docutils literal notranslate"><span class="pre">d_link_find_included</span></code>, <code class="docutils literal notranslate"><span class="pre">d_link_precalculate_ptr</span></code>, <code class="docutils literal notranslate"><span class="pre">d_link_self</span></code>, and <code class="docutils literal notranslate"><span class="pre">d_link_includes_recursive</span></code> on a sheet. </p>
 <p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">sheet</span></code>: The sheet to link. </p></li>
@@ -2895,7 +3050,7 @@ project.</p>
 <dl class="file">
 <dt>
 <span class="target" id="dsemantic_8h"></span><em>file</em> <code class="sig-name descname">dsemantic.h</code></dt>
-<dd><em>#include &lt;stdbool.h&gt;</em><em>#include “dcfg.h”</em><em>#include “dcore.h”</em><em>#include “dlex.h”</em><em>#include “dsyntax.h”</em><em>#include “dtype.h”</em><em>#include &lt;stddef.h&gt;</em><p>This header checks that the program we’re about to compile is correct. </p>
+<dd><em>#include “dcfg.h”</em><em>#include “dcore.h”</em><em>#include “dlex.h”</em><em>#include “dsyntax.h”</em><em>#include “dtype.h”</em><em>#include &lt;stdbool.h&gt;</em><em>#include &lt;stddef.h&gt;</em><p>This header checks that the program we’re about to compile is correct. </p>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric">Typedefs</p>
 <dl class="type">
@@ -2944,6 +3099,11 @@ project.</p>
 <dl class="enumerator">
 <dt id="_CPPv413NAME_FUNCTION">
 <span id="_CPPv313NAME_FUNCTION"></span><span id="_CPPv213NAME_FUNCTION"></span><span class="target" id="dsemantic_8h_1acc00bc98ac95b2a5a266ee002ff048aeac8953656b9852f6c256978c12b290719"></span><code class="sig-name descname">NAME_FUNCTION</code><a class="headerlink" href="#_CPPv413NAME_FUNCTION" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="enumerator">
+<dt id="_CPPv414NAME_CFUNCTION">
+<span id="_CPPv314NAME_CFUNCTION"></span><span id="_CPPv214NAME_CFUNCTION"></span><span class="target" id="dsemantic_8h_1acc00bc98ac95b2a5a266ee002ff048aea1a3084741e650d7d48d5e0a6e97dc68c"></span><code class="sig-name descname">NAME_CFUNCTION</code><a class="headerlink" href="#_CPPv414NAME_CFUNCTION" title="Permalink to this definition">¶</a><br /></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -3923,7 +4083,7 @@ project.</p>
 <dl class="file">
 <dt>
 <span class="target" id="dvm_8h"></span><em>file</em> <code class="sig-name descname">dvm.h</code></dt>
-<dd><em>#include &lt;stdbool.h&gt;</em><em>#include “dcfg.h”</em><em>#include “derror.h”</em><em>#include &lt;stdint.h&gt;</em><p>This header contains functionality for the Decision VM - the object that will run the generated bytecode. </p>
+<dd><em>#include “dcfg.h”</em><em>#include “derror.h”</em><em>#include &lt;stdbool.h&gt;</em><em>#include &lt;stdint.h&gt;</em><p>This header contains functionality for the Decision VM - the object that will run the generated bytecode. </p>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric">Defines</p>
 <dl class="macro">
@@ -4097,324 +4257,330 @@ project.</p>
 <dl class="enumerator">
 <dt id="_CPPv47OP_CALL">
 <span id="_CPPv37OP_CALL"></span><span id="_CPPv27OP_CALL"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a098bbeea13096667b102f7fd90cbe38f"></span><code class="sig-name descname">OP_CALL</code> = 6<a class="headerlink" href="#_CPPv47OP_CALL" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>push(callStack, $( pc )); $( pc ) =  </p>
+<dd><p>push(callStack, $( pc )); $( pc ) = $( r ) </p>
+</dd></dl>
+
+<dl class="enumerator">
+<dt id="_CPPv48OP_CALLC">
+<span id="_CPPv38OP_CALLC"></span><span id="_CPPv28OP_CALLC"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3ab018ef5d265ec3929161ee3bef29cc09"></span><code class="sig-name descname">OP_CALLC</code> = 7<a class="headerlink" href="#_CPPv48OP_CALLC" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>(*$( r ))(this) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv48OP_CALLR">
-<span id="_CPPv38OP_CALLR"></span><span id="_CPPv28OP_CALLR"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a5cd9cbcd006719b970da3fb499e6f58d"></span><code class="sig-name descname">OP_CALLR</code> = 7<a class="headerlink" href="#_CPPv48OP_CALLR" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv38OP_CALLR"></span><span id="_CPPv28OP_CALLR"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a5cd9cbcd006719b970da3fb499e6f58d"></span><code class="sig-name descname">OP_CALLR</code> = 8<a class="headerlink" href="#_CPPv48OP_CALLR" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>push(callStack, $( pc )); $( pc ) += W_IMMEDIATE(4/2) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv46OP_CEQ">
-<span id="_CPPv36OP_CEQ"></span><span id="_CPPv26OP_CEQ"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a6e839c67c6ddbf923463a827dee86d7c"></span><code class="sig-name descname">OP_CEQ</code> = 8<a class="headerlink" href="#_CPPv46OP_CEQ" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv36OP_CEQ"></span><span id="_CPPv26OP_CEQ"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a6e839c67c6ddbf923463a827dee86d7c"></span><code class="sig-name descname">OP_CEQ</code> = 9<a class="headerlink" href="#_CPPv46OP_CEQ" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r1 ) = ($( r2 ) == $( r3 )) ? 1 : 0 </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv47OP_CEQF">
-<span id="_CPPv37OP_CEQF"></span><span id="_CPPv27OP_CEQF"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a11b2afac9349628e4618f9374267c73e"></span><code class="sig-name descname">OP_CEQF</code> = 9<a class="headerlink" href="#_CPPv47OP_CEQF" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv37OP_CEQF"></span><span id="_CPPv27OP_CEQF"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a11b2afac9349628e4618f9374267c73e"></span><code class="sig-name descname">OP_CEQF</code> = 10<a class="headerlink" href="#_CPPv47OP_CEQF" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r1 ) = ($( f2 ) == $( f3 )) ? 1 : 0 </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv47OP_CEQS">
-<span id="_CPPv37OP_CEQS"></span><span id="_CPPv27OP_CEQS"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a2b9d4d2fe10c2332bf136f63eab62855"></span><code class="sig-name descname">OP_CEQS</code> = 10<a class="headerlink" href="#_CPPv47OP_CEQS" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv37OP_CEQS"></span><span id="_CPPv27OP_CEQS"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a2b9d4d2fe10c2332bf136f63eab62855"></span><code class="sig-name descname">OP_CEQS</code> = 11<a class="headerlink" href="#_CPPv47OP_CEQS" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r1 ) = (strcmp($( r2 ), $( r3 )) == 0) ? 1 : 0 </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv47OP_CLEQ">
-<span id="_CPPv37OP_CLEQ"></span><span id="_CPPv27OP_CLEQ"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3adc5685663f175870461fe2c551a46126"></span><code class="sig-name descname">OP_CLEQ</code> = 11<a class="headerlink" href="#_CPPv47OP_CLEQ" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv37OP_CLEQ"></span><span id="_CPPv27OP_CLEQ"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3adc5685663f175870461fe2c551a46126"></span><code class="sig-name descname">OP_CLEQ</code> = 12<a class="headerlink" href="#_CPPv47OP_CLEQ" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r1 ) = ($( r2 ) &lt;= $( r3 )) ? 1 : 0 </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv48OP_CLEQF">
-<span id="_CPPv38OP_CLEQF"></span><span id="_CPPv28OP_CLEQF"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a4ab3576ffc1ef6a5b2f984e68a6da42f"></span><code class="sig-name descname">OP_CLEQF</code> = 12<a class="headerlink" href="#_CPPv48OP_CLEQF" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv38OP_CLEQF"></span><span id="_CPPv28OP_CLEQF"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a4ab3576ffc1ef6a5b2f984e68a6da42f"></span><code class="sig-name descname">OP_CLEQF</code> = 13<a class="headerlink" href="#_CPPv48OP_CLEQF" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r1 ) = ($( f2 ) &lt;= $( f3 )) ? 1 : 0 </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv48OP_CLEQS">
-<span id="_CPPv38OP_CLEQS"></span><span id="_CPPv28OP_CLEQS"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3aa5196526b4e8658d37fa28962176521e"></span><code class="sig-name descname">OP_CLEQS</code> = 13<a class="headerlink" href="#_CPPv48OP_CLEQS" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv38OP_CLEQS"></span><span id="_CPPv28OP_CLEQS"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3aa5196526b4e8658d37fa28962176521e"></span><code class="sig-name descname">OP_CLEQS</code> = 14<a class="headerlink" href="#_CPPv48OP_CLEQS" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r1 ) = (strcmp($( r2 ), $( r3 )) &lt;= 0) ? 1 : 0 </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv46OP_CLT">
-<span id="_CPPv36OP_CLT"></span><span id="_CPPv26OP_CLT"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3abc62b4ad84a829313cf3bc9aace74a6f"></span><code class="sig-name descname">OP_CLT</code> = 14<a class="headerlink" href="#_CPPv46OP_CLT" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv36OP_CLT"></span><span id="_CPPv26OP_CLT"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3abc62b4ad84a829313cf3bc9aace74a6f"></span><code class="sig-name descname">OP_CLT</code> = 15<a class="headerlink" href="#_CPPv46OP_CLT" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r1 ) = ($( r2 ) &lt; $( r3 )) ? 1 : 0 </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv47OP_CLTF">
-<span id="_CPPv37OP_CLTF"></span><span id="_CPPv27OP_CLTF"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3af1d828de09a396f94626409570690ea1"></span><code class="sig-name descname">OP_CLTF</code> = 15<a class="headerlink" href="#_CPPv47OP_CLTF" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv37OP_CLTF"></span><span id="_CPPv27OP_CLTF"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3af1d828de09a396f94626409570690ea1"></span><code class="sig-name descname">OP_CLTF</code> = 16<a class="headerlink" href="#_CPPv47OP_CLTF" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r1 ) = ($( f2 ) &lt; $( f3 )) ? 1 : 0 </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv47OP_CLTS">
-<span id="_CPPv37OP_CLTS"></span><span id="_CPPv27OP_CLTS"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a896a3af983661594e6addb64f000c476"></span><code class="sig-name descname">OP_CLTS</code> = 16<a class="headerlink" href="#_CPPv47OP_CLTS" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv37OP_CLTS"></span><span id="_CPPv27OP_CLTS"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a896a3af983661594e6addb64f000c476"></span><code class="sig-name descname">OP_CLTS</code> = 17<a class="headerlink" href="#_CPPv47OP_CLTS" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r1 ) = (strcmp($( r2 ), $( r3 )) &lt; 0) ? 1 : 0 </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv47OP_CMEQ">
-<span id="_CPPv37OP_CMEQ"></span><span id="_CPPv27OP_CMEQ"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3affcab786a58b72c702be5c5fd7f72c9f"></span><code class="sig-name descname">OP_CMEQ</code> = 17<a class="headerlink" href="#_CPPv47OP_CMEQ" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv37OP_CMEQ"></span><span id="_CPPv27OP_CMEQ"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3affcab786a58b72c702be5c5fd7f72c9f"></span><code class="sig-name descname">OP_CMEQ</code> = 18<a class="headerlink" href="#_CPPv47OP_CMEQ" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r1 ) = ($( r2 ) &gt;= $( r3 )) ? 1 : 0 </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv48OP_CMEQF">
-<span id="_CPPv38OP_CMEQF"></span><span id="_CPPv28OP_CMEQF"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3aaa61ea8eac57c0b2218e3baec94a2c03"></span><code class="sig-name descname">OP_CMEQF</code> = 18<a class="headerlink" href="#_CPPv48OP_CMEQF" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv38OP_CMEQF"></span><span id="_CPPv28OP_CMEQF"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3aaa61ea8eac57c0b2218e3baec94a2c03"></span><code class="sig-name descname">OP_CMEQF</code> = 19<a class="headerlink" href="#_CPPv48OP_CMEQF" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r1 ) = ($( f2 ) &gt;= $( f3 )) ? 1 : 0 </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv48OP_CMEQS">
-<span id="_CPPv38OP_CMEQS"></span><span id="_CPPv28OP_CMEQS"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3ab11fa951487a1c61268d0d75f6b5b4a2"></span><code class="sig-name descname">OP_CMEQS</code> = 19<a class="headerlink" href="#_CPPv48OP_CMEQS" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv38OP_CMEQS"></span><span id="_CPPv28OP_CMEQS"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3ab11fa951487a1c61268d0d75f6b5b4a2"></span><code class="sig-name descname">OP_CMEQS</code> = 20<a class="headerlink" href="#_CPPv48OP_CMEQS" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r1 ) = (strcmp($( r2 ), $( r3 )) &gt;= 0) ? 1 : 0 </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv46OP_CMT">
-<span id="_CPPv36OP_CMT"></span><span id="_CPPv26OP_CMT"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a9227533d8a123a0e0115199bdc539f44"></span><code class="sig-name descname">OP_CMT</code> = 20<a class="headerlink" href="#_CPPv46OP_CMT" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv36OP_CMT"></span><span id="_CPPv26OP_CMT"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a9227533d8a123a0e0115199bdc539f44"></span><code class="sig-name descname">OP_CMT</code> = 21<a class="headerlink" href="#_CPPv46OP_CMT" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r1 ) = ($( r2 ) &gt; $( r3 )) ? 1 : 0 </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv47OP_CMTF">
-<span id="_CPPv37OP_CMTF"></span><span id="_CPPv27OP_CMTF"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3ae97153552f9b8b976d62dbdd11de33c7"></span><code class="sig-name descname">OP_CMTF</code> = 21<a class="headerlink" href="#_CPPv47OP_CMTF" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv37OP_CMTF"></span><span id="_CPPv27OP_CMTF"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3ae97153552f9b8b976d62dbdd11de33c7"></span><code class="sig-name descname">OP_CMTF</code> = 22<a class="headerlink" href="#_CPPv47OP_CMTF" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r1 ) = ($( f2 ) &gt; $( f3 )) ? 1 : 0 </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv47OP_CMTS">
-<span id="_CPPv37OP_CMTS"></span><span id="_CPPv27OP_CMTS"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3ae43f323f0aecf0de5b1d591eae4d3b8f"></span><code class="sig-name descname">OP_CMTS</code> = 22<a class="headerlink" href="#_CPPv47OP_CMTS" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv37OP_CMTS"></span><span id="_CPPv27OP_CMTS"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3ae43f323f0aecf0de5b1d591eae4d3b8f"></span><code class="sig-name descname">OP_CMTS</code> = 23<a class="headerlink" href="#_CPPv47OP_CMTS" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r1 ) = (strcmp($( r2 ), $( r3 )) &gt; 0) ? 1 : 0 </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv47OP_CVTF">
-<span id="_CPPv37OP_CVTF"></span><span id="_CPPv27OP_CVTF"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a7485b742b66ca50d25b7de27fe9d50b3"></span><code class="sig-name descname">OP_CVTF</code> = 23<a class="headerlink" href="#_CPPv47OP_CVTF" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv37OP_CVTF"></span><span id="_CPPv27OP_CVTF"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a7485b742b66ca50d25b7de27fe9d50b3"></span><code class="sig-name descname">OP_CVTF</code> = 24<a class="headerlink" href="#_CPPv47OP_CVTF" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( f1 ) = (dfloat)$( r0 ) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv47OP_CVTI">
-<span id="_CPPv37OP_CVTI"></span><span id="_CPPv27OP_CVTI"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a4bcac7a7dc6e4bca8e8826b468afe6f6"></span><code class="sig-name descname">OP_CVTI</code> = 24<a class="headerlink" href="#_CPPv47OP_CVTI" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv37OP_CVTI"></span><span id="_CPPv27OP_CVTI"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a4bcac7a7dc6e4bca8e8826b468afe6f6"></span><code class="sig-name descname">OP_CVTI</code> = 25<a class="headerlink" href="#_CPPv47OP_CVTI" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r1 ) = (dint) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv46OP_DIV">
-<span id="_CPPv36OP_DIV"></span><span id="_CPPv26OP_DIV"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a719aeab2140dd5f575d1559b95bf74e1"></span><code class="sig-name descname">OP_DIV</code> = 25<a class="headerlink" href="#_CPPv46OP_DIV" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv36OP_DIV"></span><span id="_CPPv26OP_DIV"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a719aeab2140dd5f575d1559b95bf74e1"></span><code class="sig-name descname">OP_DIV</code> = 26<a class="headerlink" href="#_CPPv46OP_DIV" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r1 ) = $( r1 ) / $( r2 ) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv47OP_DIVF">
-<span id="_CPPv37OP_DIVF"></span><span id="_CPPv27OP_DIVF"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a6cd7a86842146cdf160c00f6554a110e"></span><code class="sig-name descname">OP_DIVF</code> = 26<a class="headerlink" href="#_CPPv47OP_DIVF" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv37OP_DIVF"></span><span id="_CPPv27OP_DIVF"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a6cd7a86842146cdf160c00f6554a110e"></span><code class="sig-name descname">OP_DIVF</code> = 27<a class="headerlink" href="#_CPPv47OP_DIVF" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( f1 ) = $( f1 ) / $( f2 ) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv47OP_DIVI">
-<span id="_CPPv37OP_DIVI"></span><span id="_CPPv27OP_DIVI"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a2c0a40697fb1e5607e7235850b1bfc08"></span><code class="sig-name descname">OP_DIVI</code> = 27<a class="headerlink" href="#_CPPv47OP_DIVI" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>$( r ) =  / W_IMMEDIATE(4/2) </p>
+<span id="_CPPv37OP_DIVI"></span><span id="_CPPv27OP_DIVI"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a2c0a40697fb1e5607e7235850b1bfc08"></span><code class="sig-name descname">OP_DIVI</code> = 28<a class="headerlink" href="#_CPPv47OP_DIVI" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>$( r ) = $( r ) / W_IMMEDIATE(4/2) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv44OP_J">
-<span id="_CPPv34OP_J"></span><span id="_CPPv24OP_J"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a25e61807be321d7bec01c51d956f227c"></span><code class="sig-name descname">OP_J</code> = 28<a class="headerlink" href="#_CPPv44OP_J" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>$( pc ) =  </p>
+<span id="_CPPv34OP_J"></span><span id="_CPPv24OP_J"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a25e61807be321d7bec01c51d956f227c"></span><code class="sig-name descname">OP_J</code> = 29<a class="headerlink" href="#_CPPv44OP_J" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>$( pc ) = $( r ) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv47OP_JCON">
-<span id="_CPPv37OP_JCON"></span><span id="_CPPv27OP_JCON"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3aa72d503818455024e322ee86b87f37d7"></span><code class="sig-name descname">OP_JCON</code> = 29<a class="headerlink" href="#_CPPv47OP_JCON" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv37OP_JCON"></span><span id="_CPPv27OP_JCON"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3aa72d503818455024e322ee86b87f37d7"></span><code class="sig-name descname">OP_JCON</code> = 30<a class="headerlink" href="#_CPPv47OP_JCON" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( pc ) = ($( r2 )) ? $( r1 ) : $( pc ) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv45OP_JR">
-<span id="_CPPv35OP_JR"></span><span id="_CPPv25OP_JR"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a21ad3a8272f77e9545e1a65b7efb272d"></span><code class="sig-name descname">OP_JR</code> = 30<a class="headerlink" href="#_CPPv45OP_JR" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv35OP_JR"></span><span id="_CPPv25OP_JR"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a21ad3a8272f77e9545e1a65b7efb272d"></span><code class="sig-name descname">OP_JR</code> = 31<a class="headerlink" href="#_CPPv45OP_JR" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( pc ) += W_IMMEDIATE(4/2) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv48OP_JRCON">
-<span id="_CPPv38OP_JRCON"></span><span id="_CPPv28OP_JRCON"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a26ec2d1b523b33e6b3fdf4391516f696"></span><code class="sig-name descname">OP_JRCON</code> = 31<a class="headerlink" href="#_CPPv48OP_JRCON" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv38OP_JRCON"></span><span id="_CPPv28OP_JRCON"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a26ec2d1b523b33e6b3fdf4391516f696"></span><code class="sig-name descname">OP_JRCON</code> = 32<a class="headerlink" href="#_CPPv48OP_JRCON" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( pc ) = ($( r1 )) ? $( pc ) + W_IMMEDIATE(4/2) : $( pc ) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv47OP_LOAD">
-<span id="_CPPv37OP_LOAD"></span><span id="_CPPv27OP_LOAD"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3aa9d90987d861243694bd640eb0c6e8f6"></span><code class="sig-name descname">OP_LOAD</code> = 32<a class="headerlink" href="#_CPPv47OP_LOAD" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv37OP_LOAD"></span><span id="_CPPv27OP_LOAD"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3aa9d90987d861243694bd640eb0c6e8f6"></span><code class="sig-name descname">OP_LOAD</code> = 33<a class="headerlink" href="#_CPPv47OP_LOAD" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r1 ) = $( r2 ) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv410OP_LOADADR">
-<span id="_CPPv310OP_LOADADR"></span><span id="_CPPv210OP_LOADADR"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3acfb694f6410942b4d92c556e51c398ad"></span><code class="sig-name descname">OP_LOADADR</code> = 33<a class="headerlink" href="#_CPPv410OP_LOADADR" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv310OP_LOADADR"></span><span id="_CPPv210OP_LOADADR"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3acfb694f6410942b4d92c556e51c398ad"></span><code class="sig-name descname">OP_LOADADR</code> = 34<a class="headerlink" href="#_CPPv410OP_LOADADR" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r1 ) = *((dint*)$( r2 )) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv411OP_LOADADRB">
-<span id="_CPPv311OP_LOADADRB"></span><span id="_CPPv211OP_LOADADRB"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a5e06b36040e9fbb2a6ddc34e7662531a"></span><code class="sig-name descname">OP_LOADADRB</code> = 34<a class="headerlink" href="#_CPPv411OP_LOADADRB" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv311OP_LOADADRB"></span><span id="_CPPv211OP_LOADADRB"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a5e06b36040e9fbb2a6ddc34e7662531a"></span><code class="sig-name descname">OP_LOADADRB</code> = 35<a class="headerlink" href="#_CPPv411OP_LOADADRB" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r1 ) = *((uint8_t*)$( r2 )) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv410OP_LOADARG">
-<span id="_CPPv310OP_LOADARG"></span><span id="_CPPv210OP_LOADARG"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3abc9def3e79743343e34745e1c5d1d9f3"></span><code class="sig-name descname">OP_LOADARG</code> = 35<a class="headerlink" href="#_CPPv410OP_LOADARG" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv310OP_LOADARG"></span><span id="_CPPv210OP_LOADARG"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3abc9def3e79743343e34745e1c5d1d9f3"></span><code class="sig-name descname">OP_LOADARG</code> = 36<a class="headerlink" href="#_CPPv410OP_LOADARG" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>arg[r1] = $( r2 ) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv411OP_LOADARGI">
-<span id="_CPPv311OP_LOADARGI"></span><span id="_CPPv211OP_LOADARGI"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a7abfe4b61a5f6f4a463420e9b6b1526c"></span><code class="sig-name descname">OP_LOADARGI</code> = 36<a class="headerlink" href="#_CPPv411OP_LOADARGI" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv311OP_LOADARGI"></span><span id="_CPPv211OP_LOADARGI"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a7abfe4b61a5f6f4a463420e9b6b1526c"></span><code class="sig-name descname">OP_LOADARGI</code> = 37<a class="headerlink" href="#_CPPv411OP_LOADARGI" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>arg[r1] = IMMEDIATE(4/2) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv48OP_LOADF">
-<span id="_CPPv38OP_LOADF"></span><span id="_CPPv28OP_LOADF"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a82da04477198d0562981ddd7d3adda8b"></span><code class="sig-name descname">OP_LOADF</code> = 37<a class="headerlink" href="#_CPPv48OP_LOADF" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv38OP_LOADF"></span><span id="_CPPv28OP_LOADF"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a82da04477198d0562981ddd7d3adda8b"></span><code class="sig-name descname">OP_LOADF</code> = 38<a class="headerlink" href="#_CPPv48OP_LOADF" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( f1 ) = $( f2 ) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv48OP_LOADI">
-<span id="_CPPv38OP_LOADI"></span><span id="_CPPv28OP_LOADI"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a60de4d2d9c05216369b32f22325ac26c"></span><code class="sig-name descname">OP_LOADI</code> = 38<a class="headerlink" href="#_CPPv48OP_LOADI" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv38OP_LOADI"></span><span id="_CPPv28OP_LOADI"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a60de4d2d9c05216369b32f22325ac26c"></span><code class="sig-name descname">OP_LOADI</code> = 39<a class="headerlink" href="#_CPPv48OP_LOADI" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r ) = IMMEDIATE(4/2) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv49OP_LOADUI">
-<span id="_CPPv39OP_LOADUI"></span><span id="_CPPv29OP_LOADUI"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a71c03c7805ca5eb61b0b16030b1e138a"></span><code class="sig-name descname">OP_LOADUI</code> = 39<a class="headerlink" href="#_CPPv49OP_LOADUI" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv39OP_LOADUI"></span><span id="_CPPv29OP_LOADUI"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a71c03c7805ca5eb61b0b16030b1e138a"></span><code class="sig-name descname">OP_LOADUI</code> = 40<a class="headerlink" href="#_CPPv49OP_LOADUI" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r ) = IMMEDIATE(4/2) &lt;&lt; 32 / 16 </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv46OP_MOD">
-<span id="_CPPv36OP_MOD"></span><span id="_CPPv26OP_MOD"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a39c596fc7eae450b7218bd97126e37c9"></span><code class="sig-name descname">OP_MOD</code> = 40<a class="headerlink" href="#_CPPv46OP_MOD" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv36OP_MOD"></span><span id="_CPPv26OP_MOD"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a39c596fc7eae450b7218bd97126e37c9"></span><code class="sig-name descname">OP_MOD</code> = 41<a class="headerlink" href="#_CPPv46OP_MOD" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r1 ) %= $( r2 ) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv47OP_MODI">
-<span id="_CPPv37OP_MODI"></span><span id="_CPPv27OP_MODI"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a08a4434b7e1f8159703a06fbf85416d1"></span><code class="sig-name descname">OP_MODI</code> = 41<a class="headerlink" href="#_CPPv47OP_MODI" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv37OP_MODI"></span><span id="_CPPv27OP_MODI"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a08a4434b7e1f8159703a06fbf85416d1"></span><code class="sig-name descname">OP_MODI</code> = 42<a class="headerlink" href="#_CPPv47OP_MODI" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r1 ) %= W_IMMEDIATE(4/2) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv46OP_MUL">
-<span id="_CPPv36OP_MUL"></span><span id="_CPPv26OP_MUL"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3aa0e08a6f94350f03d29e4a55d543ba2f"></span><code class="sig-name descname">OP_MUL</code> = 42<a class="headerlink" href="#_CPPv46OP_MUL" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv36OP_MUL"></span><span id="_CPPv26OP_MUL"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3aa0e08a6f94350f03d29e4a55d543ba2f"></span><code class="sig-name descname">OP_MUL</code> = 43<a class="headerlink" href="#_CPPv46OP_MUL" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r1 ) = $( r1 ) * $( r2 ) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv47OP_MULF">
-<span id="_CPPv37OP_MULF"></span><span id="_CPPv27OP_MULF"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a0221d6766b29c80742022daf46780830"></span><code class="sig-name descname">OP_MULF</code> = 43<a class="headerlink" href="#_CPPv47OP_MULF" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv37OP_MULF"></span><span id="_CPPv27OP_MULF"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a0221d6766b29c80742022daf46780830"></span><code class="sig-name descname">OP_MULF</code> = 44<a class="headerlink" href="#_CPPv47OP_MULF" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( f1 ) = $( f1 ) * $( f2 ) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv47OP_MULI">
-<span id="_CPPv37OP_MULI"></span><span id="_CPPv27OP_MULI"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a2b16e81c4b571a5566b2c7ce76eec1e8"></span><code class="sig-name descname">OP_MULI</code> = 44<a class="headerlink" href="#_CPPv47OP_MULI" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv37OP_MULI"></span><span id="_CPPv27OP_MULI"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a2b16e81c4b571a5566b2c7ce76eec1e8"></span><code class="sig-name descname">OP_MULI</code> = 45<a class="headerlink" href="#_CPPv47OP_MULI" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r ) =  * W_IMMEDIATE(4/2) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv47OP_MVTF">
-<span id="_CPPv37OP_MVTF"></span><span id="_CPPv27OP_MVTF"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a5e149b5001b2ee8cf0ff7ffc91b57f45"></span><code class="sig-name descname">OP_MVTF</code> = 45<a class="headerlink" href="#_CPPv47OP_MVTF" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv37OP_MVTF"></span><span id="_CPPv27OP_MVTF"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a5e149b5001b2ee8cf0ff7ffc91b57f45"></span><code class="sig-name descname">OP_MVTF</code> = 46<a class="headerlink" href="#_CPPv47OP_MVTF" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( f1 ) = $( r0 ) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv47OP_MVTI">
-<span id="_CPPv37OP_MVTI"></span><span id="_CPPv27OP_MVTI"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a068daf64893cd3593a2b48e268a7e747"></span><code class="sig-name descname">OP_MVTI</code> = 46<a class="headerlink" href="#_CPPv47OP_MVTI" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>$( r1 ) =  </p>
+<span id="_CPPv37OP_MVTI"></span><span id="_CPPv27OP_MVTI"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a068daf64893cd3593a2b48e268a7e747"></span><code class="sig-name descname">OP_MVTI</code> = 47<a class="headerlink" href="#_CPPv47OP_MVTI" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>$( r1 ) = $( f0 ) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv46OP_NOT">
-<span id="_CPPv36OP_NOT"></span><span id="_CPPv26OP_NOT"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a36a6b73cc4823f54891a013e2cc760d1"></span><code class="sig-name descname">OP_NOT</code> = 47<a class="headerlink" href="#_CPPv46OP_NOT" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>$( r ) = ! </p>
+<span id="_CPPv36OP_NOT"></span><span id="_CPPv26OP_NOT"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a36a6b73cc4823f54891a013e2cc760d1"></span><code class="sig-name descname">OP_NOT</code> = 48<a class="headerlink" href="#_CPPv46OP_NOT" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>$( r ) = !$( r ) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv45OP_OR">
-<span id="_CPPv35OP_OR"></span><span id="_CPPv25OP_OR"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3af317be3def89f5f66558bbc402291176"></span><code class="sig-name descname">OP_OR</code> = 48<a class="headerlink" href="#_CPPv45OP_OR" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv35OP_OR"></span><span id="_CPPv25OP_OR"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3af317be3def89f5f66558bbc402291176"></span><code class="sig-name descname">OP_OR</code> = 49<a class="headerlink" href="#_CPPv45OP_OR" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r1 ) = $( r1 ) | $( r2 ) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv46OP_ORI">
-<span id="_CPPv36OP_ORI"></span><span id="_CPPv26OP_ORI"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a83472b17c2c15dd8f607b219d1b836a3"></span><code class="sig-name descname">OP_ORI</code> = 49<a class="headerlink" href="#_CPPv46OP_ORI" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv36OP_ORI"></span><span id="_CPPv26OP_ORI"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a83472b17c2c15dd8f607b219d1b836a3"></span><code class="sig-name descname">OP_ORI</code> = 50<a class="headerlink" href="#_CPPv46OP_ORI" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r ) |= IMMEDIATE(4/2) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv46OP_POP">
-<span id="_CPPv36OP_POP"></span><span id="_CPPv26OP_POP"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3afb3c2d934da3bfb01e4fd56338324e21"></span><code class="sig-name descname">OP_POP</code> = 50<a class="headerlink" href="#_CPPv46OP_POP" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv36OP_POP"></span><span id="_CPPv26OP_POP"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3afb3c2d934da3bfb01e4fd56338324e21"></span><code class="sig-name descname">OP_POP</code> = 51<a class="headerlink" href="#_CPPv46OP_POP" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r ) = pop(generalStack) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv47OP_PUSH">
-<span id="_CPPv37OP_PUSH"></span><span id="_CPPv27OP_PUSH"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a8dac71c3d6bbd96671b3a21efcc5b49f"></span><code class="sig-name descname">OP_PUSH</code> = 51<a class="headerlink" href="#_CPPv47OP_PUSH" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv37OP_PUSH"></span><span id="_CPPv27OP_PUSH"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a8dac71c3d6bbd96671b3a21efcc5b49f"></span><code class="sig-name descname">OP_PUSH</code> = 52<a class="headerlink" href="#_CPPv47OP_PUSH" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>push(generalStack, $( r )) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv49OP_STOADR">
-<span id="_CPPv39OP_STOADR"></span><span id="_CPPv29OP_STOADR"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a0aa3f17e97f14e0230b865dbeb9af830"></span><code class="sig-name descname">OP_STOADR</code> = 52<a class="headerlink" href="#_CPPv49OP_STOADR" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv39OP_STOADR"></span><span id="_CPPv29OP_STOADR"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a0aa3f17e97f14e0230b865dbeb9af830"></span><code class="sig-name descname">OP_STOADR</code> = 53<a class="headerlink" href="#_CPPv49OP_STOADR" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>*((dint*)$( r2 )) = $( r1 ) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv410OP_STOADRB">
-<span id="_CPPv310OP_STOADRB"></span><span id="_CPPv210OP_STOADRB"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a6c2d8ba5c9535a163958af24bb956af6"></span><code class="sig-name descname">OP_STOADRB</code> = 53<a class="headerlink" href="#_CPPv410OP_STOADRB" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv310OP_STOADRB"></span><span id="_CPPv210OP_STOADRB"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a6c2d8ba5c9535a163958af24bb956af6"></span><code class="sig-name descname">OP_STOADRB</code> = 54<a class="headerlink" href="#_CPPv410OP_STOADRB" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>*((uint8_t*)$( r2 )) = $( r1 ) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv46OP_SUB">
-<span id="_CPPv36OP_SUB"></span><span id="_CPPv26OP_SUB"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a6c224b456bd394d4d8bad0631ca8e2b7"></span><code class="sig-name descname">OP_SUB</code> = 54<a class="headerlink" href="#_CPPv46OP_SUB" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv36OP_SUB"></span><span id="_CPPv26OP_SUB"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a6c224b456bd394d4d8bad0631ca8e2b7"></span><code class="sig-name descname">OP_SUB</code> = 55<a class="headerlink" href="#_CPPv46OP_SUB" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r1 ) = $( r1 ) - $( r2 ) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv47OP_SUBF">
-<span id="_CPPv37OP_SUBF"></span><span id="_CPPv27OP_SUBF"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3aba1da38b689dead841119150456fcf8c"></span><code class="sig-name descname">OP_SUBF</code> = 55<a class="headerlink" href="#_CPPv47OP_SUBF" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv37OP_SUBF"></span><span id="_CPPv27OP_SUBF"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3aba1da38b689dead841119150456fcf8c"></span><code class="sig-name descname">OP_SUBF</code> = 56<a class="headerlink" href="#_CPPv47OP_SUBF" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( f1 ) = $( f1 ) - $( f2 ) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv47OP_SUBI">
-<span id="_CPPv37OP_SUBI"></span><span id="_CPPv27OP_SUBI"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a34c4e7b722fb98fff2fd6041380e7f8a"></span><code class="sig-name descname">OP_SUBI</code> = 56<a class="headerlink" href="#_CPPv47OP_SUBI" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv37OP_SUBI"></span><span id="_CPPv27OP_SUBI"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a34c4e7b722fb98fff2fd6041380e7f8a"></span><code class="sig-name descname">OP_SUBI</code> = 57<a class="headerlink" href="#_CPPv47OP_SUBI" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r ) -= W_IMMEDIATE(4/2) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv410OP_SYSCALL">
-<span id="_CPPv310OP_SYSCALL"></span><span id="_CPPv210OP_SYSCALL"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a7eb66758365ab1145745c67a50475fa5"></span><code class="sig-name descname">OP_SYSCALL</code> = 57<a class="headerlink" href="#_CPPv410OP_SYSCALL" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv310OP_SYSCALL"></span><span id="_CPPv210OP_SYSCALL"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a7eb66758365ab1145745c67a50475fa5"></span><code class="sig-name descname">OP_SYSCALL</code> = 58<a class="headerlink" href="#_CPPv410OP_SYSCALL" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>syscall(IMMEDIATE(1)), see <code class="docutils literal notranslate"><span class="pre">DSyscall</span></code>. </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv46OP_XOR">
-<span id="_CPPv36OP_XOR"></span><span id="_CPPv26OP_XOR"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3aa0587506ce6da96de3a95a97d84b0fc4"></span><code class="sig-name descname">OP_XOR</code> = 58<a class="headerlink" href="#_CPPv46OP_XOR" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv36OP_XOR"></span><span id="_CPPv26OP_XOR"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3aa0587506ce6da96de3a95a97d84b0fc4"></span><code class="sig-name descname">OP_XOR</code> = 59<a class="headerlink" href="#_CPPv46OP_XOR" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r1 ) = $( r1 ) ^ $( r2 ) </p>
 </dd></dl>
 
 <dl class="enumerator">
 <dt id="_CPPv47OP_XORI">
-<span id="_CPPv37OP_XORI"></span><span id="_CPPv27OP_XORI"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a614ad7a7be0ac293a92739e1cb76899f"></span><code class="sig-name descname">OP_XORI</code> = 59<a class="headerlink" href="#_CPPv47OP_XORI" title="Permalink to this definition">¶</a><br /></dt>
+<span id="_CPPv37OP_XORI"></span><span id="_CPPv27OP_XORI"></span><span class="target" id="dvm_8h_1a6baf59dc5cd80b7e527967775eb7e7a3a614ad7a7be0ac293a92739e1cb76899f"></span><code class="sig-name descname">OP_XORI</code> = 60<a class="headerlink" href="#_CPPv47OP_XORI" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>$( r ) ^= IMMEDIATE(4/2) </p>
 </dd></dl>
 
@@ -4488,6 +4654,99 @@ project.</p>
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">vm</span></code>: The VM that came across the error. </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">error</span></code>: The error message to display. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv414d_vm_pop_stackP3DVM">
+<span id="_CPPv314d_vm_pop_stackP3DVM"></span><span id="_CPPv214d_vm_pop_stackP3DVM"></span><span id="d_vm_pop_stack__DVMP"></span><span class="target" id="dvm_8h_1a296a99857aba55005fa7688363f7e3c8"></span>dint <code class="sig-name descname">d_vm_pop_stack</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv43DVM" title="DVM">DVM</a> *<em>vm</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv414d_vm_pop_stackP3DVM" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Pop an integer off the top of a VM’s general stack. </p>
+<p><strong>NOTE:</strong> If the general stack is empty, a runtime error will occur.</p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>The integer at the top of the general stack.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">vm</span></code>: The VM to pop from. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv420d_vm_pop_stack_floatP3DVM">
+<span id="_CPPv320d_vm_pop_stack_floatP3DVM"></span><span id="_CPPv220d_vm_pop_stack_floatP3DVM"></span><span id="d_vm_pop_stack_float__DVMP"></span><span class="target" id="dvm_8h_1a1caf4e2c83f60e5dd4b4fd100972f3f6"></span>dfloat <code class="sig-name descname">d_vm_pop_stack_float</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv43DVM" title="DVM">DVM</a> *<em>vm</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv420d_vm_pop_stack_floatP3DVM" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Pop a float off the top of a VM’s general stack. </p>
+<p><strong>NOTE:</strong> If the general stack is empty, a runtime error will occur.</p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>The float at the top of the general stack.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">vm</span></code>: The VM to pop from. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv418d_vm_pop_stack_ptrP3DVM">
+<span id="_CPPv318d_vm_pop_stack_ptrP3DVM"></span><span id="_CPPv218d_vm_pop_stack_ptrP3DVM"></span><span id="d_vm_pop_stack_ptr__DVMP"></span><span class="target" id="dvm_8h_1a5d6d65c3db52711b12194c9350c736c3"></span>void *<code class="sig-name descname">d_vm_pop_stack_ptr</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv43DVM" title="DVM">DVM</a> *<em>vm</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv418d_vm_pop_stack_ptrP3DVM" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Pop a pointer off the top of a VM’s general stack. </p>
+<p><strong>NOTE:</strong> If the general stack is empty, a runtime error will occur.</p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>The generic pointer at the top of the general stack.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">vm</span></code>: The VM to pop from. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv415d_vm_push_stackP3DVM4dint">
+<span id="_CPPv315d_vm_push_stackP3DVM4dint"></span><span id="_CPPv215d_vm_push_stackP3DVM4dint"></span><span id="d_vm_push_stack__DVMP.dint"></span><span class="target" id="dvm_8h_1aa6065a8778bdb4f37431c99861f701e3"></span>void <code class="sig-name descname">d_vm_push_stack</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv43DVM" title="DVM">DVM</a> *<em>vm</em>, dint <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv415d_vm_push_stackP3DVM4dint" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Push an integer onto the top of a VM’s general stack. </p>
+<p><strong>NOTE:</strong> If the general stack has already reached it’s capacity, a runtime error will occur when this function is called.</p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">vm</span></code>: The VM to push onto. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">value</span></code>: The value to push onto the general stack. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv421d_vm_push_stack_floatP3DVM6dfloat">
+<span id="_CPPv321d_vm_push_stack_floatP3DVM6dfloat"></span><span id="_CPPv221d_vm_push_stack_floatP3DVM6dfloat"></span><span id="d_vm_push_stack_float__DVMP.dfloat"></span><span class="target" id="dvm_8h_1ab86669dac3cb1796f4aff8309d3404f4"></span>void <code class="sig-name descname">d_vm_push_stack_float</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv43DVM" title="DVM">DVM</a> *<em>vm</em>, dfloat <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv421d_vm_push_stack_floatP3DVM6dfloat" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Push a float onto the top of a VM’s general stack. </p>
+<p><strong>NOTE:</strong> If the general stack has already reached it’s capacity, a runtime error will occur when this function is called.</p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">vm</span></code>: The VM to push onto. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">value</span></code>: The value to push onto the general stack. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv419d_vm_push_stack_ptrP3DVMPv">
+<span id="_CPPv319d_vm_push_stack_ptrP3DVMPv"></span><span id="_CPPv219d_vm_push_stack_ptrP3DVMPv"></span><span id="d_vm_push_stack_ptr__DVMP.voidP"></span><span class="target" id="dvm_8h_1ab742245e57ed73efb2571bdb86981833"></span>void <code class="sig-name descname">d_vm_push_stack_ptr</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv43DVM" title="DVM">DVM</a> *<em>vm</em>, void *<em>ptr</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv419d_vm_push_stack_ptrP3DVMPv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Push a generic pointer onto the top of a VM’s general stack. </p>
+<p><strong>NOTE:</strong> If the general stack has already reached it’s capacity, a runtime error will occur when this function is called.</p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">vm</span></code>: The VM to push onto. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ptr</span></code>: The pointer to push onto the general stack. </p></li>
 </ul>
 </dd>
 </dl>
@@ -4572,7 +4831,7 @@ project.</p>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
       
-        <a href="../the_virtual_machine/index.html" class="btn btn-neutral float-left" title="The Virtual Machine" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../the_c_api/running_c_from_decision.html" class="btn btn-neutral float-left" title="Running C from Decision" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

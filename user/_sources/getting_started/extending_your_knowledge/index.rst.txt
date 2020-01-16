@@ -30,6 +30,7 @@ exploring some of the other features Decision has to offer at your own pace:
    conditions.rst
    condition_arithmetic.rst
    changing_flow_with_conditions.rst
+   string_manipulation.rst
    variables.rst
    iteration.rst
    functions_and_subroutines.rst

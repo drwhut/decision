@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Code Generation &mdash; Decision 0.1.1 documentation</title>
+  <title>Code Generation &mdash; Decision 0.2.0 documentation</title>
   
 
   
@@ -117,6 +117,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../linking/index.html">Linking</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../the_virtual_machine/index.html">The Virtual Machine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../the_c_api/index.html">The C API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
 </ul>
 
@@ -816,7 +817,7 @@ sheet. This function also consequently adds a link to that bytecode to the
 location of the variable.</p>
 <dl class="function">
 <dt>
-<a class="reference internal" href="../reference/index.html#_CPPv45BCode" title="BCode">BCode</a> <code class="sig-name descname">d_generate_bytecode_for_call</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv410_sheetNode" title="_sheetNode">_sheetNode</a> *<em>node</em>, <a class="reference internal" href="../reference/index.html#_CPPv412BuildContext" title="BuildContext">BuildContext</a> *<em>context</em>, bool <em>isSubroutine</em><span class="sig-paren">)</span><br /></dt>
+<a class="reference internal" href="../reference/index.html#_CPPv45BCode" title="BCode">BCode</a> <code class="sig-name descname">d_generate_bytecode_for_call</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv410_sheetNode" title="_sheetNode">_sheetNode</a> *<em>node</em>, <a class="reference internal" href="../reference/index.html#_CPPv412BuildContext" title="BuildContext">BuildContext</a> *<em>context</em>, bool <em>isSubroutine</em>, bool <em>isCFunction</em><span class="sig-paren">)</span><br /></dt>
 <dd><p>Given a node needs to be “called”, generate the bytecode and link info to call that function. </p>
 <p><dl class="simple">
 <dt><strong>Return</strong></dt><dd><p>The malloc’d bytecode generated to call the node.</p>
@@ -825,6 +826,7 @@ location of the variable.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">node</span></code>: The “unknown” function to call. </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">context</span></code>: The context needed to generate the bytecode. </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">isSubroutine</span></code>: Info needed to make sure we ignore the execution sockets. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">isCFunction</span></code>: Is the call to a C function? </p></li>
 </ul>
 </dd>
 </dl>
@@ -1004,6 +1006,8 @@ and where something is.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">.func</span></code>: Essentially a list of <code class="docutils literal notranslate"><span class="pre">SheetFunction</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">.var</span></code>: Essentially a list of <code class="docutils literal notranslate"><span class="pre">SheetVariable</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">.incl</span></code>: A list of paths to sheets that this sheet includes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.c</span></code>: A list of specifications of C functions the sheet uses.
+See <a class="reference internal" href="../the_c_api/running_c_from_decision.html#running-c-from-decision"><span class="std std-ref">Running C from Decision</span></a>.</p></li>
 </ul>
 </div>
 </div>

@@ -1,0 +1,298 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Embedding Decision &mdash; Decision 0.2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Running Decision from C" href="running_decision_from_c.html" />
+    <link rel="prev" title="The C API" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Decision
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../the_language/index.html">The Language</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../the_stages_of_compilation/index.html">The Stages of Compilation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../linking/index.html">Linking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../the_virtual_machine/index.html">The Virtual Machine</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">The C API</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Embedding Decision</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#windows">Windows</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linux">Linux</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="running_decision_from_c.html">Running Decision from C</a></li>
+<li class="toctree-l2"><a class="reference internal" href="running_c_from_decision.html">Running C from Decision</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Decision</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">The C API</a> &raquo;</li>
+        
+      <li>Embedding Decision</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/the_c_api/embedding_decision.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="embedding-decision">
+<h1>Embedding Decision<a class="headerlink" href="#embedding-decision" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
+<p>To embed Decision into your C/C++ application, you will need 2 things:</p>
+<ul class="simple">
+<li><p>The Decision header files.</p></li>
+<li><p>A compiled Decision library, which can be static or dynamic.</p></li>
+</ul>
+<p>The best way to get both is to build Decision from the source code. There are
+instructions on how to build Decision from source both in the <code class="docutils literal notranslate"><span class="pre">README.md</span></code>
+file in the root of the project, and more detailed instructions in the
+<a class="reference external" href="https://drwhut.github.io/decision/user/getting_started/install_decision.html#from-the-source-code">user manual</a>.</p>
+<p>When you build Decision, not only do you get the executable you probably
+intended, but you also get a compiled library as well!</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>On Linux, you get both the static (.a) and dynamic (.so) libraries, whereas
+on Windows by default you get the static (.lib) library. To get the
+dynamic (.dll) library, you need to specify an argument when using
+<code class="docutils literal notranslate"><span class="pre">cmake</span></code>, see <code class="docutils literal notranslate"><span class="pre">README.md</span></code> for more details.</p>
+</div>
+<p>So if you have the header files and the libraries at hand, here is how you can
+embed Decision into your program:</p>
+</div>
+<div class="section" id="windows">
+<h2>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h2>
+<p>This section assumes you are using Visual Studio to build your C/C++ project.</p>
+<p>To get Visual Studio to see the header files, you can do the following:</p>
+<ol class="arabic simple">
+<li><p>In the Solution Explorer, right-click on the project and select
+<strong>Properties</strong>.</p></li>
+<li><p>In <strong>C/C++</strong>/<strong>General</strong>, in the <strong>Additional Include Directories</strong> entry,
+either insert the path to the header files manually, or click on the arrow
+button to the right to use the in-built path editor.</p></li>
+<li><p>Now, no errors should appear about missing Decision header files, and it
+should start auto-completing functions for you.</p></li>
+</ol>
+<p>To get Visual Studio to link with the compiled Decision library:</p>
+<ol class="arabic simple">
+<li><p>In the Solution Explorer, right-click on the project and select
+<strong>Properties</strong>.</p></li>
+<li><p>In <strong>Linker</strong>/<strong>General</strong>, in the <strong>Additional Library Directories</strong> entry,
+either intert the path to the folder where the library is located manually,
+or click on the arrow button on the right to use the in-built path editor.</p></li>
+<li><p>In <strong>Linker</strong>/<strong>Input</strong>, in the <strong>Additional Dependencies</strong> entry, enter
+into the semi-colon seperated list “decision.lib”, without quotes.</p></li>
+<li><p>Now, when you build and run the project, it should link properly.</p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you built a DLL version of the Decision library, if your program is
+complaining that it cannot find decision.dll, copy that file to the same
+folder as the program that is being run.</p>
+</div>
+</div>
+<div class="section" id="linux">
+<h2>Linux<a class="headerlink" href="#linux" title="Permalink to this headline">¶</a></h2>
+<p>This section assumes you are using gcc manually to build your C/C++ project.</p>
+<p>To get your program to see the header files, add the <code class="docutils literal notranslate"><span class="pre">-I</span></code> flag when you are
+compiling the C/C++ file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gcc</span> <span class="o">-</span><span class="n">I</span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">USERNAME</span><span class="o">/</span><span class="n">decision</span><span class="o">/</span><span class="n">src</span> <span class="o">-</span><span class="n">c</span> <span class="n">main</span><span class="o">.</span><span class="n">c</span>
+</pre></div>
+</div>
+<p>To get your program to link with the library, use the <code class="docutils literal notranslate"><span class="pre">-ldecision</span></code> and <code class="docutils literal notranslate"><span class="pre">-L</span></code>
+flags:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gcc</span> <span class="n">main</span><span class="o">.</span><span class="n">o</span> <span class="o">-</span><span class="n">o</span> <span class="n">main</span> <span class="o">-</span><span class="n">L</span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">USERNAME</span><span class="o">/</span><span class="n">decision</span><span class="o">/</span><span class="n">build</span> <span class="o">-</span><span class="n">ldecision</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you installed Decision with <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">make</span> <span class="pre">install</span></code> into a common prefix
+like <code class="docutils literal notranslate"><span class="pre">/usr/local</span></code>, then you may omit the <code class="docutils literal notranslate"><span class="pre">-L</span></code> flag.</p>
+<p>Installing Decision is generally recommended, as it means that if you link
+with the dynamic library (libdecision.so), you don’t have to give an
+environment variable every time to tell the executable where the library
+lives, it should just find it under a known list of directories.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="running_decision_from_c.html" class="btn btn-neutral float-right" title="Running Decision from C" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="The C API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Benjamin Beddows
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

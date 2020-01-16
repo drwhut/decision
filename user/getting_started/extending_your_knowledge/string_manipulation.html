@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Importing Sheets &mdash; Decision 0.2.0 documentation</title>
+  <title>String Manipulation &mdash; Decision 0.2.0 documentation</title>
   
 
   
@@ -35,8 +35,8 @@
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Core Reference" href="../../core_reference/index.html" />
-    <link rel="prev" title="Functions and Subroutines" href="functions_and_subroutines.html" /> 
+    <link rel="next" title="Variables" href="variables.html" />
+    <link rel="prev" title="Changing Flow with Conditions" href="changing_flow_with_conditions.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -92,11 +92,14 @@
 <li class="toctree-l3"><a class="reference internal" href="conditions.html">Conditions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="condition_arithmetic.html">Condition Arithmetic</a></li>
 <li class="toctree-l3"><a class="reference internal" href="changing_flow_with_conditions.html">Changing Flow with Conditions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="string_manipulation.html">String Manipulation</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">String Manipulation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#length">Length</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="variables.html">Variables</a></li>
 <li class="toctree-l3"><a class="reference internal" href="iteration.html">Iteration</a></li>
 <li class="toctree-l3"><a class="reference internal" href="functions_and_subroutines.html">Functions and Subroutines</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Importing Sheets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="importing_sheets.html">Importing Sheets</a></li>
 </ul>
 </li>
 </ul>
@@ -151,13 +154,13 @@
         
           <li><a href="index.html">Extending Your Knowledge</a> &raquo;</li>
         
-      <li>Importing Sheets</li>
+      <li>String Manipulation</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="../../_sources/getting_started/extending_your_knowledge/importing_sheets.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../../_sources/getting_started/extending_your_knowledge/string_manipulation.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -170,77 +173,22 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="importing-sheets">
-<h1>Importing Sheets<a class="headerlink" href="#importing-sheets" title="Permalink to this headline">¶</a></h1>
-<p>Once you start creating lots and lots of functions and subroutines, you’ll
-want to start using them in other sheets you create as well. Why create it
-multiple times when you can create it once and use it elsewhere?</p>
-<p>This is why the <code class="docutils literal notranslate"><span class="pre">Include</span></code> property exists. With it, you can include another
-sheet by using either it’s absolute path, or it’s path relative to the sheet
-including it. Once you do, you then have access to <strong>all of the sheet’s
-functions, subroutines, and variables</strong>.</p>
-<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>&lt; my_math.dc &gt;
-
-[Function(IsEven)]
-[FunctionInput(IsEven, Integer)]
-[FunctionOutput(IsEven, Boolean)]
-
-Define(IsEven)~#1
-Mod(#1, 2)~#2
-Return(IsEven, #2)
-
-[Function(IsOdd)]
-[FunctionInput(IsOdd, Integer)]
-[FunctionOutput(IsOdd, Boolean)]
-
-Define(IsOdd)~#3
-IsEven(#3)~#4
-Not(#4)~#5
-Return(IsOdd, #5)
-
-[Variable(PI, Float, 3.14159)]
-
-[Subroutine(AreaOfCircle)]
-[FunctionInput(AreaOfCircle, Float)]
-
-Define(AreaOfCircle)~#10, #11
-PI~#12
-Multiply(#11, #11, #12)~#13
-Print(#10, &quot;Given a circle with radius:&quot;)~#14
-Print(#14, #11)~#15
-Print(#15, &quot;It&#39;s area is:&quot;)~#16
-Print(#16, #13)
+  <div class="section" id="string-manipulation">
+<h1>String Manipulation<a class="headerlink" href="#string-manipulation" title="Permalink to this headline">¶</a></h1>
+<p>Decision includes some functions that allows you to manipulate strings.</p>
+<div class="section" id="length">
+<h2>Length<a class="headerlink" href="#length" title="Permalink to this headline">¶</a></h2>
+<p>You can get the number of characters in a string:</p>
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>Start~#1
+Length(&quot;Hello, world!&quot;)~#2
+Print(#1, #2)
 </pre></div>
 </div>
-<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>&lt; main.dc &gt;
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ decision length.dc
 
-[Include(&quot;my_math.dc&quot;)]
-
-Start~#1
-IsEven(6)~#2
-IsOdd(6)~#3
-
-Print(#1, #2)~#4
-Print(#4, #3)~#5
-
-Print(#5, &quot;PI is approximately:&quot;)~#6
-PI~#7
-Print(#6, #7)~#8
-
-AreaOfCircle(#8, 2.5)
+13
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ decision main.dc
-
-true
-false
-PI is approximately:
-3.14159
-Given a circle with radius:
-2.5
-It&#39;s area is:
-19.6349
-</pre></div>
 </div>
 </div>
 
@@ -252,10 +200,10 @@ It&#39;s area is:
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../../core_reference/index.html" class="btn btn-neutral float-right" title="Core Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="variables.html" class="btn btn-neutral float-right" title="Variables" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="functions_and_subroutines.html" class="btn btn-neutral float-left" title="Functions and Subroutines" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="changing_flow_with_conditions.html" class="btn btn-neutral float-left" title="Changing Flow with Conditions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

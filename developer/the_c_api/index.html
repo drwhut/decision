@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>The Stages of Compilation &mdash; Decision 0.2.0 documentation</title>
+  <title>The C API &mdash; Decision 0.2.0 documentation</title>
   
 
   
@@ -35,8 +35,8 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Lexical Analysis" href="lexical_analysis.html" />
-    <link rel="prev" title="Semantic Rules" href="../the_language/definitions/semantics.html" /> 
+    <link rel="next" title="Embedding Decision" href="embedding_decision.html" />
+    <link rel="prev" title="The Virtual Machine" href="../the_virtual_machine/index.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -84,18 +84,15 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../the_language/index.html">The Language</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">The Stages of Compilation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="lexical_analysis.html">Lexical Analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="syntax_analysis.html">Syntax Analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="semantic_analysis.html">Semantic Analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="error_reporting.html">Error Reporting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="code_generation.html">Code Generation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="optimisation.html">Optimisation</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../the_stages_of_compilation/index.html">The Stages of Compilation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../linking/index.html">Linking</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../the_virtual_machine/index.html">The Virtual Machine</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../the_c_api/index.html">The C API</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">The C API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="embedding_decision.html">Embedding Decision</a></li>
+<li class="toctree-l2"><a class="reference internal" href="running_decision_from_c.html">Running Decision from C</a></li>
+<li class="toctree-l2"><a class="reference internal" href="running_c_from_decision.html">Running C from Decision</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
 </ul>
 
@@ -142,13 +139,13 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>The Stages of Compilation</li>
+      <li>The C API</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="../_sources/the_stages_of_compilation/index.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/the_c_api/index.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -161,18 +158,45 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="the-stages-of-compilation">
-<h1>The Stages of Compilation<a class="headerlink" href="#the-stages-of-compilation" title="Permalink to this headline">¶</a></h1>
-<p>This chapter describes the stages the compiler goes through to convert the
-Decision source code into bytecode that the virtual machine can understand.</p>
+  <div class="section" id="the-c-api">
+<h1>The C API<a class="headerlink" href="#the-c-api" title="Permalink to this headline">¶</a></h1>
+<p>Since Decision is made in C, if you are writing a program in either C or C++,
+you can include Decision as en embeddable programming language! This chapter
+describes in detail how you can do so, and what you can do once you’ve
+embedded it into your program.</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="lexical_analysis.html">Lexical Analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="syntax_analysis.html">Syntax Analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="semantic_analysis.html">Semantic Analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="error_reporting.html">Error Reporting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="code_generation.html">Code Generation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="optimisation.html">Optimisation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="embedding_decision.html">Embedding Decision</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="embedding_decision.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="embedding_decision.html#windows">Windows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="embedding_decision.html#linux">Linux</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="running_decision_from_c.html">Running Decision from C</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="running_decision_from_c.html#decision-strings">Decision Strings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="running_decision_from_c.html#loading-decision-strings">Loading Decision Strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="running_decision_from_c.html#running-decision-strings">Running Decision Strings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="running_decision_from_c.html#decision-files">Decision Files</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="running_decision_from_c.html#loading-decision-files">Loading Decision Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="running_decision_from_c.html#running-decision-files">Running Decision Files</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="running_decision_from_c.html#decision-functions">Decision Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="running_decision_from_c.html#passing-arguments">Passing Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="running_decision_from_c.html#getting-return-values">Getting Return Values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="running_decision_from_c.html#calling-decision-functions">Calling Decision Functions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="running_c_from_decision.html">Running C from Decision</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="running_c_from_decision.html#c-function-prototype">C Function Prototype</a></li>
+<li class="toctree-l2"><a class="reference internal" href="running_c_from_decision.html#c-functions-as-decision-functions">C Functions as Decision Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="running_c_from_decision.html#c-functions-as-decision-subroutines">C Functions as Decision Subroutines</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -185,10 +209,10 @@ Decision source code into bytecode that the virtual machine can understand.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="lexical_analysis.html" class="btn btn-neutral float-right" title="Lexical Analysis" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="embedding_decision.html" class="btn btn-neutral float-right" title="Embedding Decision" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../the_language/definitions/semantics.html" class="btn btn-neutral float-left" title="Semantic Rules" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../the_virtual_machine/index.html" class="btn btn-neutral float-left" title="The Virtual Machine" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

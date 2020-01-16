@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Semantic Analysis &mdash; Decision 0.1.1 documentation</title>
+  <title>Semantic Analysis &mdash; Decision 0.2.0 documentation</title>
   
 
   
@@ -103,6 +103,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../linking/index.html">Linking</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../the_virtual_machine/index.html">The Virtual Machine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../the_c_api/index.html">The C API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
 </ul>
 
@@ -234,6 +235,12 @@ correct data type? If they are names, are they defined?</p></li>
 <p>When we say <strong>literals</strong> we mean data explicitly inserted into the source
 code, e.g. In <code class="docutils literal notranslate"><span class="pre">Print(#1,</span> <span class="pre">&quot;Hello,</span> <span class="pre">world!&quot;)</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Hello,</span> <span class="pre">world!&quot;</span></code> is the
 literal.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If an integer literal was given to a socket that is exclusively for floats,
+then the compiler <em>should</em> automatically convert the integer literal to a
+float literal for convenience.</p>
 </div>
 <p>Afterwards, we take the input and output sockets and connect them. While
 connecting them, we check to see if the data types of both sockets match,

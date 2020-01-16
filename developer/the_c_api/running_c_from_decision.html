@@ -1,0 +1,440 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Running C from Decision &mdash; Decision 0.2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Reference" href="../reference/index.html" />
+    <link rel="prev" title="Running Decision from C" href="running_decision_from_c.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Decision
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../the_language/index.html">The Language</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../the_stages_of_compilation/index.html">The Stages of Compilation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../linking/index.html">Linking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../the_virtual_machine/index.html">The Virtual Machine</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">The C API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="embedding_decision.html">Embedding Decision</a></li>
+<li class="toctree-l2"><a class="reference internal" href="running_decision_from_c.html">Running Decision from C</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Running C from Decision</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#c-function-prototype">C Function Prototype</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#c-functions-as-decision-functions">C Functions as Decision Functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#c-functions-as-decision-subroutines">C Functions as Decision Subroutines</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Decision</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">The C API</a> &raquo;</li>
+        
+      <li>Running C from Decision</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/the_c_api/running_c_from_decision.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="running-c-from-decision">
+<span id="id1"></span><h1>Running C from Decision<a class="headerlink" href="#running-c-from-decision" title="Permalink to this headline">¶</a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If you are embedding into a C++ program, it is very, very recommended that
+when you include a C header file, you encapsulate it with an <code class="docutils literal notranslate"><span class="pre">extern</span></code>
+block, like so:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">extern</span> <span class="s">&quot;C&quot;</span> <span class="p">{</span>
+    <span class="cp">#include</span> <span class="cpf">&lt;decision.h&gt;</span><span class="cp"></span>
+    <span class="cp">#include</span> <span class="cpf">&lt;dsheet.h&gt;</span><span class="cp"></span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="c-function-prototype">
+<h2>C Function Prototype<a class="headerlink" href="#c-function-prototype" title="Permalink to this headline">¶</a></h2>
+<p>In order to start calling C functions from Decision, the functions you want to
+call need to look like this:</p>
+<dl class="type">
+<dt>
+<em class="property">typedef </em>void (*<code class="sig-name descname">DecisionCFunction</code>)<span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv43DVM" title="DVM">DVM</a> *vm<span class="sig-paren">)</span><br /></dt>
+<dd><p>This function prototype describes what C functions that are called by Decision should look like. </p>
+</dd></dl>
+
+<p>Essentially, the functions that are called by Decision should not return
+anything, and they take a Decision Virtual Machine pointer as input.</p>
+<p>But wait, what if I want my C function to return values? The answer to that
+question is that inputs and outputs are taken from the Virtual Machine’s
+general stack, with the same functions described in <a class="reference internal" href="running_decision_from_c.html#decision-functions"><span class="std std-ref">Decision Functions</span></a>.</p>
+<p>For example, lets say you want to create a <code class="docutils literal notranslate"><span class="pre">Sin</span></code> function that you want to
+call from a Decision sheet. A way you could implement the C function would be
+like this:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;dcfunc.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;dvm.h&gt;</span><span class="cp"></span>
+
+<span class="cp">#include</span> <span class="cpf">&lt;math.h&gt;</span><span class="cp"></span>
+
+<span class="kt">void</span> <span class="nf">mySin</span><span class="p">(</span><span class="n">DVM</span> <span class="o">*</span><span class="n">vm</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Pop the argument from the stack.</span>
+    <span class="n">dfloat</span> <span class="n">input</span> <span class="o">=</span> <span class="n">d_vm_pop_stack_float</span><span class="p">(</span><span class="n">vm</span><span class="p">);</span>
+
+    <span class="n">dfloat</span> <span class="n">output</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">input</span><span class="p">)</span> <span class="c1">// sin defined in math.h</span>
+
+    <span class="c1">// Push the return value back onto the stack.</span>
+    <span class="n">d_vm_push_stack_float</span><span class="p">(</span><span class="n">vm</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Notice that the <code class="docutils literal notranslate"><span class="pre">mySin</span></code> function doesn’t return anything, and it takes a
+<code class="docutils literal notranslate"><span class="pre">DVM</span> <span class="pre">*</span></code> input, so it fits the prototype explained above. It then pops a float
+value from the stack, takes the <code class="docutils literal notranslate"><span class="pre">sin</span></code> of that value, and pushes the result
+onto the stack as the return value.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>As per the calling convention, the VM before calling will push arguments in
+reverse order, and after calling will pop return values in the correct
+order.</p>
+<p>This is why, when defining C functions to be called from Decision, you
+should <strong>pop arguments in the correct order</strong> and <strong>push return values in
+reverse order</strong>.</p>
+</div>
+<p>So now you know how to create C functions so you can call them from Decision,
+so how do you call them from Decision?</p>
+</div>
+<div class="section" id="c-functions-as-decision-functions">
+<h2>C Functions as Decision Functions<a class="headerlink" href="#c-functions-as-decision-functions" title="Permalink to this headline">¶</a></h2>
+<p>To create a Decision function to call a C function, you can use this function
+defined in <code class="docutils literal notranslate"><span class="pre">dcfunc.h</span></code>:</p>
+<dl class="function">
+<dt>
+void <code class="sig-name descname">d_create_c_function</code><span class="sig-paren">(</span><em class="property">const</em> char *<em>name</em>, <a class="reference internal" href="../reference/index.html#_CPPv417DecisionCFunction" title="DecisionCFunction">DecisionCFunction</a> <em>function</em>, <a class="reference internal" href="../reference/index.html#_CPPv45DType" title="DType">DType</a> *<em>inputs</em>, <a class="reference internal" href="../reference/index.html#_CPPv45DType" title="DType">DType</a> *<em>outputs</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Create a function that calls a C function. Any sheets that are loaded after this call can use this new function. </p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the function. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">function</span></code>: The C function to call when the node is activated. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">inputs</span></code>: A <code class="docutils literal notranslate"><span class="pre">TYPE_NONE</span></code>-terminated array of the input data types. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">outputs</span></code>: A <code class="docutils literal notranslate"><span class="pre">TYPE_NONE</span></code>-terminated array of the output data types. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>You should then free the list of created C functions at the end of your program
+with:</p>
+<dl class="function">
+<dt>
+void <code class="sig-name descname">d_free_c_functions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><br /></dt>
+<dd><p>If any functions or subroutines have been created that call C functions, free them. </p>
+</dd></dl>
+
+<p>Here is an example that uses the <code class="docutils literal notranslate"><span class="pre">mySin</span></code> function that we defined earlier:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;dcfunc.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;decision.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;dtype.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;dvm.h&gt;</span><span class="cp"></span>
+
+<span class="cp">#include</span> <span class="cpf">&lt;math.h&gt;</span><span class="cp"></span>
+
+<span class="kt">void</span> <span class="nf">mySin</span><span class="p">(</span><span class="n">DVM</span> <span class="o">*</span><span class="n">vm</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Pop the argument from the stack.</span>
+    <span class="n">dfloat</span> <span class="n">input</span> <span class="o">=</span> <span class="n">d_vm_pop_stack_float</span><span class="p">(</span><span class="n">vm</span><span class="p">);</span>
+
+    <span class="n">dfloat</span> <span class="n">output</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">input</span><span class="p">)</span> <span class="c1">// sin defined in math.h</span>
+
+    <span class="c1">// Push the return value back onto the stack.</span>
+    <span class="n">d_vm_push_stack_float</span><span class="p">(</span><span class="n">vm</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// Sin has 1 Float input.</span>
+    <span class="n">DType</span> <span class="n">sinInputs</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span><span class="n">TYPE_FLOAT</span><span class="p">,</span> <span class="n">TYPE_NONE</span><span class="p">};</span>
+
+    <span class="c1">// Sin has 1 Float output.</span>
+    <span class="n">DType</span> <span class="n">sinOutputs</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span><span class="n">TYPE_FLOAT</span><span class="p">,</span> <span class="n">TYPE_NONE</span><span class="p">};</span>
+
+    <span class="c1">// Create the C function.</span>
+    <span class="n">d_create_c_function</span><span class="p">(</span><span class="s">&quot;Sin&quot;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">mySin</span><span class="p">,</span> <span class="n">sinInputs</span><span class="p">,</span> <span class="n">sinOutputs</span><span class="p">);</span>
+
+    <span class="c1">// Run source code that calls the function.</span>
+    <span class="n">d_run_string</span><span class="p">(</span><span class="s">&quot;Start~#1; Sin(1.0)~#2; Print(#1, #2);&quot;</span><span class="p">,</span> <span class="s">&quot;source&quot;</span><span class="p">);</span>
+
+    <span class="c1">// Free the function we defined earlier.</span>
+    <span class="n">d_free_c_functions</span><span class="p">();</span>
+
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="c-functions-as-decision-subroutines">
+<h2>C Functions as Decision Subroutines<a class="headerlink" href="#c-functions-as-decision-subroutines" title="Permalink to this headline">¶</a></h2>
+<p>To create a Decision subroutine to call a C function, you can use this function
+defined in <code class="docutils literal notranslate"><span class="pre">dcfunc.h</span></code>:</p>
+<dl class="function">
+<dt>
+void <code class="sig-name descname">d_create_c_subroutine</code><span class="sig-paren">(</span><em class="property">const</em> char *<em>name</em>, <a class="reference internal" href="../reference/index.html#_CPPv417DecisionCFunction" title="DecisionCFunction">DecisionCFunction</a> <em>function</em>, <a class="reference internal" href="../reference/index.html#_CPPv45DType" title="DType">DType</a> *<em>inputs</em>, <a class="reference internal" href="../reference/index.html#_CPPv45DType" title="DType">DType</a> *<em>outputs</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Create a subroutine that calls a C function. Any sheets that are loaded after this call can use this new subroutine. </p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the subroutine. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">function</span></code>: The C function to call when the node is activated. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">inputs</span></code>: A <code class="docutils literal notranslate"><span class="pre">TYPE_NONE</span></code>-terminated array of the input data types. Note that this array should not include a <code class="docutils literal notranslate"><span class="pre">TYPE_EXECUTION</span></code> type. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">outputs</span></code>: A <code class="docutils literal notranslate"><span class="pre">TYPE_NONE</span></code>-terminated array of the output data types. Note that this array should not include a <code class="docutils literal notranslate"><span class="pre">TYPE_EXECUTION</span></code> type. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This function automatically prepends the standard input and output
+Execution sockets for you.</p>
+</div>
+<p>Like before, you should then free the list of created C functions at the end of
+your program with:</p>
+<dl class="function">
+<dt>
+void <code class="sig-name descname">d_free_c_functions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><br /></dt>
+<dd><p>If any functions or subroutines have been created that call C functions, free them. </p>
+</dd></dl>
+
+<p>Here is an example of a subroutine that reads the contents of a given file:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;dcfunc.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;decision.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;dtype.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;dvm.h&gt;</span><span class="cp"></span>
+
+<span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+
+<span class="c1">// A buffer for the contents of the file.</span>
+<span class="c1">// The reason it is a global is because it will last the lifetime of the</span>
+<span class="c1">// program - if we put it in the readFile function, it would go out of scope</span>
+<span class="c1">// when the function ended, so the pointer pushed to the VM would be invalid.</span>
+<span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span>
+
+<span class="kt">void</span> <span class="nf">myReadFile</span><span class="p">(</span><span class="n">DVM</span> <span class="o">*</span><span class="n">vm</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Pop the file name argument from the stack.</span>
+    <span class="kt">char</span> <span class="o">*</span><span class="n">fileName</span> <span class="o">=</span> <span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span><span class="n">d_vm_pop_stack_ptr</span><span class="p">(</span><span class="n">vm</span><span class="p">);</span>
+
+    <span class="kt">FILE</span> <span class="o">*</span><span class="n">fp</span> <span class="o">=</span> <span class="n">fopen</span><span class="p">(</span><span class="n">fileName</span><span class="p">,</span> <span class="s">&quot;r&quot;</span><span class="p">);</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">fp</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kt">size_t</span> <span class="n">len</span> <span class="o">=</span> <span class="n">fread</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="n">fp</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">ferror</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Error reading file!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="n">buffer</span><span class="p">[</span><span class="n">len</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="n">fclose</span><span class="p">(</span><span class="n">fp</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Push the buffer pointer return value to the stack.</span>
+    <span class="n">d_vm_push_stack_ptr</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="n">buffer</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// ReadFile has 1 String input.</span>
+    <span class="n">DType</span> <span class="n">readFileInputs</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span><span class="n">TYPE_STRING</span><span class="p">,</span> <span class="n">TYPE_NONE</span><span class="p">};</span>
+
+    <span class="c1">// ReadFile has 1 String output.</span>
+    <span class="n">DType</span> <span class="n">readFileOutputs</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span><span class="n">TYPE_STRING</span><span class="p">,</span> <span class="n">TYPE_NONE</span><span class="p">};</span>
+
+    <span class="c1">// Create the C subroutine.</span>
+    <span class="n">d_create_c_subroutine</span><span class="p">(</span><span class="s">&quot;ReadFile&quot;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">myReadFile</span><span class="p">,</span> <span class="n">readFileInputs</span><span class="p">,</span> <span class="n">readFileOutputs</span><span class="p">);</span>
+
+    <span class="c1">// Run source code that calls the subrotune.</span>
+    <span class="n">d_run_string</span><span class="p">(</span><span class="s">&quot;Start~#1; ReadFile(#1, &#39;hello.txt&#39;)~#2, #3; Print(#2, #3);&quot;</span><span class="p">,</span> <span class="s">&quot;source&quot;</span><span class="p">);</span>
+
+    <span class="c1">// Free the subroutine we defined earlier.</span>
+    <span class="n">d_free_c_functions</span><span class="p">();</span>
+
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../reference/index.html" class="btn btn-neutral float-right" title="Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="running_decision_from_c.html" class="btn btn-neutral float-left" title="Running Decision from C" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Benjamin Beddows
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

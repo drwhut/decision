@@ -51,7 +51,7 @@ Decision is being developed on
 When is Decision?
 =================
 
-Decision is currently in version 0.1.1
+Decision is currently in version 0.2.0
 
 The version format is ``[Major Build].[Minor Build].[Patch]``, where an
 increase in the major build indicates a major rework, an increase in the minor
