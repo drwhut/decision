@@ -1,0 +1,19 @@
+Start~#1
+
+< The empty string >
+Length("")~#2
+Print(#1, #2)~#3
+
+< A normal string >
+Length("Hello, world!")~#4
+Print(#3, #4)~#5
+
+< A string with escape characters in >
+Length("Hello\tthere\n")~#6
+Print(#5, #6)~#7
+
+< A variable string >
+[Variable(myStr, String, "boop")]
+myStr~#8
+Length(#8)~#9
+Print(#7, #9)~#10

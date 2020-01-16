@@ -30,6 +30,7 @@ static const char *CORE_FUNC_NAMES[NUM_CORE_FUNCTIONS] = {
     "For",
     "IfThen",
     "IfThenElse",
+    "Length",
     "LessThan",
     "LessThanOrEqual",
     "Mod",
@@ -60,6 +61,7 @@ static const short CORE_FUNC_NUM_INPUTS[NUM_CORE_FUNCTIONS] = {
     4,  // CORE_FOR
     2,  // CORE_IF_THEN
     2,  // CORE_IF_THEN_ELSE
+    1,  // CORE_LENGTH
     2,  // CORE_LESS_THAN
     2,  // CORE_LESS_THAN_OR_EQUAL
     2,  // CORE_MOD
@@ -90,6 +92,7 @@ static const short CORE_FUNC_NUM_OUTPUTS[NUM_CORE_FUNCTIONS] = {
     3, // CORE_FOR
     2, // CORE_IF_THEN
     3, // CORE_IF_THEN_ELSE
+    1, // CORE_LENGTH
     1, // CORE_LESS_THAN
     1, // CORE_LESS_THAN_OR_EQUAL
     1, // CORE_MOD
@@ -117,6 +120,7 @@ static const DType CORE_FUNC_INPUT_TYPES[NUM_CORE_FUNCTIONS][5] = {
     {TYPE_EXECUTION, TYPE_NUMBER, TYPE_NUMBER, TYPE_NUMBER, 0}, // CORE_FOR
     {TYPE_EXECUTION, TYPE_BOOL, 0},                             // CORE_IF_THEN
     {TYPE_EXECUTION, TYPE_BOOL, 0}, // CORE_IF_THEN_ELSE
+    {TYPE_STRING, 0},               // CORE_LENGTH
     {TYPE_NUMBER | TYPE_STRING, TYPE_NUMBER | TYPE_STRING, 0}, // CORE_LESS_THAN
     {TYPE_NUMBER | TYPE_STRING, TYPE_NUMBER | TYPE_STRING,
      0},                     // CORE_LESS_THAN_OR_EQUAL
@@ -146,6 +150,7 @@ static const DType CORE_FUNC_OUTPUT_TYPES[NUM_CORE_FUNCTIONS][4] = {
     {TYPE_EXECUTION, TYPE_NUMBER, TYPE_EXECUTION, 0},    // CORE_FOR
     {TYPE_EXECUTION, TYPE_EXECUTION, 0},                 // CORE_IF_THEN
     {TYPE_EXECUTION, TYPE_EXECUTION, TYPE_EXECUTION, 0}, // CORE_IF_THEN_ELSE
+    {TYPE_INT, 0},                                       // CORE_LENGTH
     {TYPE_BOOL, 0},                                      // CORE_LESS_THAN
     {TYPE_BOOL, 0},                      // CORE_LESS_THAN_OR_EQUAL
     {TYPE_INT, 0},                       // CORE_MOD

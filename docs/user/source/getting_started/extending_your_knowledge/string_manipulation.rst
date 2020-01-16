@@ -15,23 +15,24 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-########################
-Extending Your Knowledge
-########################
+String Manipulation
+===================
 
-Congratulations, you've created your first Decision script! Now you can start
-exploring some of the other features Decision has to offer at your own pace:
+Decision includes some functions that allows you to manipulate strings.
 
-.. toctree::
-   :maxdepth: 1
+Length
+------
 
-   comments.rst
-   arithmetic.rst
-   conditions.rst
-   condition_arithmetic.rst
-   changing_flow_with_conditions.rst
-   string_manipulation.rst
-   variables.rst
-   iteration.rst
-   functions_and_subroutines.rst
-   importing_sheets.rst
+You can get the number of characters in a string:
+
+.. code-block:: decision
+
+   Start~#1
+   Length("Hello, world!")~#2
+   Print(#1, #2)
+
+.. code-block::
+
+   $ decision length.dc
+
+   13
