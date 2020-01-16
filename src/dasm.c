@@ -18,6 +18,7 @@
 
 #include "dasm.h"
 
+#include "dcfunc.h"
 #include "decision.h"
 #include "dlink.h"
 #include "dmalloc.h"
@@ -33,15 +34,15 @@
 
 /* An array of mnemonics, where the index matches the opcode. */
 static const char *MNEMONICS[NUM_OPCODES] = {
-    "RET",     "ADD",      "ADDF",  "ADDI",   "AND",     "ANDI",    "CALL",
-    "CALLR",   "CEQ",      "CEQF",  "CEQS",   "CLEQ",    "CLEQF",   "CLEQS",
-    "CLT",     "CLTF",     "CLTS",  "CMEQ",   "CMEQF",   "CMEQS",   "CMT",
-    "CMTF",    "CMTS",     "CVTF",  "CVTI",   "DIV",     "DIVF",    "DIVI",
-    "J",       "JCON",     "JR",    "JRCON",  "LOAD",    "LOADADR", "LOADADRB",
-    "LOADARG", "LOADARGI", "LOADF", "LOADI",  "LOADUI",  "MOD",     "MODI",
-    "MUL",     "MULF",     "MULI",  "MVTF",   "MVTI",    "NOT",     "OR",
-    "ORI",     "POP",      "PUSH",  "STOADR", "STOADRB", "SUB",     "SUBF",
-    "SUBI",    "SYSCALL",  "XOR",   "XORI"};
+    "RET",      "ADD",     "ADDF",     "ADDI",  "AND",    "ANDI",    "CALL",
+    "CALLC",    "CALLR",   "CEQ",      "CEQF",  "CEQS",   "CLEQ",    "CLEQF",
+    "CLEQS",    "CLT",     "CLTF",     "CLTS",  "CMEQ",   "CMEQF",   "CMEQS",
+    "CMT",      "CMTF",    "CMTS",     "CVTF",  "CVTI",   "DIV",     "DIVF",
+    "DIVI",     "J",       "JCON",     "JR",    "JRCON",  "LOAD",    "LOADADR",
+    "LOADADRB", "LOADARG", "LOADARGI", "LOADF", "LOADI",  "LOADUI",  "MOD",
+    "MODI",     "MUL",     "MULF",     "MULI",  "MVTF",   "MVTI",    "NOT",
+    "OR",       "ORI",     "POP",      "PUSH",  "STOADR", "STOADRB", "SUB",
+    "SUBF",     "SUBI",    "SYSCALL",  "XOR",   "XORI"};
 
 /**
  * \fn void d_asm_text_dump(char *code, size_t size)
@@ -93,6 +94,7 @@ DECISION_API void d_asm_text_dump(char *code, size_t size) {
 
             // 1 general register.
             case OP_CALL:
+            case OP_CALLC:
             case OP_J:
             case OP_NOT:
             case OP_POP:
@@ -420,6 +422,9 @@ const char *d_asm_generate_object(Sheet *sheet, size_t *size) {
                  5 +             // ".incl"
                  sizeof(duint) + // Unsigned integer to state the size of
                                  // the next section.
+                 2 +             // ".c"
+                 sizeof(duint) + // Unsigned integer to state the size of
+                                 // the next section.
                  2;              // '.' and \0 at the end of the string.
 
     // The .func section size can highly vary, so it gets it own special spot
@@ -513,6 +518,25 @@ const char *d_asm_generate_object(Sheet *sheet, size_t *size) {
 
     len += inclLen;
 
+    // The .c section can vary as well.
+    size_t cLen = 0;
+
+    // We only need to put C functions that we use in this list.
+    for (size_t metaIndex = 0; metaIndex < sheet->_link.size; metaIndex++) {
+        LinkMeta meta = sheet->_link.list[metaIndex];
+
+        if (meta.type == LINK_CFUNCTION) {
+            CFunction *cFunc = (CFunction *)meta.meta;
+
+            // The name of the C function, along with it's inputs and outputs,
+            // which are TYPE_NONE terminated.
+            cLen += strlen(cFunc->name) + 1 +
+                    (cFunc->numInputs + cFunc->numOutputs + 2) * sizeof(DType);
+        }
+    }
+
+    len += cLen;
+
     *size = len;
 
     // Allocate memory to the string.
@@ -584,7 +608,28 @@ const char *d_asm_generate_object(Sheet *sheet, size_t *size) {
         memcpy(ptr, lm.name, sizeOfNamePlusNull);
         ptr += sizeOfNamePlusNull;
 
-        memcpy(ptr, &lm._ptr, sizeof(dint));
+        // If the object is in another sheet, we can't store the pointer as it
+        // is now! We will need to re-calculate it when we run the object after
+        // it is built.
+        char *newPtr = lm._ptr;
+
+        if (lm.type == LINK_VARIABLE || lm.type == LINK_VARIABLE_POINTER) {
+            SheetVariable *extVar = (SheetVariable *)lm.meta;
+            Sheet *extSheet       = extVar->sheet;
+
+            if (sheet != extSheet) {
+                newPtr = (char *)-1;
+            }
+        } else if (lm.type == LINK_FUNCTION) {
+            SheetFunction *extFunc = (SheetFunction *)lm.meta;
+            Sheet *extSheet        = extFunc->sheet;
+
+            if (sheet != extSheet) {
+                newPtr = (char *)-1;
+            }
+        }
+
+        memcpy(ptr, &newPtr, sizeof(dint));
         ptr += sizeof(dint);
     }
 
@@ -801,6 +846,46 @@ const char *d_asm_generate_object(Sheet *sheet, size_t *size) {
         ptr += strLenPlusNull;
 
         includePtr++;
+    }
+
+    // ".c"
+    memcpy(ptr, ".c", 2);
+    ptr += 2;
+
+    // sizeof(.c)
+    memcpy(ptr, &cLen, sizeof(duint));
+    ptr += sizeof(duint);
+
+    // .c section.
+    for (size_t metaIndex = 0; metaIndex < sheet->_link.size; metaIndex++) {
+        LinkMeta meta = sheet->_link.list[metaIndex];
+
+        if (meta.type == LINK_CFUNCTION) {
+            CFunction *cFunc = (CFunction *)meta.meta;
+
+            size_t nameLenPlusNull = strlen(cFunc->name) + 1;
+            memcpy(ptr, cFunc->name, nameLenPlusNull);
+            ptr += nameLenPlusNull;
+
+            DType none = TYPE_NONE;
+
+            // Since we are writing the arrays like they exist in the CFunction,
+            // TYPE_NONE terminated, we might as well copy the arrays directly,
+            // and then add the TYPE_NONEs afterward.
+            size_t inputLen = cFunc->numInputs * sizeof(DType);
+            memcpy(ptr, cFunc->inputs, inputLen);
+            ptr += inputLen;
+
+            memcpy(ptr, &none, sizeof(DType));
+            ptr += sizeof(DType);
+
+            size_t outputLen = cFunc->numOutputs * sizeof(DType);
+            memcpy(ptr, cFunc->outputs, outputLen);
+            ptr += outputLen;
+
+            memcpy(ptr, &none, sizeof(DType));
+            ptr += sizeof(DType);
+        }
     }
 
     // '.'
@@ -1208,6 +1293,121 @@ Sheet *d_asm_load_object(const char *obj, size_t size, const char *filePath) {
                 free(includeFilePath);
 
                 ptr += filePathLen + 1;
+            }
+        } else if (strncmp(ptr, ".c", 2) == 0) {
+            // TODO: Make sure this sections runs after the .lmeta section, as
+            // we need to make sure we can access the array!
+
+            ptr += 2;
+            sizeOfSection = *((duint *)ptr);
+            ptr += sizeof(duint);
+
+            char *startOfData = ptr;
+
+            while ((size_t)(ptr - startOfData) < sizeOfSection) {
+                // The name of the function.
+                char *funcName = ptr;
+                ptr += strlen(funcName) + 1;
+
+                // The input array.
+                DType *inputs = (DType *)ptr;
+
+                while (*((DType *)ptr) != TYPE_NONE) {
+                    ptr += sizeof(DType);
+                }
+
+                ptr += sizeof(DType); // Skip over the TYPE_NONE.
+
+                // The output array.
+                DType *outputs = (DType *)ptr;
+
+                while (*((DType *)ptr) != TYPE_NONE) {
+                    ptr += sizeof(DType);
+                }
+
+                ptr += sizeof(DType); // Skip over the TYPE_NONE.
+
+                // We have all the information we need - now we need to make
+                // sure the C function the object described exists.
+                bool cFuncFound  = false;
+                CFunction *cFunc = NULL;
+
+                size_t numCFunctions = d_get_num_c_functions();
+                for (size_t cIndex = 0; cIndex < numCFunctions; cIndex++) {
+                    cFunc = (CFunction *)d_get_c_functions() + cIndex;
+
+                    // Does it have the same name?
+                    if (strcmp(cFunc->name, funcName) == 0) {
+
+                        // Does it have the same number of inputs and outputs?
+                        size_t numInputs = 0, numOutputs = 0;
+                        DType *typePtr;
+
+                        for (typePtr = inputs; *typePtr != TYPE_NONE;
+                             typePtr++) {
+                            numInputs++;
+                        }
+
+                        for (typePtr = outputs; *typePtr != TYPE_NONE;
+                             typePtr++) {
+                            numOutputs++;
+                        }
+
+                        if ((cFunc->numInputs == numInputs) &&
+                            (cFunc->numOutputs == numOutputs)) {
+
+                            // Are the input and output types the same?
+                            bool sameInputs = true, sameOutputs = true;
+
+                            typePtr           = inputs;
+                            DType *typePtrDef = (DType *)cFunc->inputs;
+                            for (size_t i = 0; i < numInputs; i++) {
+                                if (*typePtr != *typePtrDef) {
+                                    sameInputs = false;
+                                    break;
+                                }
+                                typePtr++;
+                                typePtrDef++;
+                            }
+
+                            typePtr    = outputs;
+                            typePtrDef = (DType *)cFunc->outputs;
+                            for (size_t i = 0; i < numOutputs; i++) {
+                                if (*typePtr != *typePtrDef) {
+                                    sameOutputs = false;
+                                    break;
+                                }
+                                typePtr++;
+                                typePtrDef++;
+                            }
+
+                            if (sameInputs && sameOutputs) {
+                                // Then we've found the C function!
+                                cFuncFound = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (cFuncFound) {
+                    // Great! We just need to edit the LinkMeta entry to point
+                    // to the CFunction.
+                    for (size_t linkMetaIndex = 0;
+                         linkMetaIndex < out->_link.size; linkMetaIndex++) {
+                        LinkMeta *meta = out->_link.list + linkMetaIndex;
+
+                        if (meta->type == LINK_CFUNCTION) {
+                            if (strcmp(meta->name, funcName) == 0) {
+                                meta->meta = cFunc;
+                            }
+                        }
+                    }
+                } else {
+                    ERROR_COMPILER(out->filePath, 0, true,
+                                   "Sheet requires a C function %s to work",
+                                   funcName);
+                }
             }
         } else if (strncmp(ptr, ".\0", 2) == 0) {
             // We've reached the end, stop parsing.

@@ -19,7 +19,7 @@
 cmake_minimum_required(VERSION 2.6)
 project(Decision)
 
-set (Decision_VERSION 0.1.1)
+set (Decision_VERSION 0.2.0)
 
 # Since the built files are added in the src/ directory,
 # the files by default would go into a src/ directory.
@@ -29,3 +29,11 @@ set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 add_subdirectory(src)
+
+# Only create the tests if the user wants to.
+option(COMPILER_C_TESTS "Do you want to enable C API tests?" OFF)
+
+if(COMPILER_C_TESTS)
+    enable_testing()
+    add_subdirectory(tests/c)
+endif(COMPILER_C_TESTS)

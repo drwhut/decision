@@ -15,7 +15,7 @@ It is also available to build from the project. See the
 
 ## Branches
 
-* `master` (0.1.1): The stable branch, which contains the "safest" version to
+* `master` (0.2.0): The stable branch, which contains the "safest" version to
 use.
 * `development`: The development branch, which contains the latest and greatest
 features, but may not be stable as it is being actively worked on by developers.
@@ -31,11 +31,16 @@ installed like gcc and make.
 ```bash
 mkdir build
 cd build
-cmake ..
+cmake -DCOMPILER_32=ON ..
+cmake --build . --config Debug
+cmake --build . --config Release
 ```
 If you have Visual Studio, this will generate a Visual Studio solution. You can
-then open this solution and compile as normal.
-You should set the *decision* project to be the start-up project as well.
+either run CMake's "--build" argument as above, or you can open the solution
+yourself and build it from Visual Studio directly.
+
+If you choose to run Decision directly from Visual Studio, you should set the
+*decision* project to be the start-up project as well.
 Right-click on the *decision* project in the solution explorer, and click
 "Set as StartUp Project".
 
@@ -44,15 +49,19 @@ Right-click on the *decision* project in the solution explorer, and click
 ```bash
 mkdir build
 cd build
-cmake -G "Visual Studio 15 2017 Win64" ..
+cmake -DCOMPILER_32=OFF -G "Visual Studio 15 2017 Win64" ..
+cmake --build . --config Debug
+cmake --build . --config Release
 ```
 By default, CMake will not generate a x64 version. Because of this, you need to
 provide an extra argument, which you can get by reading the output of
 `cmake ..`, and adding "Win64" to the end. For example, if it says "-- Building
 for: Visual Studio 15 2017", provide the argument as above.
-Same as above, you should set the *decision* project to be the start-up project
-as well. Right-click on the *decision* project in the solution explorer, and
-click "Set as StartUp Project".
+
+Same as above, if you choose to run Decision from Visual Studio, you should
+set the *decision* project to be the start-up project as well. Right-click on
+the *decision* project in the solution explorer, and click "Set as StartUp
+Project".
 
 ### Linux
 
@@ -95,6 +104,17 @@ argument:
 ```bash
 cmake -DCOMPILER_DLL=ON ..
 ```
+
+#### Enable C API Tests
+
+If you want to test Decision's C API, add this argument:
+
+```bash
+cmake -DCOMPILER_C_TESTS=ON ..
+```
+
+Note that this option will generate a lot more executables than usual.
+See [tests/README.md](tests/README.md) for more details.
 
 ## License
 

@@ -3,7 +3,13 @@
 This directory contains a series of tests to make sure that the final
 executable is working properly.
 
-## Environment variables
+## C API Tests
+
+One of the directories in `tests/` is not like the others... `tests/c/` is
+tested seperately from all of the other directories, and it uses CMake to build
+the test files and execute them, but only if `COMPILER_C_TESTS = ON`.
+
+## Environment Variables
 
 In order for the tests to know where the Decision executable lives, you will
 need to define an environment variable before running the tests. The variable

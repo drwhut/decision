@@ -21,7 +21,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake ..
+          cmake -DCOMPILER_C_TESTS=ON ..
       - name: Build Decision
         run: |
           cd build
@@ -30,7 +30,11 @@ jobs:
         run: |
           cd build
           ./decision -v
-      - name: Run tests
+      - name: Run C tests
+        run: |
+          cd build
+          make test
+      - name: Run Decision tests
         run: |
           chmod +x tests/run_tests.sh
           EXECUTABLE="$(pwd)/build/decision" ./tests/run_tests.sh

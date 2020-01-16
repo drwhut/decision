@@ -25,9 +25,9 @@
 #ifndef DVM_H
 #define DVM_H
 
-#include <stdbool.h>
 #include "dcfg.h"
 #include "derror.h"
+#include <stdbool.h>
 
 #include <stdint.h>
 
@@ -48,61 +48,62 @@ typedef enum _dIns {
     OP_ADDI  = 3,  ///< $( r )  += W_IMMEDIATE(4/2)
     OP_AND   = 4,  ///< $( r1 )  = $( r1 ) & $( r2 )
     OP_ANDI  = 5,  ///< $( r )  &= IMMEDIATE(4/2)
-    OP_CALL  = 6,  ///< push(callStack, $( pc )); $( pc ) = $(r)
-    OP_CALLR = 7,  ///< push(callStack, $( pc )); $( pc ) += W_IMMEDIATE(4/2)
-    OP_CEQ   = 8,  ///< $( r1 )  = ($( r2 ) == $( r3 )) ? 1 : 0
-    OP_CEQF  = 9,  ///< $( r1 )  = ($( f2 ) == $( f3 )) ? 1 : 0
-    OP_CEQS  = 10, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) == 0) ? 1 : 0
-    OP_CLEQ  = 11, ///< $( r1 )  = ($( r2 ) <= $( r3 )) ? 1 : 0
-    OP_CLEQF = 12, ///< $( r1 )  = ($( f2 ) <= $( f3 )) ? 1 : 0
-    OP_CLEQS = 13, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) <= 0) ? 1 : 0
-    OP_CLT   = 14, ///< $( r1 )  = ($( r2 ) < $( r3 )) ? 1 : 0
-    OP_CLTF  = 15, ///< $( r1 )  = ($( f2 ) < $( f3 )) ? 1 : 0
-    OP_CLTS  = 16, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) < 0) ? 1 : 0
-    OP_CMEQ  = 17, ///< $( r1 )  = ($( r2 ) >= $( r3 )) ? 1 : 0
-    OP_CMEQF = 18, ///< $( r1 )  = ($( f2 ) >= $( f3 )) ? 1 : 0
-    OP_CMEQS = 19, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) >= 0) ? 1 : 0
-    OP_CMT   = 20, ///< $( r1 )  = ($( r2 ) > $( r3 )) ? 1 : 0
-    OP_CMTF  = 21, ///< $( r1 )  = ($( f2 ) > $( f3 )) ? 1 : 0
-    OP_CMTS  = 22, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) > 0) ? 1 : 0
-    OP_CVTF  = 23, ///< $( f1 )  = (dfloat)$( r0 )
-    OP_CVTI  = 24, ///< $( r1 )  = (dint)$(f0)
-    OP_DIV   = 25, ///< $( r1 )  = $( r1 ) / $( r2 )
-    OP_DIVF  = 26, ///< $( f1 )  = $( f1 ) / $( f2 )
-    OP_DIVI  = 27, ///< $( r )   = $(r) / W_IMMEDIATE(4/2)
-    OP_J     = 28, ///< $( pc )  = $(r)
-    OP_JCON  = 29, ///< $( pc )  = ($( r2 )) ? $( r1 ) : $( pc )
-    OP_JR    = 30, ///< $( pc ) += W_IMMEDIATE(4/2)
+    OP_CALL  = 6,  ///< push(callStack, $( pc )); $( pc ) = $( r )
+    OP_CALLC = 7,  ///< (*$( r ))(this)
+    OP_CALLR = 8,  ///< push(callStack, $( pc )); $( pc ) += W_IMMEDIATE(4/2)
+    OP_CEQ   = 9,  ///< $( r1 )  = ($( r2 ) == $( r3 )) ? 1 : 0
+    OP_CEQF  = 10, ///< $( r1 )  = ($( f2 ) == $( f3 )) ? 1 : 0
+    OP_CEQS  = 11, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) == 0) ? 1 : 0
+    OP_CLEQ  = 12, ///< $( r1 )  = ($( r2 ) <= $( r3 )) ? 1 : 0
+    OP_CLEQF = 13, ///< $( r1 )  = ($( f2 ) <= $( f3 )) ? 1 : 0
+    OP_CLEQS = 14, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) <= 0) ? 1 : 0
+    OP_CLT   = 15, ///< $( r1 )  = ($( r2 ) < $( r3 )) ? 1 : 0
+    OP_CLTF  = 16, ///< $( r1 )  = ($( f2 ) < $( f3 )) ? 1 : 0
+    OP_CLTS  = 17, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) < 0) ? 1 : 0
+    OP_CMEQ  = 18, ///< $( r1 )  = ($( r2 ) >= $( r3 )) ? 1 : 0
+    OP_CMEQF = 19, ///< $( r1 )  = ($( f2 ) >= $( f3 )) ? 1 : 0
+    OP_CMEQS = 20, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) >= 0) ? 1 : 0
+    OP_CMT   = 21, ///< $( r1 )  = ($( r2 ) > $( r3 )) ? 1 : 0
+    OP_CMTF  = 22, ///< $( r1 )  = ($( f2 ) > $( f3 )) ? 1 : 0
+    OP_CMTS  = 23, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) > 0) ? 1 : 0
+    OP_CVTF  = 24, ///< $( f1 )  = (dfloat)$( r0 )
+    OP_CVTI  = 25, ///< $( r1 )  = (dint)$(f0)
+    OP_DIV   = 26, ///< $( r1 )  = $( r1 ) / $( r2 )
+    OP_DIVF  = 27, ///< $( f1 )  = $( f1 ) / $( f2 )
+    OP_DIVI  = 28, ///< $( r )   = $( r ) / W_IMMEDIATE(4/2)
+    OP_J     = 29, ///< $( pc )  = $( r )
+    OP_JCON  = 30, ///< $( pc )  = ($( r2 )) ? $( r1 ) : $( pc )
+    OP_JR    = 31, ///< $( pc ) += W_IMMEDIATE(4/2)
     OP_JRCON =
-        31, ///< $( pc )  = ($( r1 )) ? $( pc ) + W_IMMEDIATE(4/2) : $( pc )
-    OP_LOAD     = 32, ///< $( r1 )  = $( r2 )
-    OP_LOADADR  = 33, ///< $( r1 )  = *((dint*)$( r2 ))
-    OP_LOADADRB = 34, ///< $( r1 )  = *((uint8_t*)$( r2 ))
-    OP_LOADARG  = 35, ///< arg[r1] = $( r2 )
-    OP_LOADARGI = 36, ///< arg[r1] = IMMEDIATE(4/2)
-    OP_LOADF    = 37, ///< $( f1 )  = $( f2 )
-    OP_LOADI    = 38, ///< $( r )   = IMMEDIATE(4/2)
-    OP_LOADUI   = 39, ///< $( r )   = IMMEDIATE(4/2) << 32 / 16
-    OP_MOD      = 40, ///< $( r1 ) %= $( r2 )
-    OP_MODI     = 41, ///< $( r1 ) %= W_IMMEDIATE(4/2)
-    OP_MUL      = 42, ///< $( r1 )  = $( r1 ) * $( r2 )
-    OP_MULF     = 43, ///< $( f1 )  = $( f1 ) * $( f2 )
-    OP_MULI     = 44, ///< $( r )   = $(r) * W_IMMEDIATE(4/2)
-    OP_MVTF     = 45, ///< $( f1 )  = $( r0 )
-    OP_MVTI     = 46, ///< $( r1 )  = $(f0)
-    OP_NOT      = 47, ///< $( r )   = !$(r)
-    OP_OR       = 48, ///< $( r1 )  = $( r1 ) | $( r2 )
-    OP_ORI      = 49, ///< $( r )  |= IMMEDIATE(4/2)
-    OP_POP      = 50, ///< $( r )   = pop(generalStack)
-    OP_PUSH     = 51, ///< push(generalStack, $( r ))
-    OP_STOADR   = 52, ///< *((dint*)$( r2 )) = $( r1 )
-    OP_STOADRB  = 53, ///< *((uint8_t*)$( r2 )) = $( r1 )
-    OP_SUB      = 54, ///< $( r1 )  = $( r1 ) - $( r2 )
-    OP_SUBF     = 55, ///< $( f1 )  = $( f1 ) - $( f2 )
-    OP_SUBI     = 56, ///< $( r )  -= W_IMMEDIATE(4/2)
-    OP_SYSCALL  = 57, ///< syscall(IMMEDIATE(1)), see `DSyscall`.
-    OP_XOR      = 58, ///< $( r1 )  = $( r1 ) ^ $( r2 )
-    OP_XORI     = 59, ///< $( r )  ^= IMMEDIATE(4/2)
+        32, ///< $( pc )  = ($( r1 )) ? $( pc ) + W_IMMEDIATE(4/2) : $( pc )
+    OP_LOAD     = 33, ///< $( r1 )  = $( r2 )
+    OP_LOADADR  = 34, ///< $( r1 )  = *((dint*)$( r2 ))
+    OP_LOADADRB = 35, ///< $( r1 )  = *((uint8_t*)$( r2 ))
+    OP_LOADARG  = 36, ///< arg[r1] = $( r2 )
+    OP_LOADARGI = 37, ///< arg[r1] = IMMEDIATE(4/2)
+    OP_LOADF    = 38, ///< $( f1 )  = $( f2 )
+    OP_LOADI    = 39, ///< $( r )   = IMMEDIATE(4/2)
+    OP_LOADUI   = 40, ///< $( r )   = IMMEDIATE(4/2) << 32 / 16
+    OP_MOD      = 41, ///< $( r1 ) %= $( r2 )
+    OP_MODI     = 42, ///< $( r1 ) %= W_IMMEDIATE(4/2)
+    OP_MUL      = 43, ///< $( r1 )  = $( r1 ) * $( r2 )
+    OP_MULF     = 44, ///< $( f1 )  = $( f1 ) * $( f2 )
+    OP_MULI     = 45, ///< $( r )   = $(r) * W_IMMEDIATE(4/2)
+    OP_MVTF     = 46, ///< $( f1 )  = $( r0 )
+    OP_MVTI     = 47, ///< $( r1 )  = $( f0 )
+    OP_NOT      = 48, ///< $( r )   = !$( r )
+    OP_OR       = 49, ///< $( r1 )  = $( r1 ) | $( r2 )
+    OP_ORI      = 50, ///< $( r )  |= IMMEDIATE(4/2)
+    OP_POP      = 51, ///< $( r )   = pop(generalStack)
+    OP_PUSH     = 52, ///< push(generalStack, $( r ))
+    OP_STOADR   = 53, ///< *((dint*)$( r2 )) = $( r1 )
+    OP_STOADRB  = 54, ///< *((uint8_t*)$( r2 )) = $( r1 )
+    OP_SUB      = 55, ///< $( r1 )  = $( r1 ) - $( r2 )
+    OP_SUBF     = 56, ///< $( f1 )  = $( f1 ) - $( f2 )
+    OP_SUBI     = 57, ///< $( r )  -= W_IMMEDIATE(4/2)
+    OP_SYSCALL  = 58, ///< syscall(IMMEDIATE(1)), see `DSyscall`.
+    OP_XOR      = 59, ///< $( r1 )  = $( r1 ) ^ $( r2 )
+    OP_XORI     = 60, ///< $( r )  ^= IMMEDIATE(4/2)
 } DIns;
 
 /**
@@ -317,6 +318,78 @@ DECISION_API void d_vm_runtime_error(DVM *vm, const char *error);
         d_vm_runtime_error((vm), errMsg); \
     }
 #endif // DECISION_SAFE_FUNCTIONS
+
+/**
+ * \fn dint d_vm_pop_stack(DVM *vm)
+ * \brief Pop an integer off the top of a VM's general stack.
+ *
+ * **NOTE:** If the general stack is empty, a runtime error will occur.
+ *
+ * \return The integer at the top of the general stack.
+ *
+ * \param vm The VM to pop from.
+ */
+DECISION_API dint d_vm_pop_stack(DVM *vm);
+
+/**
+ * \fn dfloat d_vm_pop_stack_float(DVM *vm)
+ * \brief Pop a float off the top of a VM's general stack.
+ *
+ * **NOTE:** If the general stack is empty, a runtime error will occur.
+ *
+ * \return The float at the top of the general stack.
+ *
+ * \param vm The VM to pop from.
+ */
+DECISION_API dfloat d_vm_pop_stack_float(DVM *vm);
+
+/**
+ * \fn void *d_vm_pop_stack_ptr(DVM *vm)
+ * \brief Pop a pointer off the top of a VM's general stack.
+ *
+ * **NOTE:** If the general stack is empty, a runtime error will occur.
+ *
+ * \return The generic pointer at the top of the general stack.
+ *
+ * \param vm The VM to pop from.
+ */
+DECISION_API void *d_vm_pop_stack_ptr(DVM *vm);
+
+/**
+ * \fn void d_vm_push_stack(DVM *vm, dint value)
+ * \brief Push an integer onto the top of a VM's general stack.
+ *
+ * **NOTE:** If the general stack has already reached it's capacity, a runtime
+ * error will occur when this function is called.
+ *
+ * \param vm The VM to push onto.
+ * \param value The value to push onto the general stack.
+ */
+DECISION_API void d_vm_push_stack(DVM *vm, dint value);
+
+/**
+ * \fn void d_vm_push_stack_float(DVM *vm, dfloat value)
+ * \brief Push a float onto the top of a VM's general stack.
+ *
+ * **NOTE:** If the general stack has already reached it's capacity, a runtime
+ * error will occur when this function is called.
+ *
+ * \param vm The VM to push onto.
+ * \param value The value to push onto the general stack.
+ */
+DECISION_API void d_vm_push_stack_float(DVM *vm, dfloat value);
+
+/**
+ * \fn void d_vm_push_stack_ptr(DVM *vm, void *ptr)
+ * \brief Push a generic pointer onto the top of a VM's general stack.
+ *
+ * **NOTE:** If the general stack has already reached it's capacity, a runtime
+ * error will occur when this function is called.
+ *
+ * \param vm The VM to push onto.
+ * \param ptr The pointer to push onto the general stack.
+ */
+DECISION_API void d_vm_push_stack_ptr(DVM *vm, void *ptr);
 
 /**
  * \fn void d_vm_parse_ins_at_pc(DVM *vm)

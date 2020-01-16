@@ -24,12 +24,13 @@
 #ifndef DSEMANTIC_H
 #define DSEMANTIC_H
 
-#include <stdbool.h>
 #include "dcfg.h"
 #include "dcore.h"
 #include "dlex.h"
 #include "dsyntax.h"
 #include "dtype.h"
+#include <stdbool.h>
+
 
 #include <stddef.h>
 
@@ -52,6 +53,9 @@ struct _sheetVariable;
 /* Forward declaration of the SheetFunction struct from dsheet.h */
 struct _sheetFunction;
 
+/* Forward declaration of the CFunction struct from dcfunc.h */
+struct _cFunction;
+
 /**
  * \struct _lineSocketPair
  * \brief A struct associating a line identifier with a socket.
@@ -70,9 +74,10 @@ typedef struct _lineSocketPair {
  * \typedef enum _nameType NameType
  */
 typedef enum _nameType {
-    NAME_CORE,     // = 0
-    NAME_VARIABLE, // = 1
-    NAME_FUNCTION, // = 2
+    NAME_CORE,      // = 0
+    NAME_VARIABLE,  // = 1
+    NAME_FUNCTION,  // = 2
+    NAME_CFUNCTION, // = 3
 } NameType;
 
 /**
@@ -87,6 +92,7 @@ typedef struct _nameDefinition {
     CoreFunction coreFunc;
     struct _sheetVariable *variable;
     struct _sheetFunction *function;
+    struct _cFunction *cFunction;
 } NameDefinition;
 
 /**

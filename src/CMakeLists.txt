@@ -18,6 +18,7 @@
 
 set (SRCS
 dasm.c
+dcfunc.c
 dcodegen.c
 dcore.c
 decision.c
@@ -36,6 +37,7 @@ dvm.c
 set (HDRS
 dasm.h
 dcfg.h
+dcfunc.h
 dcodegen.h
 dcore.h
 decision.h

@@ -42,7 +42,7 @@ You can define variables by defining a ``Variable`` property in the sheet:
    optional. If you don't give it, Decision will warn you, but it will use
    ``0``, ``0.0``, ``NULL``, and ``false`` as the default values respectively.
 
-.. node::
+.. note::
 
    The names of variables (as well as other names) can be made up of letters,
    numbers, and underscores (``_``). But they have to start with either a

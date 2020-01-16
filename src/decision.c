@@ -222,6 +222,92 @@ bool d_run_sheet(Sheet *sheet) {
 }
 
 /**
+ * \fn bool d_run_function(DVM *vm, Sheet *sheet, const char *funcName)
+ * \brief Run the specified function/subroutine in a given sheet, given the
+ * sheet has gone through `d_codegen_compile`.
+ * 
+ * \return If the function/subroutine ran without any errors.
+ * 
+ * \param vm The VM to run the function on. The reason it is a seperate
+ * argument is because it allows you to push and pop arguments and return values
+ * seperately.
+ * \param sheet The sheet the function lives in.
+ * \param funcName The name of the function/subroutine to run.
+ */
+bool d_run_function(DVM *vm, Sheet *sheet, const char *funcName) {
+    if (sheet->_text != NULL && sheet->_textSize > 0 && sheet->_isCompiled) {
+        if (sheet->_isLinked) {
+            void *funcPtr = NULL;
+
+            // Firstly check that the name we've been given isn't that of a
+            // core function/subroutine.
+            CoreFunction isCoreFunc = d_core_find_name(funcName);
+            if ((int)isCoreFunc != -1) {
+                printf("Fatal: %s is a core function", funcName);
+                return false;
+            }
+
+            // If the function is already in the meta list of the sheet, we
+            // might as well use that pointer.
+            for (size_t metaIndex = 0; metaIndex < sheet->_link.size;
+                 metaIndex++) {
+                LinkMeta meta = sheet->_link.list[metaIndex];
+
+                if (meta.type == LINK_FUNCTION) {
+                    if (strcmp(meta.name, funcName) == 0) {
+                        SheetFunction *func = (SheetFunction *)meta.meta;
+                        Sheet *extSheet     = func->sheet;
+
+                        if (sheet == extSheet) {
+                            // If the function lives inside this sheet, then
+                            // the pointer is actually an index.
+                            funcPtr = sheet->_text + (size_t)meta._ptr;
+                        } else {
+                            // Otherwise, the pointer should be accurate
+                            // already.
+                            funcPtr = meta._ptr;
+                        }
+
+                        break;
+                    }
+                }
+            }
+
+            // If we couldn't find it in our link list, then this sheet didn't
+            // use the function. So, we're going to have to find out manually
+            // where this sheet is and run it there.
+            if (funcPtr == NULL) {
+                AllNameDefinitions nameDefs =
+                    d_semantic_get_name_definitions(sheet, funcName);
+
+                NameDefinition definition;
+                if (d_semantic_select_name_definition(funcName, nameDefs,
+                                                      &definition)) {
+                    if (definition.type == NAME_FUNCTION) {
+                        Sheet *extSheet = definition.sheet;
+                        return d_run_function(vm, extSheet, funcName);
+                    }
+                } else {
+                    printf("Fatal: Sheet %s has no function %s defined",
+                           sheet->filePath, funcName);
+                }
+
+                d_semantic_free_name_definitions(nameDefs);
+            } else {
+                // We know where it lives, so we can run it!
+                return d_vm_run(vm, funcPtr);
+            }
+        } else {
+            printf("Fatal: Sheet %s has not been linked", sheet->filePath);
+        }
+    } else {
+        printf("Fatal: Sheet %s has not been compiled", sheet->filePath);
+    }
+
+    return false;
+}
+
+/**
  * \fn Sheet *d_load_string(const char *source, const char *name)
  * \brief Take Decision source code and compile it into bytecode, but do not
  * run it.
@@ -271,6 +357,9 @@ Sheet *d_load_string(const char *source, const char *name) {
 
                 VERBOSE(1, "--- STAGE 5: Optimising bytecode...\n")
                 d_optimize_all(sheet);
+
+                VERBOSE(1, "--- STAGE 6: Linking...\n")
+                d_link_sheet(sheet);
             }
 
             // Only free the tree if syntax analysis was successful, as
@@ -307,8 +396,6 @@ bool d_run_string(const char *source, const char *name) {
     bool hadErrors = sheet->hasErrors;
 
     if (!hadErrors) {
-        d_link_sheet(sheet);
-
         if (VERBOSE_LEVEL >= 3)
             d_asm_dump_all(sheet);
 
@@ -387,8 +474,6 @@ bool d_run_source_file(const char *filePath) {
     bool hadErrors = sheet->hasErrors;
 
     if (!hadErrors) {
-        d_link_sheet(sheet);
-
         if (VERBOSE_LEVEL >= 3)
             d_asm_dump_all(sheet);
 
@@ -443,6 +528,12 @@ Sheet *d_load_object_file(const char *filePath) {
     if (obj != NULL) {
         out = d_asm_load_object(obj, size, filePath);
         free((char *)obj);
+
+        out->hasErrors = d_error_report();
+
+        if (!out->hasErrors) {
+            d_link_sheet(out);
+        }
     } else {
         // We errored loading the file.
         out            = d_sheet_create(filePath);
@@ -466,8 +557,6 @@ bool d_run_object_file(const char *filePath) {
     bool hadErrors = sheet->hasErrors;
 
     if (!hadErrors) {
-        d_link_sheet(sheet);
-
         if (VERBOSE_LEVEL >= 3)
             d_asm_dump_all(sheet);
 

@@ -1,4 +1,4 @@
-..
+/*
     Decision
     Copyright (C) 2019  Benjamin Beddows
 
@@ -14,32 +14,34 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
-Welcome to the Decision Developer Manual!
-=========================================
+#include <decision.h>
+#include <dsheet.h>
 
-This developer manual is designed for developers who:
+#include "assert.h"
 
-* Are curious as to how the compiler works.
-* Want to fix a bug or problem.
-* Want to add a feature.
-* Want to help maintain the project.
+int main() {
+    // d_compile_string
+    d_compile_string("Start~#1; Print(#1, 'Hello, world!');", "main.dco");
 
-.. toctree::
-   :maxdepth: 1
-   :caption: Contents:
+    // d_load_object_file
+    Sheet *sheet = d_load_object_file("main.dco");
 
-   introduction/index.rst
-   the_language/index.rst
-   the_stages_of_compilation/index.rst
-   linking/index.rst
-   the_virtual_machine/index.rst
-   the_c_api/index.rst
-   reference/index.rst
+    // d_run_sheet
+    START_CAPTURE_STDOUT()
+    d_run_sheet(sheet);
+    STOP_CAPTURE_STDOUT()
+    ASSERT_CAPTURED_STDOUT("Hello, world!\n")
 
-Indices and tables
-==================
+    // d_sheet_free
+    d_sheet_free(sheet);
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+    // d_run_object_file
+    START_CAPTURE_STDOUT()
+    d_run_object_file("main.dco");
+    STOP_CAPTURE_STDOUT()
+    ASSERT_CAPTURED_STDOUT("Hello, world!\n")
+    
+    return 0;
+}

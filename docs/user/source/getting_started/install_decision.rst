@@ -89,7 +89,7 @@ Installation
 
    .. code-block::
 
-      cmake ..
+      cmake -DCOMPILER_32=ON ..
 
    * This will create the Visual Studio solution inside the ``build`` folder.
 
@@ -101,7 +101,7 @@ Installation
 
    .. code-block::
 
-      cmake -G "Visual Studio 15 2017 Win64" ..
+      cmake -DCOMPILER_32=OFF -G "Visual Studio 15 2017 Win64" ..
     
    For example, this is the 64-bit version of Visual Studio 2017. If you are
    using a different version of Visual Studio, you can find out what needs to
@@ -109,17 +109,27 @@ Installation
    what generator it is using. Then it is just a case of adding "Win64" to the
    end.
 
-4. Open the Visual Studio solution.
+4. Build the appropiate executable with one of the following commands:
 
-5. (Optional) If you want to run Decision from within Visual Studio, you
+   .. code-block::
+
+      cmake --build . --config Debug
+      cmake --build . --config Release
+
+   **And that's it!** However, if you want to build and run Decision directly
+   from Visual Studio, follow steps 5-8.
+
+5. Open the Visual Studio solution.
+
+6. (Optional) If you want to run Decision from within Visual Studio, you
    should set the "decision" project to be the start-up project by
    right-clicking on the "decision" project in the solution explorer and
    clicking "Set as StartUp Project".
 
-6. Select either the "Debug" or "Release" version at the top, depending on
+7. Select either the "Debug" or "Release" version at the top, depending on
    your needs.
 
-7. Click Build > Build Solution.
+8. Click Build > Build Solution.
 
 Linux
 -----
@@ -234,3 +244,15 @@ this argument when creating the CMake project:
 .. code-block::
 
    cmake -DCOMPILER_DLL=ON ..
+
+Enable C API Tests
+^^^^^^^^^^^^^^^^^^
+
+If you want CMake to generate tests testing Decision's C API, add this argument:
+
+```bash
+cmake -DCOMPILER_C_TESTS=ON ..
+```
+
+Note that this option will generate a lot more executables alongside the
+compiler executable. See ``tests/README.md`` for more details.

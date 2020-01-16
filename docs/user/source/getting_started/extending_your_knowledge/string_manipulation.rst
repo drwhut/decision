@@ -15,31 +15,24 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-Welcome to the Decision Developer Manual!
-=========================================
+String Manipulation
+===================
 
-This developer manual is designed for developers who:
+Decision includes some functions that allows you to manipulate strings.
 
-* Are curious as to how the compiler works.
-* Want to fix a bug or problem.
-* Want to add a feature.
-* Want to help maintain the project.
+Length
+------
 
-.. toctree::
-   :maxdepth: 1
-   :caption: Contents:
+You can get the number of characters in a string:
 
-   introduction/index.rst
-   the_language/index.rst
-   the_stages_of_compilation/index.rst
-   linking/index.rst
-   the_virtual_machine/index.rst
-   the_c_api/index.rst
-   reference/index.rst
+.. code-block:: decision
 
-Indices and tables
-==================
+   Start~#1
+   Length("Hello, world!")~#2
+   Print(#1, #2)
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. code-block::
+
+   $ decision length.dc
+
+   13

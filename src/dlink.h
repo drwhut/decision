@@ -50,6 +50,7 @@ typedef enum _linkType {
     LINK_VARIABLE_STRING_DEFAULT_VALUE, ///< The default value of a string
                                         ///< variable.
     LINK_FUNCTION,                      ///< A function.
+    LINK_CFUNCTION,                     ///< A C function.
 } LinkType;
 
 /**
@@ -143,6 +144,15 @@ DECISION_API void d_link_free_list(LinkMetaList *list);
 DECISION_API void d_link_replace_load_ins(char *ins, char *ptr);
 
 /**
+ * \fn void d_link_precalculate_ptr(Sheet *sheet)
+ * \brief Precalculate the pointers to external variables and functions for
+ * linking.
+ *
+ * \param sheet The sheet to precalculate the pointers for.
+ */
+DECISION_API void d_link_precalculate_ptr(struct _sheet *sheet);
+
+/**
  * \fn void d_link_self(Sheet *sheet)
  * \brief Link a sheet's properties from itself to itself and included sheets.
  *
@@ -171,8 +181,8 @@ DECISION_API void d_link_find_included(struct _sheet *sheet);
 
 /**
  * \fn void d_link_sheet(Sheet *sheet)
- * \brief Call `d_link_find_included`, `d_link_self`, and
- * `d_link_includes_recursive` on a sheet.
+ * \brief Call `d_link_find_included`, `d_link_precalculate_ptr`, `d_link_self`,
+ * and `d_link_includes_recursive` on a sheet.
  *
  * \param sheet The sheet to link.
  */

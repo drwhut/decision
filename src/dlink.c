@@ -18,6 +18,7 @@
 
 #include "dlink.h"
 
+#include "dcfunc.h"
 #include "dmalloc.h"
 #include "dsheet.h"
 #include "dvm.h"
@@ -118,6 +119,67 @@ void d_link_replace_load_ins(char *ins, char *ptr) {
 }
 
 /**
+ * \fn void d_link_precalculate_ptr(Sheet *sheet)
+ * \brief Precalculate the pointers to external variables and functions for
+ * linking.
+ *
+ * \param sheet The sheet to precalculate the pointers for.
+ */
+void d_link_precalculate_ptr(struct _sheet *sheet) {
+    if (sheet->_isCompiled) {
+        // Go through each element of the metadata list.
+        for (size_t metaIndex = 0; metaIndex < sheet->_link.size; metaIndex++) {
+            LinkMeta *meta = sheet->_link.list + metaIndex;
+
+            // TODO: Error if we don't find the pointer.
+
+            // Is the object in another castle?
+            if (meta->_ptr == (char *)-1) {
+                if (meta->type == LINK_VARIABLE ||
+                    meta->type == LINK_VARIABLE_POINTER) {
+                    SheetVariable *var = (SheetVariable *)meta->meta;
+                    Sheet *extSheet    = var->sheet;
+
+                    // Find the pointer in this sheet's link list.
+                    for (size_t i = 0; i < extSheet->_link.size; i++) {
+                        LinkMeta externalMeta = extSheet->_link.list[i];
+                        if (meta->type == externalMeta.type &&
+                            strcmp(meta->name, externalMeta.name) == 0) {
+
+                            // Great! We can add on this pointer to the sheet's
+                            // pointer to the data section, and we're done!
+                            meta->_ptr =
+                                extSheet->_data + (size_t)externalMeta._ptr;
+                            break;
+                        }
+                    }
+                } else if (meta->type == LINK_FUNCTION) {
+                    SheetFunction *func = (SheetFunction *)meta->meta;
+                    Sheet *extSheet     = func->sheet;
+
+                    // Find the pointer in this sheet's link list.
+                    for (size_t i = 0; i < extSheet->_link.size; i++) {
+                        LinkMeta externalMeta = extSheet->_link.list[i];
+                        if (meta->type == externalMeta.type &&
+                            strcmp(meta->name, externalMeta.name) == 0) {
+
+                            // Great! We can add on this pointer to the sheet's
+                            // pointer to the text section, and we're done!
+                            meta->_ptr =
+                                extSheet->_text + (size_t)externalMeta._ptr;
+                            break;
+                        }
+                    }
+                } else if (meta->type == LINK_CFUNCTION) {
+                    CFunction *cFunc = (CFunction *)meta->meta;
+                    meta->_ptr = (char *)cFunc->function;
+                }
+            }
+        }
+    }
+}
+
+/**
  * \fn void d_link_self(Sheet *sheet)
  * \brief Link a sheet's properties from itself to itself and included sheets.
  *
@@ -140,63 +202,45 @@ void d_link_self(Sheet *sheet) {
             if (meta.type == LINK_DATA_STRING_LITERAL ||
                 meta.type == LINK_VARIABLE ||
                 meta.type == LINK_VARIABLE_POINTER) {
-                char *dataStart = sheet->_data;
-                size_t offset   = (size_t)meta._ptr;
+                char *dataPtr = sheet->_data + (size_t)meta._ptr;
 
                 // If the variable is in another castle (sheet), get the pointer
-                // to that sheet's data section, and find out what the offset
-                // is.
+                // to that sheet's data section.
                 if (meta.type == LINK_VARIABLE ||
                     meta.type == LINK_VARIABLE_POINTER) {
                     SheetVariable *var   = (SheetVariable *)meta.meta;
                     Sheet *externalSheet = var->sheet;
 
                     if (sheet != externalSheet) {
-                        dataStart = externalSheet->_data;
-                        offset    = 0;
-
-                        // TODO: Pre-calculate this!
-                        for (size_t i = 0; i < externalSheet->_link.size; i++) {
-                            LinkMeta externalMeta =
-                                externalSheet->_link.list[i];
-                            if (meta.type == externalMeta.type &&
-                                strcmp(meta.name, externalMeta.name) == 0) {
-                                offset = (size_t)externalMeta._ptr;
-                                break;
-                            }
-                        }
+                        // By this point external pointers should have been
+                        // pre-calculated.
+                        dataPtr = meta._ptr;
                     }
                 }
 
-                d_link_replace_load_ins(ins, dataStart + offset);
+                d_link_replace_load_ins(ins, dataPtr);
             }
             // Functions need to link to an instruction in the text section.
             else if (meta.type == LINK_FUNCTION) {
-                char *textStart = sheet->_text;
-                size_t offset   = (size_t)meta._ptr;
+                char *textPtr = sheet->_text + (size_t)meta._ptr;
 
                 // If the function is in another castle (sheet), get the pointer
-                // to that sheet's text section, and find out what the offset
-                // is.
+                // to that sheet's text section.
                 SheetFunction *func  = (SheetFunction *)meta.meta;
                 Sheet *externalSheet = func->sheet;
 
                 if (sheet != externalSheet) {
-                    textStart = externalSheet->_text;
-                    offset    = 0;
-
-                    // TODO: Pre-calculate this!
-                    for (size_t i = 0; i < externalSheet->_link.size; i++) {
-                        LinkMeta externalMeta = externalSheet->_link.list[i];
-                        if (meta.type == externalMeta.type &&
-                            strcmp(meta.name, externalMeta.name) == 0) {
-                            offset = (size_t)externalMeta._ptr;
-                            break;
-                        }
-                    }
+                    // By this point external pointers should have been
+                    // pre-calculated.
+                    textPtr = meta._ptr;
                 }
 
-                d_link_replace_load_ins(ins, textStart + offset);
+                d_link_replace_load_ins(ins, textPtr);
+            }
+            // C functions need to link to the C function pointer.
+            else if (meta.type == LINK_CFUNCTION) {
+                CFunction *cFunc = (CFunction *)meta.meta;
+                d_link_replace_load_ins(ins, (char *)cFunc->function);
             }
         }
 
@@ -352,13 +396,14 @@ void d_link_find_included(Sheet *sheet) {
 
 /**
  * \fn void d_link_sheet(Sheet *sheet)
- * \brief Call `d_link_find_included`, `d_link_self`, and
- * `d_link_includes_recursive` on a sheet.
+ * \brief Call `d_link_find_included`, `d_link_precalculate_ptr`, `d_link_self`,
+ * and `d_link_includes_recursive` on a sheet.
  *
  * \param sheet The sheet to link.
  */
 void d_link_sheet(Sheet *sheet) {
     d_link_find_included(sheet);
+    d_link_precalculate_ptr(sheet);
     d_link_self(sheet);
     d_link_includes_recursive(sheet);
 }

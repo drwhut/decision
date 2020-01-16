@@ -1,3 +1,45 @@
+# Decision v0.2.0 - 16th January 2020
+
+## Strings
+
+* Added the `Length` core function, which returns the number of characters in
+  a given string.
+* Added tests for the `Length` function.
+
+## Compiler
+
+* The compiler now automatically converts integer literals to float literals
+if the socket is a float-only socket.
+* Moved the linking stage to the last step in loading a string instead of the
+first step in running a string.
+* Optimised by adding a stage in linking dedicated to pre-calculating the
+memory locations of external variables and pointers.
+* Fixed a bug where compiled sheets maintained their external pointers.
+
+## The C API
+
+* Added `d_run_function` to `decision.h`, which allows for running Decision
+functions and subroutines from C.
+* Added `dcfunc.c` and `dcfunc.h`, which allow for running C functions from
+Decision.
+* Added new opcode `OP_CALLC` to the VM.
+* Added a `.c` section to compiled object files to store the specifications of
+C functions the sheet uses.
+* The compiler, as part of finding the definition of a name, will look at
+defined C functions in `dcfunc.c` to find one.
+* Added `d_vm_pop_stack`, `d_vm_pop_stack_float` and `d_vm_pop_stack_ptr` to
+`dvm.h`.
+* Added `d_vm_push_stack`, `d_vm_push_stack_float` and `d_vm_push_stack_ptr` to
+`dvm.h`.
+* Added tests for the C API to the CMake project.
+
+## Documentation
+
+* Added "String Manipulation" section to the user manual.
+* Added "The C API" chapter to the developer manual.
+* Added note in the user manual about semi-colons being valid end of statement
+symbols.
+
 # Decision v0.1.1 - 25th December 2019
 
 * Changed the `bool` definition to the one in `stdbool.h`, which makes it

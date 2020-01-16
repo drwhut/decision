@@ -18,6 +18,7 @@
 
 #include "dsemantic.h"
 
+#include "dcfunc.h"
 #include "decision.h"
 #include "derror.h"
 #include "dmalloc.h"
@@ -99,11 +100,12 @@ static void get_name_definitions_recursive(Sheet *sheet, const char *name,
 
     if ((int)coreFunc > -1) {
         NameDefinition definition;
-        definition.sheet    = sheet;
-        definition.type     = NAME_CORE;
-        definition.coreFunc = coreFunc;
-        definition.variable = NULL;
-        definition.function = NULL;
+        definition.sheet     = sheet;
+        definition.type      = NAME_CORE;
+        definition.coreFunc  = coreFunc;
+        definition.variable  = NULL;
+        definition.function  = NULL;
+        definition.cFunction = NULL;
 
         add_name_definition(state, definition);
 
@@ -120,11 +122,12 @@ static void get_name_definitions_recursive(Sheet *sheet, const char *name,
                 hits++;
 
                 NameDefinition definition;
-                definition.sheet    = sheet;
-                definition.type     = NAME_VARIABLE;
-                definition.coreFunc = -1;
-                definition.variable = &(sheet->variables[i]);
-                definition.function = NULL;
+                definition.sheet     = sheet;
+                definition.type      = NAME_VARIABLE;
+                definition.coreFunc  = -1;
+                definition.variable  = &(sheet->variables[i]);
+                definition.function  = NULL;
+                definition.cFunction = NULL;
 
                 add_name_definition(state, definition);
             }
@@ -145,11 +148,12 @@ static void get_name_definitions_recursive(Sheet *sheet, const char *name,
                 hits++;
 
                 NameDefinition definition;
-                definition.sheet    = sheet;
-                definition.type     = NAME_FUNCTION;
-                definition.coreFunc = -1;
-                definition.variable = NULL;
-                definition.function = &(sheet->functions[i]);
+                definition.sheet     = sheet;
+                definition.type      = NAME_FUNCTION;
+                definition.coreFunc  = -1;
+                definition.variable  = NULL;
+                definition.function  = &(sheet->functions[i]);
+                definition.cFunction = NULL;
 
                 add_name_definition(state, definition);
             }
@@ -160,6 +164,35 @@ static void get_name_definitions_recursive(Sheet *sheet, const char *name,
         VERBOSE(
             5,
             "Not checking if a function, no functions defined in this sheet.\n")
+    }
+
+    // It could also be a C function.
+    size_t numCFunctions = d_get_num_c_functions();
+
+    if (numCFunctions > 0) {
+        const CFunction *cFunctionList = d_get_c_functions();
+
+        size_t hits = 0;
+        for (size_t i = 0; i < numCFunctions; i++) {
+            if (strcmp(cFunctionList[i].name, name) == 0) {
+                hits++;
+
+                NameDefinition definition;
+                definition.sheet     = sheet;
+                definition.type      = NAME_CFUNCTION;
+                definition.coreFunc  = -1;
+                definition.variable  = NULL;
+                definition.function  = NULL;
+                definition.cFunction = (CFunction *)cFunctionList + i;
+
+                add_name_definition(state, definition);
+            }
+        }
+
+        VERBOSE(5, "C Function: %zu\n", hits);
+    } else {
+        VERBOSE(5,
+                "Not checking if a C function, no C function are defined.\n");
     }
 
     // Please sir... may I have some more names? (If it isn't a core function)
@@ -481,9 +514,27 @@ NodeTrueProperties d_semantic_get_node_properties(struct _sheet *sheet,
 
                     break;
 
+                // Specifically, the calling of a C function.
+                case NAME_CFUNCTION:;
+
+                    const CFunction *cFunction = definition->cFunction;
+
+                    // This one is simple, all the info we need is in the
+                    // CFunction struct.
+                    out._mallocd = false;
+
+                    out.inputTypes = cFunction->inputs;
+                    out.numInputs  = (long)cFunction->numInputs;
+
+                    out.outputTypes = cFunction->outputs;
+                    out.numOutputs  = (long)cFunction->numOutputs;
+
+                    break;
+
                 default:
                     d_error_compiler_push("Name definition is not that of a "
-                                          "core function, variable or function",
+                                          "core function, variable, function "
+                                          "or C function",
                                           sheet->filePath, lineNum, true);
                     break;
             }
@@ -667,6 +718,12 @@ static void add_property_Variable(Sheet *sheet, size_t lineNum,
                         if (defaultValueToken->type == TK_FLOATLITERAL) {
                             newVariable.defaultValue.floatValue =
                                 defaultValueToken->data.floatValue;
+                        } else if (defaultValueToken->type ==
+                                   TK_INTEGERLITERAL) {
+                            // If we've been given an integer, that's fine,
+                            // we can easily convert it.
+                            newVariable.defaultValue.floatValue =
+                                (dfloat)defaultValueToken->data.integerValue;
                         } else {
                             d_error_compiler_push("Set variable to Float, got "
                                                   "non-float default value",
@@ -909,6 +966,12 @@ static void add_property_FunctionInput(Sheet *sheet, size_t lineNum,
 
                     if ((typeOfLiteral & argType) != TYPE_NONE) {
                         // The data types match, we can set the default value.
+                        defaultValue = literal->data;
+                    } else if (typeOfLiteral == TYPE_INT &&
+                               argType == TYPE_FLOAT) {
+                        // We can easily convert an integer into a float.
+                        literal->data.floatValue =
+                            (dfloat)literal->data.integerValue;
                         defaultValue = literal->data;
                     } else {
                         ERROR_COMPILER(
@@ -1414,6 +1477,18 @@ void d_semantic_scan_nodes(Sheet *sheet, SyntaxNode *root) {
 
                                             // Just set the LexData instead of
                                             // testing for each data type.
+                                            inputSocket->defaultValue =
+                                                literalToken->data;
+                                        } else if (typeOfLiteral == TYPE_INT &&
+                                                   inputSocket->type ==
+                                                       TYPE_FLOAT) {
+                                            // If the compiler expected a float,
+                                            // but got an integer, that's fine.
+                                            // We can easily convert it.
+                                            literalToken->data.floatValue =
+                                                (dfloat)literalToken->data
+                                                    .integerValue;
+
                                             inputSocket->defaultValue =
                                                 literalToken->data;
                                         } else {
@@ -2144,8 +2219,14 @@ void d_semantic_reduce_types(Sheet *sheet) {
                                             // it has already been set, then
                                             // we need to check our type is
                                             // the type that is already there.
-                                            if (inputType != TYPE_NONE && socket->type != inputType) {
-                                                d_error_compiler_push("Value inputs in a Ternary operator must be of the same type", sheet->filePath, node->lineNum, true);
+                                            if (inputType != TYPE_NONE &&
+                                                socket->type != inputType) {
+                                                d_error_compiler_push(
+                                                    "Value inputs in a Ternary "
+                                                    "operator must be of the "
+                                                    "same type",
+                                                    sheet->filePath,
+                                                    node->lineNum, true);
                                                 inputsSameType = false;
                                             }
 
@@ -2154,10 +2235,12 @@ void d_semantic_reduce_types(Sheet *sheet) {
 
                                         // So we need to check the connection.
                                         else if (socket->numConnections == 1) {
-                                            SheetSocket *otherSide = socket->connections[0];
+                                            SheetSocket *otherSide =
+                                                socket->connections[0];
 
                                             // Is this socket reduced?
-                                            if (IS_TYPE_REDUCED(otherSide->type)) {
+                                            if (IS_TYPE_REDUCED(
+                                                    otherSide->type)) {
 
                                                 // Great! So we can set this
                                                 // socket's type to be discrete!
@@ -2165,8 +2248,14 @@ void d_semantic_reduce_types(Sheet *sheet) {
 
                                                 // But wait... is is the same
                                                 // as the rest of the types???
-                                                if (inputType != TYPE_NONE && socket->type != inputType) {
-                                                    d_error_compiler_push("Value inputs in a Ternary operator must be of the same type", sheet->filePath, node->lineNum, true);
+                                                if (inputType != TYPE_NONE &&
+                                                    socket->type != inputType) {
+                                                    d_error_compiler_push(
+                                                        "Value inputs in a "
+                                                        "Ternary operator must "
+                                                        "be of the same type",
+                                                        sheet->filePath,
+                                                        node->lineNum, true);
                                                     inputsSameType = false;
                                                 }
 

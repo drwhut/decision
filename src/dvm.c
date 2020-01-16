@@ -18,6 +18,7 @@
 
 #include "dvm.h"
 
+#include "dcfunc.h"
 #include "dmalloc.h"
 
 #include <stdio.h>
@@ -33,6 +34,7 @@ static const unsigned char VM_INS_SIZE[NUM_OPCODES] = {
     3,                  // OP_AND
     2 + IMMEDIATE_SIZE, // OP_ANDI
     2,                  // OP_CALL
+    2,                  // OP_CALLC
     1 + IMMEDIATE_SIZE, // OP_CALLR
     4,                  // OP_CEQ
     4,                  // OP_CEQF
@@ -134,6 +136,110 @@ void d_vm_runtime_error(DVM *vm, const char *error) {
     printf("Fatal: (%p) %s\n", vm->pc, error);
     vm->halted       = true;
     vm->runtimeError = true;
+}
+
+/**
+ * \fn dint d_vm_pop_stack(DVM *vm)
+ * \brief Pop an integer off the top of a VM's general stack.
+ *
+ * **NOTE:** If the general stack is empty, a runtime error will occur.
+ *
+ * \return The integer at the top of the general stack.
+ *
+ * \param vm The VM to pop from.
+ */
+dint d_vm_pop_stack(DVM *vm) {
+    // If the general stack is empty, produce a runtime error.
+    if (vm->_generalStackPtr < 0) {
+        d_vm_runtime_error(vm, "popping an empty general stack");
+        return 0;
+    }
+    // Otherwise, pop the general stack.
+    else {
+        return vm->generalStack[vm->_generalStackPtr--];
+    }
+}
+
+/**
+ * \fn dfloat d_vm_pop_stack_float(DVM *vm)
+ * \brief Pop a float off the top of a VM's general stack.
+ *
+ * **NOTE:** If the general stack is empty, a runtime error will occur.
+ *
+ * \return The float at the top of the general stack.
+ *
+ * \param vm The VM to pop from.
+ */
+dfloat d_vm_pop_stack_float(DVM *vm) {
+    dint value = d_vm_pop_stack(vm);
+
+    return *((dfloat *)(&value));
+}
+
+/**
+ * \fn void *d_vm_pop_stack_ptr(DVM *vm)
+ * \brief Pop a pointer off the top of a VM's general stack.
+ *
+ * **NOTE:** If the general stack is empty, a runtime error will occur.
+ *
+ * \return The generic pointer at the top of the general stack.
+ *
+ * \param vm The VM to pop from.
+ */
+void *d_vm_pop_stack_ptr(DVM *vm) {
+    dint value = d_vm_pop_stack(vm);
+
+    return (void *)value;
+}
+
+/**
+ * \fn void d_vm_push_stack(DVM *vm, dint value)
+ * \brief Push an integer onto the top of a VM's general stack.
+ *
+ * **NOTE:** If the general stack has already reached it's capacity, a runtime
+ * error will occur when this function is called.
+ *
+ * \param vm The VM to push onto.
+ * \param value The value to push onto the general stack.
+ */
+void d_vm_push_stack(DVM *vm, dint value) {
+    if (vm->_generalStackPtr >= VM_GENERAL_STACK_CAPACITY - 1) {
+        d_vm_runtime_error(vm, "General stack has reached capacity");
+    } else {
+        vm->generalStack[++vm->_generalStackPtr] = value;
+    }
+}
+
+/**
+ * \fn void d_vm_push_stack_float(DVM *vm, dfloat value)
+ * \brief Push a float onto the top of a VM's general stack.
+ *
+ * **NOTE:** If the general stack has already reached it's capacity, a runtime
+ * error will occur when this function is called.
+ *
+ * \param vm The VM to push onto.
+ * \param value The value to push onto the general stack.
+ */
+void d_vm_push_stack_float(DVM *vm, dfloat value) {
+    dint intValue = *((dint *)(&value));
+
+    d_vm_push_stack(vm, intValue);
+}
+
+/**
+ * \fn void d_vm_push_stack_ptr(DVM *vm, void *ptr)
+ * \brief Push a generic pointer onto the top of a VM's general stack.
+ *
+ * **NOTE:** If the general stack has already reached it's capacity, a runtime
+ * error will occur when this function is called.
+ *
+ * \param vm The VM to push onto.
+ * \param value The pointer to push onto the general stack.
+ */
+void d_vm_push_stack_ptr(DVM *vm, void *ptr) {
+    dint intValue = (dint)ptr;
+
+    d_vm_push_stack(vm, intValue);
 }
 
 /* Macros to help manipulate registers more generally. */
@@ -243,6 +349,18 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
 
                 vm->_inc_pc = 0;
             }
+            break;
+
+        case OP_CALLC:;
+            union _ptrToC {
+                DecisionCFunction func;
+                intptr_t ptr;
+            } funcPtr;
+
+            funcPtr.ptr = (intptr_t)(vm->registers[GET_BYTEN(vm->pc, 1)]);
+
+            // Call the C function.
+            funcPtr.func(vm);
             break;
 
         case OP_CALLR:;
@@ -456,24 +574,11 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             break;
 
         case OP_POP:;
-            // If the general stack is empty, produce a runtime error.
-            if (vm->_generalStackPtr < 0) {
-                d_vm_runtime_error(vm, "popping an empty general stack");
-            }
-            // Otherwise, pop the general stack.
-            else {
-                vm->registers[GET_BYTEN(vm->pc, 1)] =
-                    vm->generalStack[vm->_generalStackPtr--];
-            }
+            vm->registers[GET_BYTEN(vm->pc, 1)] = d_vm_pop_stack(vm);
             break;
 
         case OP_PUSH:;
-            if (vm->_generalStackPtr >= VM_GENERAL_STACK_CAPACITY - 1) {
-                d_vm_runtime_error(vm, "General stack has reached capacity");
-            } else {
-                vm->generalStack[++vm->_generalStackPtr] =
-                    vm->registers[GET_BYTEN(vm->pc, 1)];
-            }
+            d_vm_push_stack(vm, vm->registers[GET_BYTEN(vm->pc, 1)]);
             break;
 
         case OP_STOADR:;
