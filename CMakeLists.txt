@@ -19,7 +19,7 @@
 cmake_minimum_required(VERSION 2.6)
 project(Decision)
 
-set (Decision_VERSION 0.1.1)
+set (Decision_VERSION 0.2.0)
 
 # Since the built files are added in the src/ directory,
 # the files by default would go into a src/ directory.

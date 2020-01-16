@@ -1,3 +1,5 @@
+# Decision v0.2.0 - 16th January 2020
+
 ## Strings
 
 * Added the `Length` core function, which returns the number of characters in
