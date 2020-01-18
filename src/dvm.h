@@ -42,76 +42,94 @@
  * \typedef enum _dIns DIns
  */
 typedef enum _dIns {
-    /*
-        OP_RET   = 0,  ///< $( pc )  = pop(callStack) ELSE vm.halted = true
-        OP_ADD   = 1,  ///< $( r1 )  = $( r1 ) + $( r2 )
-        OP_ADDF  = 2,  ///< $( f1 )  = $( f1 ) + $( f2 )
-        OP_ADDI  = 3,  ///< $( r )  += W_IMMEDIATE(4/2)
-        OP_AND   = 4,  ///< $( r1 )  = $( r1 ) & $( r2 )
-        OP_ANDI  = 5,  ///< $( r )  &= IMMEDIATE(4/2)
-        OP_CALL  = 6,  ///< push(callStack, $( pc )); $( pc ) = $( r )
-        OP_CALLC = 7,  ///< (*$( r ))(this)
-        OP_CALLR = 8,  ///< push(callStack, $( pc )); $( pc ) +=
-       W_IMMEDIATE(4/2) OP_CEQ   = 9,  ///< $( r1 )  = ($( r2 ) == $( r3 )) ? 1
-       : 0 OP_CEQF  = 10, ///< $( r1 )  = ($( f2 ) == $( f3 )) ? 1 : 0 OP_CEQS
-       = 11, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) == 0) ? 1 : 0 OP_CLEQ  =
-       12, ///< $( r1 )  = ($( r2 ) <= $( r3 )) ? 1 : 0 OP_CLEQF = 13, ///< $(
-       r1 )  = ($( f2 ) <= $( f3 )) ? 1 : 0 OP_CLEQS = 14, ///< $( r1 )  =
-       (strcmp($( r2 ), $( r3 )) <= 0) ? 1 : 0 OP_CLT   = 15, ///< $( r1 )  =
-       ($( r2 ) < $( r3 )) ? 1 : 0 OP_CLTF  = 16, ///< $( r1 )  = ($( f2 ) < $(
-       f3 )) ? 1 : 0 OP_CLTS  = 17, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) <
-       0) ? 1 : 0 OP_CMEQ  = 18, ///< $( r1 )  = ($( r2 ) >= $( r3 )) ? 1 : 0
-        OP_CMEQF = 19, ///< $( r1 )  = ($( f2 ) >= $( f3 )) ? 1 : 0
-        OP_CMEQS = 20, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) >= 0) ? 1 : 0
-        OP_CMT   = 21, ///< $( r1 )  = ($( r2 ) > $( r3 )) ? 1 : 0
-        OP_CMTF  = 22, ///< $( r1 )  = ($( f2 ) > $( f3 )) ? 1 : 0
-        OP_CMTS  = 23, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) > 0) ? 1 : 0
-        OP_CVTF  = 24, ///< $( f1 )  = (dfloat)$( r0 )
-        OP_CVTI  = 25, ///< $( r1 )  = (dint)$(f0)
-        OP_DIV   = 26, ///< $( r1 )  = $( r1 ) / $( r2 )
-        OP_DIVF  = 27, ///< $( f1 )  = $( f1 ) / $( f2 )
-        OP_DIVI  = 28, ///< $( r )   = $( r ) / W_IMMEDIATE(4/2)
-        OP_J     = 29, ///< $( pc )  = $( r )
-        OP_JCON  = 30, ///< $( pc )  = ($( r2 )) ? $( r1 ) : $( pc )
-        OP_JR    = 31, ///< $( pc ) += W_IMMEDIATE(4/2)
-        OP_JRCON =
-            32, ///< $( pc )  = ($( r1 )) ? $( pc ) + W_IMMEDIATE(4/2) : $( pc )
-        OP_LOAD     = 33, ///< $( r1 )  = $( r2 )
-        OP_LOADADR  = 34, ///< $( r1 )  = *((dint*)$( r2 ))
-        OP_LOADADRB = 35, ///< $( r1 )  = *((uint8_t*)$( r2 ))
-        OP_LOADARG  = 36, ///< arg[r1] = $( r2 )
-        OP_LOADARGI = 37, ///< arg[r1] = IMMEDIATE(4/2)
-        OP_LOADF    = 38, ///< $( f1 )  = $( f2 )
-        OP_LOADI    = 39, ///< $( r )   = IMMEDIATE(4/2)
-        OP_LOADUI   = 40, ///< $( r )   = IMMEDIATE(4/2) << 32 / 16
-        OP_MOD      = 41, ///< $( r1 ) %= $( r2 )
-        OP_MODI     = 42, ///< $( r1 ) %= W_IMMEDIATE(4/2)
-        OP_MUL      = 43, ///< $( r1 )  = $( r1 ) * $( r2 )
-        OP_MULF     = 44, ///< $( f1 )  = $( f1 ) * $( f2 )
-        OP_MULI     = 45, ///< $( r )   = $(r) * W_IMMEDIATE(4/2)
-        OP_MVTF     = 46, ///< $( f1 )  = $( r0 )
-        OP_MVTI     = 47, ///< $( r1 )  = $( f0 )
-        OP_NOT      = 48, ///< $( r )   = !$( r )
-        OP_OR       = 49, ///< $( r1 )  = $( r1 ) | $( r2 )
-        OP_ORI      = 50, ///< $( r )  |= IMMEDIATE(4/2)
-        OP_POP      = 51, ///< $( r )   = pop(generalStack)
-        OP_PUSH     = 52, ///< push(generalStack, $( r ))
-        OP_STOADR   = 53, ///< *((dint*)$( r2 )) = $( r1 )
-        OP_STOADRB  = 54, ///< *((uint8_t*)$( r2 )) = $( r1 )
-        OP_SUB      = 55, ///< $( r1 )  = $( r1 ) - $( r2 )
-        OP_SUBF     = 56, ///< $( f1 )  = $( f1 ) - $( f2 )
-        OP_SUBI     = 57, ///< $( r )  -= W_IMMEDIATE(4/2)
-        OP_SYSCALL  = 58, ///< syscall(IMMEDIATE(1)), see `DSyscall`.
-        OP_XOR      = 59, ///< $( r1 )  = $( r1 ) ^ $( r2 )
-        OP_XORI     = 60, ///< $( r )  ^= IMMEDIATE(4/2)
-    */
+    OP_RET     = 0,  ///< pop(stackFrame) ELSE halt()
+    OP_ADD     = 1,  ///< push(pop() + pop())
+    OP_ADDF    = 2,  ///< pushFloat(popFloat() + popFloat())
+    OP_ADDBI   = 3,  ///< push(pop() + I(1))
+    OP_ADDHI   = 4,  ///< push(pop() + I(|M|/2))
+    OP_ADDFI   = 5,  ///< push(pop() + I(|M|))
+    OP_AND     = 6,  ///< push(pop() & pop())
+    OP_ANDBI   = 7,  ///< push(pop() & I(1))
+    OP_ANDHI   = 8,  ///< push(pop() & I(|M|/2))
+    OP_ANDFI   = 9,  ///< push(pop() & I(|M|))
+    OP_CALL    = 10, ///< pc = pop(); push(stackFrame)
+    OP_CALLC   = 11, ///< (*pop())(this)
+    OP_CALLCI  = 12, ///< (*I(|M|))(this)
+    OP_CALLI   = 13, ///< pc = I(|M|); push(stackFrame)
+    OP_CALLR   = 14, ///< pc += pop(); push(stackFrame)
+    OP_CALLRB  = 15, ///< pc += I(1); push(stackFrame)
+    OP_CALLRH  = 16, ///< pc += I(|M|/2); push(stackFrame)
+    OP_CALLRF  = 17, ///< pc += I(|M|); push(stackFrame)
+    OP_CEQ     = 18, ///< push(pop() == pop())
+    OP_CEQF    = 19, ///< push(popFloat() == popFloat())
+    OP_CLEQ    = 20, ///< push(pop() <= pop())
+    OP_CLEQF   = 21, ///< push(popFloat() <= popFloat())
+    OP_CLT     = 22, ///< push(pop() < pop())
+    OP_CLTF    = 23, ///< push(popFloat() < popFloat())
+    OP_CMEQ    = 24, ///< push(pop() >= pop())
+    OP_CMEQF   = 25, ///< push(popFloat() >= popFloat())
+    OP_CMT     = 26, ///< push(pop() > pop())
+    OP_CMTF    = 27, ///< push(popFloat() > popFloat())
+    OP_CVTF    = 28, ///< push((dfloat)pop())
+    OP_CVTI    = 29, ///< push((dint)pop())
+    OP_DEREF   = 30, ///< push(*pop())
+    OP_DEREFB  = 31, ///< push(*((uint8_t *)pop()))
+    OP_DIV     = 32, ///< push(pop() / pop())
+    OP_DIVF    = 33, ///< pushFloat(popFloat() / popFloat())
+    OP_DIVBI   = 34, ///< push(pop() / I(1))
+    OP_DIVHI   = 35, ///< push(pop() / I(|M|/2))
+    OP_DIVFI   = 36, ///< push(pop() / I(|M|))
+    OP_GET     = 37, ///< push(get(pop()))
+    OP_GETBI   = 38, ///< push(get(I(1)))
+    OP_GETHI   = 39, ///< push(get(I(|M|/2)))
+    OP_GETFI   = 40, ///< push(get(I(|M|)))
+    OP_J       = 41, ///< pc = pop()
+    OP_JCON    = 42, ///< IF pop() THEN pc = pop() ELSE pop()
+    OP_JCONI   = 43, ///< IF pop() THEN pc = I(|M|)
+    OP_JI      = 44, ///< pc = I(|M|)
+    OP_JR      = 45, ///< pc += pop()
+    OP_JRI     = 46, ///< pc += I(|M|)
+    OP_JRCON   = 47, ///< IF pop() THEN pc += pop() ELSE pop()
+    OP_JRCONI  = 48, ///< IF pop() THEN pc += I(|M|)
+    OP_MOD     = 49, ///< push(pop() % pop())
+    OP_MODBI   = 50, ///< push(pop() % I(1))
+    OP_MODHI   = 51, ///< push(pop() % I(|M|/2))
+    OP_MODFI   = 52, ///< push(pop() % I(|M|))
+    OP_MUL     = 53, ///< push(pop() * pop())
+    OP_MULF    = 54, ///< pushFloat(popFloat() * popFloat())
+    OP_MULBI   = 55, ///< push(pop() * I(1))
+    OP_MULHI   = 56, ///< push(pop() * I(|M|/2))
+    OP_MULFI   = 57, ///< push(pop() * I(|M|))
+    OP_NOT     = 58, ///< push(!pop())
+    OP_OR      = 59, ///< push(pop() | pop())
+    OP_ORBI    = 60, ///< push(pop() | I(1))
+    OP_ORHI    = 61, ///< push(pop() | I(|M|/2))
+    OP_ORFI    = 62, ///< push(pop() | I(|M|))
+    OP_POPB    = 63, ///< pop() I(1) times
+    OP_POPH    = 64, ///< pop() I(|M|/2) times
+    OP_POPF    = 65, ///< pop() I(|M|) times
+    OP_PUSHB   = 66, ///< push(I(1))
+    OP_PUSHH   = 67, ///< push(I(|M|/2))
+    OP_PUSHF   = 68, ///< push(I(|M|))
+    OP_SETADR  = 69, ///< *((dint *)pop()) = pop()
+    OP_SETADRB = 70, ///< *((uint8_t *)pop()) = pop()
+    OP_SUB     = 71, ///< push(pop() - pop())
+    OP_SUBF    = 72, ///< pushFloat(popFloat() - popFloat())
+    OP_SUBBI   = 73, ///< push(pop() - I(1))
+    OP_SUBHI   = 74, ///< push(pop() - I(|M|/2))
+    OP_SUBFI   = 75, ///< push(pop() - I(|M|))
+    OP_SYSCALL = 76, ///< push(syscall(I(1), pop(), pop(), pop()))
+    OP_XOR     = 77, ///< push(pop() ^ pop())
+    OP_XORBI   = 78, ///< push(pop() ^ I(1))
+    OP_XORHI   = 79, ///< push(pop() ^ I(|M|/2))
+    OP_XORFI   = 80, ///< push(pop() ^ I(|M|))
 } DIns;
 
 /**
  * \def NUM_OPCODES
  * \brief Macro constant representing the number of opcodes.
  */
-// #define NUM_OPCODES (OP_XORI + 1)
+#define NUM_OPCODES (OP_XORFI + 1)
 
 /**
  * \enum _dSyscall
@@ -178,56 +196,20 @@ typedef struct _DVM {
     bool runtimeError; ///< The runtime error flag.
 } DVM;
 
-/**
- * \def IMMEDIATE_SIZE
- * \brief The size of immediates in bytes.
- *
- * \def immediate_t
- * \brief A type to store immediates in.
- *
- * \def uimmediate_t
- * \brief A type to store unsigned immediates in.
- *
- * \def IMMEDIATE_MASK
- * \brief A mask to get the lower half of an immediate.
- *
- * \def IMMEDIATE_UPPER_MASK
- * \brief A mask to get the upper half of an immediate.
- */
-/*
+#define BIMMEDIATE_SIZE 1
+#define bimmediate_t    int8_t
+
 #ifdef DECISION_32
-#define IMMEDIATE_SIZE       2
-#define immediate_t          int16_t
-#define uimmediate_t         uint16_t
-#define IMMEDIATE_MASK       0xffff
-#define IMMEDIATE_UPPER_MASK 0xffff0000
+#define HIMMEDIATE_SIZE 2
+#define himmediate_t    int16_t
+#define FIMMEDIATE_SIZE 4
+#define fimmediate_t    int32_t
 #else
-#define IMMEDIATE_SIZE       4
-#define immediate_t          int32_t
-#define uimmediate_t         uint32_t
-#define IMMEDIATE_MASK       0xffffffff
-#define IMMEDIATE_UPPER_MASK 0xffffffff00000000
+#define HIMMEDIATE_SIZE 4
+#define himmediate_t    int32_t
+#define FIMMEDIATE_SIZE 8
+#define fimmediate_t    int64_t
 #endif // DECISION_32
-*/
-
-/**
- * \def GET_IMMEDIATE_PTR(ptr)
- * \brief Get a lower immediate value from a pointer.
- */
-//#define GET_IMMEDIATE_PTR(ptr) (dint) * ((uimmediate_t *)(ptr))
-
-/**
- * \def GET_UPPER_IMMEDIATE_PTR(ptr)
- * \brief Get an upper immediate value from a pointer.
- */
-//#define GET_UPPER_IMMEDIATE_PTR(ptr) \
-    (GET_IMMEDIATE_PTR(ptr) << IMMEDIATE_SIZE * 8)
-
-/**
- * \def GET_BYTEN(ptr, n)
- * \brief Macro function to get the `n`th byte after a pointer `ptr`.
- */
-//#define GET_BYTEN(ptr, n) *((unsigned char *)(ptr) + (n))
 
 /*
 === STACK FUNCTIONS =======================================
@@ -281,9 +263,9 @@ DECISION_API void *d_vm_get_ptr(DVM *vm, dint index);
 /**
  * \fn dint d_vm_pop(DVM *vm)
  * \brief Pop an integer from the top of the stack.
- * 
+ *
  * \return The integer at the top of the stack.
- * 
+ *
  * \param vm The VM whose stack to pop from.
  */
 DECISION_API dint d_vm_pop(DVM *vm);
@@ -291,7 +273,7 @@ DECISION_API dint d_vm_pop(DVM *vm);
 /**
  * \fn void d_vm_popn(DVM *vm, size_t n)
  * \brief Pop `n` elements from the stack.
- * 
+ *
  * \param vm The VM whose stack to pop from.
  * \param n The number of elements to pop.
  */
@@ -300,9 +282,9 @@ DECISION_API void d_vm_popn(DVM *vm, size_t n);
 /**
  * \fn dfloat d_vm_pop_float(DVM *vm)
  * \brief Pop a float from the top of the stack.
- * 
+ *
  * \return The float at the top of the stack.
- * 
+ *
  * \param vm The VM whose stack to pop from.
  */
 DECISION_API dfloat d_vm_pop_float(DVM *vm);
@@ -310,9 +292,9 @@ DECISION_API dfloat d_vm_pop_float(DVM *vm);
 /**
  * \fn void *d_vm_pop_ptr(DVM *vm)
  * \brief Pop a pointer from the top of the stack.
- * 
+ *
  * \return The pointer at the top of the stack.
- * 
+ *
  * \param vm The VM whose stack to pop from.
  */
 DECISION_API void *d_vm_pop_ptr(DVM *vm);
@@ -320,7 +302,7 @@ DECISION_API void *d_vm_pop_ptr(DVM *vm);
 /**
  * \fn void d_vm_push(DVM *vm, dint value)
  * \brief Push an integer value onto the stack.
- * 
+ *
  * \param vm The VM whose stack to push onto.
  * \param value The value to push onto the stack.
  */
@@ -329,7 +311,7 @@ DECISION_API void d_vm_push(DVM *vm, dint value);
 /**
  * \fn void d_vm_push_float(DVM *vm, dfloat value)
  * \brief Push a float value onto the stack.
- * 
+ *
  * \param vm The VM whose stack to push onto.
  * \param value The value to push onto the stack.
  */
@@ -338,18 +320,60 @@ DECISION_API void d_vm_push_float(DVM *vm, dfloat value);
 /**
  * \fn void d_vm_push_ptr(DVM *vm, void *ptr)
  * \brief Push a pointer onto the stack.
- * 
+ *
  * \param vm The VM whose stack to push onto.
  * \param ptr The pointer to push onto the stack.
  */
 DECISION_API void d_vm_push_ptr(DVM *vm, void *ptr);
 
 /**
+ * \fn void d_vm_set(DVM *vm, dint index, dint value)
+ * \brief Set the value of an element in the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \param vm The VM whose stack to set the element of.
+ * \param index The index of the stack.
+ * \param value The value to set.
+ */
+DECISION_API void d_vm_set(DVM *vm, dint index, dint value);
+
+/**
+ * \fn void d_vm_set_float(DVM *vm, dint index, dfloat value)
+ * \brief Set the value of an element in the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \param vm The VM whose stack to set the element of.
+ * \param index The index of the stack.
+ * \param value The value to set.
+ */
+DECISION_API void d_vm_set_float(DVM *vm, dint index, dfloat value);
+
+/**
+ * \fn void d_vm_set_ptr(DVM *vm, dint index, void *ptr)
+ * \brief Set the value of an element in the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \param vm The VM whose stack to set the element of.
+ * \param index The index of the stack.
+ * \param ptr The value to set.
+ */
+DECISION_API void d_vm_set_ptr(DVM *vm, dint index, void *ptr);
+
+/**
  * \fn size_t d_vm_top(DVM *vm)
  * \brief Get the number of elements in the stack.
- * 
+ *
  * \return The number of elements in the stack.
- * 
+ *
  * \param vm The VM whose stack to query.
  */
 DECISION_API size_t d_vm_top(DVM *vm);
@@ -367,7 +391,7 @@ DECISION_API size_t d_vm_top(DVM *vm);
  *
  * \param opcode The opcode to query.
  */
-// DECISION_API const unsigned char d_vm_ins_size(DIns opcode);
+DECISION_API const unsigned char d_vm_ins_size(DIns opcode);
 
 /**
  * \fn DVM d_vm_create()

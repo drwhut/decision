@@ -26,70 +26,92 @@
 #include <string.h>
 
 /* A constant array of the size of each opcode's instruction in bytes. */
-/*
 static const unsigned char VM_INS_SIZE[NUM_OPCODES] = {
-    1,                  // OP_RET
-    3,                  // OP_ADD
-    3,                  // OP_ADDF
-    2 + IMMEDIATE_SIZE, // OP_ADDI
-    3,                  // OP_AND
-    2 + IMMEDIATE_SIZE, // OP_ANDI
-    2,                  // OP_CALL
-    2,                  // OP_CALLC
-    1 + IMMEDIATE_SIZE, // OP_CALLR
-    4,                  // OP_CEQ
-    4,                  // OP_CEQF
-    4,                  // OP_CEQS
-    4,                  // OP_CLEQ
-    4,                  // OP_CLEQF
-    4,                  // OP_CLEQS
-    4,                  // OP_CLT
-    4,                  // OP_CLTF
-    4,                  // OP_CLTS
-    4,                  // OP_CMEQ
-    4,                  // OP_CMEQF
-    4,                  // OP_CMEQS
-    4,                  // OP_CMT
-    4,                  // OP_CMTF
-    4,                  // OP_CMTS
-    3,                  // OP_CVTF
-    3,                  // OP_CVTI
-    3,                  // OP_DIV
-    3,                  // OP_DIVF
-    2 + IMMEDIATE_SIZE, // OP_DIVI
-    2,                  // OP_J
-    3,                  // OP_JR
-    1 + IMMEDIATE_SIZE, // OP_JR
-    2 + IMMEDIATE_SIZE, // OP_JRCON
-    3,                  // OP_LOAD
-    3,                  // OP_LOADADR
-    3,                  // OP_LOADADRB
-    3,                  // OP_LOADARG
-    2 + IMMEDIATE_SIZE, // OP_LOADARGI
-    3,                  // OP_LOADF
-    2 + IMMEDIATE_SIZE, // OP_LOADI
-    2 + IMMEDIATE_SIZE, // OP_LOADUI
-    3,                  // OP_MOD
-    2 + IMMEDIATE_SIZE, // OP_MODI
-    3,                  // OP_MUL
-    3,                  // OP_MULF
-    2 + IMMEDIATE_SIZE, // OP_MULI
-    3,                  // OP_MVTF
-    3,                  // OP_MVTI
-    2,                  // OP_NOT
-    3,                  // OP_OR
-    2 + IMMEDIATE_SIZE, // OP_ORI
-    2,                  // OP_POP
-    2,                  // OP_PUSH
-    3,                  // OP_STOADR
-    3,                  // OP_STOADRB
-    3,                  // OP_SUB
-    3,                  // OP_SUBF
-    2 + IMMEDIATE_SIZE, // OP_SUBI
-    2,                  // OP_SYSCALL
-    3,                  // OP_XOR
-    2 + IMMEDIATE_SIZE, // OP_XORI
+    1,                   // OP_RET
+    1,                   // OP_ADD
+    1,                   // OP_ADDF
+    1 + BIMMEDIATE_SIZE, // OP_ADDBI
+    1 + HIMMEDIATE_SIZE, // OP_ADDHI
+    1 + FIMMEDIATE_SIZE, // OP_ADDFI
+    1,                   // OP_AND
+    1 + BIMMEDIATE_SIZE, // OP_ANDBI
+    1 + HIMMEDIATE_SIZE, // OP_ANDHI
+    1 + FIMMEDIATE_SIZE, // OP_ANDFI
+    1,                   // OP_CALL
+    1,                   // OP_CALLC
+    1 + FIMMEDIATE_SIZE, // OP_CALLCI
+    1 + FIMMEDIATE_SIZE, // OP_CALLI
+    1,                   // OP_CALLR
+    1 + BIMMEDIATE_SIZE, // OP_CALLRB
+    1 + HIMMEDIATE_SIZE, // OP_CALLRH
+    1 + FIMMEDIATE_SIZE, // OP_CALLRF
+    1,                   // OP_CEQ
+    1,                   // OP_CEQF
+    1,                   // OP_CLEQ
+    1,                   // OP_CLEQF
+    1,                   // OP_CLT
+    1,                   // OP_CLTF
+    1,                   // OP_CMEQ
+    1,                   // OP_MEQF
+    1,                   // OP_CMT
+    1,                   // OP_CMTF
+    1,                   // OP_CVTF
+    1,                   // OP_CVTI
+    1,                   // OP_DEREF
+    1,                   // OP_DEREFB
+    1,                   // OP_DIV
+    1,                   // OP_DIVF
+    1 + BIMMEDIATE_SIZE, // OP_DIVBI
+    1 + HIMMEDIATE_SIZE, // OP_DIVHI
+    1 + FIMMEDIATE_SIZE, // OP_DIVFI
+    1,                   // OP_GET
+    1 + BIMMEDIATE_SIZE, // OP_GETBI
+    1 + HIMMEDIATE_SIZE, // OP_GETHI
+    1 + FIMMEDIATE_SIZE, // OP_GETFI
+    1,                   // OP_J
+    1,                   // OP_JCON
+    1 + FIMMEDIATE_SIZE, // OP_JCONI
+    1 + FIMMEDIATE_SIZE, // OP_JI
+    1,                   // OP_JR
+    1 + FIMMEDIATE_SIZE, // OP_JRI
+    1,                   // OP_JRCON
+    1 + FIMMEDIATE_SIZE, // OP_JRCONI
+    1,                   // OP_MOD
+    1 + BIMMEDIATE_SIZE, // OP_MODBI
+    1 + HIMMEDIATE_SIZE, // OP_MODHI
+    1 + FIMMEDIATE_SIZE, // OP_MODFI
+    1,                   // OP_MUL
+    1,                   // OP_MULF
+    1 + BIMMEDIATE_SIZE, // OP_MULBI
+    1 + HIMMEDIATE_SIZE, // OP_MULHI
+    1 + FIMMEDIATE_SIZE, // OP_MULFI
+    1,                   // OP_NOT
+    1,                   // OP_OR
+    1 + BIMMEDIATE_SIZE, // OP_ORBI
+    1 + HIMMEDIATE_SIZE, // OP_ORHI
+    1 + FIMMEDIATE_SIZE, // OP_ORFI
+    1 + BIMMEDIATE_SIZE, // OP_POPB
+    1 + HIMMEDIATE_SIZE, // OP_POPH
+    1 + FIMMEDIATE_SIZE, // OP_POPF
+    1 + BIMMEDIATE_SIZE, // OP_PUSHB
+    1 + HIMMEDIATE_SIZE, // OP_PUSHH
+    1 + FIMMEDIATE_SIZE, // OP_PUSHF
+    1,                   // OP_SETADR
+    1,                   // OP_SETADRB
+    1,                   // OP_SUB
+    1,                   // OP_SUBF
+    1 + BIMMEDIATE_SIZE, // OP_SUBBI
+    1 + HIMMEDIATE_SIZE, // OP_SUBHI
+    1 + FIMMEDIATE_SIZE, // OP_SUBFI
+    1 + BIMMEDIATE_SIZE, // OP_SYSCALL
+    1,                   // OP_XOR
+    1 + BIMMEDIATE_SIZE, // OP_XORBI
+    1 + HIMMEDIATE_SIZE, // OP_XORHI
+    1 + FIMMEDIATE_SIZE, // OP_XORFI
 };
+
+/*
+=== STACK FUNCTIONS =======================================
 */
 
 /**
@@ -139,30 +161,80 @@ static void vm_decrease_stack_size(DVM *vm) {
     }
 }
 
-/*
-=== STACK FUNCTIONS =======================================
-*/
+/**
+ * \def VM_GET_FRAME_PTR(vm, index)
+ * \brief Get a pointer relative to the VM's frame pointer.
+ */
+#define VM_GET_FRAME_PTR(vm, index) ((vm)->framePtr + (index))
+
+/**
+ * \def VM_GET_STACK_PTR(vm, index)
+ * \brief Get a pointer relative to the VM's stack pointer.
+ */
+#define VM_GET_STACK_PTR(vm, index) ((vm)->stackPtr + (index))
+
+/**
+ * \def VM_GET_FRAME(vm, index)
+ * \brief Get the value of the stack at the index, relative to the frame
+ * pointer.
+ */
+#define VM_GET_FRAME(vm, index) (*VM_GET_FRAME_PTR(vm, index))
+
+/**
+ * \def VM_GET_STACK(vm, index)
+ * \brief Get the value of the stack at the index, relative to the stack
+ * pointer.
+ */
+#define VM_GET_STACK(vm, index) (*VM_GET_STACK_PTR(vm, index))
+
+/**
+ * \def VM_GET_FRAME_FLOAT_PTR(vm, index)
+ * \brief Get a float pointer relative to the VM's frame pointer.
+ */
+#define VM_GET_FRAME_FLOAT_PTR(vm, index) \
+    ((dfloat *)VM_GET_FRAME_PTR(vm, index))
+
+/**
+ * \def VM_GET_STACK_FLOAT_PTR(vm, index)
+ * \brief Get a float pointer relative to the VM's stack pointer.
+ */
+#define VM_GET_STACK_FLOAT_PTR(vm, index) \
+    ((dfloat *)VM_GET_STACK_PTR(vm, index))
+
+/**
+ * \def VM_GET_FRAME_FLOAT(vm, index)
+ * \brief Get the float value of the stack at the index, relative to the frame
+ * pointer.
+ */
+#define VM_GET_FRAME_FLOAT(vm, index) (*VM_GET_STACK_FLOAT_PTR(vm, index))
+
+/**
+ * \def VM_GET_STACK_FLOAT(vm, index)
+ * \brief Get the float value of the stack at the index, relative to the stack
+ * pointer.
+ */
+#define VM_GET_STACK_FLOAT(vm, index) (*VM_GET_STACK_FLOAT_PTR(vm, index))
 
 /**
  * \fn dint d_vm_get(DVM *vm, dint index)
  * \brief Get an integer from a value in the stack at a particular index.
- * 
+ *
  * * If `index` is non-negative, it will index relative to the start of the
  * stack frame.
  * * If `index` is negative, it will index relative to the top of the stack.
- * 
+ *
  * \return The integer value of the stack at the given index.
- * 
+ *
  * \param vm The VM whose stack to retrieve from.
  * \param index The index of the stack.
  */
 dint d_vm_get(DVM *vm, dint index) {
     if (index > 0) {
         // Get the value relative to the frame pointer.
-        return *(vm->framePtr + index);
+        return VM_GET_FRAME(vm, index);
     } else {
         // Get the value relative to the stack pointer.
-        return *(vm->stackPtr + index);
+        return VM_GET_STACK(vm, index);
     }
 }
 
@@ -207,9 +279,9 @@ void *d_vm_get_ptr(DVM *vm, dint index) {
 /**
  * \fn dint d_vm_pop(DVM *vm)
  * \brief Pop an integer from the top of the stack.
- * 
+ *
  * \return The integer at the top of the stack.
- * 
+ *
  * \param vm The VM whose stack to pop from.
  */
 dint d_vm_pop(DVM *vm) {
@@ -221,7 +293,7 @@ dint d_vm_pop(DVM *vm) {
 /**
  * \fn void d_vm_popn(DVM *vm, size_t n)
  * \brief Pop `n` elements from the stack.
- * 
+ *
  * \param vm The VM whose stack to pop from.
  * \param n The number of elements to pop.
  */
@@ -244,9 +316,9 @@ void d_vm_popn(DVM *vm, size_t n) {
 /**
  * \fn dfloat d_vm_pop_float(DVM *vm)
  * \brief Pop a float from the top of the stack.
- * 
+ *
  * \return The float at the top of the stack.
- * 
+ *
  * \param vm The VM whose stack to pop from.
  */
 dfloat d_vm_pop_float(DVM *vm) {
@@ -258,9 +330,9 @@ dfloat d_vm_pop_float(DVM *vm) {
 /**
  * \fn void *d_vm_pop_ptr(DVM *vm)
  * \brief Pop a pointer from the top of the stack.
- * 
+ *
  * \return The pointer at the top of the stack.
- * 
+ *
  * \param vm The VM whose stack to pop from.
  */
 void *d_vm_pop_ptr(DVM *vm) {
@@ -272,7 +344,7 @@ void *d_vm_pop_ptr(DVM *vm) {
 /**
  * \fn void d_vm_push(DVM *vm, dint value)
  * \brief Push an integer value onto the stack.
- * 
+ *
  * \param vm The VM whose stack to push onto.
  * \param value The value to push onto the stack.
  */
@@ -287,7 +359,7 @@ void d_vm_push(DVM *vm, dint value) {
 /**
  * \fn void d_vm_push_float(DVM *vm, dfloat value)
  * \brief Push a float value onto the stack.
- * 
+ *
  * \param vm The VM whose stack to push onto.
  * \param value The value to push onto the stack.
  */
@@ -300,7 +372,7 @@ void d_vm_push_float(DVM *vm, dfloat value) {
 /**
  * \fn void d_vm_push_ptr(DVM *vm, void *ptr)
  * \brief Push a pointer onto the stack.
- * 
+ *
  * \param vm The VM whose stack to push onto.
  * \param ptr The pointer to push onto the stack.
  */
@@ -311,11 +383,69 @@ void d_vm_push_ptr(DVM *vm, void *ptr) {
 }
 
 /**
+ * \fn void d_vm_set(DVM *vm, dint index, dint value)
+ * \brief Set the value of an element in the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \param vm The VM whose stack to set the element of.
+ * \param index The index of the stack.
+ * \param value The value to set.
+ */
+void d_vm_set(DVM *vm, dint index, dint value) {
+    if (index > 0) {
+        // Set the value relative to the frame pointer.
+        *VM_GET_FRAME_PTR(vm, index) = value;
+    } else {
+        // Set the value relative to the stack pointer.
+        *VM_GET_STACK_PTR(vm, index) = value;
+    }
+}
+
+/**
+ * \fn void d_vm_set_float(DVM *vm, dint index, dfloat value)
+ * \brief Set the value of an element in the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \param vm The VM whose stack to set the element of.
+ * \param index The index of the stack.
+ * \param value The value to set.
+ */
+void d_vm_set_float(DVM *vm, dint index, dfloat value) {
+    dint intValue = *((dfloat *)(&value));
+
+    d_vm_set(vm, index, intValue);
+}
+
+/**
+ * \fn void d_vm_set_ptr(DVM *vm, dint index, void *ptr)
+ * \brief Set the value of an element in the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \param vm The VM whose stack to set the element of.
+ * \param index The index of the stack.
+ * \param ptr The value to set.
+ */
+void d_vm_set_ptr(DVM *vm, dint index, void *ptr) {
+    dint value = (dint)ptr;
+
+    d_vm_set(vm, index, value);
+}
+
+/**
  * \fn size_t d_vm_top(DVM *vm)
  * \brief Get the number of elements in the stack.
- * 
+ *
  * \return The number of elements in the stack.
- * 
+ *
  * \param vm The VM whose stack to query.
  */
 size_t d_vm_top(DVM *vm) {
@@ -339,14 +469,12 @@ size_t d_vm_top(DVM *vm) {
  *
  * \param opcode The opcode to query.
  */
-/*
 const unsigned char d_vm_ins_size(DIns opcode) {
     if (opcode >= NUM_OPCODES)
         return 0;
 
     return VM_INS_SIZE[opcode];
 }
-*/
 
 /**
  * \fn DVM d_vm_create()
@@ -354,7 +482,7 @@ const unsigned char d_vm_ins_size(DIns opcode) {
  *
  * \return A Decision VM in its starting state.
  */
-DECISION_API DVM d_vm_create() {
+DVM d_vm_create() {
     DVM vm;
 
     // In order to set the VM to its starting state, we just need to set the
@@ -373,7 +501,7 @@ DECISION_API DVM d_vm_create() {
  *
  * \param vm A Decision VM to set to its starting state.
  */
-DECISION_API void d_vm_reset(DVM *vm) {
+void d_vm_reset(DVM *vm) {
     vm->pc      = 0;
     vm->_inc_pc = 0;
 
@@ -402,7 +530,7 @@ DECISION_API void d_vm_reset(DVM *vm) {
  *
  * \param vm The Decision VM to free.
  */
-DECISION_API void d_vm_free(DVM *vm) {
+void d_vm_free(DVM *vm) {
     if (vm->basePtr != NULL) {
         free(vm->basePtr);
         vm->basePtr = NULL;
@@ -424,44 +552,86 @@ void d_vm_runtime_error(DVM *vm, const char *error) {
     vm->runtimeError = true;
 }
 
-/* Macros to help manipulate registers more generally. */
 /*
-#define REG_OP_1(op) \
-    vm->registers[GET_BYTEN(vm->pc, 1)] op vm->registers[GET_BYTEN(vm->pc, 1)]
-#define REG_FOP_1(op)                                                   \
-    vm->floatRegisters[GET_BYTEN(vm->pc, 1) - VM_REG_FLOAT_START] op vm \
-        ->floatRegisters[GET_BYTEN(vm->pc, 1) - VM_REG_FLOAT_START]
-
-#define REG_OP_2(op) \
-    vm->registers[GET_BYTEN(vm->pc, 1)] op vm->registers[GET_BYTEN(vm->pc, 2)]
-#define REG_FOP_2(op)                                                   \
-    vm->floatRegisters[GET_BYTEN(vm->pc, 1) - VM_REG_FLOAT_START] op vm \
-        ->floatRegisters[GET_BYTEN(vm->pc, 2) - VM_REG_FLOAT_START]
-
-#define REG_OP_CON(op)                             \
-    vm->registers[GET_BYTEN(vm->pc, 1)] =          \
-        (vm->registers[GET_BYTEN(vm->pc, 2)] op vm \
-             ->registers[GET_BYTEN(vm->pc, 3)])    \
-            ? 1                                    \
-            : 0
-#define REG_FOP_CON(op)                                                      \
-    vm->registers[GET_BYTEN(vm->pc, 1)] =                                    \
-        (vm->floatRegisters[GET_BYTEN(vm->pc, 2) - VM_REG_FLOAT_START] op vm \
-             ->floatRegisters[GET_BYTEN(vm->pc, 3) - VM_REG_FLOAT_START])    \
-            ? 1                                                              \
-            : 0
-#define REG_SOP_CON(op)                                            \
-    vm->registers[GET_BYTEN(vm->pc, 1)] =                          \
-        (strcmp((char *)vm->registers[GET_BYTEN(vm->pc, 2)],       \
-                (char *)vm->registers[GET_BYTEN(vm->pc, 3)]) op 0) \
-            ? 1                                                    \
-            : 0
-
-#define REG_OP_I(op) \
-    vm->registers[GET_BYTEN(vm->pc, 1)] op GET_IMMEDIATE_PTR(vm->pc + 2)
-#define REG_OP_UI(op) \
-    vm->registers[GET_BYTEN(vm->pc, 1)] op GET_UPPER_IMMEDIATE_PTR(vm->pc + 2)
+    NOTE: The following helper macros are used extensively in
+    d_vm_parse_ins_at_pc. Since this function is going to be called a LOT,
+    these helper macros need to be as efficient as possible. This means things
+    like using as few functions as possible, making as less calculations as
+    possible, etc.
 */
+
+/**
+ * \def GET_IMMEDIATE(t)
+ * \brief A helper macro for getting a generic immediate value.
+ */
+#define GET_IMMEDIATE(t) (*((t *)(vm->pc + 1)))
+
+/**
+ * \def GET_BIMMEDIATE()
+ * \brief A helper macro for getting a byte immediate.
+ */
+#define GET_BIMMEDIATE() GET_IMMEDIATE(bimmediate_t)
+
+/**
+ * \def GET_HIMMEDIATE()
+ * \brief A helper macro for getting a half immediate.
+ */
+#define GET_HIMMEDIATE() GET_IMMEDIATE(himmediate_t)
+
+/**
+ * \def GET_FIMMEDIATE()
+ * \brief A helper macro for getting a full immediate.
+ */
+#define GET_FIMMEDIATE() GET_IMMEDIATE(fimmediate_t)
+
+/**
+ * \def OP_1_1_I(sym, fun)
+ * \brief A helper macro for opcodes with 1 input and 1 output involving
+ * integers, and an immediate.
+ */
+#define OP_1_1_I(sym, fun)                   \
+    {                                        \
+        dint *top = VM_GET_STACK_PTR(vm, 0); \
+        *top      = *top sym fun();            \
+    }
+
+/**
+ * \def OP_2_1(sym)
+ * \brief A helper macro for opcodes with 2 inputs and 1 output involving
+ * integers.
+ */
+#define OP_2_1(sym)                                                  \
+    {                                                                \
+        dint value = (VM_GET_STACK(vm, 0) sym VM_GET_STACK(vm, -1)); \
+        *VM_GET_STACK_PTR(vm, -1) = value;                           \
+        d_vm_popn(vm, 1);                                            \
+    }
+
+/**
+ * \def OP_2_1_F(sym)
+ * \brief A helper macro for opcodes with 2 inputs and 1 output involving
+ * floats.
+ */
+#define OP_2_1_F(sym)                                                   \
+    {                                                                   \
+        dfloat value =                                                  \
+            (VM_GET_STACK_FLOAT(vm, 0) sym VM_GET_STACK_FLOAT(vm, -1)); \
+        *VM_GET_STACK_FLOAT_PTR(vm, -1) = value;                        \
+        d_vm_popn(vm, 1);                                               \
+    }
+
+/**
+ * \def OP_2_1_C(sym)
+ * \brief A helper macro for opcodes with 2 inputs and 1 output involving
+ * comparisons with floats.
+ */
+#define OP_2_1_C(sym)                                                   \
+    {                                                                   \
+        dint value =                                                    \
+            (VM_GET_STACK_FLOAT(vm, 0) sym VM_GET_STACK_FLOAT(vm, -1)); \
+        *VM_GET_STACK_FLOAT_PTR(vm, -1) = value;                        \
+        d_vm_popn(vm, 1);                                               \
+    }
 
 /**
  * \fn void d_vm_parse_ins_at_pc(DVM *vm)
@@ -470,7 +640,6 @@ void d_vm_runtime_error(DVM *vm, const char *error) {
  *
  * \param vm The VM to use to parse the instruction.
  */
-/*
 void d_vm_parse_ins_at_pc(DVM *vm) {
     DIns opcode = *(vm->pc);
 
@@ -479,61 +648,57 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
     // 0.
     vm->_inc_pc = VM_INS_SIZE[opcode];
 
-    // Immediate holder variable.
-    immediate_t immediate;
-
     // Do stuff depending on what the opcode is.
     switch (opcode) {
         case OP_RET:;
-            // If the call stack is empty, halt the VM.
-            if (vm->_callStackPtr < 0) {
+            // If the frame pointer is pointing to a location before the start
+            // of the stack, then halt, as this is the last frame.
+            if (vm->framePtr < vm->basePtr) {
                 vm->halted = true;
-            }
-            // Otherwise, pop the call stack.
-            else {
-                vm->pc = vm->callStack[vm->_callStackPtr--];
-
-                // We don't want to increment now we're in the spot we want to
-                // be in!
-                vm->_inc_pc = 0;
+            } else {
+                // TODO: Pop the stack frame.
             }
             break;
 
         case OP_ADD:;
-            REG_OP_2(+=);
+            OP_2_1(+)
             break;
 
         case OP_ADDF:;
-            REG_FOP_2(+=);
+            OP_2_1_F(+)
             break;
 
-        case OP_ADDI:;
-            REG_OP_I(+= (immediate_t));
+        case OP_ADDBI:;
+            OP_1_1_I(+, GET_BIMMEDIATE)
+            break;
+
+        case OP_ADDHI:;
+            OP_1_1_I(+, GET_HIMMEDIATE)
+            break;
+
+        case OP_ADDFI:;
+            OP_1_1_I(+, GET_FIMMEDIATE)
             break;
 
         case OP_AND:;
-            REG_OP_2(&=);
+            OP_2_1(&)
             break;
 
-        case OP_ANDI:;
-            REG_OP_I(&=);
+        case OP_ANDBI:;
+            OP_1_1_I(&, GET_BIMMEDIATE)
+            break;
+
+        case OP_ANDHI:;
+            OP_1_1_I(&, GET_HIMMEDIATE)
+            break;
+
+        case OP_ANDFI:;
+            OP_1_1_I(&, GET_FIMMEDIATE)
             break;
 
         case OP_CALL:;
-            if (vm->_callStackPtr >= VM_GENERAL_STACK_CAPACITY - 1) {
-                d_vm_runtime_error(vm, "Call stack has reached capacity");
-            } else {
-                // Push the instruction after this call to the stack, so when
-                // we return, we start off from there.
-                vm->callStack[++vm->_callStackPtr] =
-                    vm->pc + VM_INS_SIZE[OP_CALL];
-
-                // OP_J
-                vm->pc =
-                    (char *)(intptr_t)(vm->registers[GET_BYTEN(vm->pc, 1)]);
-
-                vm->_inc_pc = 0;
-            }
+            // TODO: Call.
+            vm->_inc_pc = 0;
             break;
 
         case OP_CALLC:;
@@ -542,313 +707,331 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
                 intptr_t ptr;
             } funcPtr;
 
-            funcPtr.ptr = (intptr_t)(vm->registers[GET_BYTEN(vm->pc, 1)]);
+            funcPtr.ptr = VM_GET_STACK(vm, 0);
+            d_vm_popn(vm, 1);
 
             // Call the C function.
             funcPtr.func(vm);
             break;
 
+        case OP_CALLCI:;
+            union _ptrToC {
+                DecisionCFunction func;
+                intptr_t ptr;
+            } funcPtr;
+
+            funcPtr.ptr = GET_FIMMEDIATE();
+
+            // Call the C function.
+            funcPtr.func(vm);
+            break;
+
+        case OP_CALLI:;
+            /// TODO: Call.
+            vm->_inc_pc = 0;
+            break;
+
         case OP_CALLR:;
-            if (vm->_callStackPtr >= VM_CALL_STACK_CAPACITY - 1) {
-                d_vm_runtime_error(vm, "Call stack has reached capacity.");
-            } else {
-                // Push the instruction after this call to the stack, so when
-                // we return, we start off from there.
-                vm->callStack[++vm->_callStackPtr] =
-                    vm->pc + VM_INS_SIZE[OP_CALLR];
+            // TODO: Call.
+            vm->_inc_pc = 0;
+            break;
 
-                // OP_JR
-                immediate_t i = GET_IMMEDIATE_PTR(vm->pc + 1);
-                d_vm_add_pc(vm, i);
+        case OP_CALLRB:;
+            // TODO: Call.
+            vm->_inc_pc = 0;
+            break;
 
-                vm->_inc_pc = 0;
-            }
+        case OP_CALLRH:;
+            // TODO: Call.
+            vm->_inc_pc = 0;
+            break;
+
+        case OP_CALLRF:;
+            // TODO: Call.
+            vm->_inc_pc = 0;
             break;
 
         case OP_CEQ:;
-            REG_OP_CON(==);
+            OP_2_1(==)
             break;
 
         case OP_CEQF:;
-            REG_FOP_CON(==);
-            break;
-
-        case OP_CEQS:;
-            REG_SOP_CON(==);
+            OP_2_1_C(==)
             break;
 
         case OP_CLEQ:;
-            REG_OP_CON(<=);
+            OP_2_1(<=)
             break;
 
         case OP_CLEQF:;
-            REG_FOP_CON(<=);
-            break;
-
-        case OP_CLEQS:;
-            REG_SOP_CON(<=);
+            OP_2_1_C(<=)
             break;
 
         case OP_CLT:;
-            REG_OP_CON(<);
+            OP_2_1(<)
             break;
 
         case OP_CLTF:;
-            REG_FOP_CON(<);
-            break;
-
-        case OP_CLTS:;
-            REG_SOP_CON(<);
+            OP_2_1_C(<)
             break;
 
         case OP_CMEQ:;
-            REG_OP_CON(>=);
+            OP_2_1(>=)
             break;
 
         case OP_CMEQF:;
-            REG_FOP_CON(>=);
-            break;
-
-        case OP_CMEQS:;
-            REG_SOP_CON(>=);
+            OP_2_1_C(>=)
             break;
 
         case OP_CMT:;
-            REG_OP_CON(>);
+            OP_2_1(>)
             break;
 
         case OP_CMTF:;
-            REG_FOP_CON(>);
-            break;
-
-        case OP_CMTS:;
-            REG_SOP_CON(>);
+            OP_2_1_C(>)
             break;
 
         case OP_CVTF:;
-            vm->floatRegisters[GET_BYTEN(vm->pc, 2) - VM_REG_FLOAT_START] =
-                (dfloat)vm->registers[GET_BYTEN(vm->pc, 1)];
+            *VM_GET_STACK_FLOAT_PTR(vm, 0) = (dfloat)VM_GET_STACK(vm, 0);
             break;
 
         case OP_CVTI:;
-            vm->registers[GET_BYTEN(vm->pc, 2)] =
-                (dint)vm
-                    ->floatRegisters[GET_BYTEN(vm->pc, 1) - VM_REG_FLOAT_START];
+            *VM_GET_STACK_PTR(vm, 0) = (dint)VM_GET_STACK_FLOAT(vm, 0);
+            break;
+
+        case OP_DEREF:;
+            *VM_GET_STACK_PTR(vm, 0) = *((dint *)VM_GET_STACK(vm, 0));
+            break;
+
+        case OP_DEREFB:;
+            *VM_GET_STACK_PTR(vm, 0) = *((uint8_t *)VM_GET_STACK(vm, 0));
             break;
 
         case OP_DIV:;
-            REG_OP_2(/=);
+            OP_2_1(/)
             break;
 
         case OP_DIVF:;
-            REG_FOP_2(/=);
+            OP_2_1_F(/)
             break;
 
-        case OP_DIVI:;
-            REG_OP_I(/= (immediate_t));
+        case OP_DIVBI:;
+            OP_1_1_I(/, GET_BIMMEDIATE)
             break;
 
+        case OP_DIVHI:;
+            OP_1_1_I(/, GET_HIMMEDIATE)
+            break;
+
+        case OP_DIVFI:;
+            OP_1_1_I(/, GET_FIMMEDIATE)
+            break;
+
+        case OP_GET:;
+            *VM_GET_STACK_PTR(vm, 0) = d_vm_get(vm, VM_GET_STACK(vm, 0));
+            break;
+        
+        case OP_GETBI:;
+            d_vm_push(vm, d_vm_get(vm, GET_BIMMEDIATE()));
+            break;
+        
+        case OP_GETHI:;
+            d_vm_push(vm, d_vm_get(vm, GET_HIMMEDIATE()));
+            break;
+        
+        case OP_GETFI:;
+            d_vm_push(vm, d_vm_get(vm, GET_FIMMEDIATE()));
+            break;
+        
         case OP_J:;
-            vm->pc = (char *)(intptr_t)(vm->registers[GET_BYTEN(vm->pc, 1)]);
-
+            vm->pc = VM_GET_STACK(vm, 0);
+            d_vm_popn(vm, 1);
             vm->_inc_pc = 0;
             break;
 
         case OP_JCON:;
-            if (vm->registers[GET_BYTEN(vm->pc, 2)]) {
-                vm->pc =
-                    (char *)(intptr_t)(vm->registers[GET_BYTEN(vm->pc, 1)]);
-
+            if (VM_GET_STACK(vm, 0)) {
+                vm->pc = VM_GET_STACK(vm, -1);
                 vm->_inc_pc = 0;
             }
+            d_vm_popn(vm, 2);
             break;
 
-        case OP_JR:;
-            immediate = GET_IMMEDIATE_PTR(vm->pc + 1);
-            d_vm_add_pc(vm, immediate);
+        case OP_JCONI:;
+            if (VM_GET_STACK(vm, 0)) {
+                vm->pc = GET_FIMMEDIATE();
+                vm->_inc_pc = 0;
+            }
+            d_vm_popn(vm, 1);
+            break;
 
+        case OP_JI:;
+            vm->pc = GET_FIMMEDIATE();
+            vm->_inc_pc = 0;
+            break;
+        
+        case OP_JR:;
+            vm->pc += VM_GET_STACK(vm, 0);
+            d_vm_popn(vm, 1);
+            vm->_inc_pc = 0;
+            break;
+
+        case OP_JRI:;
+            vm->pc += GET_FIMMEDIATE();
             vm->_inc_pc = 0;
             break;
 
         case OP_JRCON:;
-            if (vm->registers[GET_BYTEN(vm->pc, 1)]) {
-                immediate = GET_IMMEDIATE_PTR(vm->pc + 2);
-                d_vm_add_pc(vm, immediate);
-
+            if (VM_GET_STACK(vm, 0)) {
+                vm->pc += VM_GET_STACK(vm, -1);
                 vm->_inc_pc = 0;
             }
+            d_vm_popn(vm, 2);
             break;
 
-        case OP_LOAD:;
-            REG_OP_2(=);
+        case OP_JRCONI:;
+            if (VM_GET_STACK(vm, 0)) {
+                vm->pc += GET_FIMMEDIATE();
+                vm->_inc_pc = 0;
+            }
+            d_vm_popn(vm, 1);
             break;
-
-        case OP_LOADADR:;
-            vm->registers[GET_BYTEN(vm->pc, 1)] =
-                *((dint *)(vm->registers[GET_BYTEN(vm->pc, 2)]));
-            break;
-
-        case OP_LOADADRB:;
-            vm->registers[GET_BYTEN(vm->pc, 1)] =
-                *((uint8_t *)(vm->registers[GET_BYTEN(vm->pc, 2)]));
-            break;
-
-        case OP_LOADARG:;
-            vm->argRegisters[GET_BYTEN(vm->pc, 1)] =
-                vm->registers[GET_BYTEN(vm->pc, 2)];
-            break;
-
-        case OP_LOADARGI:;
-            vm->argRegisters[GET_BYTEN(vm->pc, 1)] =
-                GET_IMMEDIATE_PTR(vm->pc + 2);
-            break;
-
-        case OP_LOADF:;
-            REG_FOP_2(=);
-            break;
-
-        case OP_LOADI:;
-            REG_OP_I(=);
-            break;
-
-        case OP_LOADUI:;
-            REG_OP_UI(=);
-            break;
-
+        
         case OP_MOD:;
-            REG_OP_2(%=);
+            OP_2_1(%)
             break;
 
-        case OP_MODI:;
-            REG_OP_I(%= (immediate_t));
+        case OP_MODBI:;
+            OP_1_1_I(%, GET_BIMMEDIATE)
+            break;
+
+        case OP_MODHI:;
+            OP_1_1_I(%, GET_HIMMEDIATE)
+            break;
+
+        case OP_MODFI:;
+            OP_1_1_I(%, GET_FIMMEDIATE)
             break;
 
         case OP_MUL:;
-            REG_OP_2(*=);
+            OP_2_1(*)
             break;
 
         case OP_MULF:;
-            REG_FOP_2(*=);
+            OP_2_1_F(*)
             break;
 
-        case OP_MULI:;
-            REG_OP_I(*= (immediate_t));
+        case OP_MULBI:;
+            OP_1_1_I(*, GET_BIMMEDIATE)
             break;
 
-        case OP_MVTF:;
-            vm->floatRegisters[GET_BYTEN(vm->pc, 2) - VM_REG_FLOAT_START] =
-                *((dfloat *)(vm->registers + GET_BYTEN(vm->pc, 1)));
+        case OP_MULHI:;
+            OP_1_1_I(*, GET_HIMMEDIATE)
             break;
 
-        case OP_MVTI:;
-            vm->registers[GET_BYTEN(vm->pc, 2)] =
-                *((dint *)(vm->floatRegisters + GET_BYTEN(vm->pc, 1) -
-                           VM_REG_FLOAT_START));
+        case OP_MULFI:;
+            OP_1_1_I(*, GET_FIMMEDIATE)
             break;
 
-        case OP_NOT:
-            REG_OP_1(= !);
+        case OP_NOT:;
+            *VM_GET_STACK_PTR(vm, 0) = !VM_GET_STACK(vm, 0);
             break;
 
         case OP_OR:;
-            REG_OP_2(|=);
+            OP_2_1(|)
             break;
 
-        case OP_ORI:;
-            REG_OP_I(|=);
+        case OP_ORBI:;
+            OP_1_1_I(|, GET_BIMMEDIATE)
             break;
 
-        case OP_POP:;
-            vm->registers[GET_BYTEN(vm->pc, 1)] = d_vm_pop_stack(vm);
+        case OP_ORHI:;
+            OP_1_1_I(|, GET_HIMMEDIATE)
             break;
 
-        case OP_PUSH:;
-            d_vm_push_stack(vm, vm->registers[GET_BYTEN(vm->pc, 1)]);
+        case OP_ORFI:;
+            OP_1_1_I(|, GET_FIMMEDIATE)
             break;
 
-        case OP_STOADR:;
-            *((dint *)(vm->registers[GET_BYTEN(vm->pc, 2)])) =
-                vm->registers[GET_BYTEN(vm->pc, 1)];
+        case OP_POPB:;
+            d_vm_popn(vm, GET_BIMMEDIATE());
             break;
 
-        case OP_STOADRB:;
-            *((uint8_t *)(vm->registers[GET_BYTEN(vm->pc, 2)])) =
-                (uint8_t)vm->registers[GET_BYTEN(vm->pc, 1)];
+        case OP_POPH:;
+            d_vm_popn(vm, GET_HIMMEDIATE());
+            break;
+
+        case OP_POPF:;
+            d_vm_popn(vm, GET_FIMMEDIATE());
+            break;
+
+        case OP_PUSHB:;
+            d_vm_push(vm, GET_BIMMEDIATE());
+            break;
+
+        case OP_PUSHH:;
+            d_vm_push(vm, GET_HIMMEDIATE());
+            break;
+
+        case OP_PUSHF:;
+            d_vm_push(vm, GET_FIMMEDIATE());
+            break;
+
+        case OP_SETADR:;
+            *((dint *)VM_GET_STACK(vm, 0)) = VM_GET_STACK(vm, -1);
+            d_vm_popn(vm, 2);
+            break;
+
+        case OP_SETADRB:;
+            *((uint8_t *)VM_GET_STACK(vm, 0)) = VM_GET_STACK(vm, -1);
+            d_vm_popn(vm, 2);
             break;
 
         case OP_SUB:;
-            REG_OP_2(-=);
+            OP_2_1(-)
             break;
 
         case OP_SUBF:;
-            REG_FOP_2(-=);
+            OP_2_1_F(-)
             break;
 
-        case OP_SUBI:;
-            REG_OP_I(-= (immediate_t));
+        case OP_SUBBI:;
+            OP_1_1_I(-, GET_BIMMEDIATE)
+            break;
+
+        case OP_SUBHI:;
+            OP_1_1_I(-, GET_HIMMEDIATE)
+            break;
+
+        case OP_SUBFI:;
+            OP_1_1_I(-, GET_FIMMEDIATE)
             break;
 
         case OP_SYSCALL:;
-            DSyscall syscall = GET_BYTEN(vm->pc, 1);
-
-            switch (syscall) {
-                case SYS_LOADSTR:;
-                    reg_t varStrReg = (reg_t)vm->argRegisters[0];
-                    reg_t cpyStrReg = (reg_t)vm->argRegisters[1];
-                    size_t len1 = strlen((char *)vm->registers[varStrReg]) + 1;
-                    size_t len2 = strlen((char *)vm->registers[cpyStrReg]) + 1;
-                    if (len1 != len2) {
-                        vm->registers[varStrReg] = (dint)d_realloc(
-                            (char *)vm->registers[varStrReg], len2);
-                    }
-                    memcpy((char *)vm->registers[varStrReg],
-                           (char *)vm->registers[cpyStrReg], len2);
-                    break;
-
-                case SYS_PRINT:;
-                    reg_t regToPrint = (reg_t)vm->argRegisters[1];
-                    switch (vm->argRegisters[0]) {
-                        case 0: // Integer
-                            printf("%" DINT_PRINTF_d,
-                                   vm->registers[regToPrint]);
-                            break;
-                        case 1: // Float
-                            printf("%g",
-                                   vm->floatRegisters[regToPrint -
-                                                      VM_REG_FLOAT_START]);
-                            break;
-                        case 2: // String
-                            printf("%s", (char *)(intptr_t)(
-                                             vm->registers[regToPrint]));
-                            break;
-                        case 3: // Boolean
-                            printf("%s", (vm->registers[regToPrint]) ? "true"
-                                                                     : "false");
-                            break;
-                    }
-                    if (vm->argRegisters[2])
-                        printf("\n");
-                    break;
-
-                default:
-                    break;
-            }
+            // TODO: Syscalls.
             break;
 
         case OP_XOR:;
-            REG_OP_2(^=);
+            OP_2_1(^)
             break;
 
-        case OP_XORI:;
-            REG_OP_I(^=);
+        case OP_XORBI:;
+            OP_1_1_I(^, GET_BIMMEDIATE)
+            break;
+
+        case OP_XORHI:;
+            OP_1_1_I(^, GET_HIMMEDIATE)
+            break;
+
+        case OP_XORFI:;
+            OP_1_1_I(^, GET_FIMMEDIATE)
             break;
 
         default:
-            ERROR_RUNTIME(vm, "Unknown opcode %d", opcode);
+            ERROR_RUNTIME(vm, "unknown opcode %d", opcode);
             break;
     }
 }
-*/
 
 /**
  * \fn void d_vm_add_pc(DVM *vm, dint rel)
