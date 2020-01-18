@@ -26,6 +26,7 @@
 #include <string.h>
 
 /* A constant array of the size of each opcode's instruction in bytes. */
+/*
 static const unsigned char VM_INS_SIZE[NUM_OPCODES] = {
     1,                  // OP_RET
     3,                  // OP_ADD
@@ -89,6 +90,245 @@ static const unsigned char VM_INS_SIZE[NUM_OPCODES] = {
     3,                  // OP_XOR
     2 + IMMEDIATE_SIZE, // OP_XORI
 };
+*/
+
+/**
+ * \fn static void vm_increase_stack_size(DVM *vm)
+ * \brief Increase the stack size of the VM by `VM_STACK_SIZE_SCALE_INC`.
+ *
+ * \param vm The VM of the stack to increase the size of.
+ */
+static void vm_increase_stack_size(DVM *vm) {
+    duint newSize = (duint)(vm->stackSize * VM_STACK_SIZE_SCALE_INC);
+
+    if (newSize > vm->stackSize) {
+        vm->stackSize = newSize;
+
+        size_t newAlloc = newSize * sizeof(dint);
+
+        if (vm->basePtr == NULL) {
+            vm->basePtr = d_malloc(newSize);
+        } else {
+            vm->basePtr = d_realloc(vm->basePtr, newSize);
+        }
+    }
+}
+
+/**
+ * \fn static void vm_decrease_stack_size(DVM *vm)
+ * \brief Decrease the size of the stack by `VM_STACK_SIZE_SCALE_DEC`.
+ * Note that the size cannot go lower than `VM_STACK_SIZE_MIN`.
+ *
+ * \param vm The VM of the stack to decrease the size of.
+ */
+static void vm_decrease_stack_size(DVM *vm) {
+    duint newSize = (duint)(vm->stackSize * VM_STACK_SIZE_SCALE_DEC);
+
+    if (newSize < VM_STACK_SIZE_MIN) {
+        newSize = VM_STACK_SIZE_MIN;
+    }
+
+    if (newSize < vm->stackSize) {
+        size_t newAlloc = newSize * sizeof(dint);
+
+        if (vm->basePtr == NULL) {
+            vm->basePtr = d_malloc(newSize);
+        } else {
+            vm->basePtr = d_realloc(vm->basePtr, newSize);
+        }
+    }
+}
+
+/*
+=== STACK FUNCTIONS =======================================
+*/
+
+/**
+ * \fn dint d_vm_get(DVM *vm, dint index)
+ * \brief Get an integer from a value in the stack at a particular index.
+ * 
+ * * If `index` is non-negative, it will index relative to the start of the
+ * stack frame.
+ * * If `index` is negative, it will index relative to the top of the stack.
+ * 
+ * \return The integer value of the stack at the given index.
+ * 
+ * \param vm The VM whose stack to retrieve from.
+ * \param index The index of the stack.
+ */
+dint d_vm_get(DVM *vm, dint index) {
+    if (index > 0) {
+        // Get the value relative to the frame pointer.
+        return *(vm->framePtr + index);
+    } else {
+        // Get the value relative to the stack pointer.
+        return *(vm->stackPtr + index);
+    }
+}
+
+/**
+ * \fn dfloat d_vm_get_float(DVM *vm, dint index)
+ * \brief Get a float from a value in the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \return The float value of the stack at the given index.
+ *
+ * \param vm The VM whose stack to retrieve from.
+ * \param index The index of the stack.
+ */
+dfloat d_vm_get_float(DVM *vm, dint index) {
+    dint value = d_vm_get(vm, index);
+
+    return *((dfloat *)(&value));
+}
+
+/**
+ * \fn void *d_vm_get_float(DVM *vm, dint index)
+ * \brief Get a pointer from a value in the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \return The pointer value of the stack at the given index.
+ *
+ * \param vm The VM whose stack to retrieve from.
+ * \param index The index of the stack.
+ */
+void *d_vm_get_ptr(DVM *vm, dint index) {
+    dint value = d_vm_get(vm, value);
+
+    return (void *)value;
+}
+
+/**
+ * \fn dint d_vm_pop(DVM *vm)
+ * \brief Pop an integer from the top of the stack.
+ * 
+ * \return The integer at the top of the stack.
+ * 
+ * \param vm The VM whose stack to pop from.
+ */
+dint d_vm_pop(DVM *vm) {
+    dint value = d_vm_get(vm, 0);
+    d_vm_popn(vm, 1);
+    return value;
+}
+
+/**
+ * \fn void d_vm_popn(DVM *vm, size_t n)
+ * \brief Pop `n` elements from the stack.
+ * 
+ * \param vm The VM whose stack to pop from.
+ * \param n The number of elements to pop.
+ */
+void d_vm_popn(DVM *vm, size_t n) {
+    if (n > 0) {
+        const size_t maxN = d_vm_top(vm);
+
+        if (n > maxN) {
+            n = maxN;
+        }
+
+        vm->stackPtr = vm->stackPtr - n;
+
+        if (maxN - n < (dint)(vm->stackSize * VM_STACK_SIZE_SCALE_DEC)) {
+            vm_decrease_stack_size(vm);
+        }
+    }
+}
+
+/**
+ * \fn dfloat d_vm_pop_float(DVM *vm)
+ * \brief Pop a float from the top of the stack.
+ * 
+ * \return The float at the top of the stack.
+ * 
+ * \param vm The VM whose stack to pop from.
+ */
+dfloat d_vm_pop_float(DVM *vm) {
+    dfloat value = d_vm_get_float(vm, 0);
+    d_vm_popn(vm, 1);
+    return value;
+}
+
+/**
+ * \fn void *d_vm_pop_ptr(DVM *vm)
+ * \brief Pop a pointer from the top of the stack.
+ * 
+ * \return The pointer at the top of the stack.
+ * 
+ * \param vm The VM whose stack to pop from.
+ */
+void *d_vm_pop_ptr(DVM *vm) {
+    void *ptr = d_vm_get_ptr(vm, 0);
+    d_vm_popn(vm, 1);
+    return ptr;
+}
+
+/**
+ * \fn void d_vm_push(DVM *vm, dint value)
+ * \brief Push an integer value onto the stack.
+ * 
+ * \param vm The VM whose stack to push onto.
+ * \param value The value to push onto the stack.
+ */
+void d_vm_push(DVM *vm, dint value) {
+    while (d_vm_top(vm) >= vm->stackSize) {
+        vm_increase_stack_size(vm);
+    }
+
+    *(++vm->stackPtr) = value;
+}
+
+/**
+ * \fn void d_vm_push_float(DVM *vm, dfloat value)
+ * \brief Push a float value onto the stack.
+ * 
+ * \param vm The VM whose stack to push onto.
+ * \param value The value to push onto the stack.
+ */
+void d_vm_push_float(DVM *vm, dfloat value) {
+    dint intValue = *((dint *)(&value));
+
+    d_vm_push(vm, intValue);
+}
+
+/**
+ * \fn void d_vm_push_ptr(DVM *vm, void *ptr)
+ * \brief Push a pointer onto the stack.
+ * 
+ * \param vm The VM whose stack to push onto.
+ * \param ptr The pointer to push onto the stack.
+ */
+void d_vm_push_ptr(DVM *vm, void *ptr) {
+    dint value = (dint)ptr;
+
+    d_vm_push(vm, value);
+}
+
+/**
+ * \fn size_t d_vm_top(DVM *vm)
+ * \brief Get the number of elements in the stack.
+ * 
+ * \return The number of elements in the stack.
+ * 
+ * \param vm The VM whose stack to query.
+ */
+size_t d_vm_top(DVM *vm) {
+    if (vm->basePtr != NULL) {
+        return 0;
+    }
+
+    return (size_t)((vm->stackPtr - vm->basePtr) + 1);
+}
+
+/*
+=== VM FUNCTIONS ==========================================
+*/
 
 /**
  * \fn const unsigned char d_vm_ins_size(DIns opcode)
@@ -99,28 +339,74 @@ static const unsigned char VM_INS_SIZE[NUM_OPCODES] = {
  *
  * \param opcode The opcode to query.
  */
+/*
 const unsigned char d_vm_ins_size(DIns opcode) {
     if (opcode >= NUM_OPCODES)
         return 0;
 
     return VM_INS_SIZE[opcode];
 }
+*/
+
+/**
+ * \fn DVM d_vm_create()
+ * \brief Create a Decision VM in its starting state, with malloc'd elements.
+ *
+ * \return A Decision VM in its starting state.
+ */
+DECISION_API DVM d_vm_create() {
+    DVM vm;
+
+    // In order to set the VM to its starting state, we just need to set the
+    // base stack pointer to NULL, and d_vm_reset will do the rest for us.
+    // Setting the pointer to NULL will force d_vm_reset to malloc a new stack.
+    vm.basePtr = NULL;
+
+    d_vm_reset(&vm);
+
+    return vm;
+}
 
 /**
  * \fn void d_vm_reset(DVM *vm)
- * \brief Reset a Decision VM object to it's starting state.
+ * \brief Reset a Decision VM to its starting state.
  *
- * \param vm A Decision VM to set to it's starting state.
+ * \param vm A Decision VM to set to its starting state.
  */
-void d_vm_reset(DVM *vm) {
-    vm->pc      = 0x0;
+DECISION_API void d_vm_reset(DVM *vm) {
+    vm->pc      = 0;
     vm->_inc_pc = 0;
 
-    vm->_generalStackPtr = -1;
-    vm->_callStackPtr    = -1;
+    vm->stackSize = VM_STACK_SIZE_MIN;
+
+    const size_t stackAlloc = vm->stackSize * sizeof(dint);
+
+    if (vm->basePtr == NULL) {
+        vm->basePtr = d_malloc(stackAlloc);
+    } else {
+        vm->basePtr = d_realloc(vm->basePtr, stackAlloc);
+    }
+
+    dint *ptr    = vm->basePtr - 1;
+    vm->stackPtr = ptr;
+    vm->framePtr = ptr;
 
     vm->halted       = true;
     vm->runtimeError = false;
+}
+
+/**
+ * \fn void d_vm_free(DVM *vm)
+ * \brief Free the malloc'd elements of a Decision VM. Note that this makes the
+ * VM unusable unless you call `d_vm_reset` on it.
+ *
+ * \param vm The Decision VM to free.
+ */
+DECISION_API void d_vm_free(DVM *vm) {
+    if (vm->basePtr != NULL) {
+        free(vm->basePtr);
+        vm->basePtr = NULL;
+    }
 }
 
 /**
@@ -138,111 +424,8 @@ void d_vm_runtime_error(DVM *vm, const char *error) {
     vm->runtimeError = true;
 }
 
-/**
- * \fn dint d_vm_pop_stack(DVM *vm)
- * \brief Pop an integer off the top of a VM's general stack.
- *
- * **NOTE:** If the general stack is empty, a runtime error will occur.
- *
- * \return The integer at the top of the general stack.
- *
- * \param vm The VM to pop from.
- */
-dint d_vm_pop_stack(DVM *vm) {
-    // If the general stack is empty, produce a runtime error.
-    if (vm->_generalStackPtr < 0) {
-        d_vm_runtime_error(vm, "popping an empty general stack");
-        return 0;
-    }
-    // Otherwise, pop the general stack.
-    else {
-        return vm->generalStack[vm->_generalStackPtr--];
-    }
-}
-
-/**
- * \fn dfloat d_vm_pop_stack_float(DVM *vm)
- * \brief Pop a float off the top of a VM's general stack.
- *
- * **NOTE:** If the general stack is empty, a runtime error will occur.
- *
- * \return The float at the top of the general stack.
- *
- * \param vm The VM to pop from.
- */
-dfloat d_vm_pop_stack_float(DVM *vm) {
-    dint value = d_vm_pop_stack(vm);
-
-    return *((dfloat *)(&value));
-}
-
-/**
- * \fn void *d_vm_pop_stack_ptr(DVM *vm)
- * \brief Pop a pointer off the top of a VM's general stack.
- *
- * **NOTE:** If the general stack is empty, a runtime error will occur.
- *
- * \return The generic pointer at the top of the general stack.
- *
- * \param vm The VM to pop from.
- */
-void *d_vm_pop_stack_ptr(DVM *vm) {
-    dint value = d_vm_pop_stack(vm);
-
-    return (void *)value;
-}
-
-/**
- * \fn void d_vm_push_stack(DVM *vm, dint value)
- * \brief Push an integer onto the top of a VM's general stack.
- *
- * **NOTE:** If the general stack has already reached it's capacity, a runtime
- * error will occur when this function is called.
- *
- * \param vm The VM to push onto.
- * \param value The value to push onto the general stack.
- */
-void d_vm_push_stack(DVM *vm, dint value) {
-    if (vm->_generalStackPtr >= VM_GENERAL_STACK_CAPACITY - 1) {
-        d_vm_runtime_error(vm, "General stack has reached capacity");
-    } else {
-        vm->generalStack[++vm->_generalStackPtr] = value;
-    }
-}
-
-/**
- * \fn void d_vm_push_stack_float(DVM *vm, dfloat value)
- * \brief Push a float onto the top of a VM's general stack.
- *
- * **NOTE:** If the general stack has already reached it's capacity, a runtime
- * error will occur when this function is called.
- *
- * \param vm The VM to push onto.
- * \param value The value to push onto the general stack.
- */
-void d_vm_push_stack_float(DVM *vm, dfloat value) {
-    dint intValue = *((dint *)(&value));
-
-    d_vm_push_stack(vm, intValue);
-}
-
-/**
- * \fn void d_vm_push_stack_ptr(DVM *vm, void *ptr)
- * \brief Push a generic pointer onto the top of a VM's general stack.
- *
- * **NOTE:** If the general stack has already reached it's capacity, a runtime
- * error will occur when this function is called.
- *
- * \param vm The VM to push onto.
- * \param value The pointer to push onto the general stack.
- */
-void d_vm_push_stack_ptr(DVM *vm, void *ptr) {
-    dint intValue = (dint)ptr;
-
-    d_vm_push_stack(vm, intValue);
-}
-
 /* Macros to help manipulate registers more generally. */
+/*
 #define REG_OP_1(op) \
     vm->registers[GET_BYTEN(vm->pc, 1)] op vm->registers[GET_BYTEN(vm->pc, 1)]
 #define REG_FOP_1(op)                                                   \
@@ -278,6 +461,7 @@ void d_vm_push_stack_ptr(DVM *vm, void *ptr) {
     vm->registers[GET_BYTEN(vm->pc, 1)] op GET_IMMEDIATE_PTR(vm->pc + 2)
 #define REG_OP_UI(op) \
     vm->registers[GET_BYTEN(vm->pc, 1)] op GET_UPPER_IMMEDIATE_PTR(vm->pc + 2)
+*/
 
 /**
  * \fn void d_vm_parse_ins_at_pc(DVM *vm)
@@ -286,6 +470,7 @@ void d_vm_push_stack_ptr(DVM *vm, void *ptr) {
  *
  * \param vm The VM to use to parse the instruction.
  */
+/*
 void d_vm_parse_ins_at_pc(DVM *vm) {
     DIns opcode = *(vm->pc);
 
@@ -663,6 +848,7 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             break;
     }
 }
+*/
 
 /**
  * \fn void d_vm_add_pc(DVM *vm, dint rel)
@@ -682,7 +868,8 @@ void d_vm_add_pc(DVM *vm, dint rel) {
  * \brief Increment the program counter in a Decision VM, to go to the next
  * instruction.
  *
- * **NOTE:** The VM will ALWAYS increment the PC after every instruction.
+ * **NOTE:** The VM will ALWAYS increment the PC after any instruction that
+ * isn't a jump, call or return.
  *
  * \param vm The VM whose PC to add to.
  */

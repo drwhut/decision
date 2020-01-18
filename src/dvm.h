@@ -42,75 +42,76 @@
  * \typedef enum _dIns DIns
  */
 typedef enum _dIns {
-    OP_RET   = 0,  ///< $( pc )  = pop(callStack) ELSE vm.halted = true
-    OP_ADD   = 1,  ///< $( r1 )  = $( r1 ) + $( r2 )
-    OP_ADDF  = 2,  ///< $( f1 )  = $( f1 ) + $( f2 )
-    OP_ADDI  = 3,  ///< $( r )  += W_IMMEDIATE(4/2)
-    OP_AND   = 4,  ///< $( r1 )  = $( r1 ) & $( r2 )
-    OP_ANDI  = 5,  ///< $( r )  &= IMMEDIATE(4/2)
-    OP_CALL  = 6,  ///< push(callStack, $( pc )); $( pc ) = $( r )
-    OP_CALLC = 7,  ///< (*$( r ))(this)
-    OP_CALLR = 8,  ///< push(callStack, $( pc )); $( pc ) += W_IMMEDIATE(4/2)
-    OP_CEQ   = 9,  ///< $( r1 )  = ($( r2 ) == $( r3 )) ? 1 : 0
-    OP_CEQF  = 10, ///< $( r1 )  = ($( f2 ) == $( f3 )) ? 1 : 0
-    OP_CEQS  = 11, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) == 0) ? 1 : 0
-    OP_CLEQ  = 12, ///< $( r1 )  = ($( r2 ) <= $( r3 )) ? 1 : 0
-    OP_CLEQF = 13, ///< $( r1 )  = ($( f2 ) <= $( f3 )) ? 1 : 0
-    OP_CLEQS = 14, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) <= 0) ? 1 : 0
-    OP_CLT   = 15, ///< $( r1 )  = ($( r2 ) < $( r3 )) ? 1 : 0
-    OP_CLTF  = 16, ///< $( r1 )  = ($( f2 ) < $( f3 )) ? 1 : 0
-    OP_CLTS  = 17, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) < 0) ? 1 : 0
-    OP_CMEQ  = 18, ///< $( r1 )  = ($( r2 ) >= $( r3 )) ? 1 : 0
-    OP_CMEQF = 19, ///< $( r1 )  = ($( f2 ) >= $( f3 )) ? 1 : 0
-    OP_CMEQS = 20, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) >= 0) ? 1 : 0
-    OP_CMT   = 21, ///< $( r1 )  = ($( r2 ) > $( r3 )) ? 1 : 0
-    OP_CMTF  = 22, ///< $( r1 )  = ($( f2 ) > $( f3 )) ? 1 : 0
-    OP_CMTS  = 23, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) > 0) ? 1 : 0
-    OP_CVTF  = 24, ///< $( f1 )  = (dfloat)$( r0 )
-    OP_CVTI  = 25, ///< $( r1 )  = (dint)$(f0)
-    OP_DIV   = 26, ///< $( r1 )  = $( r1 ) / $( r2 )
-    OP_DIVF  = 27, ///< $( f1 )  = $( f1 ) / $( f2 )
-    OP_DIVI  = 28, ///< $( r )   = $( r ) / W_IMMEDIATE(4/2)
-    OP_J     = 29, ///< $( pc )  = $( r )
-    OP_JCON  = 30, ///< $( pc )  = ($( r2 )) ? $( r1 ) : $( pc )
-    OP_JR    = 31, ///< $( pc ) += W_IMMEDIATE(4/2)
-    OP_JRCON =
-        32, ///< $( pc )  = ($( r1 )) ? $( pc ) + W_IMMEDIATE(4/2) : $( pc )
-    OP_LOAD     = 33, ///< $( r1 )  = $( r2 )
-    OP_LOADADR  = 34, ///< $( r1 )  = *((dint*)$( r2 ))
-    OP_LOADADRB = 35, ///< $( r1 )  = *((uint8_t*)$( r2 ))
-    OP_LOADARG  = 36, ///< arg[r1] = $( r2 )
-    OP_LOADARGI = 37, ///< arg[r1] = IMMEDIATE(4/2)
-    OP_LOADF    = 38, ///< $( f1 )  = $( f2 )
-    OP_LOADI    = 39, ///< $( r )   = IMMEDIATE(4/2)
-    OP_LOADUI   = 40, ///< $( r )   = IMMEDIATE(4/2) << 32 / 16
-    OP_MOD      = 41, ///< $( r1 ) %= $( r2 )
-    OP_MODI     = 42, ///< $( r1 ) %= W_IMMEDIATE(4/2)
-    OP_MUL      = 43, ///< $( r1 )  = $( r1 ) * $( r2 )
-    OP_MULF     = 44, ///< $( f1 )  = $( f1 ) * $( f2 )
-    OP_MULI     = 45, ///< $( r )   = $(r) * W_IMMEDIATE(4/2)
-    OP_MVTF     = 46, ///< $( f1 )  = $( r0 )
-    OP_MVTI     = 47, ///< $( r1 )  = $( f0 )
-    OP_NOT      = 48, ///< $( r )   = !$( r )
-    OP_OR       = 49, ///< $( r1 )  = $( r1 ) | $( r2 )
-    OP_ORI      = 50, ///< $( r )  |= IMMEDIATE(4/2)
-    OP_POP      = 51, ///< $( r )   = pop(generalStack)
-    OP_PUSH     = 52, ///< push(generalStack, $( r ))
-    OP_STOADR   = 53, ///< *((dint*)$( r2 )) = $( r1 )
-    OP_STOADRB  = 54, ///< *((uint8_t*)$( r2 )) = $( r1 )
-    OP_SUB      = 55, ///< $( r1 )  = $( r1 ) - $( r2 )
-    OP_SUBF     = 56, ///< $( f1 )  = $( f1 ) - $( f2 )
-    OP_SUBI     = 57, ///< $( r )  -= W_IMMEDIATE(4/2)
-    OP_SYSCALL  = 58, ///< syscall(IMMEDIATE(1)), see `DSyscall`.
-    OP_XOR      = 59, ///< $( r1 )  = $( r1 ) ^ $( r2 )
-    OP_XORI     = 60, ///< $( r )  ^= IMMEDIATE(4/2)
+    /*
+        OP_RET   = 0,  ///< $( pc )  = pop(callStack) ELSE vm.halted = true
+        OP_ADD   = 1,  ///< $( r1 )  = $( r1 ) + $( r2 )
+        OP_ADDF  = 2,  ///< $( f1 )  = $( f1 ) + $( f2 )
+        OP_ADDI  = 3,  ///< $( r )  += W_IMMEDIATE(4/2)
+        OP_AND   = 4,  ///< $( r1 )  = $( r1 ) & $( r2 )
+        OP_ANDI  = 5,  ///< $( r )  &= IMMEDIATE(4/2)
+        OP_CALL  = 6,  ///< push(callStack, $( pc )); $( pc ) = $( r )
+        OP_CALLC = 7,  ///< (*$( r ))(this)
+        OP_CALLR = 8,  ///< push(callStack, $( pc )); $( pc ) +=
+       W_IMMEDIATE(4/2) OP_CEQ   = 9,  ///< $( r1 )  = ($( r2 ) == $( r3 )) ? 1
+       : 0 OP_CEQF  = 10, ///< $( r1 )  = ($( f2 ) == $( f3 )) ? 1 : 0 OP_CEQS
+       = 11, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) == 0) ? 1 : 0 OP_CLEQ  =
+       12, ///< $( r1 )  = ($( r2 ) <= $( r3 )) ? 1 : 0 OP_CLEQF = 13, ///< $(
+       r1 )  = ($( f2 ) <= $( f3 )) ? 1 : 0 OP_CLEQS = 14, ///< $( r1 )  =
+       (strcmp($( r2 ), $( r3 )) <= 0) ? 1 : 0 OP_CLT   = 15, ///< $( r1 )  =
+       ($( r2 ) < $( r3 )) ? 1 : 0 OP_CLTF  = 16, ///< $( r1 )  = ($( f2 ) < $(
+       f3 )) ? 1 : 0 OP_CLTS  = 17, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) <
+       0) ? 1 : 0 OP_CMEQ  = 18, ///< $( r1 )  = ($( r2 ) >= $( r3 )) ? 1 : 0
+        OP_CMEQF = 19, ///< $( r1 )  = ($( f2 ) >= $( f3 )) ? 1 : 0
+        OP_CMEQS = 20, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) >= 0) ? 1 : 0
+        OP_CMT   = 21, ///< $( r1 )  = ($( r2 ) > $( r3 )) ? 1 : 0
+        OP_CMTF  = 22, ///< $( r1 )  = ($( f2 ) > $( f3 )) ? 1 : 0
+        OP_CMTS  = 23, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) > 0) ? 1 : 0
+        OP_CVTF  = 24, ///< $( f1 )  = (dfloat)$( r0 )
+        OP_CVTI  = 25, ///< $( r1 )  = (dint)$(f0)
+        OP_DIV   = 26, ///< $( r1 )  = $( r1 ) / $( r2 )
+        OP_DIVF  = 27, ///< $( f1 )  = $( f1 ) / $( f2 )
+        OP_DIVI  = 28, ///< $( r )   = $( r ) / W_IMMEDIATE(4/2)
+        OP_J     = 29, ///< $( pc )  = $( r )
+        OP_JCON  = 30, ///< $( pc )  = ($( r2 )) ? $( r1 ) : $( pc )
+        OP_JR    = 31, ///< $( pc ) += W_IMMEDIATE(4/2)
+        OP_JRCON =
+            32, ///< $( pc )  = ($( r1 )) ? $( pc ) + W_IMMEDIATE(4/2) : $( pc )
+        OP_LOAD     = 33, ///< $( r1 )  = $( r2 )
+        OP_LOADADR  = 34, ///< $( r1 )  = *((dint*)$( r2 ))
+        OP_LOADADRB = 35, ///< $( r1 )  = *((uint8_t*)$( r2 ))
+        OP_LOADARG  = 36, ///< arg[r1] = $( r2 )
+        OP_LOADARGI = 37, ///< arg[r1] = IMMEDIATE(4/2)
+        OP_LOADF    = 38, ///< $( f1 )  = $( f2 )
+        OP_LOADI    = 39, ///< $( r )   = IMMEDIATE(4/2)
+        OP_LOADUI   = 40, ///< $( r )   = IMMEDIATE(4/2) << 32 / 16
+        OP_MOD      = 41, ///< $( r1 ) %= $( r2 )
+        OP_MODI     = 42, ///< $( r1 ) %= W_IMMEDIATE(4/2)
+        OP_MUL      = 43, ///< $( r1 )  = $( r1 ) * $( r2 )
+        OP_MULF     = 44, ///< $( f1 )  = $( f1 ) * $( f2 )
+        OP_MULI     = 45, ///< $( r )   = $(r) * W_IMMEDIATE(4/2)
+        OP_MVTF     = 46, ///< $( f1 )  = $( r0 )
+        OP_MVTI     = 47, ///< $( r1 )  = $( f0 )
+        OP_NOT      = 48, ///< $( r )   = !$( r )
+        OP_OR       = 49, ///< $( r1 )  = $( r1 ) | $( r2 )
+        OP_ORI      = 50, ///< $( r )  |= IMMEDIATE(4/2)
+        OP_POP      = 51, ///< $( r )   = pop(generalStack)
+        OP_PUSH     = 52, ///< push(generalStack, $( r ))
+        OP_STOADR   = 53, ///< *((dint*)$( r2 )) = $( r1 )
+        OP_STOADRB  = 54, ///< *((uint8_t*)$( r2 )) = $( r1 )
+        OP_SUB      = 55, ///< $( r1 )  = $( r1 ) - $( r2 )
+        OP_SUBF     = 56, ///< $( f1 )  = $( f1 ) - $( f2 )
+        OP_SUBI     = 57, ///< $( r )  -= W_IMMEDIATE(4/2)
+        OP_SYSCALL  = 58, ///< syscall(IMMEDIATE(1)), see `DSyscall`.
+        OP_XOR      = 59, ///< $( r1 )  = $( r1 ) ^ $( r2 )
+        OP_XORI     = 60, ///< $( r )  ^= IMMEDIATE(4/2)
+    */
 } DIns;
 
 /**
  * \def NUM_OPCODES
  * \brief Macro constant representing the number of opcodes.
  */
-#define NUM_OPCODES (OP_XORI + 1)
+// #define NUM_OPCODES (OP_XORI + 1)
 
 /**
  * \enum _dSyscall
@@ -118,6 +119,7 @@ typedef enum _dIns {
  *
  * \typedef enum _dSyscall DSyscall
  */
+/*
 typedef enum _dSyscall {
     SYS_LOADSTR = 0, ///< Load a string value into a MALLOC'D string.
                      ///< * `arg0`: A register which contains a pointer to a
@@ -135,57 +137,25 @@ typedef enum _dSyscall {
                    ///< * `arg2`: If set to `1`, it will print a newline at the
                    ///< end, otherwise it will not.
 } DSyscall;
+*/
 
 /**
- * \def reg_t
- * \brief Macro to represent register indexes.
- *
- * **NOTE:** Needs to be able to hold numbers bigger than the number of
- * registers, since we need to check in code generation if we've used too many.
+ * \def VM_STACK_SIZE_MIN
+ * \brief The minimum, and starting, size of the VM's stack.
  */
-#define reg_t uint16_t
+#define VM_STACK_SIZE_MIN 64
 
 /**
- * \def VM_NUM_REG
- * \brief Macro constant to state the number of registers in the Decision VM.
+ * \def VM_STACK_SIZE_SCALE_INC
+ * \brief How much should the stack size increase once it reaches capacity?
  */
-#define VM_NUM_REG 256
+#define VM_STACK_SIZE_SCALE_INC 1.5
 
 /**
- * \def VM_NUM_ARG_REG
- * \brief Macro constant to state the number of argument registers.
+ * \def VM_STACK_SIZE_SCALE_DEC
+ * \brief How much should the stack size decrease to save memory?
  */
-#define VM_NUM_ARG_REG 4
-
-/**
- * \def VM_REG_FLOAT_START
- * \brief Macro constant to state the starting index of the floating point
- * registers.
- *
- * **NOTE:** There are always 256 general-purpose registers, this constant says
- * where it divides them into integer and floating point registers.
- *
- * **NOTE:** Needs to be < `VM_NUM_REG`!
- */
-#define VM_REG_FLOAT_START 128
-
-/**
- * \def VM_IS_FLOAT_REG(reg)
- * \brief Macro to help distinguish floating point registers.
- */
-#define VM_IS_FLOAT_REG(reg) ((reg) >= VM_REG_FLOAT_START)
-
-/**
- * \def VM_GENERAL_STACK_CAPACITY
- * \brief Macro constant to state the capacity of the general stack.
- */
-#define VM_GENERAL_STACK_CAPACITY 128
-
-/**
- * \def VM_CALL_STACK_CAPACITY
- * \brief Macro constant to state the capacity of the call stack.
- */
-#define VM_CALL_STACK_CAPACITY 128
+#define VM_STACK_SIZE_SCALE_DEC 0.5
 
 /**
  * \enum _DVM
@@ -198,16 +168,11 @@ typedef struct _DVM {
     unsigned char _inc_pc; ///< How many bytes to increment the program counter.
                            ///< This is determined automatically.
 
-    dint registers[VM_REG_FLOAT_START]; ///< The general registers.
-    dfloat floatRegisters[VM_NUM_REG -
-                          VM_REG_FLOAT_START]; ///< The float registers.
-    dint argRegisters[VM_NUM_ARG_REG];         ///< The argument registers.
+    dint *basePtr;  ///< A pointer to the base of the stack.
+    dint *stackPtr; ///< A pointer to the top of the stack.
+    dint *framePtr; ///< A pointer to the start of the stack frame.
 
-    dint generalStack[VM_GENERAL_STACK_CAPACITY]; ///< The general stack.
-    short _generalStackPtr; ///< The general stack pointer.
-
-    char *callStack[VM_CALL_STACK_CAPACITY]; ///< The call stack.
-    short _callStackPtr;                     ///< The call stack pointer.
+    duint stackSize; ///< The current size of the stack.
 
     bool halted;       ///< The halted flag.
     bool runtimeError; ///< The runtime error flag.
@@ -229,6 +194,7 @@ typedef struct _DVM {
  * \def IMMEDIATE_UPPER_MASK
  * \brief A mask to get the upper half of an immediate.
  */
+/*
 #ifdef DECISION_32
 #define IMMEDIATE_SIZE       2
 #define immediate_t          int16_t
@@ -242,28 +208,154 @@ typedef struct _DVM {
 #define IMMEDIATE_MASK       0xffffffff
 #define IMMEDIATE_UPPER_MASK 0xffffffff00000000
 #endif // DECISION_32
+*/
 
 /**
  * \def GET_IMMEDIATE_PTR(ptr)
  * \brief Get a lower immediate value from a pointer.
  */
-#define GET_IMMEDIATE_PTR(ptr) (dint) * ((uimmediate_t *)(ptr))
+//#define GET_IMMEDIATE_PTR(ptr) (dint) * ((uimmediate_t *)(ptr))
 
 /**
  * \def GET_UPPER_IMMEDIATE_PTR(ptr)
  * \brief Get an upper immediate value from a pointer.
  */
-#define GET_UPPER_IMMEDIATE_PTR(ptr) \
+//#define GET_UPPER_IMMEDIATE_PTR(ptr) \
     (GET_IMMEDIATE_PTR(ptr) << IMMEDIATE_SIZE * 8)
 
 /**
  * \def GET_BYTEN(ptr, n)
  * \brief Macro function to get the `n`th byte after a pointer `ptr`.
  */
-#define GET_BYTEN(ptr, n) *((unsigned char *)(ptr) + (n))
+//#define GET_BYTEN(ptr, n) *((unsigned char *)(ptr) + (n))
 
 /*
-=== FUNCTIONS =============================================
+=== STACK FUNCTIONS =======================================
+*/
+
+/**
+ * \fn dint d_vm_get(DVM *vm, dint index)
+ * \brief Get an integer from a value in the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \return The integer value of the stack at the given index.
+ *
+ * \param vm The VM whose stack to retrieve from.
+ * \param index The index of the stack.
+ */
+DECISION_API dint d_vm_get(DVM *vm, dint index);
+
+/**
+ * \fn dfloat d_vm_get_float(DVM *vm, dint index)
+ * \brief Get a float from a value in the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \return The float value of the stack at the given index.
+ *
+ * \param vm The VM whose stack to retrieve from.
+ * \param index The index of the stack.
+ */
+DECISION_API dfloat d_vm_get_float(DVM *vm, dint index);
+
+/**
+ * \fn void *d_vm_get_float(DVM *vm, dint index)
+ * \brief Get a pointer from a value in the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \return The pointer value of the stack at the given index.
+ *
+ * \param vm The VM whose stack to retrieve from.
+ * \param index The index of the stack.
+ */
+DECISION_API void *d_vm_get_ptr(DVM *vm, dint index);
+
+/**
+ * \fn dint d_vm_pop(DVM *vm)
+ * \brief Pop an integer from the top of the stack.
+ * 
+ * \return The integer at the top of the stack.
+ * 
+ * \param vm The VM whose stack to pop from.
+ */
+DECISION_API dint d_vm_pop(DVM *vm);
+
+/**
+ * \fn void d_vm_popn(DVM *vm, size_t n)
+ * \brief Pop `n` elements from the stack.
+ * 
+ * \param vm The VM whose stack to pop from.
+ * \param n The number of elements to pop.
+ */
+DECISION_API void d_vm_popn(DVM *vm, size_t n);
+
+/**
+ * \fn dfloat d_vm_pop_float(DVM *vm)
+ * \brief Pop a float from the top of the stack.
+ * 
+ * \return The float at the top of the stack.
+ * 
+ * \param vm The VM whose stack to pop from.
+ */
+DECISION_API dfloat d_vm_pop_float(DVM *vm);
+
+/**
+ * \fn void *d_vm_pop_ptr(DVM *vm)
+ * \brief Pop a pointer from the top of the stack.
+ * 
+ * \return The pointer at the top of the stack.
+ * 
+ * \param vm The VM whose stack to pop from.
+ */
+DECISION_API void *d_vm_pop_ptr(DVM *vm);
+
+/**
+ * \fn void d_vm_push(DVM *vm, dint value)
+ * \brief Push an integer value onto the stack.
+ * 
+ * \param vm The VM whose stack to push onto.
+ * \param value The value to push onto the stack.
+ */
+DECISION_API void d_vm_push(DVM *vm, dint value);
+
+/**
+ * \fn void d_vm_push_float(DVM *vm, dfloat value)
+ * \brief Push a float value onto the stack.
+ * 
+ * \param vm The VM whose stack to push onto.
+ * \param value The value to push onto the stack.
+ */
+DECISION_API void d_vm_push_float(DVM *vm, dfloat value);
+
+/**
+ * \fn void d_vm_push_ptr(DVM *vm, void *ptr)
+ * \brief Push a pointer onto the stack.
+ * 
+ * \param vm The VM whose stack to push onto.
+ * \param ptr The pointer to push onto the stack.
+ */
+DECISION_API void d_vm_push_ptr(DVM *vm, void *ptr);
+
+/**
+ * \fn size_t d_vm_top(DVM *vm)
+ * \brief Get the number of elements in the stack.
+ * 
+ * \return The number of elements in the stack.
+ * 
+ * \param vm The VM whose stack to query.
+ */
+DECISION_API size_t d_vm_top(DVM *vm);
+
+/*
+=== VM FUNCTIONS ==========================================
 */
 
 /**
@@ -275,15 +367,32 @@ typedef struct _DVM {
  *
  * \param opcode The opcode to query.
  */
-DECISION_API const unsigned char d_vm_ins_size(DIns opcode);
+// DECISION_API const unsigned char d_vm_ins_size(DIns opcode);
+
+/**
+ * \fn DVM d_vm_create()
+ * \brief Create a Decision VM in its starting state, with malloc'd elements.
+ *
+ * \return A Decision VM in its starting state.
+ */
+DECISION_API DVM d_vm_create();
 
 /**
  * \fn void d_vm_reset(DVM *vm)
- * \brief Reset a Decision VM object to it's starting state.
+ * \brief Reset a Decision VM to its starting state.
  *
- * \param vm A Decision VM to set to it's starting state.
+ * \param vm A Decision VM to set to its starting state.
  */
 DECISION_API void d_vm_reset(DVM *vm);
+
+/**
+ * \fn void d_vm_free(DVM *vm)
+ * \brief Free the malloc'd elements of a Decision VM. Note that this makes the
+ * VM unusable unless you call `d_vm_reset` on it.
+ *
+ * \param vm The Decision VM to free.
+ */
+DECISION_API void d_vm_free(DVM *vm);
 
 /**
  * \fn void d_vm_runtime_error(DVM *vm, const char *error)
@@ -320,91 +429,20 @@ DECISION_API void d_vm_runtime_error(DVM *vm, const char *error);
 #endif // DECISION_SAFE_FUNCTIONS
 
 /**
- * \fn dint d_vm_pop_stack(DVM *vm)
- * \brief Pop an integer off the top of a VM's general stack.
- *
- * **NOTE:** If the general stack is empty, a runtime error will occur.
- *
- * \return The integer at the top of the general stack.
- *
- * \param vm The VM to pop from.
- */
-DECISION_API dint d_vm_pop_stack(DVM *vm);
-
-/**
- * \fn dfloat d_vm_pop_stack_float(DVM *vm)
- * \brief Pop a float off the top of a VM's general stack.
- *
- * **NOTE:** If the general stack is empty, a runtime error will occur.
- *
- * \return The float at the top of the general stack.
- *
- * \param vm The VM to pop from.
- */
-DECISION_API dfloat d_vm_pop_stack_float(DVM *vm);
-
-/**
- * \fn void *d_vm_pop_stack_ptr(DVM *vm)
- * \brief Pop a pointer off the top of a VM's general stack.
- *
- * **NOTE:** If the general stack is empty, a runtime error will occur.
- *
- * \return The generic pointer at the top of the general stack.
- *
- * \param vm The VM to pop from.
- */
-DECISION_API void *d_vm_pop_stack_ptr(DVM *vm);
-
-/**
- * \fn void d_vm_push_stack(DVM *vm, dint value)
- * \brief Push an integer onto the top of a VM's general stack.
- *
- * **NOTE:** If the general stack has already reached it's capacity, a runtime
- * error will occur when this function is called.
- *
- * \param vm The VM to push onto.
- * \param value The value to push onto the general stack.
- */
-DECISION_API void d_vm_push_stack(DVM *vm, dint value);
-
-/**
- * \fn void d_vm_push_stack_float(DVM *vm, dfloat value)
- * \brief Push a float onto the top of a VM's general stack.
- *
- * **NOTE:** If the general stack has already reached it's capacity, a runtime
- * error will occur when this function is called.
- *
- * \param vm The VM to push onto.
- * \param value The value to push onto the general stack.
- */
-DECISION_API void d_vm_push_stack_float(DVM *vm, dfloat value);
-
-/**
- * \fn void d_vm_push_stack_ptr(DVM *vm, void *ptr)
- * \brief Push a generic pointer onto the top of a VM's general stack.
- *
- * **NOTE:** If the general stack has already reached it's capacity, a runtime
- * error will occur when this function is called.
- *
- * \param vm The VM to push onto.
- * \param ptr The pointer to push onto the general stack.
- */
-DECISION_API void d_vm_push_stack_ptr(DVM *vm, void *ptr);
-
-/**
  * \fn void d_vm_parse_ins_at_pc(DVM *vm)
  * \brief Given a Decision VM, at it's current position in the program, parse
  * the instruction at that position.
  *
  * \param vm The VM to use to parse the instruction.
  */
-DECISION_API void d_vm_parse_ins_at_pc(DVM *vm);
+// DECISION_API void d_vm_parse_ins_at_pc(DVM *vm);
 
 /**
  * \fn void d_vm_add_pc(DVM *vm, dint rel)
  * \brief Add to the program counter to go +rel bytes.
  *
- * **NOTE:** The VM will ALWAYS increment the PC after every instruction.
+ * **NOTE:** The VM will ALWAYS increment the PC after any instruction that
+ * isn't a jump, call or return.
  *
  * \param vm The VM whose PC to add to.
  * \param rel How many bytes to go forward. *Can* be negative.
@@ -416,7 +454,8 @@ DECISION_API void d_vm_add_pc(DVM *vm, dint rel);
  * \brief Increment the program counter in a Decision VM, to go to the next
  * instruction.
  *
- * **NOTE:** The VM will ALWAYS increment the PC after every instruction.
+ * **NOTE:** The VM will ALWAYS increment the PC after any instruction that
+ * isn't a jump, call or return.
  *
  * \param vm The VM whose PC to add to.
  */
