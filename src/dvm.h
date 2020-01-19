@@ -88,41 +88,45 @@ typedef enum _dIns {
     OP_JCONI   = 43, ///< IF pop() THEN pc = I(|M|)
     OP_JI      = 44, ///< pc = I(|M|)
     OP_JR      = 45, ///< pc += pop()
-    OP_JRI     = 46, ///< pc += I(|M|)
-    OP_JRCON   = 47, ///< IF pop() THEN pc += pop() ELSE pop()
-    OP_JRCONI  = 48, ///< IF pop() THEN pc += I(|M|)
-    OP_MOD     = 49, ///< push(pop() % pop())
-    OP_MODBI   = 50, ///< push(pop() % I(1))
-    OP_MODHI   = 51, ///< push(pop() % I(|M|/2))
-    OP_MODFI   = 52, ///< push(pop() % I(|M|))
-    OP_MUL     = 53, ///< push(pop() * pop())
-    OP_MULF    = 54, ///< pushFloat(popFloat() * popFloat())
-    OP_MULBI   = 55, ///< push(pop() * I(1))
-    OP_MULHI   = 56, ///< push(pop() * I(|M|/2))
-    OP_MULFI   = 57, ///< push(pop() * I(|M|))
-    OP_NOT     = 58, ///< push(!pop())
-    OP_OR      = 59, ///< push(pop() | pop())
-    OP_ORBI    = 60, ///< push(pop() | I(1))
-    OP_ORHI    = 61, ///< push(pop() | I(|M|/2))
-    OP_ORFI    = 62, ///< push(pop() | I(|M|))
-    OP_POPB    = 63, ///< pop() I(1) times
-    OP_POPH    = 64, ///< pop() I(|M|/2) times
-    OP_POPF    = 65, ///< pop() I(|M|) times
-    OP_PUSHB   = 66, ///< push(I(1))
-    OP_PUSHH   = 67, ///< push(I(|M|/2))
-    OP_PUSHF   = 68, ///< push(I(|M|))
-    OP_SETADR  = 69, ///< *((dint *)pop()) = pop()
-    OP_SETADRB = 70, ///< *((uint8_t *)pop()) = pop()
-    OP_SUB     = 71, ///< push(pop() - pop())
-    OP_SUBF    = 72, ///< pushFloat(popFloat() - popFloat())
-    OP_SUBBI   = 73, ///< push(pop() - I(1))
-    OP_SUBHI   = 74, ///< push(pop() - I(|M|/2))
-    OP_SUBFI   = 75, ///< push(pop() - I(|M|))
-    OP_SYSCALL = 76, ///< push(syscall(I(1), pop(), pop(), pop()))
-    OP_XOR     = 77, ///< push(pop() ^ pop())
-    OP_XORBI   = 78, ///< push(pop() ^ I(1))
-    OP_XORHI   = 79, ///< push(pop() ^ I(|M|/2))
-    OP_XORFI   = 80, ///< push(pop() ^ I(|M|))
+    OP_JRBI    = 46, ///< pc += I(1)
+    OP_JRHI    = 47, ///< pc += I(|M|/2)
+    OP_JRFI    = 48, ///< pc += I(|M|)
+    OP_JRCON   = 49, ///< IF pop() THEN pc += pop() ELSE pop()
+    OP_JRCONBI = 50, ///< IF pop() THEN pc += I(1)
+    OP_JRCONHI = 51, ///< IF pop() THEN pc += I(|M|/2)
+    OP_JRCONFI = 52, ///< IF pop() THEN pc += I(|M|)
+    OP_MOD     = 53, ///< push(pop() % pop())
+    OP_MODBI   = 54, ///< push(pop() % I(1))
+    OP_MODHI   = 55, ///< push(pop() % I(|M|/2))
+    OP_MODFI   = 56, ///< push(pop() % I(|M|))
+    OP_MUL     = 57, ///< push(pop() * pop())
+    OP_MULF    = 58, ///< pushFloat(popFloat() * popFloat())
+    OP_MULBI   = 59, ///< push(pop() * I(1))
+    OP_MULHI   = 60, ///< push(pop() * I(|M|/2))
+    OP_MULFI   = 61, ///< push(pop() * I(|M|))
+    OP_NOT     = 62, ///< push(!pop())
+    OP_OR      = 63, ///< push(pop() | pop())
+    OP_ORBI    = 64, ///< push(pop() | I(1))
+    OP_ORHI    = 65, ///< push(pop() | I(|M|/2))
+    OP_ORFI    = 66, ///< push(pop() | I(|M|))
+    OP_POPB    = 67, ///< pop() I(1) times
+    OP_POPH    = 68, ///< pop() I(|M|/2) times
+    OP_POPF    = 69, ///< pop() I(|M|) times
+    OP_PUSHB   = 70, ///< push(I(1))
+    OP_PUSHH   = 71, ///< push(I(|M|/2))
+    OP_PUSHF   = 72, ///< push(I(|M|))
+    OP_SETADR  = 73, ///< *((dint *)pop()) = pop()
+    OP_SETADRB = 74, ///< *((uint8_t *)pop()) = pop()
+    OP_SUB     = 75, ///< push(pop() - pop())
+    OP_SUBF    = 76, ///< pushFloat(popFloat() - popFloat())
+    OP_SUBBI   = 77, ///< push(pop() - I(1))
+    OP_SUBHI   = 78, ///< push(pop() - I(|M|/2))
+    OP_SUBFI   = 79, ///< push(pop() - I(|M|))
+    OP_SYSCALL = 80, ///< push(syscall(I(1), pop(), pop(), pop()))
+    OP_XOR     = 81, ///< push(pop() ^ pop())
+    OP_XORBI   = 82, ///< push(pop() ^ I(1))
+    OP_XORHI   = 83, ///< push(pop() ^ I(|M|/2))
+    OP_XORFI   = 84, ///< push(pop() ^ I(|M|))
 } DIns;
 
 /**
@@ -496,5 +500,13 @@ DECISION_API void d_vm_inc_pc(DVM *vm);
  * \param start A pointer to the start of the bytecode to execute.
  */
 DECISION_API bool d_vm_run(DVM *vm, void *start);
+
+/**
+ * \fn void d_vm_dump(DVM *vm)
+ * \brief Dump the contents of a Decision VM to stdout for debugging.
+ * 
+ * \param vm The VM to dump the contents of.
+ */
+DECISION_API void d_vm_dump(DVM *vm);
 
 #endif // DVM_H

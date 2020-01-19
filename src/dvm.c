@@ -73,9 +73,13 @@ static const unsigned char VM_INS_SIZE[NUM_OPCODES] = {
     1 + FIMMEDIATE_SIZE, // OP_JCONI
     1 + FIMMEDIATE_SIZE, // OP_JI
     1,                   // OP_JR
-    1 + FIMMEDIATE_SIZE, // OP_JRI
+    1 + BIMMEDIATE_SIZE, // OP_JRBI
+    1 + HIMMEDIATE_SIZE, // OP_JRHI
+    1 + FIMMEDIATE_SIZE, // OP_JRFI
     1,                   // OP_JRCON
-    1 + FIMMEDIATE_SIZE, // OP_JRCONI
+    1 + BIMMEDIATE_SIZE, // OP_JRCONBI
+    1 + HIMMEDIATE_SIZE, // OP_JRCONHI
+    1 + FIMMEDIATE_SIZE, // OP_JRCONFI
     1,                   // OP_MOD
     1 + BIMMEDIATE_SIZE, // OP_MODBI
     1 + HIMMEDIATE_SIZE, // OP_MODHI
@@ -592,7 +596,7 @@ void d_vm_runtime_error(DVM *vm, const char *error) {
 #define OP_1_1_I(sym, fun)                   \
     {                                        \
         dint *top = VM_GET_STACK_PTR(vm, 0); \
-        *top      = *top sym fun();            \
+        *top      = *top sym fun();          \
     }
 
 /**
@@ -830,19 +834,19 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
         case OP_GET:;
             *VM_GET_STACK_PTR(vm, 0) = d_vm_get(vm, VM_GET_STACK(vm, 0));
             break;
-        
+
         case OP_GETBI:;
             d_vm_push(vm, d_vm_get(vm, GET_BIMMEDIATE()));
             break;
-        
+
         case OP_GETHI:;
             d_vm_push(vm, d_vm_get(vm, GET_HIMMEDIATE()));
             break;
-        
+
         case OP_GETFI:;
             d_vm_push(vm, d_vm_get(vm, GET_FIMMEDIATE()));
             break;
-        
+
         case OP_J:;
             vm->pc = VM_GET_STACK(vm, 0);
             d_vm_popn(vm, 1);
@@ -851,7 +855,7 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
 
         case OP_JCON:;
             if (VM_GET_STACK(vm, 0)) {
-                vm->pc = VM_GET_STACK(vm, -1);
+                vm->pc      = VM_GET_STACK(vm, -1);
                 vm->_inc_pc = 0;
             }
             d_vm_popn(vm, 2);
@@ -859,24 +863,34 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
 
         case OP_JCONI:;
             if (VM_GET_STACK(vm, 0)) {
-                vm->pc = GET_FIMMEDIATE();
+                vm->pc      = GET_FIMMEDIATE();
                 vm->_inc_pc = 0;
             }
             d_vm_popn(vm, 1);
             break;
 
         case OP_JI:;
-            vm->pc = GET_FIMMEDIATE();
+            vm->pc      = GET_FIMMEDIATE();
             vm->_inc_pc = 0;
             break;
-        
+
         case OP_JR:;
             vm->pc += VM_GET_STACK(vm, 0);
             d_vm_popn(vm, 1);
             vm->_inc_pc = 0;
             break;
 
-        case OP_JRI:;
+        case OP_JRBI:;
+            vm->pc += GET_BIMMEDIATE();
+            vm->_inc_pc = 0;
+            break;
+
+        case OP_JRHI:;
+            vm->pc += GET_HIMMEDIATE();
+            vm->_inc_pc = 0;
+            break;
+
+        case OP_JRFI:;
             vm->pc += GET_FIMMEDIATE();
             vm->_inc_pc = 0;
             break;
@@ -889,14 +903,30 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             d_vm_popn(vm, 2);
             break;
 
-        case OP_JRCONI:;
+        case OP_JRCONBI:;
+            if (VM_GET_STACK(vm, 0)) {
+                vm->pc += GET_BIMMEDIATE();
+                vm->_inc_pc = 0;
+            }
+            d_vm_popn(vm, 1);
+            break;
+
+        case OP_JRCONHI:;
+            if (VM_GET_STACK(vm, 0)) {
+                vm->pc += GET_HIMMEDIATE();
+                vm->_inc_pc = 0;
+            }
+            d_vm_popn(vm, 1);
+            break;
+
+        case OP_JRCONFI:;
             if (VM_GET_STACK(vm, 0)) {
                 vm->pc += GET_FIMMEDIATE();
                 vm->_inc_pc = 0;
             }
             d_vm_popn(vm, 1);
             break;
-        
+
         case OP_MOD:;
             OP_2_1(%)
             break;
@@ -1080,4 +1110,33 @@ bool d_vm_run(DVM *vm, void *start) {
     }
 
     return !vm->runtimeError;
+}
+
+/**
+ * \fn void d_vm_dump(DVM *vm)
+ * \brief Dump the contents of a Decision VM to stdout for debugging.
+ *
+ * \param vm The VM to dump the contents of.
+ */
+void d_vm_dump(DVM *vm) {
+    // Print off basic information.
+    printf("pc     = %p (%d)\n", vm->pc, *(vm->pc));
+    printf("halted = %d\n", vm->halted);
+    printf("error  = %d\n", vm->runtimeError);
+
+    // Print off the stack.
+    printf("\nstack (size = %" DINT_PRINTF_u "):\n", vm->stackSize);
+
+    dint *ptr = vm->stackPtr;
+
+    while (ptr >= vm->basePtr) {
+        dint offset       = ptr - vm->stackPtr;
+        dint intValue     = *ptr;
+        dfloat floatValue = *((dfloat *)ptr);
+
+        printf("%d\t= %d\t|\t%x\t|\t%f\n", offset, intValue, intValue,
+               floatValue);
+
+        ptr--;
+    }
 }
