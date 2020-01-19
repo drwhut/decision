@@ -777,6 +777,9 @@ void d_vm_runtime_error(DVM *vm, const char *error) {
  * \fn void d_vm_parse_ins_at_pc(DVM *vm)
  * \brief Given a Decision VM, at it's current position in the program, parse
  * the instruction at that position.
+ * 
+ * **NOTE:** This function will be run a lot during the course of execution.
+ * If you are looking to optimise Decision, this is a good place to start.
  *
  * \param vm The VM to use to parse the instruction.
  */
