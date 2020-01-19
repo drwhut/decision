@@ -281,6 +281,84 @@ void *d_vm_get_ptr(DVM *vm, dint index) {
 }
 
 /**
+ * \fn void d_vm_insert(DVM *vm, dint index, dint value)
+ * \brief Insert an integer into the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \param vm The VM whose stack to insert to.
+ * \param index The index of the stack to insert to, i.e. `value` will be at
+ * this location when the function returns.
+ * \param value The value to insert into the stack.
+ */
+void d_vm_insert(DVM *vm, dint index, dint value) {
+    if (index == 0) {
+        // If the index is 0, then we want to insert the value to the top of
+        // the stack, and move whatever is already there up one place.
+        d_vm_push(vm, 0);
+        *VM_GET_STACK_PTR(vm, 0)  = VM_GET_STACK(vm, -1);
+        *VM_GET_STACK_PTR(vm, -1) = value;
+    } else {
+        dint *insertPtr;
+
+        if (index > 0) {
+            // Get the position relative to the frame pointer.
+            insertPtr = VM_GET_FRAME_PTR(vm, index);
+        } else {
+            // Get the position relative to the stack pointer.
+            insertPtr = VM_GET_STACK_PTR(vm, index);
+        }
+
+        if (insertPtr >= vm->basePtr && insertPtr <= vm->stackPtr) {
+            d_vm_push(vm, 0);
+            const size_t numElemsToMove = ((vm->stackPtr - insertPtr) + 1);
+            memmove(insertPtr + 1, insertPtr, numElemsToMove * sizeof(dint));
+            *insertPtr = value;
+        }
+    }
+}
+
+/**
+ * \fn void d_vm_insert_float(DVM *vm, dint index, dfloat value)
+ * \brief Insert a float into the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \param vm The VM whose stack to insert to.
+ * \param index The index of the stack to insert to, i.e. `value` will be at
+ * this location when the function returns.
+ * \param value The value to insert into the stack.
+ */
+void d_vm_insert_float(DVM *vm, dint index, dfloat value) {
+    dint intValue = *((dint *)(&value));
+
+    d_vm_insert(vm, index, intValue);
+}
+
+/**
+ * \fn void d_vm_insert_ptr(DVM *vm, dint index, void *ptr)
+ * \brief Insert a pointer into the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \param vm The VM whose stack to insert to.
+ * \param index The index of the stack to insert to, i.e. `ptr` will be at this
+ * location when the function returns.
+ * \param value The pointer to insert into the stack.
+ */
+void d_vm_insert_ptr(DVM *vm, dint index, void *ptr) {
+    dint value = (dint)ptr;
+
+    d_vm_insert(vm, index, value);
+}
+
+/**
  * \fn dint d_vm_pop(DVM *vm)
  * \brief Pop an integer from the top of the stack.
  *
@@ -1038,7 +1116,32 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             break;
 
         case OP_SYSCALL:;
-            // TODO: Syscalls.
+            switch (GET_BIMMEDIATE()) {
+                case SYS_PRINT:;
+                    switch (VM_GET_STACK(vm, 0)) {
+                        case 0: // Integer
+                            printf("%" DINT_PRINTF_d, VM_GET_STACK(vm, -1));
+                            break;
+                        case 1: // Float
+                            printf("%f", VM_GET_STACK_FLOAT(vm, -1));
+                            break;
+                        case 2: // String
+                            printf("%s", (char *)VM_GET_STACK(vm, -1));
+                            break;
+                        case 3: // Boolean
+                            printf("%s",
+                                   VM_GET_STACK(vm, -1) ? "true" : "false");
+                            break;
+                    }
+
+                    if (VM_GET_STACK(vm, -2)) {
+                        printf("\n");
+                    }
+
+                    *VM_GET_STACK_PTR(vm, -2) = 0;
+                    break;
+            }
+            d_vm_popn(vm, 2);
             break;
 
         case OP_XOR:;

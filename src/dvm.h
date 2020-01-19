@@ -141,25 +141,15 @@ typedef enum _dIns {
  *
  * \typedef enum _dSyscall DSyscall
  */
-/*
 typedef enum _dSyscall {
-    SYS_LOADSTR = 0, ///< Load a string value into a MALLOC'D string.
-                     ///< * `arg0`: A register which contains a pointer to a
-                     ///< MALLOC'D string, the string that is being set.
-                     ///< If the new string is a different length, chances are
-                     ///< the pointer to the malloc'd string will change, and
-                     ///< so will this register.
-                     ///< * `arg1`: A register which contains a pointer to the
-                     ///< string to copy.
-
-    SYS_PRINT = 1, ///< Print a value to `stdout`.
+    SYS_PRINT = 0, ///< Print a value to `stdout`.
                    ///< * `arg0`: `0`: `Integer`, `1`: `Float`, `2`: `String`,
                    ///< `3`: `Boolean`.
-                   ///< * `arg1`: The register to print.
+                   ///< * `arg1`: The value to print.
                    ///< * `arg2`: If set to `1`, it will print a newline at the
                    ///< end, otherwise it will not.
+                   ///< * Returns: The value 0.
 } DSyscall;
-*/
 
 /**
  * \def VM_STACK_SIZE_MIN
@@ -263,6 +253,51 @@ DECISION_API dfloat d_vm_get_float(DVM *vm, dint index);
  * \param index The index of the stack.
  */
 DECISION_API void *d_vm_get_ptr(DVM *vm, dint index);
+
+/**
+ * \fn void d_vm_insert(DVM *vm, dint index, dint value)
+ * \brief Insert an integer into the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \param vm The VM whose stack to insert to.
+ * \param index The index of the stack to insert to, i.e. `value` will be at
+ * this location when the function returns.
+ * \param value The value to insert into the stack.
+ */
+DECISION_API void d_vm_insert(DVM *vm, dint index, dint value);
+
+/**
+ * \fn void d_vm_insert_float(DVM *vm, dint index, dfloat value)
+ * \brief Insert a float into the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \param vm The VM whose stack to insert to.
+ * \param index The index of the stack to insert to, i.e. `value` will be at
+ * this location when the function returns.
+ * \param value The value to insert into the stack.
+ */
+DECISION_API void d_vm_insert_float(DVM *vm, dint index, dfloat value);
+
+/**
+ * \fn void d_vm_insert_ptr(DVM *vm, dint index, void *ptr)
+ * \brief Insert a pointer into the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \param vm The VM whose stack to insert to.
+ * \param index The index of the stack to insert to, i.e. `ptr` will be at this
+ * location when the function returns.
+ * \param value The pointer to insert into the stack.
+ */
+DECISION_API void d_vm_insert_ptr(DVM *vm, dint index, void *ptr);
 
 /**
  * \fn dint d_vm_pop(DVM *vm)
@@ -504,7 +539,7 @@ DECISION_API bool d_vm_run(DVM *vm, void *start);
 /**
  * \fn void d_vm_dump(DVM *vm)
  * \brief Dump the contents of a Decision VM to stdout for debugging.
- * 
+ *
  * \param vm The VM to dump the contents of.
  */
 DECISION_API void d_vm_dump(DVM *vm);
