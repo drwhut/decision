@@ -27,96 +27,117 @@
 
 /* A constant array of the size of each opcode's instruction in bytes. */
 static const unsigned char VM_INS_SIZE[NUM_OPCODES] = {
-    1,                   // OP_RET
-    1,                   // OP_ADD
-    1,                   // OP_ADDF
-    1 + BIMMEDIATE_SIZE, // OP_ADDBI
-    1 + HIMMEDIATE_SIZE, // OP_ADDHI
-    1 + FIMMEDIATE_SIZE, // OP_ADDFI
-    1,                   // OP_AND
-    1 + BIMMEDIATE_SIZE, // OP_ANDBI
-    1 + HIMMEDIATE_SIZE, // OP_ANDHI
-    1 + FIMMEDIATE_SIZE, // OP_ANDFI
-    1,                   // OP_CALL
-    1,                   // OP_CALLC
-    1 + FIMMEDIATE_SIZE, // OP_CALLCI
-    1 + FIMMEDIATE_SIZE, // OP_CALLI
-    1,                   // OP_CALLR
-    1 + BIMMEDIATE_SIZE, // OP_CALLRB
-    1 + HIMMEDIATE_SIZE, // OP_CALLRH
-    1 + FIMMEDIATE_SIZE, // OP_CALLRF
-    1,                   // OP_CEQ
-    1,                   // OP_CEQF
-    1,                   // OP_CLEQ
-    1,                   // OP_CLEQF
-    1,                   // OP_CLT
-    1,                   // OP_CLTF
-    1,                   // OP_CMEQ
-    1,                   // OP_MEQF
-    1,                   // OP_CMT
-    1,                   // OP_CMTF
-    1,                   // OP_CVTF
-    1,                   // OP_CVTI
-    1,                   // OP_DEREF
-    1,                   // OP_DEREFB
-    1,                   // OP_DIV
-    1,                   // OP_DIVF
-    1 + BIMMEDIATE_SIZE, // OP_DIVBI
-    1 + HIMMEDIATE_SIZE, // OP_DIVHI
-    1 + FIMMEDIATE_SIZE, // OP_DIVFI
-    1,                   // OP_GET
-    1 + BIMMEDIATE_SIZE, // OP_GETBI
-    1 + HIMMEDIATE_SIZE, // OP_GETHI
-    1 + FIMMEDIATE_SIZE, // OP_GETFI
-    1,                   // OP_J
-    1,                   // OP_JCON
-    1 + FIMMEDIATE_SIZE, // OP_JCONI
-    1 + FIMMEDIATE_SIZE, // OP_JI
-    1,                   // OP_JR
-    1 + BIMMEDIATE_SIZE, // OP_JRBI
-    1 + HIMMEDIATE_SIZE, // OP_JRHI
-    1 + FIMMEDIATE_SIZE, // OP_JRFI
-    1,                   // OP_JRCON
-    1 + BIMMEDIATE_SIZE, // OP_JRCONBI
-    1 + HIMMEDIATE_SIZE, // OP_JRCONHI
-    1 + FIMMEDIATE_SIZE, // OP_JRCONFI
-    1,                   // OP_MOD
-    1 + BIMMEDIATE_SIZE, // OP_MODBI
-    1 + HIMMEDIATE_SIZE, // OP_MODHI
-    1 + FIMMEDIATE_SIZE, // OP_MODFI
-    1,                   // OP_MUL
-    1,                   // OP_MULF
-    1 + BIMMEDIATE_SIZE, // OP_MULBI
-    1 + HIMMEDIATE_SIZE, // OP_MULHI
-    1 + FIMMEDIATE_SIZE, // OP_MULFI
-    1,                   // OP_NOT
-    1,                   // OP_OR
-    1 + BIMMEDIATE_SIZE, // OP_ORBI
-    1 + HIMMEDIATE_SIZE, // OP_ORHI
-    1 + FIMMEDIATE_SIZE, // OP_ORFI
-    1 + BIMMEDIATE_SIZE, // OP_POPB
-    1 + HIMMEDIATE_SIZE, // OP_POPH
-    1 + FIMMEDIATE_SIZE, // OP_POPF
-    1 + BIMMEDIATE_SIZE, // OP_PUSHB
-    1 + HIMMEDIATE_SIZE, // OP_PUSHH
-    1 + FIMMEDIATE_SIZE, // OP_PUSHF
-    1,                   // OP_SETADR
-    1,                   // OP_SETADRB
-    1,                   // OP_SUB
-    1,                   // OP_SUBF
-    1 + BIMMEDIATE_SIZE, // OP_SUBBI
-    1 + HIMMEDIATE_SIZE, // OP_SUBHI
-    1 + FIMMEDIATE_SIZE, // OP_SUBFI
-    1 + BIMMEDIATE_SIZE, // OP_SYSCALL
-    1,                   // OP_XOR
-    1 + BIMMEDIATE_SIZE, // OP_XORBI
-    1 + HIMMEDIATE_SIZE, // OP_XORHI
-    1 + FIMMEDIATE_SIZE, // OP_XORFI
+    1,                                     // OP_RET
+    1 + BIMMEDIATE_SIZE,                   // OP_RETN
+    1,                                     // OP_ADD
+    1,                                     // OP_ADDF
+    1 + BIMMEDIATE_SIZE,                   // OP_ADDBI
+    1 + HIMMEDIATE_SIZE,                   // OP_ADDHI
+    1 + FIMMEDIATE_SIZE,                   // OP_ADDFI
+    1,                                     // OP_AND
+    1 + BIMMEDIATE_SIZE,                   // OP_ANDBI
+    1 + HIMMEDIATE_SIZE,                   // OP_ANDHI
+    1 + FIMMEDIATE_SIZE,                   // OP_ANDFI
+    1 + BIMMEDIATE_SIZE,                   // OP_CALL
+    1,                                     // OP_CALLC
+    1 + FIMMEDIATE_SIZE,                   // OP_CALLCI
+    1 + FIMMEDIATE_SIZE + BIMMEDIATE_SIZE, // OP_CALLI
+    1 + BIMMEDIATE_SIZE,                   // OP_CALLR
+    1 + BIMMEDIATE_SIZE + BIMMEDIATE_SIZE, // OP_CALLRB
+    1 + HIMMEDIATE_SIZE + BIMMEDIATE_SIZE, // OP_CALLRH
+    1 + FIMMEDIATE_SIZE + BIMMEDIATE_SIZE, // OP_CALLRF
+    1,                                     // OP_CEQ
+    1,                                     // OP_CEQF
+    1,                                     // OP_CLEQ
+    1,                                     // OP_CLEQF
+    1,                                     // OP_CLT
+    1,                                     // OP_CLTF
+    1,                                     // OP_CMEQ
+    1,                                     // OP_MEQF
+    1,                                     // OP_CMT
+    1,                                     // OP_CMTF
+    1,                                     // OP_CVTF
+    1,                                     // OP_CVTI
+    1,                                     // OP_DEREF
+    1,                                     // OP_DEREFB
+    1,                                     // OP_DIV
+    1,                                     // OP_DIVF
+    1 + BIMMEDIATE_SIZE,                   // OP_DIVBI
+    1 + HIMMEDIATE_SIZE,                   // OP_DIVHI
+    1 + FIMMEDIATE_SIZE,                   // OP_DIVFI
+    1,                                     // OP_GET
+    1 + BIMMEDIATE_SIZE,                   // OP_GETBI
+    1 + HIMMEDIATE_SIZE,                   // OP_GETHI
+    1 + FIMMEDIATE_SIZE,                   // OP_GETFI
+    1,                                     // OP_J
+    1,                                     // OP_JCON
+    1 + FIMMEDIATE_SIZE,                   // OP_JCONI
+    1 + FIMMEDIATE_SIZE,                   // OP_JI
+    1,                                     // OP_JR
+    1 + BIMMEDIATE_SIZE,                   // OP_JRBI
+    1 + HIMMEDIATE_SIZE,                   // OP_JRHI
+    1 + FIMMEDIATE_SIZE,                   // OP_JRFI
+    1,                                     // OP_JRCON
+    1 + BIMMEDIATE_SIZE,                   // OP_JRCONBI
+    1 + HIMMEDIATE_SIZE,                   // OP_JRCONHI
+    1 + FIMMEDIATE_SIZE,                   // OP_JRCONFI
+    1,                                     // OP_MOD
+    1 + BIMMEDIATE_SIZE,                   // OP_MODBI
+    1 + HIMMEDIATE_SIZE,                   // OP_MODHI
+    1 + FIMMEDIATE_SIZE,                   // OP_MODFI
+    1,                                     // OP_MUL
+    1,                                     // OP_MULF
+    1 + BIMMEDIATE_SIZE,                   // OP_MULBI
+    1 + HIMMEDIATE_SIZE,                   // OP_MULHI
+    1 + FIMMEDIATE_SIZE,                   // OP_MULFI
+    1,                                     // OP_NOT
+    1,                                     // OP_OR
+    1 + BIMMEDIATE_SIZE,                   // OP_ORBI
+    1 + HIMMEDIATE_SIZE,                   // OP_ORHI
+    1 + FIMMEDIATE_SIZE,                   // OP_ORFI
+    1 + BIMMEDIATE_SIZE,                   // OP_POPB
+    1 + HIMMEDIATE_SIZE,                   // OP_POPH
+    1 + FIMMEDIATE_SIZE,                   // OP_POPF
+    1 + BIMMEDIATE_SIZE,                   // OP_PUSHB
+    1 + HIMMEDIATE_SIZE,                   // OP_PUSHH
+    1 + FIMMEDIATE_SIZE,                   // OP_PUSHF
+    1,                                     // OP_SETADR
+    1,                                     // OP_SETADRB
+    1,                                     // OP_SUB
+    1,                                     // OP_SUBF
+    1 + BIMMEDIATE_SIZE,                   // OP_SUBBI
+    1 + HIMMEDIATE_SIZE,                   // OP_SUBHI
+    1 + FIMMEDIATE_SIZE,                   // OP_SUBFI
+    1 + BIMMEDIATE_SIZE,                   // OP_SYSCALL
+    1,                                     // OP_XOR
+    1 + BIMMEDIATE_SIZE,                   // OP_XORBI
+    1 + HIMMEDIATE_SIZE,                   // OP_XORHI
+    1 + FIMMEDIATE_SIZE,                   // OP_XORFI
 };
 
 /*
 === STACK FUNCTIONS =======================================
 */
+
+/**
+ * \fn static void vm_set_stack_size_to(DVM *vm, duint size)
+ * \brief Set the VM's stack size.
+ *
+ * \param vm The VM whose stack to set the size of.
+ * \param size The size the stack should be set to, i.e. how many elements can
+ * it contain?
+ */
+static void vm_set_stack_size_to(DVM *vm, duint size) {
+    vm->stackSize = size;
+
+    const size_t newAlloc = size * sizeof(dint);
+
+    if (vm->basePtr == NULL) {
+        vm->basePtr = d_malloc(size);
+    } else {
+        vm->basePtr = d_realloc(vm->basePtr, size);
+    }
+}
 
 /**
  * \fn static void vm_increase_stack_size(DVM *vm)
@@ -128,15 +149,7 @@ static void vm_increase_stack_size(DVM *vm) {
     duint newSize = (duint)(vm->stackSize * VM_STACK_SIZE_SCALE_INC);
 
     if (newSize > vm->stackSize) {
-        vm->stackSize = newSize;
-
-        size_t newAlloc = newSize * sizeof(dint);
-
-        if (vm->basePtr == NULL) {
-            vm->basePtr = d_malloc(newSize);
-        } else {
-            vm->basePtr = d_realloc(vm->basePtr, newSize);
-        }
+        vm_set_stack_size_to(vm, newSize);
     }
 }
 
@@ -155,13 +168,7 @@ static void vm_decrease_stack_size(DVM *vm) {
     }
 
     if (newSize < vm->stackSize) {
-        size_t newAlloc = newSize * sizeof(dint);
-
-        if (vm->basePtr == NULL) {
-            vm->basePtr = d_malloc(newSize);
-        } else {
-            vm->basePtr = d_realloc(vm->basePtr, newSize);
-        }
+        vm_set_stack_size_to(vm, newSize);
     }
 }
 
@@ -218,6 +225,22 @@ static void vm_decrease_stack_size(DVM *vm) {
  * pointer.
  */
 #define VM_GET_STACK_FLOAT(vm, index) (*VM_GET_STACK_FLOAT_PTR(vm, index))
+
+/**
+ * \fn size_t d_vm_frame(DVM *vm)
+ * \brief Get the number of elements in the current stack frame.
+ *
+ * \return The number of elements in the stack frame.
+ *
+ * \param vm The VM whose stack to query.
+ */
+size_t d_vm_frame(DVM *vm) {
+    if (vm->basePtr != NULL) {
+        return 0;
+    }
+
+    return (size_t)(vm->stackPtr - vm->framePtr);
+}
 
 /**
  * \fn dint d_vm_get(DVM *vm, dint index)
@@ -281,6 +304,17 @@ void *d_vm_get_ptr(DVM *vm, dint index) {
 }
 
 /**
+ * \def VM_INSERT_LEN(vm, ptr, len, numMove)
+ * \brief A helper macro for for inserting a length of items onto the stack,
+ * without the checks.
+ */
+#define VM_INSERT_LEN(vm, ptr, len, numMove)                     \
+    {                                                            \
+        d_vm_pushn(vm, len);                                     \
+        memmove((ptr) + (len), (ptr), (numMove) * sizeof(dint)); \
+    }
+
+/**
  * \fn void d_vm_insert(DVM *vm, dint index, dint value)
  * \brief Insert an integer into the stack at a particular index.
  *
@@ -312,9 +346,8 @@ void d_vm_insert(DVM *vm, dint index, dint value) {
         }
 
         if (insertPtr >= vm->basePtr && insertPtr <= vm->stackPtr) {
-            d_vm_push(vm, 0);
             const size_t numElemsToMove = ((vm->stackPtr - insertPtr) + 1);
-            memmove(insertPtr + 1, insertPtr, numElemsToMove * sizeof(dint));
+            VM_INSERT_LEN(vm, insertPtr, 1, numElemsToMove)
             *insertPtr = value;
         }
     }
@@ -431,11 +464,35 @@ void *d_vm_pop_ptr(DVM *vm) {
  * \param value The value to push onto the stack.
  */
 void d_vm_push(DVM *vm, dint value) {
-    while (d_vm_top(vm) >= vm->stackSize) {
+    if (d_vm_top(vm) >= vm->stackSize) {
         vm_increase_stack_size(vm);
     }
 
     *(++vm->stackPtr) = value;
+}
+
+/**
+ * \fn void d_vm_pushn(DVM *vm, size_t n)
+ * \brief Push `0` onto the stack `n` times.
+ *
+ * \param vm The VM whose stack to push onto.
+ * \param n The number of items to push onto the stack.
+ */
+void d_vm_pushn(DVM *vm, size_t n) {
+    if (n > 0) {
+        dint *newStackPtr    = vm->stackPtr + n;
+        const size_t newSize = (newStackPtr - vm->basePtr) + 1;
+
+        if (newSize >= vm->stackSize) {
+            // Make space for the new elements if needed, plus a bit extra.
+            vm_set_stack_size_to(vm,
+                                 (duint)(newSize * VM_STACK_SIZE_SCALE_INC));
+        }
+
+        memset(vm->stackPtr + 1, 0, n * sizeof(dint));
+
+        vm->stackPtr = newStackPtr;
+    }
 }
 
 /**
@@ -480,6 +537,17 @@ void d_vm_remove(DVM *vm, dint index) {
 }
 
 /**
+ * \def VM_REMOVE_LEN(vm, ptr, len)
+ * \brief A helper macro for removing a length of items in the stack, without
+ * any of the checks.
+ */
+#define VM_REMOVE_LEN(vm, ptr, len, numMove)                     \
+    {                                                            \
+        memmove((ptr), (ptr) + (len), (numMove) * sizeof(dint)); \
+        d_vm_popn(vm, len);                                      \
+    }
+
+/**
  * \fn void d_vm_remove_len(DVM *vm, dint index, size_t len)
  * \brief Remove a number of values from the stack, starting at a particular
  * index.
@@ -514,9 +582,7 @@ void d_vm_remove_len(DVM *vm, dint index, size_t len) {
                 }
 
                 const size_t numElemsToMove = max - len;
-                memmove(removePtr, removePtr + len,
-                        numElemsToMove * sizeof(dint));
-                d_vm_popn(vm, len);
+                VM_REMOVE_LEN(vm, removePtr, len, numElemsToMove)
             }
         }
     }
@@ -645,15 +711,7 @@ void d_vm_reset(DVM *vm) {
     vm->pc      = 0;
     vm->_inc_pc = 0;
 
-    vm->stackSize = VM_STACK_SIZE_MIN;
-
-    const size_t stackAlloc = vm->stackSize * sizeof(dint);
-
-    if (vm->basePtr == NULL) {
-        vm->basePtr = d_malloc(stackAlloc);
-    } else {
-        vm->basePtr = d_realloc(vm->basePtr, stackAlloc);
-    }
+    vm_set_stack_size_to(vm, VM_STACK_SIZE_MIN);
 
     dint *ptr    = vm->basePtr - 1;
     vm->stackPtr = ptr;
@@ -701,28 +759,28 @@ void d_vm_runtime_error(DVM *vm, const char *error) {
 */
 
 /**
- * \def GET_IMMEDIATE(t)
+ * \def GET_IMMEDIATE(tm, offset)
  * \brief A helper macro for getting a generic immediate value.
  */
-#define GET_IMMEDIATE(t) (*((t *)(vm->pc + 1)))
+#define GET_IMMEDIATE(t, offset) (*((t *)(vm->pc + (offset))))
 
 /**
- * \def GET_BIMMEDIATE()
+ * \def GET_BIMMEDIATE(offset)
  * \brief A helper macro for getting a byte immediate.
  */
-#define GET_BIMMEDIATE() GET_IMMEDIATE(bimmediate_t)
+#define GET_BIMMEDIATE(offset) GET_IMMEDIATE(bimmediate_t, offset)
 
 /**
- * \def GET_HIMMEDIATE()
+ * \def GET_HIMMEDIATE(offset)
  * \brief A helper macro for getting a half immediate.
  */
-#define GET_HIMMEDIATE() GET_IMMEDIATE(himmediate_t)
+#define GET_HIMMEDIATE(offset) GET_IMMEDIATE(himmediate_t, offset)
 
 /**
- * \def GET_FIMMEDIATE()
+ * \def GET_FIMMEDIATE(offset)
  * \brief A helper macro for getting a full immediate.
  */
-#define GET_FIMMEDIATE() GET_IMMEDIATE(fimmediate_t)
+#define GET_FIMMEDIATE(offset) GET_IMMEDIATE(fimmediate_t, offset)
 
 /**
  * \def OP_1_1_I(sym, fun)
@@ -732,7 +790,7 @@ void d_vm_runtime_error(DVM *vm, const char *error) {
 #define OP_1_1_I(sym, fun)                   \
     {                                        \
         dint *top = VM_GET_STACK_PTR(vm, 0); \
-        *top      = *top sym fun();          \
+        *top      = *top sym fun(1);         \
     }
 
 /**
@@ -773,11 +831,137 @@ void d_vm_runtime_error(DVM *vm, const char *error) {
         d_vm_popn(vm, 1);                                               \
     }
 
+/*
+            vm->pc = VM_GET_STACK(vm, 0);
+
+            const uint8_t numArguments = (uint8_t)GET_BIMMEDIATE(1);
+            dint *insertPtr            = vm->stackPtr - numArguments - 1;
+
+            VM_INSERT_LEN(vm, insertPtr, 2, numArguments)
+
+            // Save the frame pointer first...
+            *insertPtr = (dint)vm->framePtr;
+
+            // ... then the program counter.
+            insertPtr++;
+            *insertPtr = (dint)vm->pc;
+
+            // Then set the new frame pointer.
+            vm->framePtr = insertPtr;
+
+            vm->_inc_pc = 0;
+*/
+
+/**
+ * \def CALL_GENERIC(sym, newPC, offset)
+ * \brief A generic helper macro for call opcodes.
+ */
+#define CALL_GENERIC(sym, newPC, offset)                              \
+    {                                                                 \
+        vm->pc sym newPC;                                             \
+        const uint8_t numArguments = (uint8_t)GET_BIMMEDIATE(offset); \
+        dint *insertPtr            = vm->stackPtr - numArguments - 1; \
+        VM_INSERT_LEN(vm, insertPtr, 2, numArguments)                 \
+        *insertPtr = (dint)vm->framePtr;                              \
+        insertPtr++;                                                  \
+        *insertPtr   = (dint)vm->pc;                                  \
+        vm->framePtr = insertPtr;                                     \
+        vm->_inc_pc  = 0;                                             \
+    }
+
+/**
+ * \def CALL_1_0(sym)
+ * \brief A helper macro for call opcodes with 1 input and 0 outputs.
+ * 
+ * **NOTE:** Here we just decrement the stack pointer instead of using
+ * `d_vm_popn`, since `VM_INSERT_LEN` pushed 2 times, it makes an overall
+ * difference of 1 element being pushed on, so the stack should not have to be
+ * decreased in size. This is simply an optimisation.
+ */
+#define CALL_1_0(sym)                              \
+    {                                              \
+        CALL_GENERIC(sym, VM_GET_STACK(vm, 0), 1); \
+        vm->stackPtr--;                            \
+    }
+
+/**
+ * \def CALL_0_0_BI(sym)
+ * \brief A helper macro for call opcodes with 0 inputs and 0 outputs,
+ * involving a byte immediate.
+ */
+#define CALL_0_0_BI(sym) \
+    CALL_GENERIC(sym, GET_BIMMEDIATE(1), 1 + BIMMEDIATE_SIZE)
+
+/**
+ * \def CALL_0_0_HI(sym)
+ * \brief A helper macro for call opcodes with 0 inputs and 0 outputs,
+ * involving a half immediate.
+ */
+#define CALL_0_0_HI(sym) \
+    CALL_GENERIC(sym, GET_HIMMEDIATE(1), 1 + HIMMEDIATE_SIZE)
+
+/**
+ * \def CALL_0_0_FI(sym)
+ * \brief A helper macro for call opcodes with 0 inputs and 0 outputs,
+ * involving a full immediate.
+ */
+#define CALL_0_0_FI(sym) \
+    CALL_GENERIC(sym, GET_FIMMEDIATE(1), 1 + FIMMEDIATE_SIZE)
+
+/**
+ * \def J_0_0_I(sym)
+ * \brief A helper macro for jump opcodes with 0 inputs and 0 outputs, and an
+ * immediate.
+ */
+#define J_0_0_I(sym, fun)  \
+    {                      \
+        vm->pc sym fun(1); \
+        vm->_inc_pc = 0;   \
+    }
+
+/**
+ * \def J_1_0(sym)
+ * \brief A helper macro for jump opcodes with 1 input and 0 outputs.
+ */
+#define J_1_0(sym)                      \
+    {                                   \
+        vm->pc sym VM_GET_STACK(vm, 0); \
+        d_vm_popn(vm, 1);               \
+        vm->_inc_pc = 0;                \
+    }
+
+/**
+ * \def JCON_1_0_I(sym, fun)
+ * \brief A helper macro for jump condition opcodes with 1 input and 0 outputs,
+ * and an immediate.
+ */
+#define JCON_1_0_I(sym, fun)       \
+    {                              \
+        if (VM_GET_STACK(vm, 0)) { \
+            vm->pc sym fun(1);     \
+            vm->_inc_pc = 0;       \
+        }                          \
+        d_vm_popn(vm, 1);          \
+    }
+
+/**
+ * \def JCON_2_0(sym)
+ * \brief A helper macro for jump condition opcodes with 2 inputs and 0 outputs.
+ */
+#define JCON_2_0(sym)                        \
+    {                                        \
+        if (VM_GET_STACK(vm, 0)) {           \
+            vm->pc sym VM_GET_STACK(vm, -1); \
+            vm->_inc_pc = 0;                 \
+        }                                    \
+        d_vm_popn(vm, 2);                    \
+    }
+
 /**
  * \fn void d_vm_parse_ins_at_pc(DVM *vm)
  * \brief Given a Decision VM, at it's current position in the program, parse
  * the instruction at that position.
- * 
+ *
  * **NOTE:** This function will be run a lot during the course of execution.
  * If you are looking to optimise Decision, this is a good place to start.
  *
@@ -793,13 +977,34 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
 
     // Do stuff depending on what the opcode is.
     switch (opcode) {
-        case OP_RET:;
+        case OP_RET:
+        case OP_RETN:;
             // If the frame pointer is pointing to a location before the start
             // of the stack, then halt, as this is the last frame.
             if (vm->framePtr < vm->basePtr) {
                 vm->halted = true;
             } else {
-                // TODO: Pop the stack frame.
+                uint8_t numReturnValues = 0;
+
+                if (opcode == OP_RETN) {
+                    numReturnValues = (uint8_t)GET_BIMMEDIATE(1);
+                }
+
+                // The frame pointer is now pointing at the saved program
+                // counter, i.e. the return address.
+                dint *ptr = vm->framePtr;
+                vm->pc    = (char *)(*ptr);
+
+                // The element before that is the saved frame pointer of the
+                // previous stack frame.
+                ptr--;
+                vm->framePtr = (dint *)(*ptr);
+
+                // Now this position is where the return values should go.
+                const size_t lenRemove =
+                    (vm->stackPtr - ptr) + 1 - numReturnValues;
+
+                VM_REMOVE_LEN(vm, ptr, lenRemove, numReturnValues);
             }
             break;
 
@@ -840,8 +1045,7 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             break;
 
         case OP_CALL:;
-            // TODO: Call.
-            vm->_inc_pc = 0;
+            CALL_1_0(=)
             break;
 
         case OP_CALLC:;
@@ -863,35 +1067,30 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
                 intptr_t ptr;
             } funcPtr;
 
-            funcPtr.ptr = GET_FIMMEDIATE();
+            funcPtr.ptr = GET_FIMMEDIATE(1);
 
             // Call the C function.
             funcPtr.func(vm);
             break;
 
         case OP_CALLI:;
-            /// TODO: Call.
-            vm->_inc_pc = 0;
+            CALL_0_0_FI(=)
             break;
 
         case OP_CALLR:;
-            // TODO: Call.
-            vm->_inc_pc = 0;
+            CALL_1_0(+=)
             break;
 
         case OP_CALLRB:;
-            // TODO: Call.
-            vm->_inc_pc = 0;
+            CALL_0_0_BI(+=)
             break;
 
         case OP_CALLRH:;
-            // TODO: Call.
-            vm->_inc_pc = 0;
+            CALL_0_0_HI(+=)
             break;
 
         case OP_CALLRF:;
-            // TODO: Call.
-            vm->_inc_pc = 0;
+            CALL_0_0_FI(+=)
             break;
 
         case OP_CEQ:;
@@ -975,95 +1174,63 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             break;
 
         case OP_GETBI:;
-            d_vm_push(vm, d_vm_get(vm, GET_BIMMEDIATE()));
+            d_vm_push(vm, d_vm_get(vm, GET_BIMMEDIATE(1)));
             break;
 
         case OP_GETHI:;
-            d_vm_push(vm, d_vm_get(vm, GET_HIMMEDIATE()));
+            d_vm_push(vm, d_vm_get(vm, GET_HIMMEDIATE(1)));
             break;
 
         case OP_GETFI:;
-            d_vm_push(vm, d_vm_get(vm, GET_FIMMEDIATE()));
+            d_vm_push(vm, d_vm_get(vm, GET_FIMMEDIATE(1)));
             break;
 
         case OP_J:;
-            vm->pc = VM_GET_STACK(vm, 0);
-            d_vm_popn(vm, 1);
-            vm->_inc_pc = 0;
+            J_1_0(=)
             break;
 
         case OP_JCON:;
-            if (VM_GET_STACK(vm, 0)) {
-                vm->pc      = VM_GET_STACK(vm, -1);
-                vm->_inc_pc = 0;
-            }
-            d_vm_popn(vm, 2);
+            JCON_2_0(=)
             break;
 
         case OP_JCONI:;
-            if (VM_GET_STACK(vm, 0)) {
-                vm->pc      = GET_FIMMEDIATE();
-                vm->_inc_pc = 0;
-            }
-            d_vm_popn(vm, 1);
+            JCON_1_0_I(=, GET_FIMMEDIATE)
             break;
 
         case OP_JI:;
-            vm->pc      = GET_FIMMEDIATE();
-            vm->_inc_pc = 0;
+            J_0_0_I(=, GET_FIMMEDIATE)
             break;
 
         case OP_JR:;
-            vm->pc += VM_GET_STACK(vm, 0);
-            d_vm_popn(vm, 1);
-            vm->_inc_pc = 0;
+            J_1_0(+=)
             break;
 
         case OP_JRBI:;
-            vm->pc += GET_BIMMEDIATE();
-            vm->_inc_pc = 0;
+            J_0_0_I(+=, GET_BIMMEDIATE)
             break;
 
         case OP_JRHI:;
-            vm->pc += GET_HIMMEDIATE();
-            vm->_inc_pc = 0;
+            J_0_0_I(+=, GET_HIMMEDIATE)
             break;
 
         case OP_JRFI:;
-            vm->pc += GET_FIMMEDIATE();
-            vm->_inc_pc = 0;
+            J_0_0_I(+=, GET_FIMMEDIATE)
             break;
 
         case OP_JRCON:;
-            if (VM_GET_STACK(vm, 0)) {
-                vm->pc += VM_GET_STACK(vm, -1);
-                vm->_inc_pc = 0;
-            }
-            d_vm_popn(vm, 2);
+            JCON_2_0(+=)
             break;
 
         case OP_JRCONBI:;
-            if (VM_GET_STACK(vm, 0)) {
-                vm->pc += GET_BIMMEDIATE();
-                vm->_inc_pc = 0;
-            }
-            d_vm_popn(vm, 1);
+            JCON_1_0_I(+=, GET_BIMMEDIATE)
             break;
 
         case OP_JRCONHI:;
-            if (VM_GET_STACK(vm, 0)) {
-                vm->pc += GET_HIMMEDIATE();
-                vm->_inc_pc = 0;
-            }
-            d_vm_popn(vm, 1);
+            JCON_1_0_I(+=, GET_HIMMEDIATE)
             break;
 
         case OP_JRCONFI:;
-            if (VM_GET_STACK(vm, 0)) {
-                vm->pc += GET_FIMMEDIATE();
-                vm->_inc_pc = 0;
-            }
-            d_vm_popn(vm, 1);
+            JCON_1_0_I(+=, GET_FIMMEDIATE)
             break;
 
         case OP_MOD:;
@@ -1123,27 +1290,27 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             break;
 
         case OP_POPB:;
-            d_vm_popn(vm, GET_BIMMEDIATE());
+            d_vm_popn(vm, GET_BIMMEDIATE(1));
             break;
 
         case OP_POPH:;
-            d_vm_popn(vm, GET_HIMMEDIATE());
+            d_vm_popn(vm, GET_HIMMEDIATE(1));
             break;
 
         case OP_POPF:;
-            d_vm_popn(vm, GET_FIMMEDIATE());
+            d_vm_popn(vm, GET_FIMMEDIATE(1));
             break;
 
         case OP_PUSHB:;
-            d_vm_push(vm, GET_BIMMEDIATE());
+            d_vm_push(vm, GET_BIMMEDIATE(1));
             break;
 
         case OP_PUSHH:;
-            d_vm_push(vm, GET_HIMMEDIATE());
+            d_vm_push(vm, GET_HIMMEDIATE(1));
             break;
 
         case OP_PUSHF:;
-            d_vm_push(vm, GET_FIMMEDIATE());
+            d_vm_push(vm, GET_FIMMEDIATE(1));
             break;
 
         case OP_SETADR:;
@@ -1177,7 +1344,7 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             break;
 
         case OP_SYSCALL:;
-            switch (GET_BIMMEDIATE()) {
+            switch (GET_BIMMEDIATE(1)) {
                 case SYS_PRINT:;
                     switch (VM_GET_STACK(vm, 0)) {
                         case 0: // Integer

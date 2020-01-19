@@ -42,91 +42,92 @@
  * \typedef enum _dIns DIns
  */
 typedef enum _dIns {
-    OP_RET     = 0,  ///< pop(stackFrame) ELSE halt()
-    OP_ADD     = 1,  ///< push(pop() + pop())
-    OP_ADDF    = 2,  ///< pushFloat(popFloat() + popFloat())
-    OP_ADDBI   = 3,  ///< push(pop() + I(1))
-    OP_ADDHI   = 4,  ///< push(pop() + I(|M|/2))
-    OP_ADDFI   = 5,  ///< push(pop() + I(|M|))
-    OP_AND     = 6,  ///< push(pop() & pop())
-    OP_ANDBI   = 7,  ///< push(pop() & I(1))
-    OP_ANDHI   = 8,  ///< push(pop() & I(|M|/2))
-    OP_ANDFI   = 9,  ///< push(pop() & I(|M|))
-    OP_CALL    = 10, ///< pc = pop(); push(stackFrame)
-    OP_CALLC   = 11, ///< (*pop())(this)
-    OP_CALLCI  = 12, ///< (*I(|M|))(this)
-    OP_CALLI   = 13, ///< pc = I(|M|); push(stackFrame)
-    OP_CALLR   = 14, ///< pc += pop(); push(stackFrame)
-    OP_CALLRB  = 15, ///< pc += I(1); push(stackFrame)
-    OP_CALLRH  = 16, ///< pc += I(|M|/2); push(stackFrame)
-    OP_CALLRF  = 17, ///< pc += I(|M|); push(stackFrame)
-    OP_CEQ     = 18, ///< push(pop() == pop())
-    OP_CEQF    = 19, ///< push(popFloat() == popFloat())
-    OP_CLEQ    = 20, ///< push(pop() <= pop())
-    OP_CLEQF   = 21, ///< push(popFloat() <= popFloat())
-    OP_CLT     = 22, ///< push(pop() < pop())
-    OP_CLTF    = 23, ///< push(popFloat() < popFloat())
-    OP_CMEQ    = 24, ///< push(pop() >= pop())
-    OP_CMEQF   = 25, ///< push(popFloat() >= popFloat())
-    OP_CMT     = 26, ///< push(pop() > pop())
-    OP_CMTF    = 27, ///< push(popFloat() > popFloat())
-    OP_CVTF    = 28, ///< push((dfloat)pop())
-    OP_CVTI    = 29, ///< push((dint)pop())
-    OP_DEREF   = 30, ///< push(*pop())
-    OP_DEREFB  = 31, ///< push(*((uint8_t *)pop()))
-    OP_DIV     = 32, ///< push(pop() / pop())
-    OP_DIVF    = 33, ///< pushFloat(popFloat() / popFloat())
-    OP_DIVBI   = 34, ///< push(pop() / I(1))
-    OP_DIVHI   = 35, ///< push(pop() / I(|M|/2))
-    OP_DIVFI   = 36, ///< push(pop() / I(|M|))
-    OP_GET     = 37, ///< push(get(pop()))
-    OP_GETBI   = 38, ///< push(get(I(1)))
-    OP_GETHI   = 39, ///< push(get(I(|M|/2)))
-    OP_GETFI   = 40, ///< push(get(I(|M|)))
-    OP_J       = 41, ///< pc = pop()
-    OP_JCON    = 42, ///< IF pop() THEN pc = pop() ELSE pop()
-    OP_JCONI   = 43, ///< IF pop() THEN pc = I(|M|)
-    OP_JI      = 44, ///< pc = I(|M|)
-    OP_JR      = 45, ///< pc += pop()
-    OP_JRBI    = 46, ///< pc += I(1)
-    OP_JRHI    = 47, ///< pc += I(|M|/2)
-    OP_JRFI    = 48, ///< pc += I(|M|)
-    OP_JRCON   = 49, ///< IF pop() THEN pc += pop() ELSE pop()
-    OP_JRCONBI = 50, ///< IF pop() THEN pc += I(1)
-    OP_JRCONHI = 51, ///< IF pop() THEN pc += I(|M|/2)
-    OP_JRCONFI = 52, ///< IF pop() THEN pc += I(|M|)
-    OP_MOD     = 53, ///< push(pop() % pop())
-    OP_MODBI   = 54, ///< push(pop() % I(1))
-    OP_MODHI   = 55, ///< push(pop() % I(|M|/2))
-    OP_MODFI   = 56, ///< push(pop() % I(|M|))
-    OP_MUL     = 57, ///< push(pop() * pop())
-    OP_MULF    = 58, ///< pushFloat(popFloat() * popFloat())
-    OP_MULBI   = 59, ///< push(pop() * I(1))
-    OP_MULHI   = 60, ///< push(pop() * I(|M|/2))
-    OP_MULFI   = 61, ///< push(pop() * I(|M|))
-    OP_NOT     = 62, ///< push(!pop())
-    OP_OR      = 63, ///< push(pop() | pop())
-    OP_ORBI    = 64, ///< push(pop() | I(1))
-    OP_ORHI    = 65, ///< push(pop() | I(|M|/2))
-    OP_ORFI    = 66, ///< push(pop() | I(|M|))
-    OP_POPB    = 67, ///< pop() I(1) times
-    OP_POPH    = 68, ///< pop() I(|M|/2) times
-    OP_POPF    = 69, ///< pop() I(|M|) times
-    OP_PUSHB   = 70, ///< push(I(1))
-    OP_PUSHH   = 71, ///< push(I(|M|/2))
-    OP_PUSHF   = 72, ///< push(I(|M|))
-    OP_SETADR  = 73, ///< *((dint *)pop()) = pop()
-    OP_SETADRB = 74, ///< *((uint8_t *)pop()) = pop()
-    OP_SUB     = 75, ///< push(pop() - pop())
-    OP_SUBF    = 76, ///< pushFloat(popFloat() - popFloat())
-    OP_SUBBI   = 77, ///< push(pop() - I(1))
-    OP_SUBHI   = 78, ///< push(pop() - I(|M|/2))
-    OP_SUBFI   = 79, ///< push(pop() - I(|M|))
-    OP_SYSCALL = 80, ///< push(syscall(I(1), pop(), pop(), pop()))
-    OP_XOR     = 81, ///< push(pop() ^ pop())
-    OP_XORBI   = 82, ///< push(pop() ^ I(1))
-    OP_XORHI   = 83, ///< push(pop() ^ I(|M|/2))
-    OP_XORFI   = 84, ///< push(pop() ^ I(|M|))
+    OP_RET     = 0,  ///< Equivalent to RETN 0.
+    OP_RETN    = 1,  ///< pop(stackFrame w/ I(1) return values)
+    OP_ADD     = 2,  ///< push(pop() + pop())
+    OP_ADDF    = 3,  ///< pushFloat(popFloat() + popFloat())
+    OP_ADDBI   = 4,  ///< push(pop() + I(1))
+    OP_ADDHI   = 5,  ///< push(pop() + I(|M|/2))
+    OP_ADDFI   = 6,  ///< push(pop() + I(|M|))
+    OP_AND     = 7,  ///< push(pop() & pop())
+    OP_ANDBI   = 8,  ///< push(pop() & I(1))
+    OP_ANDHI   = 9,  ///< push(pop() & I(|M|/2))
+    OP_ANDFI   = 10, ///< push(pop() & I(|M|))
+    OP_CALL    = 11, ///< pc = pop(); push(stackFrame w/ I(1) arguments)
+    OP_CALLC   = 12, ///< (*pop())(this)
+    OP_CALLCI  = 13, ///< (*I(|M|))(this)
+    OP_CALLI   = 14, ///< pc = I(|M|); push(stackFrame w/ I(1) arguments)
+    OP_CALLR   = 15, ///< pc += pop(); push(stackFrame w/ I(1) arguments)
+    OP_CALLRB  = 16, ///< pc += I(1); push(stackFrame w/ I(1) arguments)
+    OP_CALLRH  = 17, ///< pc += I(|M|/2); push(stackFrame w/ I(1) arguments)
+    OP_CALLRF  = 18, ///< pc += I(|M|); push(stackFrame w/ I(1) arguments)
+    OP_CEQ     = 19, ///< push(pop() == pop())
+    OP_CEQF    = 20, ///< push(popFloat() == popFloat())
+    OP_CLEQ    = 21, ///< push(pop() <= pop())
+    OP_CLEQF   = 22, ///< push(popFloat() <= popFloat())
+    OP_CLT     = 23, ///< push(pop() < pop())
+    OP_CLTF    = 24, ///< push(popFloat() < popFloat())
+    OP_CMEQ    = 25, ///< push(pop() >= pop())
+    OP_CMEQF   = 26, ///< push(popFloat() >= popFloat())
+    OP_CMT     = 27, ///< push(pop() > pop())
+    OP_CMTF    = 28, ///< push(popFloat() > popFloat())
+    OP_CVTF    = 29, ///< push((dfloat)pop())
+    OP_CVTI    = 30, ///< push((dint)pop())
+    OP_DEREF   = 31, ///< push(*pop())
+    OP_DEREFB  = 32, ///< push(*((uint8_t *)pop()))
+    OP_DIV     = 33, ///< push(pop() / pop())
+    OP_DIVF    = 34, ///< pushFloat(popFloat() / popFloat())
+    OP_DIVBI   = 35, ///< push(pop() / I(1))
+    OP_DIVHI   = 36, ///< push(pop() / I(|M|/2))
+    OP_DIVFI   = 37, ///< push(pop() / I(|M|))
+    OP_GET     = 38, ///< push(get(pop()))
+    OP_GETBI   = 39, ///< push(get(I(1)))
+    OP_GETHI   = 40, ///< push(get(I(|M|/2)))
+    OP_GETFI   = 41, ///< push(get(I(|M|)))
+    OP_J       = 42, ///< pc = pop()
+    OP_JCON    = 43, ///< IF pop() THEN pc = pop() ELSE pop()
+    OP_JCONI   = 44, ///< IF pop() THEN pc = I(|M|)
+    OP_JI      = 45, ///< pc = I(|M|)
+    OP_JR      = 46, ///< pc += pop()
+    OP_JRBI    = 47, ///< pc += I(1)
+    OP_JRHI    = 48, ///< pc += I(|M|/2)
+    OP_JRFI    = 49, ///< pc += I(|M|)
+    OP_JRCON   = 50, ///< IF pop() THEN pc += pop() ELSE pop()
+    OP_JRCONBI = 51, ///< IF pop() THEN pc += I(1)
+    OP_JRCONHI = 52, ///< IF pop() THEN pc += I(|M|/2)
+    OP_JRCONFI = 53, ///< IF pop() THEN pc += I(|M|)
+    OP_MOD     = 54, ///< push(pop() % pop())
+    OP_MODBI   = 55, ///< push(pop() % I(1))
+    OP_MODHI   = 56, ///< push(pop() % I(|M|/2))
+    OP_MODFI   = 57, ///< push(pop() % I(|M|))
+    OP_MUL     = 58, ///< push(pop() * pop())
+    OP_MULF    = 59, ///< pushFloat(popFloat() * popFloat())
+    OP_MULBI   = 60, ///< push(pop() * I(1))
+    OP_MULHI   = 61, ///< push(pop() * I(|M|/2))
+    OP_MULFI   = 62, ///< push(pop() * I(|M|))
+    OP_NOT     = 63, ///< push(!pop())
+    OP_OR      = 64, ///< push(pop() | pop())
+    OP_ORBI    = 65, ///< push(pop() | I(1))
+    OP_ORHI    = 66, ///< push(pop() | I(|M|/2))
+    OP_ORFI    = 67, ///< push(pop() | I(|M|))
+    OP_POPB    = 68, ///< pop() I(1) times
+    OP_POPH    = 69, ///< pop() I(|M|/2) times
+    OP_POPF    = 70, ///< pop() I(|M|) times
+    OP_PUSHB   = 71, ///< push(I(1))
+    OP_PUSHH   = 72, ///< push(I(|M|/2))
+    OP_PUSHF   = 73, ///< push(I(|M|))
+    OP_SETADR  = 74, ///< *((dint *)pop()) = pop()
+    OP_SETADRB = 75, ///< *((uint8_t *)pop()) = pop()
+    OP_SUB     = 76, ///< push(pop() - pop())
+    OP_SUBF    = 77, ///< pushFloat(popFloat() - popFloat())
+    OP_SUBBI   = 78, ///< push(pop() - I(1))
+    OP_SUBHI   = 79, ///< push(pop() - I(|M|/2))
+    OP_SUBFI   = 80, ///< push(pop() - I(|M|))
+    OP_SYSCALL = 81, ///< push(syscall(I(1), pop(), pop(), pop()))
+    OP_XOR     = 82, ///< push(pop() ^ pop())
+    OP_XORBI   = 83, ///< push(pop() ^ I(1))
+    OP_XORHI   = 84, ///< push(pop() ^ I(|M|/2))
+    OP_XORFI   = 85, ///< push(pop() ^ I(|M|))
 } DIns;
 
 /**
@@ -208,6 +209,16 @@ typedef struct _DVM {
 /*
 === STACK FUNCTIONS =======================================
 */
+
+/**
+ * \fn size_t d_vm_frame(DVM *vm)
+ * \brief Get the number of elements in the current stack frame.
+ *
+ * \return The number of elements in the stack frame.
+ *
+ * \param vm The VM whose stack to query.
+ */
+DECISION_API size_t d_vm_frame(DVM *vm);
 
 /**
  * \fn dint d_vm_get(DVM *vm, dint index)
@@ -346,6 +357,15 @@ DECISION_API void *d_vm_pop_ptr(DVM *vm);
  * \param value The value to push onto the stack.
  */
 DECISION_API void d_vm_push(DVM *vm, dint value);
+
+/**
+ * \fn void d_vm_pushn(DVM *vm, size_t n)
+ * \brief Push `0` onto the stack `n` times.
+ *
+ * \param vm The VM whose stack to push onto.
+ * \param n The number of items to push onto the stack.
+ */
+DECISION_API void d_vm_pushn(DVM *vm, size_t n);
 
 /**
  * \fn void d_vm_push_float(DVM *vm, dfloat value)
