@@ -251,7 +251,7 @@ DECISION_API dint d_vm_get(DVM *vm, dint index);
 DECISION_API dfloat d_vm_get_float(DVM *vm, dint index);
 
 /**
- * \fn void *d_vm_get_float(DVM *vm, dint index)
+ * \fn void *d_vm_get_ptr(DVM *vm, dint index)
  * \brief Get a pointer from a value in the stack at a particular index.
  *
  * * If `index` is positive, it will index relative to the start of the stack
@@ -306,7 +306,7 @@ DECISION_API void d_vm_insert_float(DVM *vm, dint index, dfloat value);
  * \param vm The VM whose stack to insert to.
  * \param index The index of the stack to insert to, i.e. `ptr` will be at this
  * location when the function returns.
- * \param value The pointer to insert into the stack.
+ * \param ptr The pointer to insert into the stack.
  */
 DECISION_API void d_vm_insert_ptr(DVM *vm, dint index, void *ptr);
 
@@ -546,7 +546,7 @@ DECISION_API void d_vm_runtime_error(DVM *vm, const char *error);
  *
  * \param vm The VM to use to parse the instruction.
  */
-// DECISION_API void d_vm_parse_ins_at_pc(DVM *vm);
+DECISION_API void d_vm_parse_ins_at_pc(DVM *vm);
 
 /**
  * \fn void d_vm_add_pc(DVM *vm, dint rel)
