@@ -366,6 +366,34 @@ DECISION_API void d_vm_push_float(DVM *vm, dfloat value);
 DECISION_API void d_vm_push_ptr(DVM *vm, void *ptr);
 
 /**
+ * \fn void d_vm_remove(DVM *vm, dint index)
+ * \brief Remove the value from the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \param vm The VM whose stack to remove from.
+ * \param index The index to remove from the stack.
+ */
+DECISION_API void d_vm_remove(DVM *vm, dint index);
+
+/**
+ * \fn void d_vm_remove_len(DVM *vm, dint index, size_t len)
+ * \brief Remove a number of values from the stack, starting at a particular
+ * index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \param vm The VM whose stack to remove from.
+ * \param index The index to start removing from the stack.
+ * \param len The number of items to remove from the stack.
+ */
+DECISION_API void d_vm_remove_len(DVM *vm, dint index, size_t len);
+
+/**
  * \fn void d_vm_set(DVM *vm, dint index, dint value)
  * \brief Set the value of an element in the stack at a particular index.
  *

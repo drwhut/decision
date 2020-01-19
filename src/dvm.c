@@ -465,6 +465,64 @@ void d_vm_push_ptr(DVM *vm, void *ptr) {
 }
 
 /**
+ * \fn void d_vm_remove(DVM *vm, dint index)
+ * \brief Remove the value from the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \param vm The VM whose stack to remove from.
+ * \param index The index to remove from the stack.
+ */
+void d_vm_remove(DVM *vm, dint index) {
+    d_vm_remove_len(vm, index, 1);
+}
+
+/**
+ * \fn void d_vm_remove_len(DVM *vm, dint index, size_t len)
+ * \brief Remove a number of values from the stack, starting at a particular
+ * index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \param vm The VM whose stack to remove from.
+ * \param index The index to start removing from the stack.
+ * \param len The number of items to remove from the stack.
+ */
+void d_vm_remove_len(DVM *vm, dint index, size_t len) {
+    if (len > 0) {
+        if (index == 0) {
+            d_vm_popn(vm, 1);
+        } else {
+            dint *removePtr;
+
+            if (index > 0) {
+                // Get the position relative to the frame pointer.
+                removePtr = VM_GET_FRAME_PTR(vm, index);
+            } else {
+                // Get the position relative to the stack pointer.
+                removePtr = VM_GET_STACK_PTR(vm, index);
+            }
+
+            if (removePtr >= vm->basePtr && removePtr <= vm->stackPtr) {
+                const size_t max = (vm->stackPtr - removePtr) + 1;
+                if (len >= max) {
+                    len = max;
+                }
+
+                const size_t numElemsToMove = max - len;
+                memmove(removePtr, removePtr + len,
+                        numElemsToMove * sizeof(dint));
+                d_vm_popn(vm, len);
+            }
+        }
+    }
+}
+
+/**
  * \fn void d_vm_set(DVM *vm, dint index, dint value)
  * \brief Set the value of an element in the stack at a particular index.
  *
