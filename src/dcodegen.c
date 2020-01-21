@@ -775,7 +775,7 @@ BCode d_push_input(SheetSocket *socket, BuildContext *context,
     VERBOSE(5, "Generating bytecode to get the value of input socket %p...\n",
             socket);
 
-    BCode out;
+    BCode out = {NULL, 0};
 
     if (socket->isInput && socket->type != TYPE_EXECUTION) {
         if (socket->numConnections == 0) {
@@ -786,7 +786,7 @@ BCode d_push_input(SheetSocket *socket, BuildContext *context,
             SheetSocket *connSocket = socket->connections[0];
 
             // Has this output not already been generated?
-            if (connSocket->_stackIndex > -1) {
+            if (connSocket->_stackIndex < 0) {
                 // TODO: Generate the bytecode, use forceFloat.
             }
 
@@ -817,16 +817,15 @@ BCode d_push_input(SheetSocket *socket, BuildContext *context,
  *
  * \param node The node whose input sockets to generate bytecode for.
  * \param context The context needed to generate the bytecode.
+ * \param ignoreLiterals Do not generate bytecode for non-float literal inputs.
  * \param forceFloat Force integers to be converted to floats.
  */
 BCode d_push_node_inputs(SheetNode *node, BuildContext *context,
-                         bool forceFloat) {
+                         bool ignoreLiterals, bool forceFloat) {
     VERBOSE(5, "Generating bytecode to get the inputs for node %s...\n",
             node->name);
 
-    BCode out;
-
-    // TODO: Account for the fact caller might want to use immediates.
+    BCode out = {NULL, 0};
 
     // We want the first input to be at the top of the stack, so generate that
     // input last.
@@ -834,9 +833,13 @@ BCode d_push_node_inputs(SheetNode *node, BuildContext *context,
         SheetSocket *socket = node->sockets[i];
 
         if (socket->isInput && socket->type != TYPE_EXECUTION) {
-            BCode input = d_push_input(socket, context, forceFloat);
-            d_concat_bytecode(&out, &input);
-            d_free_bytecode(&input);
+            if (socket->numConnections > 0 || socket->type == TYPE_FLOAT ||
+                !ignoreLiterals) {
+
+                BCode input = d_push_input(socket, context, forceFloat);
+                d_concat_bytecode(&out, &input);
+                d_free_bytecode(&input);
+            }
         }
     }
 
@@ -851,12 +854,17 @@ BCode d_push_node_inputs(SheetNode *node, BuildContext *context,
         SheetSocket *socket = node->sockets[i];
 
         if (socket->isInput && socket->type != TYPE_EXECUTION) {
-            // Is this input the correct amount from the top?
-            if (STACK_INDEX_TOP(context, socket->_stackIndex) != -numInputs) {
-                positionsCorrect = false;
-                break;
+            if (socket->numConnections > 0 || socket->type == TYPE_FLOAT ||
+                !ignoreLiterals) {
+
+                // Is this input the correct amount from the top?
+                if (STACK_INDEX_TOP(context, socket->_stackIndex) !=
+                    -numInputs) {
+                    positionsCorrect = false;
+                    break;
+                }
+                numInputs++;
             }
-            numInputs++;
         }
     }
 
@@ -866,14 +874,19 @@ BCode d_push_node_inputs(SheetNode *node, BuildContext *context,
             SheetSocket *socket = node->sockets[i];
 
             if (socket->isInput && socket->type != TYPE_EXECUTION) {
-                BCode get = d_bytecode_ins(OP_GETFI);
-                d_bytecode_set_fimmediate(get, 1,
-                                          (fimmediate_t)STACK_INDEX_TOP(
-                                              context, socket->_stackIndex));
-                d_concat_bytecode(&out, &get);
-                d_free_bytecode(&get);
+                if (socket->numConnections > 0 || socket->type == TYPE_FLOAT ||
+                    !ignoreLiterals) {
 
-                socket->_stackIndex = context->stackTop;
+                    BCode get = d_bytecode_ins(OP_GETFI);
+                    d_bytecode_set_fimmediate(
+                        get, 1,
+                        (fimmediate_t)STACK_INDEX_TOP(context,
+                                                      socket->_stackIndex));
+                    d_concat_bytecode(&out, &get);
+                    d_free_bytecode(&get);
+
+                    socket->_stackIndex = context->stackTop;
+                }
             }
         }
     }
@@ -882,29 +895,134 @@ BCode d_push_node_inputs(SheetNode *node, BuildContext *context,
 }
 
 /**
- * \fn void d_setup_input(SheetSocket *socket, BuildContext *context,
- *                        bool forceFloat, BCode *addTo)
- * \brief Given an input socket, do what is nessesary to set it up for use in a
- * node.
+ * \fn BCode d_generate_operator(SheetNode *node, BuildContext *context,
+ *                               DIns opcode, DIns fopcode, DIns fiopcode,
+ *                               bool oneInput, bool infiniteInputs,
+ *                               bool forceFloat)
+ * \brief Given an operator node, generate the bytecode for it.
  *
- * \param socket The socket corresponding to the input.
- * \param context The context needed to build bytecode.
- * \param forceFloat Always convert the input to a float if it isn't already.
- * \param addTo If any extra bytecode is needed to setup the input, add it onto
- * this bytecode.
+ * \return Bytecode to get the output of an operator.
+ *
+ * \param node The operator node to get the result for.
+ * \param context The context needed to generate the bytecode.
+ * \param opcode The operator instruction.
+ * \param fopcode The float variant of the instruction.
+ * \param fiopcode The full immediate variant of the instruction.
+ * \param forceFloat Should the output always be a float?
  */
-/*
-void d_setup_input(struct _sheetSocket *socket, BuildContext *context,
-                   bool forceFloat, BCode *addTo) {
-    // The input is a literal.
-    if (socket->numConnections == 0) {
-        BCode literal =
-            d_generate_bytecode_for_literal(socket, context, forceFloat);
-        d_concat_bytecode(addTo, &literal);
-        d_free_bytecode(&literal);
+BCode d_generate_operator(SheetNode *node, BuildContext *context, DIns opcode,
+                          DIns fopcode, DIns fiopcode, bool forceFloat) {
+    VERBOSE(5, "Generate bytecode for operator %s...\n", node->name);
+
+    BCode out       = {NULL, 0};
+    BCode subaction = {NULL, 0};
+
+    // Do we need to convert integer inputs to floats?
+    bool convertFloat = forceFloat;
+
+    // If we're not forcing it, we may still need to if any of the inputs are
+    // floats.
+    if (!convertFloat) {
+        for (size_t j = 0; j < node->numSockets - 1; j++) {
+            SheetSocket *inputSocket = node->sockets[j];
+
+            if (inputSocket->type == TYPE_FLOAT) {
+                convertFloat = true;
+                break;
+            }
+        }
     }
+
+    SheetSocket *socket = node->sockets[0];
+
+    // Generate the bytecode for the inputs without literals - but we want to
+    // start working from the first input, even if it is a literal.
+    // NOTE: If we need to convert inputs to floats, we need to generate all
+    // of the inputs, including literals, as we always generate the first
+    // input.
+    out = d_push_node_inputs(node, context, !convertFloat, convertFloat);
+    if (!convertFloat && socket->numConnections == 0) {
+        subaction = d_push_literal(socket, context, convertFloat);
+        d_concat_bytecode(&out, &subaction);
+        d_free_bytecode(&subaction);
+    }
+
+    DIns nonImmediateOpcode = (convertFloat) ? fopcode : opcode;
+
+    size_t i = 1;
+
+    while (socket->isInput && i < node->numSockets) {
+        socket = node->sockets[i++];
+
+        if (socket->isInput) {
+            if (socket->type == TYPE_INT && socket->numConnections == 0) {
+                // This input is a literal, so we can use the immediate opcode.
+                subaction = d_bytecode_ins(fiopcode);
+                d_bytecode_set_fimmediate(
+                    subaction, 1,
+                    (fimmediate_t)socket->defaultValue.integerValue);
+            } else {
+                // The two inputs are both on the top of the stack, so just
+                // use the non-immediate opcode.
+                subaction = d_bytecode_ins(nonImmediateOpcode);
+            }
+            d_concat_bytecode(&out, &subaction);
+            d_free_bytecode(&subaction);
+        }
+    }
+
+    return out;
 }
-*/
+
+/**
+ * \fn BCode d_generate_comparator(SheetNode *node, BuildContext *context,
+ *                                 DIns opcode, DIns fopcode, bool notAfter)
+ * \brief Given a comparator node, generate the bytecode for it.
+ *
+ * \return Bytecode to get the output of a comparator.
+ *
+ * \param node The comparator node to get the result for.
+ * \param context The context needed to generate the bytecode.
+ * \param opcode The comparator instruction.
+ * \param fopcode The float variant of the instruction.
+ * \param notAfter Do we invert the answer at the end?
+ */
+BCode d_generate_comparator(SheetNode *node, BuildContext *context, DIns opcode,
+                            DIns fopcode, bool notAfter) {
+    VERBOSE(5, "Generating bytecode for comparator %s...\n", node->name);
+
+    // First, we need to check what types our inputs are.
+    bool isString = false;
+    bool isFloat  = false;
+
+    for (size_t i = 0; i < node->numSockets; i++) {
+        SheetSocket *socket = node->sockets[i];
+
+        if (socket->isInput) {
+            if (socket->type == TYPE_STRING) {
+                isString = true;
+                break;
+            } else if (socket->type == TYPE_FLOAT) {
+                isFloat = true;
+                break;
+            }
+        }
+    }
+
+    BCode out = d_push_node_inputs(node, context, false, isFloat);
+
+    if (isString) {
+        // TODO: Add syscall for string comparisons.
+    } else {
+        DIns compOpcode = (isFloat) ? fopcode : opcode;
+
+        BCode comp = d_bytecode_ins(compOpcode);
+        d_concat_bytecode(&out, &comp);
+        d_free_bytecode(&comp);
+    }
+
+    return out;
+}
 
 /**
  * \fn void d_setup_arguments(SheetNode *defineNode, BuildContext *context,
@@ -1063,480 +1181,6 @@ void d_setup_returns(SheetNode *returnNode, BuildContext *context, BCode *addTo,
         d_concat_bytecode(addTo, &codeForRetAtEnd);
         d_free_bytecode(&codeForRetAtEnd);
     }
-}
-*/
-
-/**
- * \fn BCode d_generate_bytecode_for_literal(SheetSocket *socket,
- *                                           BuildContext *context,
- *                                           bool cvtFloat)
- * \brief Given a socket, generate the bytecode to load the literal value.
- *
- * \return The malloc'd bytecode generated to get the literal value.
- *
- * \param socket The socket to get the literal value from.
- * \param context The context needed to generate the bytecode.
- * \param cvtFloat If true, and if the literal is an integer, convert it into a
- * float.
- */
-/*
-BCode d_generate_bytecode_for_literal(SheetSocket *socket,
-                                      BuildContext *context, bool cvtFloat) {
-    VERBOSE(
-        5,
-        "Generating bytecode to get literal value of type %u from node %s...\n",
-        socket->type, socket->node->name);
-    BCode out = (BCode){NULL, 0};
-
-    switch (socket->type) {
-        case TYPE_INT:;
-            dint literal = socket->defaultValue.integerValue;
-
-            if (cvtFloat) {
-                literal = *((dint *)((dfloat)literal));
-
-            out = d_malloc_bytecode(d_vm_ins_size(OP_PUSHF));
-            d_bytecode_set_byte(out, 0, OP_PUSHF);
-            d_bytecode_set_fimmediate(out, 1, (fimmediate_t)literal);
-
-            break;
-    }
-
-    // Store the defaultValue in the next available register.
-    switch (socket->type) {
-        case TYPE_INT:;
-            dint literal = socket->defaultValue.integerValue;
-            reg_t reg    = d_next_general_reg(context, useSafeReg);
-
-            // Get the socket to remember which register it's using.
-            socket->_reg = reg;
-
-            // Do we need to load the integer in 2 parts?
-            if ((literal & IMMEDIATE_UPPER_MASK) != 0) {
-                // Optimising for if we ORI a value of 0.
-                bool ignoreOr = ((literal & IMMEDIATE_MASK) == 0);
-
-                size_t size = d_vm_ins_size(OP_LOADUI);
-                if (!ignoreOr)
-                    size += d_vm_ins_size(OP_ORI);
-
-                out = d_malloc_bytecode(size);
-                d_bytecode_set_byte(out, 0, OP_LOADUI);
-                d_bytecode_set_byte(out, 1, (char)reg);
-                d_bytecode_set_immediate(
-                    out, 2,
-                    ((literal & IMMEDIATE_UPPER_MASK) >> (IMMEDIATE_SIZE * 8)));
-
-                if (!ignoreOr) {
-                    d_bytecode_set_byte(out, d_vm_ins_size(OP_LOADUI), OP_ORI);
-                    d_bytecode_set_byte(
-                        out, (size_t)d_vm_ins_size(OP_LOADUI) + 1, (char)reg);
-                    d_bytecode_set_immediate(
-                        out, (size_t)d_vm_ins_size(OP_LOADUI) + 2,
-                        (literal & IMMEDIATE_MASK));
-                }
-            } else {
-                out = d_malloc_bytecode(d_vm_ins_size(OP_LOADI));
-                d_bytecode_set_byte(out, 0, OP_LOADI);
-                d_bytecode_set_byte(out, 1, (char)reg);
-                d_bytecode_set_immediate(out, 2, (immediate_t)literal);
-            }
-
-            if (cvtFloat) {
-                BCode cvt = d_convert_between_number_types(socket, context,
-                                                           OP_CVTF, useSafeReg);
-                d_concat_bytecode(&out, &cvt);
-                d_free_bytecode(&cvt);
-            }
-            break;
-
-        case TYPE_FLOAT:;
-            dfloat floatLiteral = socket->defaultValue.floatValue;
-            dint intRep         = *((dint *)(&floatLiteral));
-
-            reg_t intReg = d_next_general_reg(context, false);
-
-            // Get the socket to remember which register it's using.
-            socket->_reg = intReg;
-
-            // Optimising for if we ORI a value of 0.
-            bool ignoreOr = ((intRep & IMMEDIATE_MASK) == 0);
-            size_t size   = d_vm_ins_size(OP_LOADUI);
-
-            if (!ignoreOr)
-                size += d_vm_ins_size(OP_ORI);
-
-            out = d_malloc_bytecode(size);
-            d_bytecode_set_byte(out, 0, OP_LOADUI);
-            d_bytecode_set_byte(out, 1, (char)intReg);
-            d_bytecode_set_immediate(
-                out, 2,
-                ((intRep & IMMEDIATE_UPPER_MASK) >> (IMMEDIATE_SIZE * 8)));
-
-            if (!ignoreOr) {
-                d_bytecode_set_byte(out, d_vm_ins_size(OP_LOADUI), OP_ORI);
-                d_bytecode_set_byte(out, (size_t)d_vm_ins_size(OP_LOADUI) + 1,
-                                    (char)intReg);
-                d_bytecode_set_immediate(out,
-                                         (size_t)d_vm_ins_size(OP_LOADUI) + 2,
-                                         (intRep & IMMEDIATE_MASK));
-            }
-
-            BCode mvtf = d_convert_between_number_types(socket, context,
-                                                        OP_MVTF, useSafeReg);
-
-            d_concat_bytecode(&out, &mvtf);
-            d_free_bytecode(&mvtf);
-
-            // We don't need the general register anymore.
-            d_free_reg(context, intReg);
-            break;
-
-        case TYPE_STRING:;
-            char *strLiteral = socket->defaultValue.stringValue;
-
-            reg_t strReg = d_next_general_reg(context, useSafeReg);
-
-            // Get the socket to remember which register it's using.
-            socket->_reg = strReg;
-
-            out = d_malloc_bytecode((size_t)d_vm_ins_size(OP_LOADUI) +
-                                    d_vm_ins_size(OP_ORI));
-            d_bytecode_set_byte(out, 0, OP_LOADUI);
-            d_bytecode_set_byte(out, 1, (char)strReg);
-
-            d_bytecode_set_byte(out, d_vm_ins_size(OP_LOADUI), OP_ORI);
-            d_bytecode_set_byte(out, (size_t)d_vm_ins_size(OP_LOADUI) + 1,
-                                (char)strReg);
-
-            // Place the string literal into the data section.
-            d_allocate_string_literal_in_data(context, &out, 0, strLiteral);
-
-            break;
-
-        case TYPE_BOOL:;
-            dint boolLiteral = (dint)(socket->defaultValue.booleanValue);
-            reg_t boolReg    = d_next_general_reg(context, useSafeReg);
-
-            // Get the socket to remember which register it's using.
-            socket->_reg = boolReg;
-
-            // TODO: Create a LOADBI instruction?
-            out = d_malloc_bytecode(d_vm_ins_size(OP_LOADI));
-            d_bytecode_set_byte(out, 0, OP_LOADI);
-            d_bytecode_set_byte(out, 1, (char)boolReg);
-            d_bytecode_set_immediate(out, 2, (immediate_t)boolLiteral);
-
-            break;
-
-        default:
-            break;
-    }
-
-    return out;
-}
-*/
-
-/**
- * \fn BCode d_generate_bytecode_for_input(SheetSocket *socket,
- *                                         BuildContext *context, bool inLoop,
- *                                         bool forceLiteral)
- * \brief Given an input socket with a variable data type, generate the
- * bytecode to get the value of the input.
- *
- * \return The malloc'd bytecode generated to get the inputs.
- *
- * \param socket The socket to get the input for.
- * \param context The context needed to generate the bytecode.
- * \param inLoop Are the inputs being gotten from a node that is being run
- * inside a loop?
- * \param forceLiteral Force the bytecode for literals to be generated. You
- * may not want this if you want to optimise later by using immediate
- * instructions.
- */
-/*
-BCode d_generate_bytecode_for_input(SheetSocket *socket, BuildContext *context,
-                                    bool inLoop, bool forceLiteral) {
-    VERBOSE(5, "Generating bytecode to get input for socket %p...\n", socket);
-    BCode inputCode = (BCode){NULL, 0};
-
-    if (socket->isInput && (socket->type & TYPE_VAR_ANY) == socket->type) {
-        SheetNode *node = socket->node;
-
-        // Is this socket connected to a node?
-        if (socket->numConnections == 1) {
-            SheetSocket *socketConnectedTo = socket->connections[0];
-            SheetNode *nodeConnectedTo     = socketConnectedTo->node;
-
-            // If a later input has a call in it, we may as well put
-            // this input in a safe register.
-            bool useSafeReg     = false;
-            bool ourSocketFound = false;
-
-            for (size_t j = 0; j < node->numSockets; j++) {
-                SheetSocket *testSocket = node->sockets[j];
-
-                // Only check sockets AFTER the socket we're generating input
-                // for.
-                if (ourSocketFound) {
-                    if (testSocket->isInput &&
-                        (testSocket->type & TYPE_VAR_ANY) == testSocket->type) {
-                        if (testSocket->numConnections == 1) {
-                            SheetSocket *testSocketConn =
-                                testSocket->connections[0];
-                            SheetNode *testNode = testSocketConn->node;
-
-                            if (d_does_input_involve_call(testNode)) {
-                                useSafeReg = true;
-                                break;
-                            }
-                        }
-                    }
-                } else if (socket == testSocket) {
-                    ourSocketFound = true;
-                }
-            }
-
-            if (!nodeConnectedTo->isExecution) {
-                // We just need to make sure we're not about to
-                // re-generate bytecode for a Define node for a
-                // function. That will have already been done in
-                // d_generate_bytecode_for_definition_node().
-                if (strcmp(nodeConnectedTo->name, "Define") != 0) {
-                    inputCode = d_generate_bytecode_for_nonexecution_node(
-                        nodeConnectedTo, context, inLoop);
-
-                    // We need to set our input socket's register to the
-                    // connected node's output socket register.
-                    socket->_reg = socketConnectedTo->_reg;
-
-                    // But do we need to move it into a safe register?
-                    if (useSafeReg) {
-                        reg_t safeReg;
-
-                        if (VM_IS_FLOAT_REG(socket->_reg))
-                            safeReg = d_next_float_reg(context, useSafeReg);
-                        else
-                            safeReg = d_next_general_reg(context, useSafeReg);
-
-                        d_free_reg(context, socket->_reg);
-
-                        DIns opcode = (VM_IS_FLOAT_REG(socket->_reg)) ? OP_LOADF
-                                                                      : OP_LOAD;
-
-                        BCode move = d_malloc_bytecode(d_vm_ins_size(opcode));
-                        d_bytecode_set_byte(move, 0, opcode);
-                        d_bytecode_set_byte(move, 1, (char)safeReg);
-                        d_bytecode_set_byte(move, 2, (char)socket->_reg);
-
-                        d_concat_bytecode(&inputCode, &move);
-                        d_free_bytecode(&move);
-
-                        socket->_reg = safeReg;
-                    }
-                } else {
-                    // If it is a Define node, we need to copy the
-                    // inputs into new registers so that the original
-                    // data is preserved.
-                    // Optimize: If the output socket only has one
-                    // connection, and there's no chance of it getting
-                    // used more than once (i.e. not in a loop), there's
-                    // no need to duplicate.
-                    reg_t oldReg = socketConnectedTo->_reg;
-                    reg_t newReg;
-
-                    if (socketConnectedTo->numConnections > 1 || inLoop) {
-                        if (VM_IS_FLOAT_REG(oldReg))
-                            newReg = d_next_float_reg(context, useSafeReg);
-                        else
-                            newReg = d_next_general_reg(context, useSafeReg);
-
-                        DIns opcode =
-                            (VM_IS_FLOAT_REG(oldReg)) ? OP_LOADF : OP_LOAD;
-
-                        inputCode = d_malloc_bytecode(d_vm_ins_size(opcode));
-                        d_bytecode_set_byte(inputCode, 0, opcode);
-                        d_bytecode_set_byte(inputCode, 1, (char)newReg);
-                        d_bytecode_set_byte(inputCode, 2, (char)oldReg);
-                    } else {
-                        newReg = oldReg;
-                    }
-
-                    socket->_reg = newReg;
-                }
-            } else {
-                // For getting output values from execution nodes,
-                // we need to duplicate the original value into a
-                // new register.
-                reg_t oldReg = socketConnectedTo->_reg;
-                reg_t newReg;
-
-                if (VM_IS_FLOAT_REG(oldReg))
-                    newReg = d_next_float_reg(context, useSafeReg);
-                else
-                    newReg = d_next_general_reg(context, useSafeReg);
-
-                socket->_reg = newReg;
-
-                DIns opcode = (VM_IS_FLOAT_REG(oldReg)) ? OP_LOADF : OP_LOAD;
-
-                inputCode = d_malloc_bytecode(d_vm_ins_size(opcode));
-                d_bytecode_set_byte(inputCode, 0, opcode);
-                d_bytecode_set_byte(inputCode, 1, (char)newReg);
-                d_bytecode_set_byte(inputCode, 2, (char)oldReg);
-            }
-        } else if (forceLiteral) {
-            // If it is not connected, it is a literal value, so only
-            // generate bytecode if the caller wants to.
-            inputCode = d_generate_bytecode_for_literal(
-                socket, context, socket->type == TYPE_FLOAT, false);
-        }
-    }
-
-    return inputCode;
-}
-*/
-
-/**
- * \fn BCode d_generate_bytecode_for_inputs(SheetNode *node,
- *                                          BuildContext *context, bool inLoop,
- *                                          bool forceLiterals)
- * \brief Given a node, generate the bytecode to get the values of the inputs.
- *
- * **NOTE:** This functions just calls `d_generate_bytecode_for_input` for each
- * valid input socket.
- *
- * \return The malloc'd bytecode generated to get the inputs.
- *
- * \param node The node to get the inputs for.
- * \param context The context needed to generate the bytecode.
- * \param inLoop Are the inputs being gotten from a node that is being run
- * inside a loop?
- * \param forceLiterals Force the bytecode for literals to be generated. You
- * may not want this if you want to optimise later by using immediate
- * instructions.
- */
-/*
-DECISION_API BCode d_generate_bytecode_for_inputs(SheetNode *node,
-                                                  BuildContext *context,
-                                                  bool inLoop,
-                                                  bool forceLiterals) {
-    VERBOSE(5, "Generating bytecode to get inputs for node %s...\n",
-            node->name);
-    BCode out = (BCode){NULL, 0};
-
-    if (node->sockets != NULL && node->numSockets > 0) {
-        for (size_t i = 0; i < node->numSockets; i++) {
-            BCode inputCode = (BCode){NULL, 0};
-
-            SheetSocket *socket = node->sockets[i];
-
-            // We only care about inputs with the variable data types.
-            if (socket->isInput &&
-                (socket->type & TYPE_VAR_ANY) == socket->type) {
-
-                inputCode = d_generate_bytecode_for_input(
-                    socket, context, inLoop, forceLiterals);
-            }
-
-            // After we've generated the code for the individual input,
-            // we need to append it to the general bytecode for the node.
-            d_concat_bytecode(&out, &inputCode);
-            d_free_bytecode(&inputCode);
-        }
-    }
-
-    return out;
-}
-*/
-
-/**
- * \fn BCode d_generate_bytecode_for_variable(SheetNode *node,
- *                                            BuildContext *context,
- *                                            SheetVariable *variable)
- * \brief Given a node that is a getter for a variable, generate bytecode to
- * get its value.
- *
- * \return The malloc'd bytecode generated the get the value of the variable.
- *
- * \param node The node that is the getter of a variable.
- * \param context The context needed to generate the bytecode.
- * \param variable The variable data needed to generate the bytecode.
- */
-/*
-BCode d_generate_bytecode_for_variable(SheetNode *node, BuildContext *context,
-                                       SheetVariable *variable) {
-    VERBOSE(5, "Generating bytecode to get the value of variable %s...\n",
-            node->name);
-    bool isFloat = variable->dataType == TYPE_FLOAT;
-    size_t size  = (variable->dataType == TYPE_BOOL) ? 1 : sizeof(dint);
-
-    // Firstly, we need to generate the instructions to load the address (which
-    // will be linked eventually), then to load the value at that address.
-    reg_t adrReg = d_next_general_reg(context, false);
-    reg_t outReg = (isFloat) ? d_next_float_reg(context, false) : adrReg;
-
-    // Optimising by using the same register to load the address and to carry
-    // the output if it's not a float variable.
-    if (isFloat)
-        d_free_reg(context, adrReg);
-
-    DIns loadOpcode = (size == 1) ? OP_LOADADRB : OP_LOADADR;
-
-    BCode out =
-        d_malloc_bytecode((size_t)d_vm_ins_size(OP_LOADUI) +
-                          d_vm_ins_size(OP_ORI) + d_vm_ins_size(loadOpcode));
-    d_bytecode_set_byte(out, 0, OP_LOADUI);
-    d_bytecode_set_byte(out, 1, (char)adrReg);
-
-    d_bytecode_set_byte(out, d_vm_ins_size(OP_LOADUI), OP_ORI);
-    d_bytecode_set_byte(out, (size_t)d_vm_ins_size(OP_LOADUI) + 1,
-                        (char)adrReg);
-
-    // NOTE: If you want to store more than just 1 or 4 byte variables, you'll
-    // need to add more opcodes, or more arguments to existing opcodes.
-    d_bytecode_set_byte(
-        out, (size_t)d_vm_ins_size(OP_LOADUI) + d_vm_ins_size(OP_ORI),
-        loadOpcode);
-    d_bytecode_set_byte(
-        out, (size_t)d_vm_ins_size(OP_LOADUI) + d_vm_ins_size(OP_ORI) + 1,
-        (char)adrReg);
-    d_bytecode_set_byte(
-        out, (size_t)d_vm_ins_size(OP_LOADUI) + d_vm_ins_size(OP_ORI) + 2,
-        (char)adrReg);
-
-    // If it's a float, we need to add an extra instruction to move the value
-    // into a float register.
-    if (isFloat) {
-        // We can't use d_convert_between_number_types here, since we don't
-        // know anything about the sockets used.
-        BCode mvtf = d_malloc_bytecode(d_vm_ins_size(OP_MVTF));
-        d_bytecode_set_byte(mvtf, 0, OP_MVTF);
-        d_bytecode_set_byte(mvtf, 1, (char)adrReg);
-        d_bytecode_set_byte(mvtf, 2, (char)outReg);
-
-        d_concat_bytecode(&out, &mvtf);
-        d_free_bytecode(&mvtf);
-    }
-
-    LinkType linkType = (variable->dataType == TYPE_STRING)
-                            ? LINK_VARIABLE_POINTER
-                            : LINK_VARIABLE;
-
-    // We need this code to remember to link to the variable.
-    LinkMeta meta = d_link_new_meta(linkType, node->name, variable);
-
-    // Now we add the link metadata to the list in the context, but we
-    // want to look out for duplicate variables that may have already been
-    // allocated.
-    size_t metaIndexInList;
-    bool wasDuplicate = false;
-    d_add_link_to_ins(context, &out, 0, meta, &metaIndexInList, &wasDuplicate);
-
-    // Getters for variable should only have one socket, which is output.
-    node->sockets[0]->_reg = outReg;
-
-    return out;
 }
 */
 
@@ -1795,265 +1439,6 @@ BCode d_generate_bytecode_for_call(SheetNode *node, BuildContext *context,
             }
         }
     }
-
-    return out;
-}
-*/
-
-/**
- * \fn BCode d_generate_bytecode_for_operator(
- * SheetNode *node, BuildContext *context, DIns opcode, DIns fopcode,
- * DIns iopcode, bool oneInput, bool infiniteInputs, bool forceFloat)
- * \brief Given an operator node, generate the bytecode for it.
- *
- * \return The malloc'd bytecode generated to get the result.
- *
- * \param node The node to get the result from.
- * \param context The context needed to generate the bytecode.
- * \param opcode The operator instruction.
- * \param fopcode The float variant of the instruction.
- * \param iopcode The immediate variant of the instruction.
- * \param oneInput Is there only one input?
- * \param infiniteInputs Does this node take an infinite amount of inputs?
- * \param forceFloat Should the output always be a float?
- */
-/*
-BCode d_generate_bytecode_for_operator(SheetNode *node, BuildContext *context,
-                                       DIns opcode, DIns fopcode, DIns iopcode,
-                                       bool oneInput, bool infiniteInputs,
-                                       bool forceFloat) {
-    VERBOSE(5, "Generating operator bytecode for node %s...\n", node->name);
-    BCode out       = (BCode){NULL, 0};
-    BCode subaction = (BCode){NULL, 0};
-    reg_t reg1, reg2 = 0;
-    size_t i = 0;
-
-    // Do we need to convert integer inputs to floats?
-    bool convertFloat = forceFloat;
-
-    // If we're not forcing it, we may still need to if any of the inputs are
-    // floats.
-    if (!convertFloat) {
-        for (size_t j = 0; j < node->numSockets - 1; j++) {
-            SheetSocket *inputSocket = node->sockets[j];
-
-            if (inputSocket->type == TYPE_FLOAT) {
-                convertFloat = true;
-                break;
-            }
-        }
-    }
-
-    DIns nonImmediateOpcode = (convertFloat) ? fopcode : opcode;
-
-    // We're going to do stuff onto the first value's register.
-    SheetSocket *socket = node->sockets[i];
-    d_setup_input(socket, context, convertFloat, false, &out);
-    reg1 = socket->_reg;
-
-    if (oneInput) {
-        subaction = d_malloc_bytecode(d_vm_ins_size(opcode));
-        d_bytecode_set_byte(subaction, 0, opcode);
-        d_bytecode_set_byte(subaction, 1, (char)reg1);
-
-        d_concat_bytecode(&out, &subaction);
-        d_free_bytecode(&subaction);
-
-        socket = node->sockets[++i];
-    } else {
-        socket = node->sockets[++i];
-
-        while (socket->isInput) {
-            bool do2 = false;
-
-            // Is the socket just an immediate value?
-            if (socket->numConnections == 0) {
-                if (socket->type == TYPE_BOOL) {
-                    bool literalBool = socket->defaultValue.booleanValue;
-
-                    // TODO: LOADBI. Add it.
-                    subaction = d_malloc_bytecode(d_vm_ins_size(iopcode));
-                    d_bytecode_set_byte(subaction, 0, iopcode);
-                    d_bytecode_set_byte(subaction, 1, (char)reg1);
-                    d_bytecode_set_immediate(subaction, 2, literalBool);
-
-                    d_concat_bytecode(&out, &subaction);
-                    d_free_bytecode(&subaction);
-                } else if (socket->type == TYPE_INT && !convertFloat) {
-                    dint literalInt = socket->defaultValue.integerValue;
-
-                    // Do we need to load the integer in 2 parts?
-                    // If so, we can't use the immediate verison of the
-                    // instruction.
-                    // Even if the upper half is all 0xff, then we can still
-                    // use it with an immediate instruction, since it (should)
-                    // get casted to an integer of the immediate's size.
-                    if ((literalInt & IMMEDIATE_UPPER_MASK) != 0 &&
-                        (literalInt & IMMEDIATE_UPPER_MASK) !=
-                            IMMEDIATE_UPPER_MASK) {
-                        // Generate the bytecode for loading the full integer,
-                        subaction = d_generate_bytecode_for_literal(
-                            socket, context, convertFloat, false);
-                        d_concat_bytecode(&out, &subaction);
-                        d_free_bytecode(&subaction);
-
-                        // then do the normal operation on it.
-                        do2 = true;
-                    } else {
-                        subaction = d_malloc_bytecode(d_vm_ins_size(iopcode));
-                        d_bytecode_set_byte(subaction, 0, iopcode);
-                        d_bytecode_set_byte(subaction, 1, (char)reg1);
-                        d_bytecode_set_immediate(subaction, 2,
-                                                 (literalInt & IMMEDIATE_MASK));
-
-                        d_concat_bytecode(&out, &subaction);
-                        d_free_bytecode(&subaction);
-                    }
-                } else {
-                    // Generate the bytecode for loading the full float,
-                    subaction = d_generate_bytecode_for_literal(
-                        socket, context, convertFloat, false);
-                    d_concat_bytecode(&out, &subaction);
-                    d_free_bytecode(&subaction);
-
-                    // then do the normal operation on it.
-                    do2 = true;
-                }
-            } else {
-                do2 = true;
-            }
-
-            if (do2) {
-                reg2 = socket->_reg;
-
-                // Do we need to convert this register into a float?
-                if (!VM_IS_FLOAT_REG(reg2) && convertFloat) {
-                    BCode cvt = d_convert_between_number_types(socket, context,
-                                                               OP_CVTF, false);
-                    d_concat_bytecode(&out, &cvt);
-                    d_free_bytecode(&cvt);
-
-                    reg2 = socket->_reg;
-                }
-
-                subaction =
-                    d_malloc_bytecode(d_vm_ins_size(nonImmediateOpcode));
-                d_bytecode_set_byte(subaction, 0, nonImmediateOpcode);
-                d_bytecode_set_byte(subaction, 1, (char)reg1);
-                d_bytecode_set_byte(subaction, 2, (char)reg2);
-
-                d_concat_bytecode(&out, &subaction);
-                d_free_bytecode(&subaction);
-
-                d_free_reg(context, reg2);
-            }
-
-            socket = node->sockets[++i];
-
-            // If the operator only has 2 inputs, break out now.
-            if (!infiniteInputs)
-                break;
-        }
-    }
-
-    // "socket" should now point to the output socket.
-    // We need to set the output socket's register for the next
-    // node to use.
-    socket->_reg = reg1;
-
-    return out;
-}
-*/
-
-/**
- * \fn BCode d_generate_bytecode_for_comparator(SheetNode *node,
- *                                              BuildContext *context,
- *                                              DIns opcode, DIns fopcode,
- *                                              DIns sopcode, bool notAfter)
- * \brief Given an comparator node, generate the bytecode for it.
- *
- * \return The malloc'd bytecode generated to get the result.
- *
- * \param node The node to get the result from.
- * \param context The context needed to generate the bytecode.
- * \param opcode The operator instruction.
- * \param fopcode The float variant of the instruction.
- * \param sopcode The string variant of the instruction.
- * \param notAfter After the comparison is done, do we invert the answer?
- */
-/*
-BCode d_generate_bytecode_for_comparator(SheetNode *node, BuildContext *context,
-                                         DIns opcode, DIns fopcode,
-                                         DIns sopcode, bool notAfter) {
-    VERBOSE(5, "Generating comparator bytecode for node %s...\n", node->name);
-    BCode out       = (BCode){NULL, 0};
-    BCode subaction = (BCode){NULL, 0};
-    reg_t reg1, reg2, reg3 = 0;
-
-    // Do we have string inputs?
-    bool stringInput = (node->sockets[0]->type == TYPE_STRING &&
-                        node->sockets[1]->type == TYPE_STRING);
-
-    // Do we need to convert integer inputs to floats?
-    // Check what our inputs are. If one is a float, we need to.
-    bool convertFloat = false;
-
-    if (!stringInput)
-        for (size_t i = 0; i < 2; i++) {
-            SheetSocket *inputSocket = node->sockets[i];
-
-            if (inputSocket->type == TYPE_FLOAT) {
-                convertFloat = true;
-                break;
-            }
-        }
-
-    DIns opcodeToUse = (convertFloat) ? fopcode : opcode;
-    opcodeToUse      = (stringInput) ? sopcode : opcodeToUse;
-
-    // We're going to do stuff onto the first value's register.
-    SheetSocket *socket = node->sockets[0];
-    d_setup_input(socket, context, convertFloat, false, &out);
-    reg1 = socket->_reg;
-
-    socket = node->sockets[1];
-    d_setup_input(socket, context, convertFloat, false, &out);
-    reg2 = socket->_reg;
-
-    // If we're dealing with floats, we need a GENERAL register to store the
-    // result.
-    if (convertFloat) {
-        reg3 = d_next_general_reg(context, false);
-    } else {
-        reg3 = reg1;
-    }
-
-    subaction = d_malloc_bytecode(d_vm_ins_size(opcodeToUse));
-    d_bytecode_set_byte(subaction, 0, opcodeToUse);
-    d_bytecode_set_byte(subaction, 1, (char)reg3);
-    d_bytecode_set_byte(subaction, 2, (char)reg1);
-    d_bytecode_set_byte(subaction, 3, (char)reg2);
-
-    if (notAfter) {
-        BCode not = d_malloc_bytecode(d_vm_ins_size(OP_NOT));
-        d_bytecode_set_byte(not, 0, OP_NOT);
-        d_bytecode_set_byte(not, 1, (char)reg3);
-
-        d_concat_bytecode(&subaction, &not);
-        d_free_bytecode(&not);
-    }
-
-    d_concat_bytecode(&out, &subaction);
-
-    d_free_reg(context, reg2);
-    if (convertFloat)
-        d_free_reg(context, reg1);
-
-    // Setup the outptut socket so the next node knows which register to use.
-    socket       = node->sockets[2];
-    socket->_reg = reg3;
-
-    d_free_bytecode(&subaction);
 
     return out;
 }

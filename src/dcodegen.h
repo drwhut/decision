@@ -360,28 +360,50 @@ DECISION_API BCode d_push_input(struct _sheetSocket *socket,
  *
  * \param node The node whose input sockets to generate bytecode for.
  * \param context The context needed to generate the bytecode.
+ * \param ignoreLiterals Do not generate bytecode for non-float literal inputs.
  * \param forceFloat Force integers to be converted to floats.
  */
 DECISION_API BCode d_push_node_inputs(struct _sheetNode *node,
-                                      BuildContext *context, bool forceFloat);
+                                      BuildContext *context,
+                                      bool ignoreLiterals, bool forceFloat);
 
 /**
- * \fn void d_setup_input(SheetSocket *socket, BuildContext *context,
- *                        bool forceFloat, BCode *addTo)
- * \brief Given an input socket, do what is nessesary to set it up for use in a
- * node.
+ * \fn BCode d_generate_operator(SheetNode *node, BuildContext *context,
+ *                               DIns opcode, DIns fopcode, DIns fiopcode,
+ *                               bool oneInput, bool infiniteInputs,
+ *                               bool forceFloat)
+ * \brief Given an operator node, generate the bytecode for it.
  *
- * \param socket The socket corresponding to the input.
- * \param context The context needed to build bytecode.
- * \param forceFloat Always convert the input to a float if it isn't already.
- * \param addTo If any extra bytecode is needed to setup the input, add it onto
- * this bytecode.
+ * \return Bytecode to get the output of an operator.
+ *
+ * \param node The operator node to get the result for.
+ * \param context The context needed to generate the bytecode.
+ * \param opcode The operator instruction.
+ * \param fopcode The float variant of the instruction.
+ * \param fiopcode The full immediate variant of the instruction.
+ * \param forceFloat Should the output always be a float?
  */
-/*
-DECISION_API void d_setup_input(struct _sheetSocket *socket,
-                                BuildContext *context, bool forceFloat,
-                                BCode *addTo);
-*/
+DECISION_API BCode d_generate_operator(struct _sheetNode *node,
+                                       BuildContext *context, DIns opcode,
+                                       DIns fopcode, DIns fiopcode,
+                                       bool forceFloat);
+
+/**
+ * \fn BCode d_generate_comparator(SheetNode *node, BuildContext *context,
+ *                                 DIns opcode, DIns fopcode, bool notAfter)
+ * \brief Given a comparator node, generate the bytecode for it.
+ *
+ * \return Bytecode to get the output of a comparator.
+ *
+ * \param node The comparator node to get the result for.
+ * \param context The context needed to generate the bytecode.
+ * \param opcode The comparator instruction.
+ * \param fopcode The float variant of the instruction.
+ * \param notAfter Do we invert the answer at the end?
+ */
+DECISION_API BCode d_generate_comparator(struct _sheetNode *node,
+                                         BuildContext *context, DIns opcode,
+                                         DIns fopcode, bool notAfter);
 
 /**
  * \fn void d_setup_arguments(SheetNode *defineNode, BuildContext *context,
@@ -425,90 +447,6 @@ DECISION_API void d_setup_returns(struct _sheetNode *returnNode,
 */
 
 /**
- * \fn BCode d_generate_bytecode_for_literal(SheetSocket *socket,
- *                                           BuildContext *context,
- *                                           bool cvtFloat)
- * \brief Given a socket, generate the bytecode to load the literal value.
- *
- * \return The malloc'd bytecode generated to get the literal value.
- *
- * \param socket The socket to get the literal value from.
- * \param context The context needed to generate the bytecode.
- * \param cvtFloat If true, and if the literal is an integer, convert it into a
- * float.
- */
-/*
-DECISION_API BCode d_generate_bytecode_for_literal(struct _sheetSocket *socket,
-                                                   BuildContext *context,
-                                                   bool cvtFloat);
-*/
-
-/**
- * \fn BCode d_generate_bytecode_for_input(SheetSocket *socket,
- *                                         BuildContext *context, bool inLoop,
- *                                         bool forceLiteral)
- * \brief Given an input socket with a variable data type, generate the
- * bytecode to get the value of the input.
- *
- * \return The malloc'd bytecode generated to get the inputs.
- *
- * \param socket The socket to get the input for.
- * \param context The context needed to generate the bytecode.
- * \param inLoop Are the inputs being gotten from a node that is being run
- * inside a loop?
- * \param forceLiteral Force the bytecode for literals to be generated. You
- * may not want this if you want to optimise later by using immediate
- * instructions.
- */
-/*
-DECISION_API BCode d_generate_bytecode_for_input(struct _sheetSocket *socket,
-                                                 BuildContext *context,
-                                                 bool inLoop,
-                                                 bool forceLiteral);
-*/
-
-/**
- * \fn BCode d_generate_bytecode_for_inputs(SheetNode *node,
- *                                          BuildContext *context, bool inLoop)
- * \brief Given a node, generate the bytecode to get the values of the inputs.
- *
- * \return The malloc'd bytecode generated to get the inputs.
- *
- * \param node The node to get the inputs for.
- * \param context The context needed to generate the bytecode.
- * \param inLoop Are the inputs being gotten from a node that is being run
- * inside a loop?
- * \param forceLiterals Force the bytecode for literals to be generated. You
- * may not want this if you want to optimise later by using immediate
- * instructions.
- */
-/*
-DECISION_API BCode d_generate_bytecode_for_inputs(struct _sheetNode *node,
-                                                  BuildContext *context,
-                                                  bool inLoop,
-                                                  bool forceLiterals);
-*/
-
-/**
- * \fn BCode d_generate_bytecode_for_variable(SheetNode *node,
- *                                            BuildContext *context,
- *                                            SheetVariable *variable)
- * \brief Given a node that is a getter for a variable, generate bytecode to
- * get its value.
- *
- * \return The malloc'd bytecode generated the get the value of the variable.
- *
- * \param node The node that is the getter of a variable.
- * \param context The context needed to generate the bytecode.
- * \param variable The variable data needed to generate the bytecode.
- */
-/*
-DECISION_API BCode
-d_generate_bytecode_for_variable(struct _sheetNode *node, BuildContext *context,
-                                 struct _sheetVariable *variable);
-*/
-
-/**
  * \fn BCode d_generate_bytecode_for_call(SheetNode *node,
  *                                        BuildContext *context,
  *                                        bool isSubroutine, bool isCFunction)
@@ -527,53 +465,6 @@ DECISION_API BCode d_generate_bytecode_for_call(struct _sheetNode *node,
                                                 BuildContext *context,
                                                 bool isSubroutine,
                                                 bool isCFunction);
-*/
-
-/**
- * \fn BCode d_generate_bytecode_for_operator(
- * SheetNode *node, BuildContext *context, DIns opcode, DIns fopcode,
- * DIns iopcode, bool oneInput, bool infiniteInputs, bool forceFloat)
- * \brief Given an operator node, generate the bytecode for it.
- *
- * \return The malloc'd bytecode generated to get the result.
- *
- * \param node The node to get the result from.
- * \param context The context needed to generate the bytecode.
- * \param opcode The operator instruction.
- * \param fopcode The float variant of the instruction.
- * \param iopcode The immediate variant of the instruction.
- * \param oneInput Is there only one input?
- * \param infiniteInputs Does this node take an infinite amount of inputs?
- * \param forceFloat Should the output always be a float?
- */
-/*
-DECISION_API BCode d_generate_bytecode_for_operator(
-    struct _sheetNode *node, BuildContext *context, DIns opcode, DIns fopcode,
-    DIns iopcode, bool oneInput, bool infiniteInputs, bool forceFloat);
-*/
-
-/**
- * \fn BCode d_generate_bytecode_for_comparator(SheetNode *node,
- *                                              BuildContext *context,
- *                                              DIns opcode, DIns fopcode,
- *                                              DIns sopcode, bool notAfter)
- * \brief Given an comparator node, generate the bytecode for it.
- *
- * \return The malloc'd bytecode generated to get the result.
- *
- * \param node The node to get the result from.
- * \param context The context needed to generate the bytecode.
- * \param opcode The operator instruction.
- * \param fopcode The float variant of the instruction.
- * \param sopcode The string variant of the instruction.
- * \param notAfter After the comparison is done, do we invert the answer?
- */
-/*
-DECISION_API BCode d_generate_bytecode_for_comparator(struct _sheetNode *node,
-                                                      BuildContext *context,
-                                                      DIns opcode, DIns fopcode,
-                                                      DIns sopcode,
-                                                      bool notAfter);
 */
 
 /**
