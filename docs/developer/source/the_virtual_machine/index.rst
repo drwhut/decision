@@ -112,7 +112,9 @@ them.
 
 .. note::
 
-   Floating-point constants cannot be represented as immediates.
+   Floating-point constants cannot be represented as immediates, except for
+   when you are pushing them to the stack, since that's the only way they can
+   get on the stack.
 
 Diagrams
 ========

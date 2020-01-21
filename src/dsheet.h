@@ -71,7 +71,7 @@ typedef struct _sheetSocket {
     struct _sheetSocket **connections;
     size_t numConnections;
 
-    reg_t _reg; ///< Used in code generation.
+    int _stackIndex; ///< Used in code generation.
 } SheetSocket;
 
 /**

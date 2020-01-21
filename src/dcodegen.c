@@ -35,166 +35,6 @@
 */
 
 /**
- * \fn reg_t d_next_reg(BuildContext *context, reg_t *nextRegInContext,
- *                      reg_t end)
- * \brief Return the next available register index, and increment it afterwards.
- *
- * \return The next available register.
- *
- * \param context The build context.
- * \param nextRegInContext A pointer to the next register variable in the
- * context.
- * \param end The ending register index of the section we want to get.
- */
-reg_t d_next_reg(BuildContext *context, reg_t *nextRegInContext, reg_t end) {
-    if (*nextRegInContext == end + 1) {
-        // Warn user about running out of registers!
-        printf("Warning: The maximum number of registers has been allocated! "
-               "Consider simplifying your sheet.\n");
-    }
-
-    reg_t currentReg = *nextRegInContext;
-    reg_t nextReg    = currentReg;
-
-    // Remember that this register is now in use.
-    SET_REG_USED(context->usedReg, currentReg);
-    SET_REG_USED(context->maxUsedReg, currentReg);
-
-    // Increment nextReg until we find a free register.
-    do {
-        nextReg++;
-    } while (IS_REG_USED(context->usedReg, nextReg));
-
-    *nextRegInContext = nextReg;
-
-    return currentReg;
-}
-
-/**
- * \fn reg_t d_next_general_reg(BuildContext* context, bool safe)
- * \brief Return the next available general register index, and increment it
- * afterwards.
- *
- * \return The next available general register.
- *
- * \param context The build context.
- * \param safe Should the register be a safe register?
- */
-reg_t d_next_general_reg(BuildContext *context, bool safe) {
-    reg_t *next = (safe) ? &(context->nextSafeReg) : &(context->nextReg);
-    return d_next_reg(context, next, VM_REG_FLOAT_START - 1);
-}
-
-/**
- * \fn reg_t d_next_float_reg(BuildContext *context, bool safe)
- * \brief Return the next available float register index, and increment it
- * afterwards.
- *
- * \return The next available float register.
- *
- * \param context The build context.
- * \param safe Should the register be a safe register?
- */
-reg_t d_next_float_reg(BuildContext *context, bool safe) {
-    reg_t *next =
-        (safe) ? &(context->nextSafeFloatReg) : &(context->nextFloatReg);
-    return d_next_reg(context, next, VM_NUM_REG - 1);
-}
-
-/**
- * \fn void d_free_general_reg(BuildContext *context, reg_t reg)
- * \brief Free a general register, and potentially change the next register to
- * use.
- *
- * \param context The build context.
- * \param reg The general register to free in the build context.
- */
-void d_free_general_reg(BuildContext *context, reg_t reg) {
-    if (IS_REG_USED(context->usedReg, reg)) {
-        SET_REG_FREE(context->usedReg, reg);
-
-        // If the free'd register is less than the current next register,
-        // move the next register to the one we just freed.
-        if (reg < context->nextReg && reg >= NUM_SAFE_GENERAL_REGISTERS) {
-            context->nextReg = reg;
-        }
-        if (reg < context->nextSafeReg) {
-            context->nextSafeReg = reg;
-        }
-    }
-}
-
-/**
- * \fn void d_free_float_reg(BuildContext *context, reg_t reg)
- * \brief Free a float register, and potentially change the next register to
- * use.
- *
- * \param context The build context.
- * \param reg The float register to free in the build context.
- */
-void d_free_float_reg(BuildContext *context, reg_t reg) {
-    if (IS_REG_USED(context->usedReg, reg)) {
-        SET_REG_FREE(context->usedReg, reg);
-
-        // If the free'd register is less than the current next register,
-        // move the next register to the one we just freed.
-        if (reg < context->nextFloatReg && reg >= NUM_SAFE_FLOAT_REGISTERS) {
-            context->nextFloatReg = reg;
-        }
-        if (reg < context->nextSafeFloatReg) {
-            context->nextSafeFloatReg = reg;
-        }
-    }
-}
-
-/**
- * \fn void d_free_reg(BuildContext *context, reg_t reg)
- * \brief Free a register.
- *
- * It will automatically call either `d_free_general_reg` or `d_free_float_reg`.
- *
- * \param context The build context.
- * \param reg The register to free in the build context.
- */
-void d_free_reg(BuildContext *context, reg_t reg) {
-    if (VM_IS_FLOAT_REG(reg))
-        d_free_float_reg(context, reg);
-    else
-        d_free_general_reg(context, reg);
-}
-
-/**
- * \fn void d_reg_new_function(BuildContext *context)
- * \brief Set the contents of the register arrays in the context ready for
- * generating the bytecode for a new function.
- *
- * \param context The context to set.
- */
-void d_reg_new_function(BuildContext *context) {
-    for (unsigned char i = 0; i < VM_NUM_REG / 8; i++) {
-        context->usedReg[i]    = 0;
-        context->maxUsedReg[i] = 0;
-    }
-}
-
-/**
- * \fn bool d_is_all_reg_free(BuildContext *context)
- * \brief Are all of the registers in the context free?
- *
- * \return `true` if yes, `false` if no.
- *
- * \param context The build context whose registers we want to check.
- */
-bool d_is_all_reg_free(BuildContext *context) {
-    for (size_t i = 0; i < VM_NUM_REG / 8; i++) {
-        if (context->usedReg[i] != 0)
-            return false;
-    }
-
-    return true;
-}
-
-/**
  * \fn BCode d_malloc_bytecode(size_t size)
  * \brief Create a malloc'd BCode object, with a set number of bytes.
  *
@@ -208,12 +48,24 @@ BCode d_malloc_bytecode(size_t size) {
     out.code = (char *)d_malloc(size);
     out.size = size;
 
-    out.startOfReturnMarkers    = NULL;
-    out.numStartOfReturnMarkers = 0;
-
     out.linkList     = NULL;
     out.linkListSize = 0;
 
+    return out;
+}
+
+/**
+ * \fn BCode d_bytecode_ins(DIns opcode)
+ * \brief Quickly create bytecode that is the size of an opcode, which also has
+ * its first byte set as the opcode itself.
+ *
+ * \return The opcode-initialised bytecode.
+ *
+ * \param opcode The opcode to initialise with.
+ */
+BCode d_bytecode_ins(DIns opcode) {
+    BCode out = d_malloc_bytecode(d_vm_ins_size(opcode));
+    d_bytecode_set_byte(out, 0, (char)opcode);
     return out;
 }
 
@@ -232,19 +84,27 @@ void d_bytecode_set_byte(BCode bcode, size_t index, char byte) {
 }
 
 /**
- * \fn void d_bytecode_set_immediate(BCode bcode, size_t index,
- *                                   immediate_t immediate)
- * \brief Given some bytecode, set an immediate-sized value into the bytecode.
+ * \fn void d_bytecode_set_fimmediate(BCode bcode, size_t index,
+ *                                   fimmediate_t fimmediate)
+ * \brief Given some bytecode, set a full immediate value into the bytecode.
+ *
+ * **NOTE:** There are no functions to set byte or half immediates for a good
+ * reason: Mixing immediate sizes during code generation is a bad idea, as
+ * inserting bytecode in the middle of another bit of bytecode could make some
+ * smaller immediates invalid, and they would have to increase in size, which
+ * would be a pain. Instead, we only work with full immediates during code
+ * generation, and reduce down the full immediate instructions to byte or
+ * half immediate instructions in the optimisation stage.
  *
  * \param bcode The bytecode to edit.
  * \param index The starting index of the section of the bytecode to edit.
- * \param immediate The immediate value to set.
+ * \param fimmediate The full immediate value to set.
  */
-void d_bytecode_set_immediate(BCode bcode, size_t index,
-                              immediate_t immediate) {
-    if (index < bcode.size - IMMEDIATE_SIZE + 1) {
-        immediate_t *ptr = (immediate_t *)(bcode.code + index);
-        *ptr             = immediate;
+void d_bytecode_set_fimmediate(BCode bcode, size_t index,
+                               fimmediate_t fimmediate) {
+    if (index < bcode.size - FIMMEDIATE_SIZE + 1) {
+        fimmediate_t *ptr = (fimmediate_t *)(bcode.code + index);
+        *ptr              = fimmediate;
     }
 }
 
@@ -259,20 +119,14 @@ void d_free_bytecode(BCode *bcode) {
         free(bcode->code);
     }
 
-    if (bcode->startOfReturnMarkers != NULL) {
-        free(bcode->startOfReturnMarkers);
-    }
-
     if (bcode->linkList != NULL) {
         free(bcode->linkList);
     }
 
-    bcode->code                    = NULL;
-    bcode->size                    = 0;
-    bcode->startOfReturnMarkers    = NULL;
-    bcode->numStartOfReturnMarkers = 0;
-    bcode->linkList                = NULL;
-    bcode->linkListSize            = 0;
+    bcode->code         = NULL;
+    bcode->size         = 0;
+    bcode->linkList     = NULL;
+    bcode->linkListSize = 0;
 }
 
 /**
@@ -297,35 +151,6 @@ void d_concat_bytecode(BCode *base, BCode *after) {
         char *addPtr = base->code + base->size;
 
         memcpy(addPtr, after->code, after->size);
-
-        // If the after code has any return markers, then we need to calculate
-        // where they will end up in the new bytecode.
-        if (after->startOfReturnMarkers != NULL &&
-            after->numStartOfReturnMarkers > 0) {
-            size_t newNumReturnMarkers =
-                base->numStartOfReturnMarkers + after->numStartOfReturnMarkers;
-
-            if (base->startOfReturnMarkers != NULL) {
-                base->startOfReturnMarkers =
-                    (size_t *)d_realloc(base->startOfReturnMarkers,
-                                        newNumReturnMarkers * sizeof(size_t));
-            } else {
-                base->startOfReturnMarkers =
-                    (size_t *)d_malloc(newNumReturnMarkers * sizeof(size_t));
-            }
-
-            // i is the index in the base list.
-            // j is the index in the after list.
-            for (size_t i = base->numStartOfReturnMarkers;
-                 i < newNumReturnMarkers; i++) {
-                size_t j = i - base->numStartOfReturnMarkers;
-
-                base->startOfReturnMarkers[i] =
-                    after->startOfReturnMarkers[j] + base->size;
-            }
-
-            base->numStartOfReturnMarkers = newNumReturnMarkers;
-        }
 
         // Now we've concatenated the bytecode, we need to add the links as
         // well, but change the index of the instruction they point to, since
@@ -399,16 +224,12 @@ void d_insert_bytecode(BCode *base, BCode *insertCode, size_t insertIndex) {
         for (size_t i = 0; i < base->size;) {
             DIns opcode = base->code[i];
 
-            if (opcode == OP_CALLR || opcode == OP_JR || opcode == OP_JRCON) {
-                // Depending on the instruction, there may be a register index
-                // inbetween the opcode and the immediate...
-                unsigned char jmpAmtOffset = 1;
+            // Remember in code generation we only work with full immediates.
+            if (opcode == OP_CALLRF || opcode == OP_JRFI ||
+                opcode == OP_JRCONFI) {
 
-                if (opcode == OP_JRCON)
-                    jmpAmtOffset = 2;
-
-                immediate_t jmpAmt =
-                    GET_IMMEDIATE_PTR(base->code + i + jmpAmtOffset);
+                fimmediate_t *jmpPtr = (fimmediate_t *)(base->code + i + 1);
+                fimmediate_t jmpAmt  = *jmpPtr;
 
                 // TODO: Deal with the case that it jumped INTO the inserted
                 // region.
@@ -419,9 +240,8 @@ void d_insert_bytecode(BCode *base, BCode *insertCode, size_t insertIndex) {
                     // Did it jump over the inserted region?
                     if (i - insertCode->size + jmpAmt < insertIndex) {
                         // Then fix the jump amount.
-                        jmpAmt = jmpAmt - (immediate_t)insertCode->size;
-                        *(immediate_t *)(base->code + i + jmpAmtOffset) =
-                            (jmpAmt & IMMEDIATE_MASK);
+                        jmpAmt  = jmpAmt - (fimmediate_t)insertCode->size;
+                        *jmpPtr = jmpAmt;
                     }
                 }
 
@@ -431,46 +251,13 @@ void d_insert_bytecode(BCode *base, BCode *insertCode, size_t insertIndex) {
                     // Did it jump over the inserted region?
                     if (i + jmpAmt >= insertIndex + insertCode->size) {
                         // Then fix the jump amount.
-                        jmpAmt = jmpAmt + (immediate_t)insertCode->size;
-                        *(immediate_t *)(base->code + i + jmpAmtOffset) =
-                            (jmpAmt & IMMEDIATE_MASK);
+                        jmpAmt  = jmpAmt + (fimmediate_t)insertCode->size;
+                        *jmpPtr = jmpAmt;
                     }
                 }
             }
 
             i += d_vm_ins_size(opcode);
-        }
-
-        // Now we need to modify any return markers after the insertion.
-        for (size_t i = 0; i < base->numStartOfReturnMarkers; i++) {
-            size_t returnMarker = base->startOfReturnMarkers[i];
-
-            if (returnMarker >= insertIndex) {
-                base->startOfReturnMarkers[i] = returnMarker + insertCode->size;
-            }
-        }
-
-        // Now we need to add the return markers to the new bytecode.
-        if (insertCode->numStartOfReturnMarkers > 0) {
-            if (base->startOfReturnMarkers != NULL &&
-                base->numStartOfReturnMarkers > 0) {
-                base->startOfReturnMarkers =
-                    (size_t *)d_realloc(base->startOfReturnMarkers,
-                                        (base->numStartOfReturnMarkers +
-                                         insertCode->numStartOfReturnMarkers) *
-                                            sizeof(size_t));
-            } else {
-                base->startOfReturnMarkers = (size_t *)d_malloc(
-                    (insertCode->numStartOfReturnMarkers) * sizeof(size_t));
-            }
-
-            for (size_t i = 0; i < insertCode->numStartOfReturnMarkers; i++) {
-                base->startOfReturnMarkers[base->numStartOfReturnMarkers + i] =
-                    insertCode->startOfReturnMarkers[i] + insertIndex;
-            }
-
-            base->numStartOfReturnMarkers = base->numStartOfReturnMarkers +
-                                            insertCode->numStartOfReturnMarkers;
         }
 
         // Next, we need to fix the original InstructionToLinks before adding
@@ -511,34 +298,6 @@ void d_insert_bytecode(BCode *base, BCode *insertCode, size_t insertIndex) {
     }
 }
 
-/**
- * \fn void d_insert_return_marker(BCode *bcode, size_t returnMarker)
- * \brief Insert a return marker into some bytecode.
- *
- * The marker represents the index of the first byte of the first instruction
- * of setting up return values for a function.
- *
- * \param bcode The bytecode to add the marker to.
- * \param returnMarker The marker to add.
- */
-void d_insert_return_marker(BCode *bcode, size_t returnMarker) {
-    if (returnMarker < bcode->size) {
-        bcode->numStartOfReturnMarkers++;
-
-        if (bcode->startOfReturnMarkers != NULL) {
-            bcode->startOfReturnMarkers = (size_t *)d_realloc(
-                bcode->startOfReturnMarkers,
-                bcode->numStartOfReturnMarkers * sizeof(size_t));
-        } else {
-            bcode->startOfReturnMarkers = (size_t *)d_malloc(
-                bcode->numStartOfReturnMarkers * sizeof(size_t));
-        }
-
-        bcode->startOfReturnMarkers[bcode->numStartOfReturnMarkers - 1] =
-            returnMarker;
-    }
-}
-
 /*
 === LINKING FUNCTIONS =====================================
 */
@@ -551,8 +310,8 @@ void d_insert_return_marker(BCode *bcode, size_t returnMarker) {
  *
  * \param context The context needed to store the link.
  * \param bcode The bytecode containing the instruction to link.
- * \param insIndex The index of the LOADUI instruction to replace when
- * linking is taking place.
+ * \param insIndex The index of the instruction to edit when linking is taking
+ * place.
  * \param linkMeta The link metadata.
  * \param indexInList Stores in the reference the index of the new metadata
  * in the list.
@@ -917,101 +676,112 @@ bool d_does_output_involve_call(SheetNode *node) {
 */
 
 /**
- * \fn BCode d_convert_between_number_types(SheetSocket *socket,
- *                                          BuildContext *context, DIns opcode,
- *                                          bool useSafeReg)
- * \brief Generate bytecode to convert from one number type to the other, i.e.
- * Integer -> Float or Float -> Integer.
+ * \fn BCode d_push_literal(SheetSocket *socket, BuildContext *context,
+ *                          bool cvtFloat)
+ * \brief Generate bytecode to push a literal onto the stack.
  *
- * The new register is placed in the socket.
+ * \return Bytecode to push the socket's literal onto the stack.
  *
- * \return The bytecode generated to convert.
- *
- * \param socket The input socket to convert.
- * \param context The context needed to generate the bytecode.
- * \param opcode The opcode to use to convert.
- * \param useSafeReg Specifies if the output should be in a safe register.
+ * \param socket The socket of the literal to push onto the stack.
+ * \param context The context needed to build the bytecode.
+ * \param cvtFloat Converts the literal to a float if possible.
  */
-BCode d_convert_between_number_types(struct _sheetSocket *socket,
-                                     BuildContext *context, DIns opcode,
-                                     bool useSafeReg) {
-    reg_t oldReg = socket->_reg;
-    reg_t newReg;
+BCode d_push_literal(SheetSocket *socket, BuildContext *context,
+                     bool cvtFloat) {
+    VERBOSE(
+        5,
+        "Generating bytecode to get literal value of type %u from node %s...\n",
+        socket->type, socket->node->name);
 
-    // Automatically decide if the new register is a float register or not
-    // depending on the opcode.
-    if (opcode == OP_MVTF || opcode == OP_CVTF)
-        newReg = d_next_float_reg(context, useSafeReg);
-    else
-        newReg = d_next_general_reg(context, useSafeReg);
+    // Even for floats, we want the integer representation of them.
+    dint intLiteral = socket->defaultValue.integerValue;
 
-    d_free_reg(context, oldReg);
+    BCode out = d_bytecode_ins(OP_PUSHF);
+    d_bytecode_set_fimmediate(out, 1, (fimmediate_t)intLiteral);
 
-    BCode out = d_malloc_bytecode(d_vm_ins_size(opcode));
-    d_bytecode_set_byte(out, 0, opcode);
-    d_bytecode_set_byte(out, 1, (char)oldReg);
-    d_bytecode_set_byte(out, 2, (char)newReg);
+    if (socket->type == TYPE_INT && cvtFloat) {
+        BCode cvtf = d_bytecode_ins(OP_CVTF);
+        d_concat_bytecode(&out, &cvtf);
+        d_free_bytecode(&cvtf);
+    } else if (socket->type == TYPE_STRING) {
+        // The literal string needs to go into the data section.
+        d_allocate_string_literal_in_data(context, &out, 0,
+                                          socket->defaultValue.stringValue);
+    }
 
-    // We need to set this new register for when we do the operation
-    // later, so it does the operation on the new float register.
-    socket->_reg = newReg;
+    // Set the socket's stack index so we know where the value lives.
+    socket->_stackIndex = ++context->stackTop;
+
+    return out;
+}
+
+/**
+ * \fn BCode d_push_variable(SheetNode *node, BuildContext *context)
+ * \brief Given a node that is the getter of a variable, generate bytecode to
+ * push the value of the variable onto the stack.
+ *
+ * \return Bytecode to push the variable's value onto the stack.
+ *
+ * \param node The node that is the getter of a variable.
+ * \param context The context needed to build the bytecode.
+ */
+BCode d_push_variable(SheetNode *node, BuildContext *context) {
+    VERBOSE(5, "Generating bytecode to get the value of variable %s...\n",
+            node->name);
+    
+    SheetVariable *variable = node->definition.variable;
+
+    // If the variable is a boolean, the variable is 1 byte instead of
+    // sizeof(dint).
+    DIns opcode = (variable->dataType == TYPE_BOOL) ? OP_DEREFBI : OP_DEREFI;
+
+    BCode out = d_bytecode_ins(opcode);
+    d_bytecode_set_fimmediate(out, 1, 0); // The address will be linked later.
+
+    // Set the socket's stack index so we know where the value lives.
+    node->sockets[0]->_stackIndex = ++context->stackTop;
+
+    LinkType linkType = (variable->dataType == TYPE_STRING)
+                            ? LINK_VARIABLE_POINTER
+                            : LINK_VARIABLE;
+
+    // We need this code to remember to link to the variable.
+    LinkMeta meta = d_link_new_meta(linkType, node->name, variable);
+
+    // Now we add the link metadata to the list in the context, but we
+    // want to look out for duplicate variables that may have already been
+    // allocated.
+    size_t metaIndexInList;
+    bool wasDuplicate = false;
+    d_add_link_to_ins(context, &out, 0, meta, &metaIndexInList, &wasDuplicate);
 
     return out;
 }
 
 /**
  * \fn void d_setup_input(SheetSocket *socket, BuildContext *context,
- *                        bool forceFloat, bool useSafeReg, BCode *addTo)
+ *                        bool forceFloat, BCode *addTo)
  * \brief Given an input socket, do what is nessesary to set it up for use in a
  * node.
  *
  * \param socket The socket corresponding to the input.
  * \param context The context needed to build bytecode.
  * \param forceFloat Always convert the input to a float if it isn't already.
- * \param useSafeReg Specifies if the input should be in a safe register.
  * \param addTo If any extra bytecode is needed to setup the input, add it onto
  * this bytecode.
  */
+/*
 void d_setup_input(struct _sheetSocket *socket, BuildContext *context,
-                   bool forceFloat, bool useSafeReg, BCode *addTo) {
+                   bool forceFloat, BCode *addTo) {
     // The input is a literal.
     if (socket->numConnections == 0) {
-        BCode literal = d_generate_bytecode_for_literal(socket, context,
-                                                        forceFloat, useSafeReg);
+        BCode literal =
+            d_generate_bytecode_for_literal(socket, context, forceFloat);
         d_concat_bytecode(addTo, &literal);
         d_free_bytecode(&literal);
     }
-
-    if (!VM_IS_FLOAT_REG(socket->_reg) && forceFloat) {
-        BCode cvt = d_convert_between_number_types(socket, context, OP_CVTF,
-                                                   useSafeReg);
-        d_concat_bytecode(addTo, &cvt);
-        d_free_bytecode(&cvt);
-    }
-
-    if (!IS_REG_SAFE(socket->_reg) && useSafeReg) {
-        reg_t safeReg;
-
-        if (VM_IS_FLOAT_REG(socket->_reg))
-            safeReg = d_next_float_reg(context, true);
-        else
-            safeReg = d_next_general_reg(context, true);
-
-        d_free_reg(context, socket->_reg);
-
-        DIns opcode = VM_IS_FLOAT_REG(safeReg) ? OP_LOADF : OP_LOAD;
-
-        BCode move = d_malloc_bytecode(d_vm_ins_size(opcode));
-        d_bytecode_set_byte(move, 0, opcode);
-        d_bytecode_set_byte(move, 1, (char)safeReg);
-        d_bytecode_set_byte(move, 2, (char)socket->_reg);
-
-        d_concat_bytecode(addTo, &move);
-        d_free_bytecode(&move);
-
-        socket->_reg = safeReg;
-    }
 }
+*/
 
 /**
  * \fn void d_setup_arguments(SheetNode *defineNode, BuildContext *context,
@@ -1027,6 +797,7 @@ void d_setup_input(struct _sheetSocket *socket, BuildContext *context,
  * \param isSubroutine Info needed to make sure the execution socket is not
  * "poped".
  */
+/*
 void d_setup_arguments(SheetNode *defineNode, BuildContext *context,
                        BCode *addTo, bool isSubroutine) {
     VERBOSE(5, "Generating bytecode to setup arguments...\n");
@@ -1055,6 +826,7 @@ void d_setup_arguments(SheetNode *defineNode, BuildContext *context,
         d_free_bytecode(&argPop);
     }
 }
+*/
 
 /**
  * \fn void d_setup_returns(SheetNode *returnNode, BuildContext *context,
@@ -1071,6 +843,7 @@ void d_setup_arguments(SheetNode *defineNode, BuildContext *context,
  * "pushed".
  * \param retAtEnd If true, this adds a RET instruction after.
  */
+/*
 void d_setup_returns(SheetNode *returnNode, BuildContext *context, BCode *addTo,
                      bool isSubroutine, bool retAtEnd) {
     VERBOSE(5, "Generating bytecode to return values...\n");
@@ -1168,122 +941,12 @@ void d_setup_returns(SheetNode *returnNode, BuildContext *context, BCode *addTo,
         d_free_bytecode(&codeForRetAtEnd);
     }
 }
-
-/**
- * \fn void d_save_safe_reg(BuildContext *context, BCode *addTo)
- * \brief Given a function has just been compiled (and maxUsedReg has been
- * filled), generate the bytecode needed to save the safe registers onto the
- * stack before they are manipulated.
- *
- * \param context The context needed to generate the bytecode.
- * \param addTo Where to add the extra bytecode onto. Should be just after the
- * arguments of the function have been poped off the stack.
- */
-void d_save_safe_reg(BuildContext *context, BCode *addTo) {
-    BCode push = (BCode){NULL, 0};
-
-    for (reg_t reg = 0; reg < NUM_SAFE_GENERAL_REGISTERS; reg++) {
-        if (IS_REG_USED(context->maxUsedReg, reg)) {
-            push = d_malloc_bytecode(d_vm_ins_size(OP_PUSH));
-            d_bytecode_set_byte(push, 0, OP_PUSH);
-            d_bytecode_set_byte(push, 1, (char)reg);
-
-            d_concat_bytecode(addTo, &push);
-            d_free_bytecode(&push);
-        }
-    }
-
-    for (reg_t reg = VM_REG_FLOAT_START;
-         reg < VM_REG_FLOAT_START + NUM_SAFE_FLOAT_REGISTERS; reg++) {
-        if (IS_REG_USED(context->maxUsedReg, reg)) {
-            // Float registers need to first be moved to a general register
-            // before being pushed.
-            reg_t valReg = d_next_general_reg(context, false);
-
-            // We don't want to speak of this register ever again...
-            SET_REG_FREE(context->usedReg, valReg);
-            SET_REG_FREE(context->maxUsedReg, valReg);
-
-            // We can't use d_convert_between_number_types here, since we don't
-            // know anything about the sockets used.
-            push = d_malloc_bytecode((size_t)d_vm_ins_size(OP_MVTI) +
-                                     d_vm_ins_size(OP_PUSH));
-            d_bytecode_set_byte(push, 0, OP_MVTI);
-            d_bytecode_set_byte(push, 1, (char)reg);
-            d_bytecode_set_byte(push, 2, (char)valReg);
-
-            d_bytecode_set_byte(push, d_vm_ins_size(OP_MVTI), OP_PUSH);
-            d_bytecode_set_byte(push, d_vm_ins_size(OP_MVTI), (char)valReg);
-
-            d_concat_bytecode(addTo, &push);
-            d_free_bytecode(&push);
-        }
-    }
-}
-
-/**
- * \fn void d_load_safe_reg(BuildContext *context, BCode *addTo)
- * \brief Given a return node has been reached, generate the bytecode needed to
- * load safe register values from the stack.
- *
- * Note that for subroutines, there can be multiple return nodes, each of which
- * could miss some safe registers to load. On those instances, we don't insert
- * anything until after we've compiled the entire subroutine, then we add on
- * the bytecode before every instance of a return.
- *
- * \param context The context needed to generate the bytecode.
- * \param addTo Where to add the extra bytecode onto. Should be just before
- * the return values of the function are pushed onto the stack.
- */
-void d_load_safe_reg(BuildContext *context, BCode *addTo) {
-    BCode pop = (BCode){NULL, 0};
-
-    for (int reg = VM_REG_FLOAT_START + NUM_SAFE_FLOAT_REGISTERS - 1;
-         reg >= VM_REG_FLOAT_START; reg--) {
-        if (IS_REG_USED(context->maxUsedReg, reg)) {
-            // Float registers need to first be moved from a general register
-            // after being poped.
-            reg_t valReg = d_next_general_reg(context, false);
-
-            // We don't want to speak of this register ever again...
-            SET_REG_FREE(context->usedReg, valReg);
-            SET_REG_FREE(context->maxUsedReg, valReg);
-
-            // We can't use d_convert_between_number_types here, since we don't
-            // know anything about the sockets used.
-            pop = d_malloc_bytecode((size_t)d_vm_ins_size(OP_POP) +
-                                    d_vm_ins_size(OP_MVTF));
-            d_bytecode_set_byte(pop, 0, OP_POP);
-            d_bytecode_set_byte(pop, 1, (char)valReg);
-
-            d_bytecode_set_byte(pop, d_vm_ins_size(OP_POP), OP_MVTF);
-            d_bytecode_set_byte(pop, (size_t)d_vm_ins_size(OP_POP) + 1,
-                                (char)valReg);
-            d_bytecode_set_byte(pop, (size_t)d_vm_ins_size(OP_POP) + 2,
-                                (char)reg);
-
-            d_concat_bytecode(addTo, &pop);
-            d_free_bytecode(&pop);
-        }
-    }
-
-    for (int reg = NUM_SAFE_GENERAL_REGISTERS - 1; reg >= 0; reg--) {
-        if (IS_REG_USED(context->maxUsedReg, reg)) {
-            pop = d_malloc_bytecode(d_vm_ins_size(OP_POP));
-            d_bytecode_set_byte(pop, 0, OP_POP);
-            d_bytecode_set_byte(pop, 1, (char)reg);
-
-            d_concat_bytecode(addTo, &pop);
-            d_free_bytecode(&pop);
-        }
-    }
-}
+*/
 
 /**
  * \fn BCode d_generate_bytecode_for_literal(SheetSocket *socket,
  *                                           BuildContext *context,
- *                                           bool cvtFloat,
- *                                           bool useSafeReg)
+ *                                           bool cvtFloat)
  * \brief Given a socket, generate the bytecode to load the literal value.
  *
  * \return The malloc'd bytecode generated to get the literal value.
@@ -1292,16 +955,29 @@ void d_load_safe_reg(BuildContext *context, BCode *addTo) {
  * \param context The context needed to generate the bytecode.
  * \param cvtFloat If true, and if the literal is an integer, convert it into a
  * float.
- * \param useSafeReg If true, the output will be placed in a safe register.
  */
+/*
 BCode d_generate_bytecode_for_literal(SheetSocket *socket,
-                                      BuildContext *context, bool cvtFloat,
-                                      bool useSafeReg) {
+                                      BuildContext *context, bool cvtFloat) {
     VERBOSE(
         5,
         "Generating bytecode to get literal value of type %u from node %s...\n",
         socket->type, socket->node->name);
     BCode out = (BCode){NULL, 0};
+
+    switch (socket->type) {
+        case TYPE_INT:;
+            dint literal = socket->defaultValue.integerValue;
+
+            if (cvtFloat) {
+                literal = *((dint *)((dfloat)literal));
+
+            out = d_malloc_bytecode(d_vm_ins_size(OP_PUSHF));
+            d_bytecode_set_byte(out, 0, OP_PUSHF);
+            d_bytecode_set_fimmediate(out, 1, (fimmediate_t)literal);
+
+            break;
+    }
 
     // Store the defaultValue in the next available register.
     switch (socket->type) {
@@ -1436,6 +1112,7 @@ BCode d_generate_bytecode_for_literal(SheetSocket *socket,
 
     return out;
 }
+*/
 
 /**
  * \fn BCode d_generate_bytecode_for_input(SheetSocket *socket,
@@ -1454,6 +1131,7 @@ BCode d_generate_bytecode_for_literal(SheetSocket *socket,
  * may not want this if you want to optimise later by using immediate
  * instructions.
  */
+/*
 BCode d_generate_bytecode_for_input(SheetSocket *socket, BuildContext *context,
                                     bool inLoop, bool forceLiteral) {
     VERBOSE(5, "Generating bytecode to get input for socket %p...\n", socket);
@@ -1594,6 +1272,7 @@ BCode d_generate_bytecode_for_input(SheetSocket *socket, BuildContext *context,
 
     return inputCode;
 }
+*/
 
 /**
  * \fn BCode d_generate_bytecode_for_inputs(SheetNode *node,
@@ -1614,6 +1293,7 @@ BCode d_generate_bytecode_for_input(SheetSocket *socket, BuildContext *context,
  * may not want this if you want to optimise later by using immediate
  * instructions.
  */
+/*
 DECISION_API BCode d_generate_bytecode_for_inputs(SheetNode *node,
                                                   BuildContext *context,
                                                   bool inLoop,
@@ -1645,6 +1325,7 @@ DECISION_API BCode d_generate_bytecode_for_inputs(SheetNode *node,
 
     return out;
 }
+*/
 
 /**
  * \fn BCode d_generate_bytecode_for_variable(SheetNode *node,
@@ -1659,6 +1340,7 @@ DECISION_API BCode d_generate_bytecode_for_inputs(SheetNode *node,
  * \param context The context needed to generate the bytecode.
  * \param variable The variable data needed to generate the bytecode.
  */
+/*
 BCode d_generate_bytecode_for_variable(SheetNode *node, BuildContext *context,
                                        SheetVariable *variable) {
     VERBOSE(5, "Generating bytecode to get the value of variable %s...\n",
@@ -1733,6 +1415,7 @@ BCode d_generate_bytecode_for_variable(SheetNode *node, BuildContext *context,
 
     return out;
 }
+*/
 
 /**
  * \fn BCode d_generate_bytecode_for_call(SheetNode *node,
@@ -1748,6 +1431,7 @@ BCode d_generate_bytecode_for_variable(SheetNode *node, BuildContext *context,
  * \param isSubroutine Info needed to make sure we ignore the execution sockets.
  * \param isCFunction Is the call to a C function?
  */
+/*
 BCode d_generate_bytecode_for_call(SheetNode *node, BuildContext *context,
                                    bool isSubroutine, bool isCFunction) {
     VERBOSE(5, "Generating bytecode to call %s...\n", node->name);
@@ -1991,6 +1675,7 @@ BCode d_generate_bytecode_for_call(SheetNode *node, BuildContext *context,
 
     return out;
 }
+*/
 
 /**
  * \fn BCode d_generate_bytecode_for_operator(
@@ -2009,6 +1694,7 @@ BCode d_generate_bytecode_for_call(SheetNode *node, BuildContext *context,
  * \param infiniteInputs Does this node take an infinite amount of inputs?
  * \param forceFloat Should the output always be a float?
  */
+/*
 BCode d_generate_bytecode_for_operator(SheetNode *node, BuildContext *context,
                                        DIns opcode, DIns fopcode, DIns iopcode,
                                        bool oneInput, bool infiniteInputs,
@@ -2154,6 +1840,7 @@ BCode d_generate_bytecode_for_operator(SheetNode *node, BuildContext *context,
 
     return out;
 }
+*/
 
 /**
  * \fn BCode d_generate_bytecode_for_comparator(SheetNode *node,
@@ -2171,6 +1858,7 @@ BCode d_generate_bytecode_for_operator(SheetNode *node, BuildContext *context,
  * \param sopcode The string variant of the instruction.
  * \param notAfter After the comparison is done, do we invert the answer?
  */
+/*
 BCode d_generate_bytecode_for_comparator(SheetNode *node, BuildContext *context,
                                          DIns opcode, DIns fopcode,
                                          DIns sopcode, bool notAfter) {
@@ -2246,6 +1934,7 @@ BCode d_generate_bytecode_for_comparator(SheetNode *node, BuildContext *context,
 
     return out;
 }
+*/
 
 /**
  * \fn BCode d_generate_bytecode_for_nonexecution_node(
@@ -2258,6 +1947,7 @@ BCode d_generate_bytecode_for_comparator(SheetNode *node, BuildContext *context,
  * \param context The context needed to generate the bytecode.
  * \param inLoop Is this node being run from inside a loop?
  */
+/*
 BCode d_generate_bytecode_for_nonexecution_node(SheetNode *node,
                                                 BuildContext *context,
                                                 bool inLoop) {
@@ -2633,6 +2323,7 @@ BCode d_generate_bytecode_for_nonexecution_node(SheetNode *node,
 
     return out;
 }
+*/
 
 /**
  * \fn BCode d_generate_bytecode_for_execution_node(
@@ -2649,6 +2340,7 @@ BCode d_generate_bytecode_for_nonexecution_node(SheetNode *node,
  * being run inside a loop. This prevents a RET being put at the end of the
  * sequence of instructions.
  */
+/*
 BCode d_generate_bytecode_for_execution_node(SheetNode *node,
                                              BuildContext *context,
                                              bool retAtEnd, bool inLoop) {
@@ -3329,6 +3021,7 @@ BCode d_generate_bytecode_for_execution_node(SheetNode *node,
 
     return out;
 }
+*/
 
 /**
  * \fn BCode d_generate_bytecode_for_start(SheetNode *startNode,
@@ -3341,6 +3034,7 @@ BCode d_generate_bytecode_for_execution_node(SheetNode *node,
  * \param startNode A pointer to the Start node.
  * \param context The context needed to generate the bytecode.
  */
+/*
 BCode d_generate_bytecode_for_start(SheetNode *startNode,
                                     BuildContext *context) {
     // New function means all registers are free before we generate bytecode.
@@ -3374,6 +3068,7 @@ BCode d_generate_bytecode_for_start(SheetNode *startNode,
 
     return out;
 }
+*/
 
 /**
  * \fn BCode d_generate_bytecode_for_function(SheetFunction *func,
@@ -3385,6 +3080,7 @@ BCode d_generate_bytecode_for_start(SheetNode *startNode,
  * \param func The function to generate the bytecode for.
  * \param context The context needed to generate the bytecode.
  */
+/*
 BCode d_generate_bytecode_for_function(SheetFunction *func,
                                        BuildContext *context) {
     // New function means all registers are free before we generate bytecode.
@@ -3516,6 +3212,7 @@ BCode d_generate_bytecode_for_function(SheetFunction *func,
 
     return out;
 }
+*/
 
 /**
  * \fn void d_codegen_compile(Sheet *sheet)

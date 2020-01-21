@@ -59,7 +59,9 @@ static const unsigned char VM_INS_SIZE[NUM_OPCODES] = {
     1,                                     // OP_CVTF
     1,                                     // OP_CVTI
     1,                                     // OP_DEREF
+    1 + FIMMEDIATE_SIZE,                   // OP_DEREFI
     1,                                     // OP_DEREFB
+    1 + FIMMEDIATE_SIZE,                   // OP_DEREFBI
     1,                                     // OP_DIV
     1,                                     // OP_DIVF
     1 + BIMMEDIATE_SIZE,                   // OP_DIVBI
@@ -831,27 +833,6 @@ void d_vm_runtime_error(DVM *vm, const char *error) {
         d_vm_popn(vm, 1);                                               \
     }
 
-/*
-            vm->pc = VM_GET_STACK(vm, 0);
-
-            const uint8_t numArguments = (uint8_t)GET_BIMMEDIATE(1);
-            dint *insertPtr            = vm->stackPtr - numArguments - 1;
-
-            VM_INSERT_LEN(vm, insertPtr, 2, numArguments)
-
-            // Save the frame pointer first...
-            *insertPtr = (dint)vm->framePtr;
-
-            // ... then the program counter.
-            insertPtr++;
-            *insertPtr = (dint)vm->pc;
-
-            // Then set the new frame pointer.
-            vm->framePtr = insertPtr;
-
-            vm->_inc_pc = 0;
-*/
-
 /**
  * \def CALL_GENERIC(sym, newPC, offset)
  * \brief A generic helper macro for call opcodes.
@@ -872,7 +853,7 @@ void d_vm_runtime_error(DVM *vm, const char *error) {
 /**
  * \def CALL_1_0(sym)
  * \brief A helper macro for call opcodes with 1 input and 0 outputs.
- * 
+ *
  * **NOTE:** Here we just decrement the stack pointer instead of using
  * `d_vm_popn`, since `VM_INSERT_LEN` pushed 2 times, it makes an overall
  * difference of 1 element being pushed on, so the stack should not have to be
@@ -1145,8 +1126,16 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             *VM_GET_STACK_PTR(vm, 0) = *((dint *)VM_GET_STACK(vm, 0));
             break;
 
+        case OP_DEREFI:;
+            *VM_GET_STACK_PTR(vm, 0) = *((dint *)GET_FIMMEDIATE(1));
+            break;
+
         case OP_DEREFB:;
             *VM_GET_STACK_PTR(vm, 0) = *((uint8_t *)VM_GET_STACK(vm, 0));
+            break;
+
+        case OP_DEREFBI:;
+            *VM_GET_STACK_PTR(vm, 0) = *((uint8_t *)GET_FIMMEDIATE(1));
             break;
 
         case OP_DIV:;
