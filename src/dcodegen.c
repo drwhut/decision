@@ -728,7 +728,7 @@ BCode d_push_literal(SheetSocket *socket, BuildContext *context,
 BCode d_push_variable(SheetNode *node, BuildContext *context) {
     VERBOSE(5, "Generating bytecode to get the value of variable %s...\n",
             node->name);
-    
+
     SheetVariable *variable = node->definition.variable;
 
     // If the variable is a boolean, the variable is 1 byte instead of
@@ -754,6 +754,129 @@ BCode d_push_variable(SheetNode *node, BuildContext *context) {
     size_t metaIndexInList;
     bool wasDuplicate = false;
     d_add_link_to_ins(context, &out, 0, meta, &metaIndexInList, &wasDuplicate);
+
+    return out;
+}
+
+/**
+ * \fn BCode d_push_input(SheetSocket *socket, BuildContext *context,
+ *                        bool forceFloat)
+ * \brief Given an input socket, generate bytecode to push the value of the
+ * input to the top of the stack.
+ *
+ * \return Bytecode to push the input's value onto the stack.
+ *
+ * \param socket The input socket to get the value for.
+ * \param context The context needed to build the bytecode.
+ * \param forceFloat Force integers to be converted to floats.
+ */
+BCode d_push_input(SheetSocket *socket, BuildContext *context,
+                   bool forceFloat) {
+    VERBOSE(5, "Generating bytecode to get the value of input socket %p...\n",
+            socket);
+
+    BCode out;
+
+    if (socket->isInput && socket->type != TYPE_EXECUTION) {
+        if (socket->numConnections == 0) {
+            // The socket input is a literal.
+            out = d_push_literal(socket, context, forceFloat);
+        } else {
+            // The socket has a connected socket.
+            SheetSocket *connSocket = socket->connections[0];
+
+            // Has this output not already been generated?
+            if (connSocket->_stackIndex > -1) {
+                // TODO: Generate the bytecode, use forceFloat.
+            }
+
+            // If the value is not at the top of the stack, make sure it is.
+            int inputIndex = connSocket->_stackIndex;
+
+            if (!IS_INDEX_TOP(context, inputIndex)) {
+                BCode get = d_bytecode_ins(OP_GETFI);
+                d_bytecode_set_fimmediate(
+                    get, 1, (fimmediate_t)STACK_INDEX_TOP(context, inputIndex));
+
+                connSocket->_stackIndex = context->stackTop;
+            }
+        }
+    }
+
+    return out;
+}
+
+/**
+ * \fn BCode d_push_node_inputs(SheetNode *node, BuildContext *context,
+ *                              bool forceFloat)
+ * \brief Given a node, generate bytecode to push the values of the
+ * inputs to the top of the stack, such that the first input is at the top, the
+ * second input is 1 below the top, etc.
+ *
+ * \return Bytecode to push all input's values onto the stack.
+ *
+ * \param node The node whose input sockets to generate bytecode for.
+ * \param context The context needed to generate the bytecode.
+ * \param forceFloat Force integers to be converted to floats.
+ */
+BCode d_push_node_inputs(SheetNode *node, BuildContext *context,
+                         bool forceFloat) {
+    VERBOSE(5, "Generating bytecode to get the inputs for node %s...\n",
+            node->name);
+
+    BCode out;
+
+    // TODO: Account for the fact caller might want to use immediates.
+
+    // We want the first input to be at the top of the stack, so generate that
+    // input last.
+    for (int i = node->numSockets - 1; i >= 0; i--) {
+        SheetSocket *socket = node->sockets[i];
+
+        if (socket->isInput && socket->type != TYPE_EXECUTION) {
+            BCode input = d_push_input(socket, context, forceFloat);
+            d_concat_bytecode(&out, &input);
+            d_free_bytecode(&input);
+        }
+    }
+
+    // Now the bytecode for the inputs has been generated, we need to verify
+    // that the inputs are in order from the top of the stack. If not, we need
+    // to get them there.
+    int verifyIndex       = context->stackTop;
+    int numInputs         = 0;
+    bool positionsCorrect = true;
+
+    for (int i = 0; i < node->numSockets; i++) {
+        SheetSocket *socket = node->sockets[i];
+
+        if (socket->isInput && socket->type != TYPE_EXECUTION) {
+            // Is this input the correct amount from the top?
+            if (STACK_INDEX_TOP(context, socket->_stackIndex) != -numInputs) {
+                positionsCorrect = false;
+                break;
+            }
+            numInputs++;
+        }
+    }
+
+    // If the positions of the inputs are not correct, make them correct.
+    if (!positionsCorrect) {
+        for (int i = node->numSockets - 1; i >= 0; i--) {
+            SheetSocket *socket = node->sockets[i];
+
+            if (socket->isInput && socket->type != TYPE_EXECUTION) {
+                BCode get = d_bytecode_ins(OP_GETFI);
+                d_bytecode_set_fimmediate(get, 1,
+                                          (fimmediate_t)STACK_INDEX_TOP(
+                                              context, socket->_stackIndex));
+                d_concat_bytecode(&out, &get);
+                d_free_bytecode(&get);
+
+                socket->_stackIndex = context->stackTop;
+            }
+        }
+    }
 
     return out;
 }

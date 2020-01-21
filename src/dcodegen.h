@@ -335,6 +335,37 @@ DECISION_API BCode d_push_variable(struct _sheetNode *node,
                                    BuildContext *context);
 
 /**
+ * \fn BCode d_push_input(SheetSocket *socket, BuildContext *context,
+ *                        bool forceFloat)
+ * \brief Given an input socket, generate bytecode to push the value of the
+ * input to the top of the stack.
+ *
+ * \return Bytecode to push the input's value onto the stack.
+ *
+ * \param socket The input socket to get the value for.
+ * \param context The context needed to build the bytecode.
+ * \param forceFloat Force integers to be converted to floats.
+ */
+DECISION_API BCode d_push_input(struct _sheetSocket *socket,
+                                BuildContext *context, bool forceFloat);
+
+/**
+ * \fn BCode d_push_node_inputs(SheetNode *node, BuildContext *context,
+ *                              bool forceFloat)
+ * \brief Given a node, generate bytecode to push the values of the
+ * inputs to the top of the stack, such that the first input is at the top, the
+ * second input is 1 below the top, etc.
+ *
+ * \return Bytecode to push all input's values onto the stack.
+ *
+ * \param node The node whose input sockets to generate bytecode for.
+ * \param context The context needed to generate the bytecode.
+ * \param forceFloat Force integers to be converted to floats.
+ */
+DECISION_API BCode d_push_node_inputs(struct _sheetNode *node,
+                                      BuildContext *context, bool forceFloat);
+
+/**
  * \fn void d_setup_input(SheetSocket *socket, BuildContext *context,
  *                        bool forceFloat, BCode *addTo)
  * \brief Given an input socket, do what is nessesary to set it up for use in a
