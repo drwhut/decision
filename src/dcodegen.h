@@ -422,45 +422,29 @@ DECISION_API BCode d_generate_call(struct _sheetNode *node,
                                    BuildContext *context);
 
 /**
- * \fn void d_setup_arguments(SheetNode *defineNode, BuildContext *context,
- *                            BCode *addTo, bool isSubroutine)
- * \brief Given a Define node, generate bytecode to pop the arguments from the
- * stack.
+ * \fn BCode d_push_argument(SheetSocket *socket, BuildContext *context)
+ * \brief Given an output socket that is a function/subroutine argument,
+ * generate bytecode to push the value of the argument to the top of the stack.
  *
- * The node's sockets are provided with their registers.
+ * \return Bytecode to push the argument.
  *
- * \param defineNode The Define node to get the arguments of.
+ * \param socket The output socket representing the function argument.
  * \param context The context needed to generate the bytecode.
- * \param addTo Where to add the extra bytecode onto.
- * \param isSubroutine Info needed to make sure the execution socket is not
- * "poped".
  */
-/*
-DECISION_API void d_setup_arguments(struct _sheetNode *defineNode,
-                                    BuildContext *context, BCode *addTo,
-                                    bool isSubroutine);
-*/
+DECISION_API BCode d_push_argument(struct _sheetNode *socket,
+                                   BuildContext *context);
 
 /**
- * \fn void d_setup_returns(SheetNode *returnNode, BuildContext *context,
- *                          BCode *addTo, bool isSubroutine, bool retAtEnd)
- * \brief Given a Return node, generate bytecode to push the return values onto
- * the stack.
- *
- * If you want, a RET instruction is also added at the end.
- *
- * \param returnNode The Return node to get the return values from.
+ * \fn BCode d_generate_return(SheetNode *returnNode, BuildContext *context)
+ * \brief Given a Return node, generate the bytecode to return from the
+ * function/subroutine with the return values.
+ * 
+ * \return Bytecode to return from the function/subroutine.
+ * 
+ * \param returnNode The Return node to return with.
  * \param context The context needed to generate the bytecode.
- * \param addTo Where to add the extra bytecode onto.
- * \param isSubroutine Info needed to make sure the execution socket is not
- * "pushed".
- * \param retAtEnd If true, this adds a RET instruction after.
  */
-/*
-DECISION_API void d_setup_returns(struct _sheetNode *returnNode,
-                                  BuildContext *context, BCode *addTo,
-                                  bool isSubroutine, bool retAtEnd);
-*/
+DECISION_API BCode d_generate_return(struct _sheetNode *returnNode, BuildContext *context);
 
 /**
  * \fn BCode d_generate_bytecode_for_nonexecution_node(

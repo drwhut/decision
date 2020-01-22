@@ -1153,164 +1153,83 @@ BCode d_generate_call(SheetNode *node, BuildContext *context) {
 }
 
 /**
- * \fn void d_setup_arguments(SheetNode *defineNode, BuildContext *context,
- *                            BCode *addTo, bool isSubroutine)
- * \brief Given a Define node, generate bytecode to pop the arguments from the
- * stack.
+ * \fn BCode d_push_argument(SheetSocket *socket, BuildContext *context)
+ * \brief Given an output socket that is a function/subroutine argument,
+ * generate bytecode to push the value of the argument to the top of the stack.
  *
- * The node's sockets are provided with their registers.
+ * \return Bytecode to push the argument.
  *
- * \param defineNode The Define node to get the arguments of.
+ * \param socket The output socket representing the function argument.
  * \param context The context needed to generate the bytecode.
- * \param addTo Where to add the extra bytecode onto.
- * \param isSubroutine Info needed to make sure the execution socket is not
- * "poped".
  */
-/*
-void d_setup_arguments(SheetNode *defineNode, BuildContext *context,
-                       BCode *addTo, bool isSubroutine) {
-    VERBOSE(5, "Generating bytecode to setup arguments...\n");
-    // The first socket is the name, so skip that.
-    for (size_t i = 1 + (size_t)isSubroutine; i < defineNode->numSockets; i++) {
-        SheetSocket *argSocket = defineNode->sockets[i];
-        reg_t argReg           = d_next_general_reg(context, false);
+BCode d_push_argument(SheetSocket *socket, BuildContext *context) {
+    VERBOSE(5, "Generating bytecode for argument socket %p...\n", socket);
 
-        BCode argPop = d_malloc_bytecode(d_vm_ins_size(OP_POP));
-        d_bytecode_set_byte(argPop, 0, OP_POP);
-        d_bytecode_set_byte(argPop, 1, (char)argReg);
+    BCode out = {NULL, 0};
 
-        // Set the socket's register value.
-        argSocket->_reg = argReg;
+    SheetNode *node = socket->node;
 
-        // Do we need to move the value into a float register?
-        if (argSocket->type == TYPE_FLOAT) {
-            BCode mvtf = d_convert_between_number_types(argSocket, context,
-                                                        OP_MVTF, false);
+    if (!socket->isInput) {
 
-            d_concat_bytecode(&argPop, &mvtf);
-            d_free_bytecode(&mvtf);
+        // Due to the calling convention, the argument should already be on the
+        // stack, but relative to the frame pointer. We just need to figure out
+        // which index.
+        // TODO: When generating bytecode for functions, make sure that the
+        // stackTop is set correctly before generation!
+        fimmediate_t index      = 0;
+        fimmediate_t numOutputs = 0;
+
+        for (size_t i = 0; i < node->numSockets; i++) {
+            SheetSocket *testSocket = node->sockets[i];
+
+            if (!testSocket->isInput) {
+                // Sockets are separately malloc'd.
+                if (socket == testSocket) {
+                    index = numOutputs;
+                    break;
+                }
+
+                numOutputs++;
+            }
         }
 
-        d_concat_bytecode(addTo, &argPop);
-        d_free_bytecode(&argPop);
+        out = d_bytecode_ins(OP_GETFI);
+        d_bytecode_set_fimmediate(out, 1, index + 1);
     }
+
+    return out;
 }
-*/
 
 /**
- * \fn void d_setup_returns(SheetNode *returnNode, BuildContext *context,
- *                          BCode *addTo, bool isSubroutine, bool retAtEnd)
- * \brief Given a Return node, generate bytecode to push the return values onto
- * the stack.
+ * \fn BCode d_generate_return(SheetNode *returnNode, BuildContext *context)
+ * \brief Given a Return node, generate the bytecode to return from the
+ * function/subroutine with the return values.
  *
- * If you want, a RET instruction is also added at the end.
+ * \return Bytecode to return from the function/subroutine.
  *
- * \param returnNode The Return node to get the return values from.
+ * \param returnNode The Return node to return with.
  * \param context The context needed to generate the bytecode.
- * \param addTo Where to add the extra bytecode onto.
- * \param isSubroutine Info needed to make sure the execution socket is not
- * "pushed".
- * \param retAtEnd If true, this adds a RET instruction after.
  */
-/*
-void d_setup_returns(SheetNode *returnNode, BuildContext *context, BCode *addTo,
-                     bool isSubroutine, bool retAtEnd) {
-    VERBOSE(5, "Generating bytecode to return values...\n");
+BCode d_generate_return(SheetNode *returnNode, BuildContext *context) {
+    SheetFunction *function = returnNode->definition.function;
 
-    // We want to ensure that when we push return values onto the stack, they
-    // are pushed from unsafe registers - this is because safe register contents
-    // were pushed onto the stack after we poped the arguments. So, we need to
-    // pop those contents back to their respective safe registers BEFORE we push
-    // the return values. So for safety, we are yeeting the return values that
-    // live in safe registers to unsafe ones.
-    for (size_t i = returnNode->numSockets - 1; i >= 1 + (size_t)isSubroutine;
-         i--) {
-        SheetSocket *retSocket = returnNode->sockets[i];
+    VERBOSE(5, "Generating bytecode to return from %s...\n", function->name);
 
-        if (IS_REG_SAFE(retSocket->_reg) && retSocket->numConnections > 0) {
-            reg_t newUnsafeReg = 0;
-            BCode moveCode;
+    BCode out = {NULL, 0};
 
-            if (IS_REG_SAFE_GENERAL(retSocket->_reg)) {
-                newUnsafeReg = d_next_general_reg(context, false);
+    if (function->numReturns == 0) {
+        out = d_bytecode_ins(OP_RET);
+    } else {
+        out = d_push_node_inputs(returnNode, context, false, false, false);
 
-                moveCode = d_malloc_bytecode(d_vm_ins_size(OP_LOAD));
-                d_bytecode_set_byte(moveCode, 0, OP_LOAD);
-                d_bytecode_set_byte(moveCode, 1, (char)newUnsafeReg);
-                d_bytecode_set_byte(moveCode, 2, (char)retSocket->_reg);
-
-                d_concat_bytecode(addTo, &moveCode);
-                d_free_bytecode(&moveCode);
-            } else if (IS_REG_SAFE_FLOAT(retSocket->_reg)) {
-                newUnsafeReg = d_next_float_reg(context, false);
-
-                moveCode = d_malloc_bytecode(d_vm_ins_size(OP_LOADF));
-                d_bytecode_set_byte(moveCode, 0, OP_LOADF);
-                d_bytecode_set_byte(moveCode, 1, (char)newUnsafeReg);
-                d_bytecode_set_byte(moveCode, 2, (char)retSocket->_reg);
-
-                d_concat_bytecode(addTo, &moveCode);
-                d_free_bytecode(&moveCode);
-            }
-
-            d_free_reg(context, retSocket->_reg);
-            retSocket->_reg = newUnsafeReg;
-        }
+        BCode ret = d_bytecode_ins(OP_RETN);
+        d_bytecode_set_byte(ret, 1, (char)function->numReturns);
+        d_concat_bytecode(&out, &ret);
+        d_free_bytecode(&ret);
     }
 
-    // We want to add a marker afterwards for where the setup of the return
-    // values starts.
-    size_t startMarker = addTo->size;
-
-    for (size_t i = returnNode->numSockets - 1; i >= 1 + (size_t)isSubroutine;
-         i--) {
-        SheetSocket *retSocket = returnNode->sockets[i];
-
-        // Has it got a connection?
-        if (retSocket->numConnections == 0) {
-            // If not, we're going to have to generate the bytecode for
-            // the literal.
-            BCode literal = d_generate_bytecode_for_literal(retSocket, context,
-                                                            false, false);
-            d_concat_bytecode(addTo, &literal);
-            d_free_bytecode(&literal);
-        }
-
-        // One slight problem... the stack is for integers only, so if the
-        // socket holds a float, we need to move it to an integer register.
-        if (retSocket->type == TYPE_FLOAT && VM_IS_FLOAT_REG(retSocket->_reg)) {
-            BCode mv = d_convert_between_number_types(retSocket, context,
-                                                      OP_MVTI, false);
-            d_concat_bytecode(addTo, &mv);
-            d_free_bytecode(&mv);
-        }
-
-        reg_t retReg = retSocket->_reg;
-
-        // Now add the argument onto the stack.
-        BCode push = d_malloc_bytecode(d_vm_ins_size(OP_PUSH));
-        d_bytecode_set_byte(push, 0, OP_PUSH);
-        d_bytecode_set_byte(push, 1, (char)retReg);
-
-        d_concat_bytecode(addTo, &push);
-        d_free_bytecode(&push);
-
-        // And free the register, now that our value is safe and sound
-        // in the stack.
-        d_free_reg(context, retReg);
-    }
-
-    // Add a return marker.
-    d_insert_return_marker(addTo, startMarker);
-
-    if (retAtEnd) {
-        BCode codeForRetAtEnd = d_malloc_bytecode(1);
-        d_bytecode_set_byte(codeForRetAtEnd, 0, OP_RET);
-        d_concat_bytecode(addTo, &codeForRetAtEnd);
-        d_free_bytecode(&codeForRetAtEnd);
-    }
+    return out;
 }
-*/
 
 /**
  * \fn BCode d_generate_bytecode_for_nonexecution_node(
