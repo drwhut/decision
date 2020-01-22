@@ -808,28 +808,47 @@ BCode d_push_input(SheetSocket *socket, BuildContext *context,
 
 /**
  * \fn BCode d_push_node_inputs(SheetNode *node, BuildContext *context,
+ *                              bool order, bool ignoreLiterals,
  *                              bool forceFloat)
  * \brief Given a node, generate bytecode to push the values of the
- * inputs to the top of the stack, such that the first input is at the top, the
- * second input is 1 below the top, etc.
+ * inputs to the top of the stack.
  *
  * \return Bytecode to push all input's values onto the stack.
  *
  * \param node The node whose input sockets to generate bytecode for.
  * \param context The context needed to generate the bytecode.
+ * \param order If true, the inputs are pushed in order, such that the last
+ * input is at the top. If false, the inputs are pushed in reverse order, such
+ * that the first input is at the top.
  * \param ignoreLiterals Do not generate bytecode for non-float literal inputs.
  * \param forceFloat Force integers to be converted to floats.
  */
-BCode d_push_node_inputs(SheetNode *node, BuildContext *context,
+BCode d_push_node_inputs(SheetNode *node, BuildContext *context, bool order,
                          bool ignoreLiterals, bool forceFloat) {
     VERBOSE(5, "Generating bytecode to get the inputs for node %s...\n",
             node->name);
 
     BCode out = {NULL, 0};
 
-    // We want the first input to be at the top of the stack, so generate that
-    // input last.
-    for (int i = node->numSockets - 1; i >= 0; i--) {
+    int start = node->numSockets - 1;
+    int end   = 0;
+    int step  = -1;
+
+    if (order) {
+        start = 0;
+        end   = node->numSockets - 1;
+        step  = 1;
+    }
+
+    // Push the inputs in the order we want.
+    int i = start;
+
+    bool inLoop = (i >= end);
+    if (order) {
+        inLoop = (i <= end);
+    }
+
+    while (inLoop) {
         SheetSocket *socket = node->sockets[i];
 
         if (socket->isInput && socket->type != TYPE_EXECUTION) {
@@ -841,6 +860,14 @@ BCode d_push_node_inputs(SheetNode *node, BuildContext *context,
                 d_free_bytecode(&input);
             }
         }
+
+        i += step;
+
+        if (order) {
+            inLoop = (i <= end);
+        } else {
+            inLoop = (i >= end);
+        }
     }
 
     // Now the bytecode for the inputs has been generated, we need to verify
@@ -850,7 +877,14 @@ BCode d_push_node_inputs(SheetNode *node, BuildContext *context,
     int numInputs         = 0;
     bool positionsCorrect = true;
 
-    for (int i = 0; i < node->numSockets; i++) {
+    i = end;
+
+    inLoop = (i <= end);
+    if (order) {
+        inLoop = (i >= end);
+    }
+
+    while (inLoop) {
         SheetSocket *socket = node->sockets[i];
 
         if (socket->isInput && socket->type != TYPE_EXECUTION) {
@@ -866,11 +900,26 @@ BCode d_push_node_inputs(SheetNode *node, BuildContext *context,
                 numInputs++;
             }
         }
+
+        i -= step;
+
+        if (order) {
+            inLoop = (i >= end);
+        } else {
+            inLoop = (i <= end);
+        }
     }
 
     // If the positions of the inputs are not correct, make them correct.
     if (!positionsCorrect) {
-        for (int i = node->numSockets - 1; i >= 0; i--) {
+        i = start;
+
+        inLoop = (i >= end);
+        if (order) {
+            inLoop = (i <= end);
+        }
+
+        while (inLoop) {
             SheetSocket *socket = node->sockets[i];
 
             if (socket->isInput && socket->type != TYPE_EXECUTION) {
@@ -887,6 +936,14 @@ BCode d_push_node_inputs(SheetNode *node, BuildContext *context,
 
                     socket->_stackIndex = context->stackTop;
                 }
+            }
+
+            i += step;
+
+            if (order) {
+                inLoop = (i <= end);
+            } else {
+                inLoop = (i >= end);
             }
         }
     }
@@ -940,7 +997,7 @@ BCode d_generate_operator(SheetNode *node, BuildContext *context, DIns opcode,
     // NOTE: If we need to convert inputs to floats, we need to generate all
     // of the inputs, including literals, as we always generate the first
     // input.
-    out = d_push_node_inputs(node, context, !convertFloat, convertFloat);
+    out = d_push_node_inputs(node, context, false, !convertFloat, convertFloat);
     if (!convertFloat && socket->numConnections == 0) {
         subaction = d_push_literal(socket, context, convertFloat);
         d_concat_bytecode(&out, &subaction);
@@ -949,10 +1006,10 @@ BCode d_generate_operator(SheetNode *node, BuildContext *context, DIns opcode,
 
     DIns nonImmediateOpcode = (convertFloat) ? fopcode : opcode;
 
-    size_t i = 1;
+    size_t i = 0;
 
     while (socket->isInput && i < node->numSockets) {
-        socket = node->sockets[i++];
+        socket = node->sockets[++i];
 
         if (socket->isInput) {
             if (socket->type == TYPE_INT && socket->numConnections == 0) {
@@ -966,6 +1023,11 @@ BCode d_generate_operator(SheetNode *node, BuildContext *context, DIns opcode,
                 // use the non-immediate opcode.
                 subaction = d_bytecode_ins(nonImmediateOpcode);
             }
+            d_concat_bytecode(&out, &subaction);
+            d_free_bytecode(&subaction);
+        } else if (i == 1) {
+            // The node only has one input, so apply the opcode to it.
+            subaction = d_bytecode_ins(nonImmediateOpcode);
             d_concat_bytecode(&out, &subaction);
             d_free_bytecode(&subaction);
         }
@@ -1009,7 +1071,7 @@ BCode d_generate_comparator(SheetNode *node, BuildContext *context, DIns opcode,
         }
     }
 
-    BCode out = d_push_node_inputs(node, context, false, isFloat);
+    BCode out = d_push_node_inputs(node, context, false, false, isFloat);
 
     if (isString) {
         // TODO: Add syscall for string comparisons.
@@ -1019,6 +1081,72 @@ BCode d_generate_comparator(SheetNode *node, BuildContext *context, DIns opcode,
         BCode comp = d_bytecode_ins(compOpcode);
         d_concat_bytecode(&out, &comp);
         d_free_bytecode(&comp);
+    }
+
+    return out;
+}
+
+/**
+ * \fn BCode d_generate_call(SheetNode *node, BuildContext *context)
+ * \brief Given a node that calls a function or subroutine, generate the
+ * bytecode to call it.
+ *
+ * \return Bytecode to call the function or subroutine.
+ *
+ * \param node The node to generate the bytecode for.
+ * \param context The context needed to generate the bytecode.
+ */
+BCode d_generate_call(SheetNode *node, BuildContext *context) {
+    VERBOSE(5, "Generating bytecode for call %s...\n", node->name);
+
+    // Get information about the call from the node's definition.
+    size_t numArgs    = 0;
+    size_t numRets    = 0;
+    DIns opcode       = OP_CALLCI;
+    LinkType linkType = LINK_CFUNCTION;
+    void *metaData    = (void *)node->definition.cFunction;
+
+    if (node->definition.type == NAME_FUNCTION) {
+        numArgs  = node->definition.function->numArguments;
+        numRets  = node->definition.function->numReturns;
+        opcode   = OP_CALLI;
+        linkType = LINK_FUNCTION;
+        metaData = (void *)node->definition.function;
+    }
+
+    // Push the arguments in order, such that the first argument gets pushed
+    // first, then the second, etc.
+    BCode out = d_push_node_inputs(node, context, true, false, false);
+
+    // Call the function/subroutine, and link to it later.
+    BCode call = d_bytecode_ins(opcode);
+
+    if (opcode == OP_CALLI) {
+        d_bytecode_set_byte(call, FIMMEDIATE_SIZE + 1, (char)numArgs);
+    }
+
+    // We don't care if there's a duplicate entry of the metadata. It won't
+    // affect how we allocate data in the data section or anything like that.
+    size_t _dummyMeta;
+    bool _dummyBool;
+
+    LinkMeta meta = d_link_new_meta(linkType, node->name, metaData);
+    d_add_link_to_ins(context, &call, 0, meta, &_dummyMeta, &_dummyBool);
+
+    d_concat_bytecode(&out, &call);
+    d_free_bytecode(&call);
+
+    // Assign the stack indicies to the return sockets - the return values
+    // should be at the top of the stack such that the first return value is
+    // at the top.
+    // TODO: Think about if we need to copy the values when they are used...
+    int stackTop = context->stackTop;
+    for (size_t i = 0; i < node->numSockets; i++) {
+        SheetSocket *socket = node->sockets[i];
+
+        if (!(socket->isInput || socket->type == TYPE_EXECUTION)) {
+            socket->_stackIndex = stackTop--;
+        }
     }
 
     return out;
@@ -1181,266 +1309,6 @@ void d_setup_returns(SheetNode *returnNode, BuildContext *context, BCode *addTo,
         d_concat_bytecode(addTo, &codeForRetAtEnd);
         d_free_bytecode(&codeForRetAtEnd);
     }
-}
-*/
-
-/**
- * \fn BCode d_generate_bytecode_for_call(SheetNode *node,
- *                                        BuildContext *context,
- *                                        bool isSubroutine, bool isCFunction)
- * \brief Given a node needs to be "called", generate the bytecode and link
- * info to call that function.
- *
- * \return The malloc'd bytecode generated to call the node.
- *
- * \param node The "unknown" function to call.
- * \param context The context needed to generate the bytecode.
- * \param isSubroutine Info needed to make sure we ignore the execution sockets.
- * \param isCFunction Is the call to a C function?
- */
-/*
-BCode d_generate_bytecode_for_call(SheetNode *node, BuildContext *context,
-                                   bool isSubroutine, bool isCFunction) {
-    VERBOSE(5, "Generating bytecode to call %s...\n", node->name);
-    BCode out    = (BCode){NULL, 0};
-    BCode action = (BCode){NULL, 0};
-
-    // Firstly, generate the bytecode to add the arguments onto the stack.
-    // Remember we want to add them in backwards so we pop them in the right
-    // order.
-    BCode argCode = (BCode){NULL, 0};
-    for (int i = (int)node->numSockets - 1; i >= (int)isSubroutine; i--) {
-        SheetSocket *socket = node->sockets[i];
-
-        if (socket->isInput && (socket->type & TYPE_VAR_ANY) != 0) {
-            // We've got an argument.
-            // Has it got a connection?
-            if (socket->numConnections == 0) {
-                // If not, we're going to have to generate the bytecode for
-                // the literal.
-                action = d_generate_bytecode_for_literal(socket, context, false,
-                                                         false);
-                d_concat_bytecode(&argCode, &action);
-                d_free_bytecode(&action);
-            }
-
-            // One slight problem... the stack is for integers only, so if the
-            // socket holds a float, we need to move it to an integer register.
-            if (socket->type == TYPE_FLOAT && VM_IS_FLOAT_REG(socket->_reg)) {
-                BCode mv = d_convert_between_number_types(socket, context,
-                                                          OP_MVTI, false);
-                d_concat_bytecode(&argCode, &mv);
-                d_free_bytecode(&mv);
-            }
-
-            reg_t argReg = socket->_reg;
-
-            // Now add the argument onto the stack.
-            action = d_malloc_bytecode(d_vm_ins_size(OP_PUSH));
-            d_bytecode_set_byte(action, 0, OP_PUSH);
-            d_bytecode_set_byte(action, 1, (char)argReg);
-
-            d_concat_bytecode(&argCode, &action);
-            d_free_bytecode(&action);
-
-            // And free the register, now that our value is safe and sound
-            // in the stack.
-            d_free_reg(context, argReg);
-        }
-    }
-
-    // Secondly, generate the bytecode to save any values we need to save
-    // onto the stack.
-    // NOTE: With the calling convention, we don't need to save safe registers,
-    // but if there are any leftover temporary ones that haven't been free'd,
-    // then we need to save those ourselves.
-    // NOTE: This code will be executed BEFORE adding the arguments onto the
-    // stack.
-
-    // Before we start, we want to make sure that we pop these values back
-    // into the same register after we are done with the call.
-    // To help do this, we're going to copy the freeReg array now and use it
-    // again later.
-    char usedRegCopy[VM_NUM_REG / 8];
-    memcpy(usedRegCopy, context->usedReg, VM_NUM_REG / 8);
-
-    bool anySaved = false;
-
-    if (!d_is_all_reg_free(context)) {
-        anySaved = true;
-        for (reg_t i = 0; i < VM_NUM_REG; i++) {
-            if (IS_REG_USED(context->usedReg, i) && !IS_REG_SAFE(i)) {
-                reg_t valReg = i;
-
-                // Again, if the register holds a float, we need to move it to
-                // an integer register.
-                if (VM_IS_FLOAT_REG(i)) {
-                    valReg = d_next_general_reg(context, false);
-                    d_free_reg(context, i);
-
-                    // We can't use d_convert_between_number_types here, since
-                    // we don't know anything about the sockets used.
-                    action = d_malloc_bytecode(d_vm_ins_size(OP_MVTI));
-                    d_bytecode_set_byte(action, 0, OP_MVTI);
-                    d_bytecode_set_byte(action, 1, (char)i);
-                    d_bytecode_set_byte(action, 2, (char)valReg);
-
-                    d_concat_bytecode(&out, &action);
-                    d_free_bytecode(&action);
-                }
-
-                // Add the register onto the stack.
-                action = d_malloc_bytecode(d_vm_ins_size(OP_PUSH));
-                d_bytecode_set_byte(action, 0, OP_PUSH);
-                d_bytecode_set_byte(action, 1, (char)valReg);
-
-                d_concat_bytecode(&out, &action);
-                d_free_bytecode(&action);
-
-                d_free_reg(context, valReg);
-            }
-        }
-    }
-
-    // NOW add the bytecode for the arguments onto the output.
-    d_concat_bytecode(&out, &argCode);
-    d_free_bytecode(&argCode);
-
-    // Now generate the call instruction, and setup the link.
-    reg_t adrReg = d_next_general_reg(context, false);
-    d_free_reg(context, adrReg);
-
-    DIns callOp = (isCFunction) ? OP_CALLC : OP_CALL;
-
-    action = d_malloc_bytecode((size_t)d_vm_ins_size(OP_LOADUI) +
-                               d_vm_ins_size(OP_ORI) + d_vm_ins_size(callOp));
-    d_bytecode_set_byte(action, 0, OP_LOADUI);
-    d_bytecode_set_byte(action, 1, (char)adrReg);
-
-    d_bytecode_set_byte(action, d_vm_ins_size(OP_LOADUI), OP_ORI);
-    d_bytecode_set_byte(action, (size_t)d_vm_ins_size(OP_LOADUI) + 1,
-                        (char)adrReg);
-
-    d_bytecode_set_byte(
-        action, (size_t)d_vm_ins_size(OP_LOADUI) + d_vm_ins_size(OP_ORI),
-        callOp);
-    d_bytecode_set_byte(
-        action, (size_t)d_vm_ins_size(OP_LOADUI) + d_vm_ins_size(OP_ORI) + 1,
-        (char)adrReg);
-
-    // We don't care if there's a duplicate entry of the metadata. It won't
-    // affect how we allocate data in the data section or anything like that.
-    size_t _dummyMeta;
-    bool _dummyBool;
-
-    LinkType linkType = (isCFunction) ? LINK_CFUNCTION : LINK_FUNCTION;
-    void *metaData    = (isCFunction) ? (void *)node->definition.cFunction
-                                   : (void *)node->definition.function;
-
-    LinkMeta meta = d_link_new_meta(linkType, node->name, metaData);
-    d_add_link_to_ins(context, &action, 0, meta, &_dummyMeta, &_dummyBool);
-
-    d_concat_bytecode(&out, &action);
-    d_free_bytecode(&action);
-
-    // Now that the function's been called, we need to get the return values
-    // out from the stack.
-    // We don't want to put them in registers that will hold saved values,
-    // however! So we'll temporarily copy back the freeReg array and set the
-    // 'next' values so this doesn't happen.
-    if (anySaved) {
-        memcpy(context->usedReg, usedRegCopy, VM_NUM_REG / 8);
-
-        context->nextReg = NUM_SAFE_GENERAL_REGISTERS;
-        while (IS_REG_USED(context->usedReg, context->nextReg) &&
-               context->nextReg < VM_REG_FLOAT_START - 1) {
-            context->nextReg++;
-        }
-
-        context->nextFloatReg = VM_REG_FLOAT_START + NUM_SAFE_FLOAT_REGISTERS;
-        while (IS_REG_USED(context->usedReg, context->nextFloatReg) &&
-               context->nextFloatReg < VM_NUM_REG - 1) {
-            context->nextFloatReg++;
-        }
-
-        context->nextSafeReg = 0;
-        while (IS_REG_USED(context->usedReg, context->nextSafeReg) &&
-               context->nextSafeReg < VM_REG_FLOAT_START - 1) {
-            context->nextSafeReg++;
-        }
-
-        context->nextSafeFloatReg = VM_REG_FLOAT_START;
-        while (IS_REG_USED(context->usedReg, context->nextSafeFloatReg) &&
-               context->nextSafeFloatReg < VM_NUM_REG - 1) {
-            context->nextSafeFloatReg++;
-        }
-    }
-
-    for (size_t i = isSubroutine; i < node->numSockets; i++) {
-        SheetSocket *socket = node->sockets[i];
-
-        if (!socket->isInput && (socket->type & TYPE_VAR_ANY) != 0) {
-            // We've got a a return value.
-            reg_t retReg = d_next_general_reg(context, false);
-            socket->_reg = retReg;
-
-            // Now get the return value from the stack.
-            action = d_malloc_bytecode(d_vm_ins_size(OP_POP));
-            d_bytecode_set_byte(action, 0, OP_POP);
-            d_bytecode_set_byte(action, 1, (char)retReg);
-
-            d_concat_bytecode(&out, &action);
-            d_free_bytecode(&action);
-
-            // Because the stacks is for integers only, if the socket is a
-            // float socket, we need to move the integer value into a float
-            // register.
-            if (socket->type == TYPE_FLOAT) {
-                BCode mv = d_convert_between_number_types(socket, context,
-                                                          OP_MVTF, false);
-                d_concat_bytecode(&out, &mv);
-                d_free_bytecode(&mv);
-            }
-        }
-    }
-
-    // And now we've gotten the return values, any values we saved need to be
-    // restored to their correct registers.
-    if (anySaved) {
-        for (int i = VM_NUM_REG - 1; i >= 0; i--) {
-            if (IS_REG_USED(usedRegCopy, i) && !IS_REG_SAFE(i)) {
-                // Pop the value out of the stack.
-                action = d_malloc_bytecode(d_vm_ins_size(OP_POP));
-                d_bytecode_set_byte(action, 0, OP_POP);
-                d_bytecode_set_byte(action, 1, (char)i);
-
-                d_concat_bytecode(&out, &action);
-                d_free_bytecode(&action);
-
-                SET_REG_USED(context->usedReg, i);
-
-                // If the stack value was originally a float, we need to first
-                // pop it into a integer register, then move it to the correct
-                // float register.
-                if (VM_IS_FLOAT_REG(i)) {
-                    reg_t valReg = d_next_float_reg(context, false);
-                    d_free_reg(context, (reg_t)i);
-
-                    // We can't use d_convert_between_number_types here, since
-                    // we don't know anything about the sockets used.
-                    action = d_malloc_bytecode(d_vm_ins_size(OP_MVTF));
-                    d_bytecode_set_byte(action, 0, OP_MVTI);
-                    d_bytecode_set_byte(action, 1, (char)valReg);
-                    d_bytecode_set_byte(action, 2, (char)i);
-
-                    d_concat_bytecode(&out, &action);
-                    d_free_bytecode(&action);
-                }
-            }
-        }
-    }
-
-    return out;
 }
 */
 

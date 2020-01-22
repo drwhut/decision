@@ -351,20 +351,23 @@ DECISION_API BCode d_push_input(struct _sheetSocket *socket,
 
 /**
  * \fn BCode d_push_node_inputs(SheetNode *node, BuildContext *context,
+ *                              bool order, bool ignoreLiterals,
  *                              bool forceFloat)
  * \brief Given a node, generate bytecode to push the values of the
- * inputs to the top of the stack, such that the first input is at the top, the
- * second input is 1 below the top, etc.
+ * inputs to the top of the stack.
  *
  * \return Bytecode to push all input's values onto the stack.
  *
  * \param node The node whose input sockets to generate bytecode for.
  * \param context The context needed to generate the bytecode.
+ * \param order If true, the inputs are pushed in order, such that the last
+ * input is at the top. If false, the inputs are pushed in reverse order, such
+ * that the first input is at the top.
  * \param ignoreLiterals Do not generate bytecode for non-float literal inputs.
  * \param forceFloat Force integers to be converted to floats.
  */
 DECISION_API BCode d_push_node_inputs(struct _sheetNode *node,
-                                      BuildContext *context,
+                                      BuildContext *context, bool order,
                                       bool ignoreLiterals, bool forceFloat);
 
 /**
@@ -406,6 +409,19 @@ DECISION_API BCode d_generate_comparator(struct _sheetNode *node,
                                          DIns fopcode, bool notAfter);
 
 /**
+ * \fn BCode d_generate_call(SheetNode *node, BuildContext *context)
+ * \brief Given a node that calls a function or subroutine, generate the
+ * bytecode to call it.
+ *
+ * \return Bytecode to call the function or subroutine.
+ *
+ * \param node The node to generate the bytecode for.
+ * \param context The context needed to generate the bytecode.
+ */
+DECISION_API BCode d_generate_call(struct _sheetNode *node,
+                                   BuildContext *context);
+
+/**
  * \fn void d_setup_arguments(SheetNode *defineNode, BuildContext *context,
  *                            BCode *addTo, bool isSubroutine)
  * \brief Given a Define node, generate bytecode to pop the arguments from the
@@ -444,27 +460,6 @@ DECISION_API void d_setup_arguments(struct _sheetNode *defineNode,
 DECISION_API void d_setup_returns(struct _sheetNode *returnNode,
                                   BuildContext *context, BCode *addTo,
                                   bool isSubroutine, bool retAtEnd);
-*/
-
-/**
- * \fn BCode d_generate_bytecode_for_call(SheetNode *node,
- *                                        BuildContext *context,
- *                                        bool isSubroutine, bool isCFunction)
- * \brief Given a node needs to be "called", generate the bytecode and link
- * info to call that function.
- *
- * \return The malloc'd bytecode generated to call the node.
- *
- * \param node The "unknown" function to call.
- * \param context The context needed to generate the bytecode.
- * \param isSubroutine Info needed to make sure we ignore the execution sockets.
- * \param isCFunction Is the call to a C function?
- */
-/*
-DECISION_API BCode d_generate_bytecode_for_call(struct _sheetNode *node,
-                                                BuildContext *context,
-                                                bool isSubroutine,
-                                                bool isCFunction);
 */
 
 /**
