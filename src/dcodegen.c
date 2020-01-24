@@ -800,6 +800,8 @@ BCode d_push_input(SheetSocket *socket, BuildContext *context,
 
                 connSocket->_stackIndex = context->stackTop;
             }
+
+            socket->_stackIndex = connSocket->_stackIndex;
         }
     }
 
@@ -1232,24 +1234,20 @@ BCode d_generate_return(SheetNode *returnNode, BuildContext *context) {
 }
 
 /**
- * \fn BCode d_generate_bytecode_for_nonexecution_node(
- * SheetNode *node, BuildContext *context, bool inLoop)
- * \brief Given a node, generate the bytecode to get the correct output.
+ * \fn BCode d_generate_nonexecution_node(SheetNode *node,
+ *                                        BuildContext *context)
+ * \brief Given a non-execution node, generate the bytecode to get the output.
  *
- * \return The malloc'd bytecode it generated.
+ * \return Bytecode to run the nonexecution node's function.
  *
- * \param node The non-execution node to generate the bytecode for.
+ * \param node The non-execution node.
  * \param context The context needed to generate the bytecode.
- * \param inLoop Is this node being run from inside a loop?
  */
-/*
-BCode d_generate_bytecode_for_nonexecution_node(SheetNode *node,
-                                                BuildContext *context,
-                                                bool inLoop) {
+BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
     VERBOSE(5, "- Generating bytecode for non-execution node %s...\n",
             node->name);
 
-    BCode out = (BCode){NULL, 0};
+    BCode out = {NULL, 0};
 
     // Firstly, we need to check if the node is a particular function -
     // spoiler alert, one of them is not like the others...
@@ -1260,11 +1258,11 @@ BCode d_generate_bytecode_for_nonexecution_node(SheetNode *node,
         // I was a dumbass. I just thought, "oh, I should probably add a
         // Ternary node, and it doesn't seem too bad, it's just one JRCON,
         // right?". WRONG. SO WRONG. Turns out for LITERALLY ANY OTHER
-        // non-execution node you can just call d_generate_bytecode_for_inputs,
-        // but NOOO here you need to get seperate bytecode for each of the
-        // inputs since you don't want to run the bytecode for ALL inputs only
-        // to just use one, do you??? Nooo, no one wants that...
-        // P.S. This is why d_generate_bytecode_for_input exists.
+        // non-execution node you can just call d_push_node_inputs, but NOOO
+        // here you need to get seperate bytecode for each of the inputs since
+        // you don't want to run the bytecode for ALL inputs only to just use
+        // one, do you??? Nooo, no one wants that...
+        // P.S. This is why d_push_input exists.
         //     - drwhut
 
         // Firstly, generate the bytecode for the boolean input.
@@ -1276,29 +1274,17 @@ BCode d_generate_bytecode_for_nonexecution_node(SheetNode *node,
         bool boolIsLiteral    = (boolSocket->numConnections == 0);
         bool boolLiteralValue = boolSocket->defaultValue.booleanValue;
 
-        BCode boolCode =
-            d_generate_bytecode_for_input(boolSocket, context, inLoop, false);
+        BCode boolCode = d_push_input(boolSocket, context, false);
 
         d_concat_bytecode(&out, &boolCode);
         d_free_bytecode(&boolCode);
-
-        reg_t regBool = boolSocket->_reg;
-
-        // Once we have used the bool value to determine which code we run,
-        // we don't need it anymore.
-        if (!boolIsLiteral) {
-            d_free_reg(context, regBool);
-        }
 
         // Next, get the bytecode for the true input.
         SheetSocket *trueSocket = node->sockets[1];
         BCode trueCode          = (BCode){NULL, 0};
 
         if (!boolIsLiteral || boolLiteralValue) {
-            trueCode = d_generate_bytecode_for_input(trueSocket, context,
-                                                     inLoop, true);
-
-            d_free_reg(context, trueSocket->_reg);
+            trueCode = d_push_input(trueSocket, context, false);
         }
 
         // Finally, get the bytecode for the false input.
@@ -1306,10 +1292,7 @@ BCode d_generate_bytecode_for_nonexecution_node(SheetNode *node,
         BCode falseCode          = (BCode){NULL, 0};
 
         if (!boolIsLiteral || !boolLiteralValue) {
-            falseCode = d_generate_bytecode_for_input(falseSocket, context,
-                                                      inLoop, true);
-
-            d_free_reg(context, falseSocket->_reg);
+            falseCode = d_push_input(falseSocket, context, false);
         }
 
         SheetSocket *outputSocket = node->sockets[3];
@@ -1322,10 +1305,10 @@ BCode d_generate_bytecode_for_nonexecution_node(SheetNode *node,
             d_concat_bytecode(&out, append);
             d_free_bytecode(append);
 
-            // Setting the output socket register.
+            // Setting the output socket stack index.
             SheetSocket *inputSocket =
                 (boolLiteralValue) ? trueSocket : falseSocket;
-            outputSocket->_reg = inputSocket->_reg;
+            outputSocket->_stackIndex = inputSocket->_stackIndex;
 
         } else {
 
@@ -1391,10 +1374,6 @@ BCode d_generate_bytecode_for_nonexecution_node(SheetNode *node,
         SET_REG_USED(context->usedReg, outputSocket->_reg);
 
     } else {
-        // Firstly, we need to generate the bytecode for our inputs.
-        out = d_generate_bytecode_for_inputs(node, context, inLoop, false);
-
-        // Secondly, we do stuff with those inputs.
         BCode action = (BCode){NULL, 0};
 
         if ((int)coreFunc >= 0) {
@@ -1402,41 +1381,27 @@ BCode d_generate_bytecode_for_nonexecution_node(SheetNode *node,
             // Remember that it's only non-execution functions we care about.
             switch (coreFunc) {
                 case CORE_ADD:;
-                    action = d_generate_bytecode_for_operator(
-                        node, context, OP_ADD, OP_ADDF, OP_ADDI, false, true,
-                        false);
+                    action = d_generate_operator(node, context, OP_ADD, OP_ADDF,
+                                                 OP_ADDFI, false);
                     break;
                 case CORE_AND:;
-                    action = d_generate_bytecode_for_operator(
-                        node, context, OP_AND, 0, OP_ANDI, false, false, false);
+                    action = d_generate_operator(node, context, OP_AND, 0,
+                                                 OP_ANDFI, false);
                     break;
                 case CORE_DIV:
                 case CORE_DIVIDE:;
-                    action = d_generate_bytecode_for_operator(
-                        node, context, OP_DIV, OP_DIVF, OP_DIVI, false, false,
-                        coreFunc == CORE_DIVIDE);
-
-                    SheetSocket *divOutput = node->sockets[2];
-                    if (coreFunc == CORE_DIV &&
-                        VM_IS_FLOAT_REG(divOutput->_reg)) {
-                        // If the answer is a float, we need to turn it back
-                        // into an integer.
-                        // TODO: Does this need to go into a safe register?
-                        BCode cvti = d_convert_between_number_types(
-                            divOutput, context, OP_CVTI, false);
-
-                        d_concat_bytecode(&action, &cvti);
-                        d_free_bytecode(&cvti);
-                    }
+                    // TODO: Verify if it is Div, integers are going in only!
+                    action =
+                        d_generate_operator(node, context, OP_DIV, OP_DIVF,
+                                            OP_DIVFI, coreFunc == CORE_DIVIDE);
                     break;
                 case CORE_EQUAL:;
-                    action = d_generate_bytecode_for_comparator(
-                        node, context, OP_CEQ, OP_CEQF, OP_CEQS, false);
+                    action = d_generate_comparator(node, context, OP_CEQ,
+                                                   OP_CEQF, false);
                     break;
                 case CORE_MULTIPLY:;
-                    action = d_generate_bytecode_for_operator(
-                        node, context, OP_MUL, OP_MULF, OP_MULI, false, true,
-                        false);
+                    action = d_generate_operator(node, context, OP_MUL, OP_MULF,
+                                                 OP_MULFI, false);
                     break;
                 case CORE_LENGTH:;
                     // For the length of a string, we're essentially going to
@@ -1542,41 +1507,40 @@ BCode d_generate_bytecode_for_nonexecution_node(SheetNode *node,
 
                     break;
                 case CORE_LESS_THAN:;
-                    action = d_generate_bytecode_for_comparator(
-                        node, context, OP_CLT, OP_CLTF, OP_CLTS, false);
+                    action = d_generate_comparator(node, context, OP_CLT,
+                                                   OP_CLTF, false);
                     break;
                 case CORE_LESS_THAN_OR_EQUAL:;
-                    action = d_generate_bytecode_for_comparator(
-                        node, context, OP_CLEQ, OP_CLEQF, OP_CLEQS, false);
+                    action = d_generate_comparator(node, context, OP_CLEQ,
+                                                   OP_CLEQF, false);
                     break;
                 case CORE_MOD:;
-                    action = d_generate_bytecode_for_operator(
-                        node, context, OP_MOD, 0, OP_MODI, false, false, false);
+                    action = d_generate_operator(node, context, OP_MOD, 0,
+                                                 OP_MODFI, false);
                     break;
                 case CORE_MORE_THAN:;
-                    action = d_generate_bytecode_for_comparator(
-                        node, context, OP_CMT, OP_CMTF, OP_CMTS, false);
+                    action = d_generate_comparator(node, context, OP_CMT,
+                                                   OP_CMTF, false);
                     break;
                 case CORE_MORE_THAN_OR_EQUAL:;
-                    action = d_generate_bytecode_for_comparator(
-                        node, context, OP_CMEQ, OP_CMEQF, OP_CMEQS, false);
+                    action = d_generate_comparator(node, context, OP_CMEQ,
+                                                   OP_CMEQF, false);
                     break;
                 case CORE_NOT:;
-                    action = d_generate_bytecode_for_operator(
-                        node, context, OP_NOT, 0, 0, true, false, false);
+                    action =
+                        d_generate_operator(node, context, OP_NOT, 0, 0, false);
                     break;
                 case CORE_NOT_EQUAL:;
-                    action = d_generate_bytecode_for_comparator(
-                        node, context, OP_CEQ, OP_CEQF, OP_CEQS, true);
+                    action = d_generate_comparator(node, context, OP_CEQ,
+                                                   OP_CEQF, true);
                     break;
                 case CORE_OR:;
-                    action = d_generate_bytecode_for_operator(
-                        node, context, OP_OR, 0, OP_ORI, false, false, false);
+                    action = d_generate_operator(node, context, OP_OR, 0,
+                                                 OP_ORFI, false);
                     break;
                 case CORE_SUBTRACT:;
-                    action = d_generate_bytecode_for_operator(
-                        node, context, OP_SUB, OP_SUBF, OP_SUBI, false, false,
-                        false);
+                    action = d_generate_operator(node, context, OP_SUB, OP_SUBF,
+                                                 OP_SUBFI, false);
                     break;
                 case CORE_TERNARY:;
                     // Ternary is a special snowflake when it comes to
@@ -1584,8 +1548,8 @@ BCode d_generate_bytecode_for_nonexecution_node(SheetNode *node,
                     // See above.
                     break;
                 case CORE_XOR:;
-                    action = d_generate_bytecode_for_operator(
-                        node, context, OP_XOR, 0, OP_XORI, false, false, false);
+                    action = d_generate_operator(node, context, OP_XOR, 0,
+                                                 OP_XORFI, false);
                     break;
                 default:
                     break;
@@ -1618,7 +1582,6 @@ BCode d_generate_bytecode_for_nonexecution_node(SheetNode *node,
 
     return out;
 }
-*/
 
 /**
  * \fn BCode d_generate_bytecode_for_execution_node(

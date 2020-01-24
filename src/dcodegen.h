@@ -447,20 +447,16 @@ DECISION_API BCode d_push_argument(struct _sheetNode *socket,
 DECISION_API BCode d_generate_return(struct _sheetNode *returnNode, BuildContext *context);
 
 /**
- * \fn BCode d_generate_bytecode_for_nonexecution_node(
- * SheetNode *node, BuildContext *context, bool inLoop)
- * \brief Given a node, generate the bytecode to get the correct output.
- *
- * \return The malloc'd bytecode it generated.
- *
- * \param node The non-execution node to generate the bytecode for.
+ * \fn BCode d_generate_nonexecution_node(SheetNode *node,
+ *                                        BuildContext *context)
+ * \brief Given a non-execution node, generate the bytecode to get the output.
+ * 
+ * \return Bytecode to run the nonexecution node's function.
+ * 
+ * \param node The non-execution node.
  * \param context The context needed to generate the bytecode.
- * \param inLoop Is this node being run from inside a loop?
  */
-/*
-DECISION_API BCode d_generate_bytecode_for_nonexecution_node(
-    struct _sheetNode *node, BuildContext *context, bool inLoop);
-*/
+DECISION_API BCode d_generate_nonexecution_node(struct _sheetNode *node, BuildContext *context);
 
 /**
  * \fn BCode d_generate_bytecode_for_execution_node(
