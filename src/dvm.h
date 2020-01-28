@@ -112,24 +112,28 @@ typedef enum _dIns {
     OP_ORBI    = 67, ///< push(pop() | I(1))
     OP_ORHI    = 68, ///< push(pop() | I(|M|/2))
     OP_ORFI    = 69, ///< push(pop() | I(|M|))
-    OP_POPB    = 70, ///< pop() I(1) times
-    OP_POPH    = 71, ///< pop() I(|M|/2) times
-    OP_POPF    = 72, ///< pop() I(|M|) times
-    OP_PUSHB   = 73, ///< push(I(1))
-    OP_PUSHH   = 74, ///< push(I(|M|/2))
-    OP_PUSHF   = 75, ///< push(I(|M|))
-    OP_SETADR  = 76, ///< *((dint *)pop()) = pop()
-    OP_SETADRB = 77, ///< *((uint8_t *)pop()) = pop()
-    OP_SUB     = 78, ///< push(pop() - pop())
-    OP_SUBF    = 79, ///< pushFloat(popFloat() - popFloat())
-    OP_SUBBI   = 80, ///< push(pop() - I(1))
-    OP_SUBHI   = 81, ///< push(pop() - I(|M|/2))
-    OP_SUBFI   = 82, ///< push(pop() - I(|M|))
-    OP_SYSCALL = 83, ///< push(syscall(I(1), pop(), pop(), pop()))
-    OP_XOR     = 84, ///< push(pop() ^ pop())
-    OP_XORBI   = 85, ///< push(pop() ^ I(1))
-    OP_XORHI   = 86, ///< push(pop() ^ I(|M|/2))
-    OP_XORFI   = 87, ///< push(pop() ^ I(|M|))
+    OP_POP     = 70, ///< pop() once
+    OP_POPB    = 71, ///< pop() I(1) times
+    OP_POPH    = 72, ///< pop() I(|M|/2) times
+    OP_POPF    = 73, ///< pop() I(|M|) times
+    OP_PUSHB   = 74, ///< push(I(1))
+    OP_PUSHH   = 75, ///< push(I(|M|/2))
+    OP_PUSHF   = 76, ///< push(I(|M|))
+    OP_PUSHNB  = 77, ///< push(0) I(1) times
+    OP_PUSHNH  = 78, ///< push(0) I(|M|/2) times
+    OP_PUSHNF  = 79, ///< push(0) I(|M|) times
+    OP_SETADR  = 81, ///< *((dint *)pop()) = pop()
+    OP_SETADRB = 82, ///< *((uint8_t *)pop()) = pop()
+    OP_SUB     = 83, ///< push(pop() - pop())
+    OP_SUBF    = 84, ///< pushFloat(popFloat() - popFloat())
+    OP_SUBBI   = 85, ///< push(pop() - I(1))
+    OP_SUBHI   = 86, ///< push(pop() - I(|M|/2))
+    OP_SUBFI   = 87, ///< push(pop() - I(|M|))
+    OP_SYSCALL = 88, ///< push(syscall(I(1), pop(), pop(), pop()))
+    OP_XOR     = 89, ///< push(pop() ^ pop())
+    OP_XORBI   = 90, ///< push(pop() ^ I(1))
+    OP_XORHI   = 91, ///< push(pop() ^ I(|M|/2))
+    OP_XORFI   = 92, ///< push(pop() ^ I(|M|))
 } DIns;
 
 /**

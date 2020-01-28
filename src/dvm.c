@@ -97,12 +97,16 @@ static const unsigned char VM_INS_SIZE[NUM_OPCODES] = {
     1 + BIMMEDIATE_SIZE,                   // OP_ORBI
     1 + HIMMEDIATE_SIZE,                   // OP_ORHI
     1 + FIMMEDIATE_SIZE,                   // OP_ORFI
+    1,                                     // OP_POP
     1 + BIMMEDIATE_SIZE,                   // OP_POPB
     1 + HIMMEDIATE_SIZE,                   // OP_POPH
     1 + FIMMEDIATE_SIZE,                   // OP_POPF
     1 + BIMMEDIATE_SIZE,                   // OP_PUSHB
     1 + HIMMEDIATE_SIZE,                   // OP_PUSHH
     1 + FIMMEDIATE_SIZE,                   // OP_PUSHF
+    1 + BIMMEDIATE_SIZE,                   // OP_PUSHNB
+    1 + HIMMEDIATE_SIZE,                   // OP_PUSHNH
+    1 + FIMMEDIATE_SIZE,                   // OP_PUSHNF
     1,                                     // OP_SETADR
     1,                                     // OP_SETADRB
     1,                                     // OP_SUB
@@ -1278,6 +1282,10 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             OP_1_1_I(|, GET_FIMMEDIATE)
             break;
 
+        case OP_POP:;
+            d_vm_popn(vm, 1);
+            break;
+
         case OP_POPB:;
             d_vm_popn(vm, GET_BIMMEDIATE(1));
             break;
@@ -1300,6 +1308,18 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
 
         case OP_PUSHF:;
             d_vm_push(vm, GET_FIMMEDIATE(1));
+            break;
+
+        case OP_PUSHNB:;
+            d_vm_pushn(vm, GET_BIMMEDIATE(1));
+            break;
+
+        case OP_PUSHNH:;
+            d_vm_pushn(vm, GET_HIMMEDIATE(1));
+            break;
+
+        case OP_PUSHNF:;
+            d_vm_pushn(vm, GET_FIMMEDIATE(1));
             break;
 
         case OP_SETADR:;
