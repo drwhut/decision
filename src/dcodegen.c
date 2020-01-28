@@ -992,6 +992,8 @@ BCode d_generate_operator(SheetNode *node, BuildContext *context, DIns opcode,
         }
     }
 
+    int initStackTop = context->stackTop;
+
     SheetSocket *socket = node->sockets[0];
 
     // Generate the bytecode for the inputs without literals - but we want to
@@ -1027,11 +1029,17 @@ BCode d_generate_operator(SheetNode *node, BuildContext *context, DIns opcode,
             }
             d_concat_bytecode(&out, &subaction);
             d_free_bytecode(&subaction);
-        } else if (i == 1) {
-            // The node only has one input, so apply the opcode to it.
-            subaction = d_bytecode_ins(nonImmediateOpcode);
-            d_concat_bytecode(&out, &subaction);
-            d_free_bytecode(&subaction);
+        } else {
+            if (i == 1) {
+                // The node only has one input, so apply the opcode to it.
+                subaction = d_bytecode_ins(nonImmediateOpcode);
+                d_concat_bytecode(&out, &subaction);
+                d_free_bytecode(&subaction);
+            }
+
+            // Set the socket's stack index.
+            context->stackTop   = initStackTop + 1;
+            socket->_stackIndex = context->stackTop;
         }
     }
 
@@ -1084,6 +1092,9 @@ BCode d_generate_comparator(SheetNode *node, BuildContext *context, DIns opcode,
         d_concat_bytecode(&out, &comp);
         d_free_bytecode(&comp);
     }
+
+    SheetSocket *outputSocket = node->sockets[2];
+    outputSocket->_stackIndex = --context->stackTop;
 
     return out;
 }
@@ -1279,21 +1290,69 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
         d_concat_bytecode(&out, &boolCode);
         d_free_bytecode(&boolCode);
 
+        // The problem with this node is that either the true bytecode or false
+        // bytecode will get run, which means the top of the stack can be in
+        // different positions by the end of the node's bytecode.
+        // This means if one of the true or false bytecodes has a lesser stack
+        // top than the other, we need to add pushes such that both bytecodes
+        // end with the same stack top.
+        int stackTopBefore = context->stackTop;
+
         // Next, get the bytecode for the true input.
         SheetSocket *trueSocket = node->sockets[1];
-        BCode trueCode          = (BCode){NULL, 0};
+        BCode trueCode          = {NULL, 0};
 
         if (!boolIsLiteral || boolLiteralValue) {
             trueCode = d_push_input(trueSocket, context, false);
         }
 
+        int stackTopTrue = context->stackTop;
+
+        // Reset the stack top for the false bytecode.
+        context->stackTop = stackTopBefore;
+
         // Finally, get the bytecode for the false input.
         SheetSocket *falseSocket = node->sockets[2];
-        BCode falseCode          = (BCode){NULL, 0};
+        BCode falseCode          = {NULL, 0};
 
         if (!boolIsLiteral || !boolLiteralValue) {
             falseCode = d_push_input(falseSocket, context, false);
         }
+
+        int stackTopFalse = context->stackTop;
+
+        // Get what the final stack top will be, and get the other bytecode to
+        // push as many times as needed to make up the difference.
+        int finalStackTop = stackTopFalse;
+        BCode pushn       = {NULL, 0};
+
+        if (stackTopTrue > stackTopFalse) {
+            finalStackTop = stackTopTrue;
+
+            fimmediate_t diff = stackTopTrue - stackTopFalse;
+
+            // Prepend the PUSHNF instruction.
+            pushn = d_bytecode_ins(OP_PUSHNF);
+            d_bytecode_set_fimmediate(pushn, 1, diff);
+            d_concat_bytecode(&pushn, &falseCode);
+            d_free_bytecode(&falseCode);
+
+            falseCode = pushn;
+        } else if (stackTopTrue < stackTopFalse) {
+            finalStackTop = stackTopFalse;
+
+            fimmediate_t diff = stackTopFalse - stackTopTrue;
+
+            // Prepend the PUSHNF instruction.
+            pushn = d_bytecode_ins(OP_PUSHNF);
+            d_bytecode_set_fimmediate(pushn, 1, diff);
+            d_concat_bytecode(&pushn, &trueCode);
+            d_free_bytecode(&trueCode);
+
+            trueCode = pushn;
+        }
+
+        context->stackTop = finalStackTop;
 
         SheetSocket *outputSocket = node->sockets[3];
 
@@ -1316,45 +1375,21 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
             // true AND the false inputs, and only run the correct one
             // depending on the value of the boolean input.
 
-            // Have the output register be the true input register. If the
-            // false input is the used input, then we need to make sure the
-            // false code outputs to the same register.
-            outputSocket->_reg = trueSocket->_reg;
-
-            if (falseSocket->_reg != outputSocket->_reg) {
-                DIns moveOp =
-                    (outputSocket->type == TYPE_FLOAT) ? OP_LOADF : OP_LOAD;
-                BCode moveReg = d_malloc_bytecode(d_vm_ins_size(moveOp));
-
-                d_bytecode_set_byte(moveReg, 0, moveOp);
-                d_bytecode_set_byte(moveReg, 1, (char)outputSocket->_reg);
-                d_bytecode_set_byte(moveReg, 2, (char)falseSocket->_reg);
-
-                d_concat_bytecode(&falseCode, &moveReg);
-                d_free_bytecode(&moveReg);
-            }
-
-            // At the end of the false code, we need to add a JR to jump over
+            // At the end of the false code, we need to add a JRFI to jump over
             // the true code.
-            BCode jumpOverTrue = d_malloc_bytecode(d_vm_ins_size(OP_JR));
-            d_bytecode_set_byte(jumpOverTrue, 0, OP_JR);
-
-            dint jmpAmt = d_vm_ins_size(OP_JR) + trueCode.size;
-            d_bytecode_set_immediate(jumpOverTrue, 1,
-                                     (jmpAmt & IMMEDIATE_MASK));
-
+            fimmediate_t jmpAmt = d_vm_ins_size(OP_JRFI) + trueCode.size;
+            BCode jumpOverTrue  = d_bytecode_ins(OP_JRFI);
+            d_bytecode_set_fimmediate(jumpOverTrue, 1, jmpAmt);
             d_concat_bytecode(&falseCode, &jumpOverTrue);
             d_free_bytecode(&jumpOverTrue);
 
             // After we have evaluated the boolean input, we need to add a
-            // JRCON instruction to jump to the true code if the boolean is
+            // JRCONFI instruction to jump to the true code if the boolean is
             // true, and run the false code otherwise.
-            BCode jumpToCode = d_malloc_bytecode(d_vm_ins_size(OP_JRCON));
-            d_bytecode_set_byte(jumpToCode, 0, OP_JRCON);
-            d_bytecode_set_byte(jumpToCode, 1, (char)regBool);
-
             jmpAmt = d_vm_ins_size(OP_JRCON) + falseCode.size;
-            d_bytecode_set_immediate(jumpToCode, 2, (jmpAmt & IMMEDIATE_MASK));
+
+            BCode jumpToCode = d_bytecode_ins(OP_JRCONFI);
+            d_bytecode_set_immediate(jumpToCode, 1, jmpAmt);
 
             d_concat_bytecode(&out, &jumpToCode);
             d_free_bytecode(&jumpToCode);
@@ -1366,13 +1401,6 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
             d_concat_bytecode(&out, &trueCode);
             d_free_bytecode(&trueCode);
         }
-
-        // Since the output register makes use of one of the input registers,
-        // both of which were free'd (since the bytecodes were independent),
-        // we should set the register to be used. We don't need to worry about
-        // the max used array, since the register WAS used.
-        SET_REG_USED(context->usedReg, outputSocket->_reg);
-
     } else {
         BCode action = (BCode){NULL, 0};
 
@@ -1408,82 +1436,60 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
                     // do in Decision bytecode what strlen() does, which is
                     // loop through the string until we find the terminating
                     // NULL, and return how many characters there were.
+                    action =
+                        d_push_node_inputs(node, context, false, false, false);
 
-                    // Firstly, copy the string pointer. This is the pointer
-                    // we'll be using to check the characters.
-                    reg_t ptrReg = d_next_general_reg(context, false);
+                    // Before we start the loop, we want to create a copy of
+                    // the string pointer, which we will increment as we check
+                    // the characters of the string.
+                    BCode cpyPtr = d_bytecode_ins(OP_GETFI);
+                    d_bytecode_set_fimmediate(cpyPtr, 1, 0);
+                    d_concat_bytecode(&action, &cpyPtr);
+                    d_free_bytecode(&cpyPtr);
 
-                    SheetSocket *inputSock = node->sockets[0];
+                    // For the bytecode of the loop, the first thing we need to
+                    // do is push a copy of the temporary pointer, since it will
+                    // get poped by DEREFB.
+                    BCode loop = d_bytecode_ins(OP_GETFI);
+                    d_bytecode_set_fimmediate(loop, 1, 0);
 
-                    d_setup_input(inputSock, context, false, false, &action);
+                    // Secondly, get the character the pointer points to. If
+                    // it is 0, we exit the loop.
+                    BCode getChar = d_bytecode_ins(OP_DEREFB);
+                    d_concat_bytecode(&loop, &getChar);
+                    d_free_bytecode(&getChar);
 
-                    BCode loadPtr = d_malloc_bytecode(d_vm_ins_size(OP_LOAD));
-                    d_bytecode_set_byte(loadPtr, 0, OP_LOAD);
-                    d_bytecode_set_byte(loadPtr, 1, (char)ptrReg);
-                    d_bytecode_set_byte(loadPtr, 2, (char)inputSock->_reg);
+                    BCode pushZero = d_bytecode_ins(OP_PUSHF);
+                    d_bytecode_set_fimmediate(pushZero, 1, 0);
+                    d_concat_bytecode(&loop, &pushZero);
+                    d_free_bytecode(&pushZero);
 
-                    d_concat_bytecode(&action, &loadPtr);
-                    d_free_bytecode(&loadPtr);
+                    BCode equalsZero = d_bytecode_ins(OP_CEQ);
+                    d_concat_bytecode(&loop, &equalsZero);
+                    d_free_bytecode(&equalsZero);
 
-                    // Secondly, we make the loop bytecode. Here we get the
-                    // character the pointer points to, check if it is 0, if
-                    // it is, we exit the loop.
-                    reg_t charReg = d_next_general_reg(context, false);
+                    fimmediate_t jmpToAfterLoop = d_vm_ins_size(OP_JRCONFI) +
+                                                  d_vm_ins_size(OP_ADDFI) +
+                                                  d_vm_ins_size(OP_JRFI);
 
-                    BCode loop = d_malloc_bytecode(d_vm_ins_size(OP_LOADADRB));
-                    d_bytecode_set_byte(loop, 0, OP_LOADADRB);
-                    d_bytecode_set_byte(loop, 1, (char)charReg);
-                    d_bytecode_set_byte(loop, 2, (char)ptrReg);
+                    BCode jmpIfZero = d_bytecode_ins(OP_JRCONFI);
+                    d_bytecode_set_fimmediate(jmpIfZero, 1, jmpToAfterLoop);
+                    d_concat_bytecode(&loop, &jmpIfZero);
+                    d_free_bytecode(&jmpIfZero);
 
-                    reg_t cmpReg = d_next_general_reg(context, false);
-                    d_free_reg(context, cmpReg);
-                    d_free_reg(context, charReg);
+                    // At this point, the temporary string pointer should be
+                    // the item at the top of the stack.
+                    BCode incPtr = d_bytecode_ins(OP_ADDFI);
+                    d_bytecode_set_fimmediate(incPtr, 1, 1);
+                    d_concat_bytecode(&loop, &incPtr);
+                    d_free_bytecode(&incPtr);
 
-                    BCode loopAdd = d_malloc_bytecode(d_vm_ins_size(OP_LOADI));
-                    d_bytecode_set_byte(loopAdd, 0, OP_LOADI);
-                    d_bytecode_set_byte(loopAdd, 1, (char)cmpReg);
-                    d_bytecode_set_immediate(loopAdd, 2, 0);
+                    fimmediate_t jmpToStart = -(loop.size);
 
-                    d_concat_bytecode(&loop, &loopAdd);
-                    d_free_bytecode(&loopAdd);
-
-                    loopAdd = d_malloc_bytecode(d_vm_ins_size(OP_CEQ));
-                    d_bytecode_set_byte(loopAdd, 0, OP_CEQ);
-                    d_bytecode_set_byte(loopAdd, 1, (char)cmpReg);
-                    d_bytecode_set_byte(loopAdd, 2, (char)charReg);
-                    d_bytecode_set_byte(loopAdd, 3, (char)cmpReg);
-
-                    d_concat_bytecode(&loop, &loopAdd);
-                    d_free_bytecode(&loopAdd);
-
-                    immediate_t jmpToAfterLoop = d_vm_ins_size(OP_JRCON) +
-                                                 d_vm_ins_size(OP_ADDI) +
-                                                 d_vm_ins_size(OP_JR);
-
-                    loopAdd = d_malloc_bytecode(d_vm_ins_size(OP_JRCON));
-                    d_bytecode_set_byte(loopAdd, 0, OP_JRCON);
-                    d_bytecode_set_byte(loopAdd, 1, (char)cmpReg);
-                    d_bytecode_set_immediate(loopAdd, 2, jmpToAfterLoop);
-
-                    d_concat_bytecode(&loop, &loopAdd);
-                    d_free_bytecode(&loopAdd);
-
-                    loopAdd = d_malloc_bytecode(d_vm_ins_size(OP_ADDI));
-                    d_bytecode_set_byte(loopAdd, 0, OP_ADDI);
-                    d_bytecode_set_byte(loopAdd, 1, (char)ptrReg);
-                    d_bytecode_set_immediate(loopAdd, 2, 1);
-
-                    d_concat_bytecode(&loop, &loopAdd);
-                    d_free_bytecode(&loopAdd);
-
-                    immediate_t jmpToStart = -((immediate_t)loop.size);
-
-                    loopAdd = d_malloc_bytecode(d_vm_ins_size(OP_JR));
-                    d_bytecode_set_byte(loopAdd, 0, OP_JR);
-                    d_bytecode_set_immediate(loopAdd, 1, jmpToStart);
-
-                    d_concat_bytecode(&loop, &loopAdd);
-                    d_free_bytecode(&loopAdd);
+                    BCode jmpBack = d_bytecode_ins(OP_JRFI);
+                    d_bytecode_set_fimmediate(jmpBack, 1, jmpToStart);
+                    d_concat_bytecode(&loop, &jmpBack);
+                    d_free_bytecode(&jmpBack);
 
                     d_concat_bytecode(&action, &loop);
                     d_free_bytecode(&loop);
@@ -1492,18 +1498,14 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
                     // at the end of the string. So if we want the length,
                     // we can just subtract the pointer from the string
                     // pointer!
-                    BCode subPtr = d_malloc_bytecode(d_vm_ins_size(OP_SUB));
-                    d_bytecode_set_byte(subPtr, 0, OP_SUB);
-                    d_bytecode_set_byte(subPtr, 1, (char)ptrReg);
-                    d_bytecode_set_byte(subPtr, 2, (char)inputSock->_reg);
-
+                    BCode subPtr = d_bytecode_ins(OP_SUB);
                     d_concat_bytecode(&action, &subPtr);
                     d_free_bytecode(&subPtr);
 
-                    SheetSocket *outputSock = node->sockets[1];
-                    outputSock->_reg        = ptrReg;
-
-                    d_free_reg(context, inputSock->_reg);
+                    // Now the original string pointer should be replaced with
+                    // the length of the string.
+                    SheetSocket *outputSocket = node->sockets[1];
+                    outputSocket->_stackIndex = context->stackTop;
 
                     break;
                 case CORE_LESS_THAN:;
@@ -1565,14 +1567,11 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
             // analysis put the information in the nodes "definition" property.
             // TODO: Error if things below are not defined.
             if (node->definition.type == NAME_VARIABLE) {
-                action = d_generate_bytecode_for_variable(
-                    node, context, node->definition.variable);
+                action = d_push_variable(node, context);
             } else if (node->definition.type == NAME_FUNCTION) {
-                action =
-                    d_generate_bytecode_for_call(node, context, false, false);
+                action = d_generate_call(node, context);
             } else if (node->definition.type == NAME_CFUNCTION) {
-                action =
-                    d_generate_bytecode_for_call(node, context, false, true);
+                action = d_generate_call(node, context);
             }
         }
 
