@@ -438,45 +438,39 @@ DECISION_API BCode d_push_argument(struct _sheetNode *socket,
  * \fn BCode d_generate_return(SheetNode *returnNode, BuildContext *context)
  * \brief Given a Return node, generate the bytecode to return from the
  * function/subroutine with the return values.
- * 
+ *
  * \return Bytecode to return from the function/subroutine.
- * 
+ *
  * \param returnNode The Return node to return with.
  * \param context The context needed to generate the bytecode.
  */
-DECISION_API BCode d_generate_return(struct _sheetNode *returnNode, BuildContext *context);
+DECISION_API BCode d_generate_return(struct _sheetNode *returnNode,
+                                     BuildContext *context);
 
 /**
  * \fn BCode d_generate_nonexecution_node(SheetNode *node,
  *                                        BuildContext *context)
  * \brief Given a non-execution node, generate the bytecode to get the output.
- * 
+ *
  * \return Bytecode to run the nonexecution node's function.
- * 
+ *
  * \param node The non-execution node.
  * \param context The context needed to generate the bytecode.
  */
-DECISION_API BCode d_generate_nonexecution_node(struct _sheetNode *node, BuildContext *context);
+DECISION_API BCode d_generate_nonexecution_node(struct _sheetNode *node,
+                                                BuildContext *context);
 
 /**
- * \fn BCode d_generate_bytecode_for_execution_node(
- * SheetNode *node, BuildContext *context, bool retAtEnd, bool inLoop)
- * \brief Given a node, generate the bytecode to carry out it's instruction.
- *
- * \return The malloc'd bytecode it generated.
- *
- * \param node The execution node to generate the bytecode for.
+ * \fn BCode d_generate_execution_node(SheetNode *node, BuildContext* context)
+ * \brief Given an execution node, generate the bytecode to get the output.
+ * 
+ * \return Bytecode to run the execution node's subroutine.
+ * 
+ * \param node The execution node.
  * \param context The context needed to generate the bytecode.
- * \param retAtEnd If true, and if the node is at the end of the chain of
- * execution, put a OP_RET instruction at the end of the bytecode for this node.
- * \param inLoop Should be false if this is a top-level node, true if it is
- * being run inside a loop. This prevents a RET being put at the end of the
- * sequence of instructions.
  */
-/*
-DECISION_API BCode d_generate_bytecode_for_execution_node(
-    struct _sheetNode *node, BuildContext *context, bool retAtEnd, bool inLoop);
-*/
+DECISION_API BCode d_generate_execution_node(struct _sheetNode *node,
+                                             BuildContext *context);
 
 /**
  * \fn BCode d_generate_bytecode_for_start(SheetNode *startNode,

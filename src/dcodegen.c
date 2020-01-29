@@ -1402,7 +1402,7 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
             d_free_bytecode(&trueCode);
         }
     } else {
-        BCode action = (BCode){NULL, 0};
+        BCode action = {NULL, 0};
 
         if ((int)coreFunc >= 0) {
             // Generate bytecode depending on the core function.
@@ -1583,40 +1583,39 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
 }
 
 /**
- * \fn BCode d_generate_bytecode_for_execution_node(
- * SheetNode *node, BuildContext *context, bool retAtEnd, bool inLoop)
- * \brief Given a node, generate the bytecode to carry out it's instruction.
+ * \fn BCode d_generate_execution_node(SheetNode *node, BuildContext* context)
+ * \brief Given an execution node, generate the bytecode to get the output.
  *
- * \return The malloc'd bytecode it generated.
+ * \return Bytecode to run the execution node's subroutine.
  *
- * \param node The execution node to generate the bytecode for.
+ * \param node The execution node.
  * \param context The context needed to generate the bytecode.
- * \param retAtEnd If true, and if the node is at the end of the chain of
- * execution, put a OP_RET instruction at the end of the bytecode for this node.
- * \param inLoop Should be false if this is a top-level node, true if it is
- * being run inside a loop. This prevents a RET being put at the end of the
- * sequence of instructions.
  */
-/*
-BCode d_generate_bytecode_for_execution_node(SheetNode *node,
-                                             BuildContext *context,
-                                             bool retAtEnd, bool inLoop) {
+BCode d_generate_execution_node(SheetNode *node, BuildContext *context) {
     VERBOSE(5, "- Generating bytecode for execution node %s...\n", node->name);
 
-    // Firstly, we need to get the bytecode generated to get the inputs.
-    BCode out = d_generate_bytecode_for_inputs(node, context, inLoop, false);
+    int stackTopBeforeInputs = context->stackTop;
 
-    // Secondly, we use the inputs we just got to perform an action.
-    BCode action                = (BCode){NULL, 0};
+    // Firstly, we need the bytecode to get the inputs, such that the first
+    // input is at the top of the stack.
+    BCode out = d_push_node_inputs(node, context, false, false, false);
+
+    int stackTopAfterInputs = context->stackTop;
+
+    // Secondly, we use the inputs to perform an action.
+    BCode action = {NULL, 0};
+
     const CoreFunction coreFunc = d_core_find_name(node->name);
 
-    if ((int)coreFunc >= 0) {
-        SheetSocket *socket;
-        SheetNode *firstNode;
-        BCode ready = (BCode){NULL, 0};
+    // We don't want to have multiple returns at the end, so if we know we've
+    // added one, then there is no need to add another.
+    bool addedReturn = false;
 
+    if ((int)coreFunc >= 0) {
         // Generate bytecode depending on the core function.
         // Remember that it's only execution functions we care about.
+        SheetSocket *socket;
+
         switch (coreFunc) {
             case CORE_FOR:;
                 // The "index" output.
@@ -1958,12 +1957,9 @@ BCode d_generate_bytecode_for_execution_node(SheetNode *node,
             case CORE_PRINT:;
                 // Get the socket with the variable input.
                 socket = node->sockets[1];
-                d_setup_input(socket, context, false, false, &action);
-                reg_t regToPrint = socket->_reg;
 
-                // Set the arguments for the syscall.
-                immediate_t typeArg = 0;
-
+                // Setup the arguments for this syscall.
+                fimmediate_t typeArg = 0;
                 switch (socket->type) {
                     case TYPE_INT:;
                         typeArg = 0;
@@ -1981,42 +1977,39 @@ BCode d_generate_bytecode_for_execution_node(SheetNode *node,
                         break;
                 }
 
-                // TODO: Load all arguments in one instruction.
-                ready =
-                    d_malloc_bytecode(3 * (size_t)d_vm_ins_size(OP_LOADARGI) +
-                                      d_vm_ins_size(OP_SYSCALL));
+                action = d_bytecode_ins(OP_PUSHF);
+                d_bytecode_set_fimmediate(action, 1, typeArg);
 
-                // arg0
-                d_bytecode_set_byte(ready, 0, OP_LOADARGI);
-                d_bytecode_set_byte(ready, 1, 0);
-                d_bytecode_set_immediate(ready, 2, typeArg);
+                // Push the value to print, which is now one below the top of
+                // the stack (the top being the type argument).
+                BCode getArg = d_bytecode_ins(OP_GETFI);
+                d_bytecode_set_fimmediate(getArg, 1, -1);
+                d_concat_bytecode(&action, &getArg);
+                d_free_bytecode(&getArg);
 
-                // arg1
-                d_bytecode_set_byte(ready, d_vm_ins_size(OP_LOADARGI),
-                                    OP_LOADARGI);
-                d_bytecode_set_byte(ready,
-                                    (size_t)d_vm_ins_size(OP_LOADARGI) + 1, 1);
-                d_bytecode_set_immediate(
-                    ready, (size_t)d_vm_ins_size(OP_LOADARGI) + 2, regToPrint);
+                // TODO: Add a way to not print a newline.
+                BCode newLine = d_bytecode_ins(OP_PUSHF);
+                d_bytecode_set_fimmediate(newLine, 1, 1);
+                d_concat_bytecode(&action, &newLine);
+                d_free_bytecode(&newLine);
 
-                // arg2
-                d_bytecode_set_byte(
-                    ready, (size_t)d_vm_ins_size(OP_LOADARGI) * 2, OP_LOADARGI);
-                d_bytecode_set_byte(
-                    ready, (size_t)d_vm_ins_size(OP_LOADARGI) * 2 + 1, 2);
-                d_bytecode_set_immediate(
-                    ready, (size_t)d_vm_ins_size(OP_LOADARGI) * 2 + 2, 1);
+                // Call the syscall.
+                BCode print = d_bytecode_ins(OP_SYSCALL);
+                d_bytecode_set_byte(print, 1, SYS_PRINT);
+                d_concat_bytecode(&action, &print);
+                d_free_bytecode(&print);
 
-                d_bytecode_set_byte(
-                    ready, (size_t)d_vm_ins_size(OP_LOADARGI) * 3, OP_SYSCALL);
-                d_bytecode_set_byte(ready,
-                                    (size_t)d_vm_ins_size(OP_LOADARGI) * 3 + 1,
-                                    SYS_PRINT);
+                // Pop both the return value of the syscall and the value that
+                // was to be printed.
+                BCode popBoth = d_bytecode_ins(OP_POPF);
+                d_bytecode_set_fimmediate(popBoth, 1, 2);
+                d_concat_bytecode(&action, &popBoth);
+                d_free_bytecode(&popBoth);
 
-                d_concat_bytecode(&action, &ready);
-                d_free_bytecode(&ready);
+                // Decrement the top of the stack, as we have poped the value
+                // to be printed.
+                context->stackTop--;
 
-                d_free_reg(context, regToPrint);
                 break;
 
             case CORE_SET:;
@@ -2167,53 +2160,79 @@ BCode d_generate_bytecode_for_execution_node(SheetNode *node,
                 break;
 
             case CORE_WHILE:;
-                // We need the register for the boolean condition.
+                // Get the boolean socket.
                 socket = node->sockets[1];
-                d_setup_input(socket, context, false, false, &out);
-                reg_t condWhileReg = socket->_reg;
 
-                // Now we'll generate the bytecode for the code that executes
-                // if the condition is true.
-                socket         = node->sockets[2];
-                BCode trueCode = (BCode){NULL, 0};
-
-                if (socket->numConnections == 1) {
-                    firstNode = socket->connections[0]->node;
-                    trueCode  = d_generate_bytecode_for_execution_node(
-                        firstNode, context, false, true);
+                // Check to see if it is a false literal. If it is, then this
+                // execution node is useless.
+                if (socket->numConnections == 0 &&
+                    socket->defaultValue.booleanValue == false) {
+                    break;
                 }
 
-                // After the loop code has executed, we want to re-calculate
-                // our boolean input, i.e. jump back as far as we need to.
-                dint loopBackAmt =
-                    -((dint)out.size + (dint)trueCode.size +
-                      d_vm_ins_size(OP_NOT) + d_vm_ins_size(OP_JRCON));
+                // Now generate the bytecode for the code that executes if the
+                // condition is true.
+                socket                 = node->sockets[2];
+                SheetSocket *firstNode = socket->connections[0]->node;
 
-                action = d_malloc_bytecode(d_vm_ins_size(OP_JR));
-                d_bytecode_set_byte(action, 0, OP_JR);
-                d_bytecode_set_immediate(action, 1,
-                                         (loopBackAmt & IMMEDIATE_MASK));
+                // TODO: Do NOT add a return.
+                BCode trueCode = d_generate_execution_node(firstNode, context);
 
-                d_concat_bytecode(&trueCode, &action);
-                d_free_bytecode(&action);
+                // After the loop has executed, we want to pop from the stack
+                // to the point before the boolean variable got calculated,
+                // and jump back far enough as to recalculate the boolean value.
+                fimmediate_t numPop = context->stackTop - stackTopBeforeInputs;
+                if (numPop < 0) {
+                    numPop = 0;
+                }
+
+                BCode popExtra = d_bytecode_ins(OP_POPF);
+                d_bytecode_set_fimmediate(popExtra, 1, numPop);
+                d_concat_bytecode(&trueCode, &popExtra);
+                d_free_bytecode(&popExtra);
+
+                fimmediate_t loopBackAmt =
+                    -(out.size + trueCode.size + d_vm_ins_size(OP_NOT) +
+                      d_vm_ins_size(OP_JRCONFI));
+
+                BCode jmpBack = d_bytecode_ins(OP_JRFI);
+                d_bytecode_set_fimmediate(jmpBack, 1, loopBackAmt);
+                d_concat_bytecode(&trueCode, &jmpBack);
+                d_free_bytecode(&jmpBack);
 
                 // When we get our input, we want to skip the loop code if it
                 // is false.
-                action = d_malloc_bytecode((size_t)d_vm_ins_size(OP_NOT) +
-                                           d_vm_ins_size(OP_JRCON));
+                action = d_bytecode_ins(OP_NOT);
 
-                d_bytecode_set_byte(action, 0, OP_NOT);
-                d_bytecode_set_byte(action, 1, (char)condWhileReg);
+                fimmediate_t jmpOverAmt =
+                    trueCode.size + d_vm_ins_size(OP_JRCON);
 
-                d_bytecode_set_byte(action, d_vm_ins_size(OP_NOT), OP_JRCON);
-                d_bytecode_set_byte(action, (size_t)d_vm_ins_size(OP_NOT) + 1,
-                                    (char)condWhileReg);
-                d_bytecode_set_immediate(
-                    action, (size_t)d_vm_ins_size(OP_NOT) + 2,
-                    (immediate_t)trueCode.size + d_vm_ins_size(OP_JRCON));
+                BCode jmpOver = d_bytecode_ins(OP_JRCONFI);
+                d_bytecode_set_fimmediate(jmpOver, 1, jmpOverAmt);
+                d_concat_bytecode(&action, &jmpOver);
+                d_free_bytecode(&jmpOver);
 
                 d_concat_bytecode(&action, &trueCode);
                 d_free_bytecode(&trueCode);
+
+                // Finally, so the top of the stack is consistent at the end
+                // of this node's execution, we pop back to before the boolean
+                // value was being calculated.
+                // No matter if the while loop didn't activate once, or it
+                // activated multiple times, there should be only one "instance"
+                // of the boolean being calculated on the stack.
+                numPop = stackTopAfterInputs - stackTopBeforeInputs;
+                if (numPop < 0) {
+                    numPop = 0;
+                }
+
+                popExtra = d_bytecode_ins(OP_POPF);
+                d_bytecode_set_fimmediate(popExtra, 1, numPop);
+                d_concat_bytecode(&action, &popExtra);
+                d_free_bytecode(&popExtra);
+
+                context->stackTop = stackTopBeforeInputs;
+
                 break;
 
             default:
@@ -2222,24 +2241,18 @@ BCode d_generate_bytecode_for_execution_node(SheetNode *node,
     }
     // TODO: Add define here for safety.
     else if (strcmp(node->name, "Return") == 0) {
-        // Problem: We're in a subroutine, and we need to load back in safe
-        // registers now... but we cannot be certain at this point that we've
-        // used all of the safe registers we're gonna use. For now, don't put
-        // anything, but once we're done with the function, we'll add in the
-        // instructions to load back safe registers.
-
-        d_setup_returns(node, context, &action, true, true);
+        action      = d_generate_return(node, context);
+        addedReturn = true;
     } else {
         // Put arguments into the stack and call the subroutine.
-        action = d_generate_bytecode_for_call(
-            node, context, true, node->definition.type == NAME_CFUNCTION);
+        action = d_generate_call(node, context);
     }
 
     d_concat_bytecode(&out, &action);
     d_free_bytecode(&action);
 
     // Thirdly, we generate the bytecode for the next execution node.
-    BCode nextCode = (BCode){NULL, 0};
+    BCode nextCode = {NULL, 0};
 
     SheetSocket *lastExecSocket = NULL;
     if (node->sockets != NULL && node->numSockets > 0) {
@@ -2260,17 +2273,15 @@ BCode d_generate_bytecode_for_execution_node(SheetNode *node,
             SheetSocket *socketConnectedTo = lastExecSocket->connections[0];
             SheetNode *nodeConnectedTo     = socketConnectedTo->node;
 
-            // Recursively call d_generate_bytecode_for_execution_node
-            // to generate the bytecode after this node's bytecode.
-            nextCode = d_generate_bytecode_for_execution_node(
-                nodeConnectedTo, context, true, inLoop);
+            // Recursively call d_generate_execution_node to generate the
+            // bytecode after this node's bytecode.
+            nextCode = d_generate_execution_node(nodeConnectedTo, context);
         }
     }
 
-    if (!isNextNode && retAtEnd && !inLoop) {
+    if (!(isNextNode || addedReturn)) {
         // Add a RET instruction here, so the VM returns.
-        nextCode = d_malloc_bytecode(1);
-        d_bytecode_set_byte(nextCode, 0, OP_RET);
+        nextCode = d_bytecode_ins(OP_RET);
     }
 
     d_concat_bytecode(&out, &nextCode);
@@ -2278,7 +2289,6 @@ BCode d_generate_bytecode_for_execution_node(SheetNode *node,
 
     return out;
 }
-*/
 
 /**
  * \fn BCode d_generate_bytecode_for_start(SheetNode *startNode,
