@@ -785,9 +785,29 @@ BCode d_push_input(SheetSocket *socket, BuildContext *context,
             // The socket has a connected socket.
             SheetSocket *connSocket = socket->connections[0];
 
-            // Has this output not already been generated?
-            if (connSocket->_stackIndex < 0) {
-                // TODO: Generate the bytecode, use forceFloat.
+            // Has this output not already been generated, or has it been poped
+            // off?
+            if (connSocket->_stackIndex < 0 ||
+                connSocket->_stackIndex > context->stackTop) {
+                SheetNode *connNode = connSocket->node;
+
+                // Determine if the node is an execution node.
+                bool isExecutionNode = false;
+
+                for (size_t i = 0; i < connNode->numSockets; i++) {
+                    SheetSocket *testSocket = connNode->sockets[i];
+
+                    if (testSocket->type == TYPE_EXECUTION) {
+                        isExecutionNode = true;
+                        break;
+                    }
+                }
+
+                if (isExecutionNode) {
+                    // TODO: This.
+                } else {
+                    out = d_generate_nonexecution_node(connNode, context);
+                }
             }
 
             // If the value is not at the top of the stack, make sure it is.
@@ -797,6 +817,8 @@ BCode d_push_input(SheetSocket *socket, BuildContext *context,
                 BCode get = d_bytecode_ins(OP_GETFI);
                 d_bytecode_set_fimmediate(
                     get, 1, (fimmediate_t)STACK_INDEX_TOP(context, inputIndex));
+                d_concat_bytecode(&out, &get);
+                d_free_bytecode(&get);
 
                 connSocket->_stackIndex = context->stackTop;
             }
@@ -875,7 +897,7 @@ BCode d_push_node_inputs(SheetNode *node, BuildContext *context, bool order,
     // Now the bytecode for the inputs has been generated, we need to verify
     // that the inputs are in order from the top of the stack. If not, we need
     // to get them there.
-    int verifyIndex       = context->stackTop;
+    // int verifyIndex       = context->stackTop;
     int numInputs         = 0;
     bool positionsCorrect = true;
 
@@ -1093,6 +1115,12 @@ BCode d_generate_comparator(SheetNode *node, BuildContext *context, DIns opcode,
         d_free_bytecode(&comp);
     }
 
+    if (notAfter) {
+        BCode not = d_bytecode_ins(OP_NOT);
+        d_concat_bytecode(&out, &not);
+        d_free_bytecode(&not);
+    }
+
     SheetSocket *outputSocket = node->sockets[2];
     outputSocket->_stackIndex = --context->stackTop;
 
@@ -1208,6 +1236,8 @@ BCode d_push_argument(SheetSocket *socket, BuildContext *context) {
 
         out = d_bytecode_ins(OP_GETFI);
         d_bytecode_set_fimmediate(out, 1, index + 1);
+
+        context->stackTop++;
     }
 
     return out;
@@ -1389,7 +1419,7 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
             jmpAmt = d_vm_ins_size(OP_JRCON) + falseCode.size;
 
             BCode jumpToCode = d_bytecode_ins(OP_JRCONFI);
-            d_bytecode_set_immediate(jumpToCode, 1, jmpAmt);
+            d_bytecode_set_fimmediate(jumpToCode, 1, jmpAmt);
 
             d_concat_bytecode(&out, &jumpToCode);
             d_free_bytecode(&jumpToCode);
@@ -1484,7 +1514,7 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
                     d_concat_bytecode(&loop, &incPtr);
                     d_free_bytecode(&incPtr);
 
-                    fimmediate_t jmpToStart = -(loop.size);
+                    fimmediate_t jmpToStart = -(fimmediate_t)(loop.size);
 
                     BCode jmpBack = d_bytecode_ins(OP_JRFI);
                     d_bytecode_set_fimmediate(jmpBack, 1, jmpToStart);
@@ -1615,7 +1645,7 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context) {
         // Generate bytecode depending on the core function.
         // Remember that it's only execution functions we care about.
         SheetSocket *socket;
-        SheetSocket *firstNode;
+        SheetNode *firstNode;
 
         switch (coreFunc) {
             case CORE_FOR:;
@@ -1983,6 +2013,17 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context) {
                 socket = node->sockets[1];
 
                 // Setup the arguments for this syscall.
+                // TODO: Add a way to not print a newline.
+                action = d_bytecode_ins(OP_PUSHF);
+                d_bytecode_set_fimmediate(action, 1, 1);
+
+                // Push the value to print, which is now one below the top of
+                // the stack (the top being the type argument).
+                BCode getArg = d_bytecode_ins(OP_GETFI);
+                d_bytecode_set_fimmediate(getArg, 1, -1);
+                d_concat_bytecode(&action, &getArg);
+                d_free_bytecode(&getArg);
+
                 fimmediate_t typeArg = 0;
                 switch (socket->type) {
                     case TYPE_INT:;
@@ -2001,21 +2042,11 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context) {
                         break;
                 }
 
-                action = d_bytecode_ins(OP_PUSHF);
-                d_bytecode_set_fimmediate(action, 1, typeArg);
-
-                // Push the value to print, which is now one below the top of
-                // the stack (the top being the type argument).
-                BCode getArg = d_bytecode_ins(OP_GETFI);
-                d_bytecode_set_fimmediate(getArg, 1, -1);
-                d_concat_bytecode(&action, &getArg);
-                d_free_bytecode(&getArg);
-
-                // TODO: Add a way to not print a newline.
-                BCode newLine = d_bytecode_ins(OP_PUSHF);
-                d_bytecode_set_fimmediate(newLine, 1, 1);
-                d_concat_bytecode(&action, &newLine);
-                d_free_bytecode(&newLine);
+                // Push the type of the variable.
+                BCode printType = d_bytecode_ins(OP_PUSHF);
+                d_bytecode_set_fimmediate(printType, 1, typeArg);
+                d_concat_bytecode(&action, &printType);
+                d_free_bytecode(&printType);
 
                 // Call the syscall.
                 BCode print = d_bytecode_ins(OP_SYSCALL);
@@ -2100,9 +2131,9 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context) {
                 d_concat_bytecode(&trueCode, &popExtra);
                 d_free_bytecode(&popExtra);
 
-                fimmediate_t loopBackAmt =
-                    -(out.size + trueCode.size + d_vm_ins_size(OP_NOT) +
-                      d_vm_ins_size(OP_JRCONFI));
+                fimmediate_t loopBackAmt = -(fimmediate_t)(
+                    out.size + trueCode.size + d_vm_ins_size(OP_NOT) +
+                    d_vm_ins_size(OP_JRCONFI));
 
                 BCode jmpBack = d_bytecode_ins(OP_JRFI);
                 d_bytecode_set_fimmediate(jmpBack, 1, loopBackAmt);
@@ -2289,7 +2320,7 @@ BCode d_generate_function(SheetFunction *func, BuildContext *context) {
             // of the Return node, so the final Return values are
             // calculated.
             BCode funcCode = d_generate_return(returnNode, context);
-            
+
             d_concat_bytecode(&out, &funcCode);
             d_free_bytecode(&funcCode);
         }

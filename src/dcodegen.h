@@ -431,7 +431,7 @@ DECISION_API BCode d_generate_call(struct _sheetNode *node,
  * \param socket The output socket representing the function argument.
  * \param context The context needed to generate the bytecode.
  */
-DECISION_API BCode d_push_argument(struct _sheetNode *socket,
+DECISION_API BCode d_push_argument(struct _sheetSocket *socket,
                                    BuildContext *context);
 
 /**
@@ -463,9 +463,9 @@ DECISION_API BCode d_generate_nonexecution_node(struct _sheetNode *node,
 /**
  * \fn BCode d_generate_execution_node(SheetNode *node, BuildContext* context)
  * \brief Given an execution node, generate the bytecode to get the output.
- * 
+ *
  * \return Bytecode to run the execution node's subroutine.
- * 
+ *
  * \param node The execution node.
  * \param context The context needed to generate the bytecode.
  */

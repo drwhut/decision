@@ -71,15 +71,18 @@ DECISION_API void d_asm_text_dump(char *code, size_t size) {
 
         const unsigned char insSize = d_vm_ins_size(opcode);
 
+        const size_t maxInsSize = 1 + FIMMEDIATE_SIZE + BIMMEDIATE_SIZE;
+
         // Print the index of the instruction, the actual instruction, and the
         // mnemonic.
         printf("%8zx\t", i);
 
-        for (size_t j = 0; j < sizeof(dint); j++) {
-            if (j < insSize)
+        for (size_t j = 0; j < maxInsSize; j++) {
+            if (j < insSize) {
                 printf("%02hhx ", *(ins + j));
-            else
+            } else {
                 printf("   ");
+            }
         }
 
         printf("\t%s ", mnemonic);
@@ -166,7 +169,7 @@ DECISION_API void d_asm_text_dump(char *code, size_t size) {
                 printf("0x%" BIMMEDIATE_PRINTF "x, 0x%" HIMMEDIATE_PRINTF "x",
                        b1, h2);
                 break;
-            
+
             // Full Immediate + Byte Immediate.
             case OP_CALLI:
             case OP_CALLRF:

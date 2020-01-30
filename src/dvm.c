@@ -139,9 +139,9 @@ static void vm_set_stack_size_to(DVM *vm, duint size) {
     const size_t newAlloc = size * sizeof(dint);
 
     if (vm->basePtr == NULL) {
-        vm->basePtr = d_malloc(size);
+        vm->basePtr = d_malloc(newAlloc);
     } else {
-        vm->basePtr = d_realloc(vm->basePtr, size);
+        vm->basePtr = d_realloc(vm->basePtr, newAlloc);
     }
 }
 
@@ -291,7 +291,7 @@ dfloat d_vm_get_float(DVM *vm, dint index) {
 }
 
 /**
- * \fn void *d_vm_get_float(DVM *vm, dint index)
+ * \fn void *d_vm_get_ptr(DVM *vm, dint index)
  * \brief Get a pointer from a value in the stack at a particular index.
  *
  * * If `index` is positive, it will index relative to the start of the stack
@@ -304,7 +304,7 @@ dfloat d_vm_get_float(DVM *vm, dint index) {
  * \param index The index of the stack.
  */
 void *d_vm_get_ptr(DVM *vm, dint index) {
-    dint value = d_vm_get(vm, value);
+    dint value = d_vm_get(vm, index);
 
     return (void *)value;
 }
@@ -428,7 +428,7 @@ void d_vm_popn(DVM *vm, size_t n) {
 
         vm->stackPtr = vm->stackPtr - n;
 
-        if (maxN - n < (dint)(vm->stackSize * VM_STACK_SIZE_SCALE_DEC)) {
+        if (maxN - n < (size_t)(vm->stackSize * VM_STACK_SIZE_SCALE_DEC)) {
             vm_decrease_stack_size(vm);
         }
     }
@@ -629,7 +629,7 @@ void d_vm_set(DVM *vm, dint index, dint value) {
  * \param value The value to set.
  */
 void d_vm_set_float(DVM *vm, dint index, dfloat value) {
-    dint intValue = *((dfloat *)(&value));
+    dint intValue = *((dint *)(&value));
 
     d_vm_set(vm, index, intValue);
 }
@@ -833,7 +833,7 @@ void d_vm_runtime_error(DVM *vm, const char *error) {
     {                                                                   \
         dint value =                                                    \
             (VM_GET_STACK_FLOAT(vm, 0) sym VM_GET_STACK_FLOAT(vm, -1)); \
-        *VM_GET_STACK_FLOAT_PTR(vm, -1) = value;                        \
+        *VM_GET_STACK_PTR(vm, -1) = value;                              \
         d_vm_popn(vm, 1);                                               \
     }
 
@@ -943,6 +943,17 @@ void d_vm_runtime_error(DVM *vm, const char *error) {
     }
 
 /**
+ * \union _ptrToC
+ * \brief A union of a pointer to a C function, and the pointer value.
+ *
+ * \typedef union _ptrToC PtrToC
+ */
+typedef union _ptrToC {
+    DecisionCFunction func;
+    intptr_t ptr;
+} PtrToC;
+
+/**
  * \fn void d_vm_parse_ins_at_pc(DVM *vm)
  * \brief Given a Decision VM, at it's current position in the program, parse
  * the instruction at that position.
@@ -1030,14 +1041,11 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             break;
 
         case OP_CALL:;
-            CALL_1_0(=)
+            CALL_1_0(= (char *))
             break;
 
         case OP_CALLC:;
-            union _ptrToC {
-                DecisionCFunction func;
-                intptr_t ptr;
-            } funcPtr;
+            PtrToC funcPtr;
 
             funcPtr.ptr = VM_GET_STACK(vm, 0);
             d_vm_popn(vm, 1);
@@ -1047,19 +1055,16 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             break;
 
         case OP_CALLCI:;
-            union _ptrToC {
-                DecisionCFunction func;
-                intptr_t ptr;
-            } funcPtr;
+            PtrToC funcPtrImmediate;
 
-            funcPtr.ptr = GET_FIMMEDIATE(1);
+            funcPtrImmediate.ptr = GET_FIMMEDIATE(1);
 
             // Call the C function.
-            funcPtr.func(vm);
+            funcPtrImmediate.func(vm);
             break;
 
         case OP_CALLI:;
-            CALL_0_0_FI(=)
+            CALL_0_0_FI(= (char *))
             break;
 
         case OP_CALLR:;
@@ -1179,19 +1184,19 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             break;
 
         case OP_J:;
-            J_1_0(=)
+            J_1_0(= (char *))
             break;
 
         case OP_JCON:;
-            JCON_2_0(=)
+            JCON_2_0(= (char *))
             break;
 
         case OP_JCONI:;
-            JCON_1_0_I(=, GET_FIMMEDIATE)
+            JCON_1_0_I(= (char *), GET_FIMMEDIATE)
             break;
 
         case OP_JI:;
-            J_0_0_I(=, GET_FIMMEDIATE)
+            J_0_0_I(= (char *), GET_FIMMEDIATE)
             break;
 
         case OP_JR:;
@@ -1328,7 +1333,7 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             break;
 
         case OP_SETADRB:;
-            *((uint8_t *)VM_GET_STACK(vm, 0)) = VM_GET_STACK(vm, -1);
+            *((uint8_t *)VM_GET_STACK(vm, 0)) = (uint8_t)VM_GET_STACK(vm, -1);
             d_vm_popn(vm, 2);
             break;
 
