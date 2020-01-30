@@ -197,19 +197,24 @@ typedef struct _DVM {
     bool runtimeError; ///< The runtime error flag.
 } DVM;
 
-#define BIMMEDIATE_SIZE 1
-#define bimmediate_t    int8_t
+#define BIMMEDIATE_SIZE   1
+#define BIMMEDIATE_PRINTF "hh"
+#define bimmediate_t      int8_t
 
 #ifdef DECISION_32
-#define HIMMEDIATE_SIZE 2
-#define himmediate_t    int16_t
-#define FIMMEDIATE_SIZE 4
-#define fimmediate_t    int32_t
+#define HIMMEDIATE_SIZE   2
+#define HIMMEDIATE_PRINTF "h"
+#define himmediate_t      int16_t
+#define FIMMEDIATE_SIZE   4
+#define FIMMEDIATE_PRINTF "l"
+#define fimmediate_t      int32_t
 #else
-#define HIMMEDIATE_SIZE 4
-#define himmediate_t    int32_t
-#define FIMMEDIATE_SIZE 8
-#define fimmediate_t    int64_t
+#define HIMMEDIATE_SIZE   4
+#define HIMMEDIATE_PRINTF "l"
+#define himmediate_t      int32_t
+#define FIMMEDIATE_SIZE   8
+#define FIMMEDIATE_PRINTF "ll"
+#define fimmediate_t      int64_t
 #endif // DECISION_32
 
 /*

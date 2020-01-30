@@ -34,15 +34,20 @@
 
 /* An array of mnemonics, where the index matches the opcode. */
 static const char *MNEMONICS[NUM_OPCODES] = {
-    "RET",      "ADD",     "ADDF",     "ADDI",  "AND",    "ANDI",    "CALL",
-    "CALLC",    "CALLR",   "CEQ",      "CEQF",  "CEQS",   "CLEQ",    "CLEQF",
-    "CLEQS",    "CLT",     "CLTF",     "CLTS",  "CMEQ",   "CMEQF",   "CMEQS",
-    "CMT",      "CMTF",    "CMTS",     "CVTF",  "CVTI",   "DIV",     "DIVF",
-    "DIVI",     "J",       "JCON",     "JR",    "JRCON",  "LOAD",    "LOADADR",
-    "LOADADRB", "LOADARG", "LOADARGI", "LOADF", "LOADI",  "LOADUI",  "MOD",
-    "MODI",     "MUL",     "MULF",     "MULI",  "MVTF",   "MVTI",    "NOT",
-    "OR",       "ORI",     "POP",      "PUSH",  "STOADR", "STOADRB", "SUB",
-    "SUBF",     "SUBI",    "SYSCALL",  "XOR",   "XORI"};
+    "RET",    "RETN",   "ADD",    "ADDF",    "ADDBI",   "ADDHI",   "ADDFI",
+    "AND",    "ANDBI",  "ANDHI",  "ANDFI",   "CALL",    "CALLC",   "CALLCI",
+    "CALLI",  "CALLR",  "CALLRB", "CALLRH",  "CALLRF",  "CEQ",     "CEQF",
+    "CLEQ",   "CLEQF",  "CLT",    "CLTF",    "CMEQ",    "CMEQF",   "CMT",
+    "CMTF",   "CVTF",   "CVTI",   "DEREF",   "DEREFI",  "DEREFB",  "DEREFBI",
+    "DIV",    "DIVF",   "DIVBI",  "DIVHI",   "DIVFI",   "GET",     "GETBI",
+    "GETHI",  "GETFI",  "J",      "JCON",    "JCONI",   "JI",      "JR",
+    "JRBI",   "JRHI",   "JRFI",   "JRCON",   "JRCONBI", "JRCONHI", "JRCONFI",
+    "MOD",    "MODBI",  "MODHI",  "MODFI",   "MUL",     "MULF",    "MULBI",
+    "MULHI",  "MULFI",  "NOT",    "OR",      "ORBI",    "ORHI",    "ORFI",
+    "POP",    "POPB",   "POPH",   "POPF",    "PUSHB",   "PUSHH",   "PUSHF",
+    "PUSHNB", "PUSHNH", "PUSHNF", "SETADR",  "SETADRB", "SUB",     "SUBF",
+    "SUBBI",  "SUBHI",  "SUBFI",  "SYSCALL", "XOR",     "XORBI",   "XORHI",
+    "XORFI"};
 
 /**
  * \fn void d_asm_text_dump(char *code, size_t size)
@@ -79,125 +84,99 @@ DECISION_API void d_asm_text_dump(char *code, size_t size) {
 
         printf("\t%s ", mnemonic);
 
+        bimmediate_t b1;
+
         // We group together instructions with the same "format" to simplify.
         switch (opcode) {
             // Byte Immediate.
-            case OP_SYSCALL:;
-                printf("0x%hhx", *(ins + 1));
-                break;
-
-            // Immediate.
-            case OP_CALLR:
-            case OP_JR:;
-                printf("0x%" DINT_PRINTF_x, GET_IMMEDIATE_PTR(ins + 1));
-                break;
-
-            // 1 general register.
+            case OP_RETN:
+            case OP_ADDBI:
+            case OP_ANDBI:
             case OP_CALL:
-            case OP_CALLC:
-            case OP_J:
-            case OP_NOT:
-            case OP_POP:
-            case OP_PUSH:;
-                printf("r%u", GET_BYTEN(ins, 1));
+            case OP_CALLR:
+            case OP_DIVBI:
+            case OP_GETBI:
+            case OP_JRBI:
+            case OP_JRCONBI:
+            case OP_MODBI:
+            case OP_MULBI:
+            case OP_ORBI:
+            case OP_POPB:
+            case OP_PUSHB:
+            case OP_PUSHNB:
+            case OP_SUBBI:
+            case OP_SYSCALL:
+            case OP_XORBI:
+                printf("0x%" BIMMEDIATE_PRINTF "x", *(bimmediate_t *)(ins + 1));
                 break;
 
-            // 1 general register, 1 float register.
-            case OP_CVTF:
-            case OP_MVTF:;
-                printf("r%u, f%u", GET_BYTEN(ins, 1),
-                       GET_BYTEN(ins, 2) - VM_REG_FLOAT_START);
+            // Half Immediate.
+            case OP_ADDHI:
+            case OP_ANDHI:
+            case OP_DIVHI:
+            case OP_GETHI:
+            case OP_JRHI:
+            case OP_JRCONHI:
+            case OP_MODHI:
+            case OP_MULHI:
+            case OP_ORHI:
+            case OP_POPH:
+            case OP_PUSHH:
+            case OP_PUSHNH:
+            case OP_SUBHI:
+            case OP_XORHI:
+                printf("0x%" HIMMEDIATE_PRINTF "x", *(himmediate_t *)(ins + 1));
                 break;
 
-            // 1 float register, 1 general register.
-            case OP_CVTI:
-            case OP_MVTI:;
-                printf("f%u, r%u", GET_BYTEN(ins, 1) - VM_REG_FLOAT_START,
-                       GET_BYTEN(ins, 2));
+            // Full Immediate.
+            case OP_ADDFI:
+            case OP_ANDFI:
+            case OP_CALLCI:
+            case OP_DEREFI:
+            case OP_DEREFBI:
+            case OP_DIVFI:
+            case OP_GETFI:
+            case OP_JCONI:
+            case OP_JI:
+            case OP_JRFI:
+            case OP_JRCONFI:
+            case OP_MODFI:
+            case OP_MULFI:
+            case OP_ORFI:
+            case OP_POPF:
+            case OP_PUSHF:
+            case OP_PUSHNF:
+            case OP_SUBFI:
+            case OP_XORFI:
+                printf("0x%" FIMMEDIATE_PRINTF "x", *(fimmediate_t *)(ins + 1));
                 break;
 
-            // 1 argument register, 1 general register.
-            case OP_LOADARG:;
-                printf("arg%u, r%u", GET_BYTEN(ins, 1), GET_BYTEN(ins, 2));
+            // Byte Immediate + Byte Immediate.
+            case OP_CALLRB:
+                b1              = *(bimmediate_t *)(ins + 1);
+                bimmediate_t b2 = *(bimmediate_t *)(ins + 1 + BIMMEDIATE_SIZE);
+                printf("0x%" BIMMEDIATE_PRINTF "x, 0x%" BIMMEDIATE_PRINTF "x",
+                       b1, b2);
                 break;
 
-            // 1 general register, immediate.
-            case OP_ADDI:
-            case OP_ANDI:
-            case OP_DIVI:
-            case OP_JRCON:
-            case OP_LOADI:
-            case OP_LOADUI:
-            case OP_MODI:
-            case OP_MULI:
-            case OP_ORI:
-            case OP_SUBI:
-            case OP_XORI:;
-                printf("r%u, 0x%" DINT_PRINTF_x, GET_BYTEN(ins, 1),
-                       GET_IMMEDIATE_PTR(ins + 2));
+            // Half Immediate + Byte Immediate.
+            case OP_CALLRH:
+                b1              = *(bimmediate_t *)(ins + 1);
+                himmediate_t h2 = *(himmediate_t *)(ins + 1 + BIMMEDIATE_SIZE);
+                printf("0x%" BIMMEDIATE_PRINTF "x, 0x%" HIMMEDIATE_PRINTF "x",
+                       b1, h2);
+                break;
+            
+            // Full Immediate + Byte Immediate.
+            case OP_CALLI:
+            case OP_CALLRF:
+                b1              = *(bimmediate_t *)(ins + 1);
+                fimmediate_t f2 = *(fimmediate_t *)(ins + 1 + BIMMEDIATE_SIZE);
+                printf("0x%" BIMMEDIATE_PRINTF "x, 0x%" FIMMEDIATE_PRINTF "x",
+                       b1, f2);
                 break;
 
-            // 1 argument register, immediate.
-            case OP_LOADARGI:;
-                printf("arg%u 0x%" DINT_PRINTF_x, GET_BYTEN(ins, 1),
-                       GET_IMMEDIATE_PTR(ins + 2));
-                break;
-
-            // 2 general registers.
-            case OP_ADD:
-            case OP_AND:
-            case OP_DIV:
-            case OP_JCON:
-            case OP_LOAD:
-            case OP_LOADADR:
-            case OP_LOADADRB:
-            case OP_MOD:
-            case OP_MUL:
-            case OP_OR:
-            case OP_STOADR:
-            case OP_STOADRB:
-            case OP_SUB:
-            case OP_XOR:;
-                printf("r%u, r%u", GET_BYTEN(ins, 1), GET_BYTEN(ins, 2));
-                break;
-
-            // 2 float registers.
-            case OP_ADDF:
-            case OP_DIVF:
-            case OP_LOADF:
-            case OP_MULF:
-            case OP_SUBF:;
-                printf("f%u, f%u", GET_BYTEN(ins, 1) - VM_REG_FLOAT_START,
-                       GET_BYTEN(ins, 2) - VM_REG_FLOAT_START);
-                break;
-
-            // 3 general registers.
-            case OP_CEQ:
-            case OP_CEQS:
-            case OP_CLEQ:
-            case OP_CLEQS:
-            case OP_CLT:
-            case OP_CLTS:
-            case OP_CMEQ:
-            case OP_CMEQS:
-            case OP_CMT:
-            case OP_CMTS:;
-                printf("r%u, r%u, r%u", GET_BYTEN(ins, 1), GET_BYTEN(ins, 2),
-                       GET_BYTEN(ins, 3));
-                break;
-
-            // 1 general register, 2 float registers.
-            case OP_CEQF:
-            case OP_CLEQF:
-            case OP_CLTF:
-            case OP_CMEQF:
-            case OP_CMTF:;
-                printf("r%u, f%u, f%u", GET_BYTEN(ins, 1),
-                       GET_BYTEN(ins, 2) - VM_REG_FLOAT_START,
-                       GET_BYTEN(ins, 3) - VM_REG_FLOAT_START);
-                break;
-
-            // OP_RET
+            // No immediates.
             default:
                 break;
         }
