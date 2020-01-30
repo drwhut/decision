@@ -661,7 +661,7 @@ void d_vm_set_ptr(DVM *vm, dint index, void *ptr) {
  * \param vm The VM whose stack to query.
  */
 size_t d_vm_top(DVM *vm) {
-    if (vm->basePtr != NULL) {
+    if (vm->basePtr == NULL) {
         return 0;
     }
 
@@ -1365,7 +1365,7 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
                             printf("%" DINT_PRINTF_d, VM_GET_STACK(vm, -1));
                             break;
                         case 1: // Float
-                            printf("%f", VM_GET_STACK_FLOAT(vm, -1));
+                            printf("%g", VM_GET_STACK_FLOAT(vm, -1));
                             break;
                         case 2: // String
                             printf("%s", (char *)VM_GET_STACK(vm, -1));
