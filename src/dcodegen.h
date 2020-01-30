@@ -473,8 +473,7 @@ DECISION_API BCode d_generate_execution_node(struct _sheetNode *node,
                                              BuildContext *context);
 
 /**
- * \fn BCode d_generate_bytecode_for_start(SheetNode *startNode,
- *                                         BuildContext *context)
+ * \fn BCode d_generate_start(SheetNode *startNode, BuildContext *context)
  * \brief Given a Start node, generate the bytecode for the sequence starting
  * from this node.
  *
@@ -483,14 +482,11 @@ DECISION_API BCode d_generate_execution_node(struct _sheetNode *node,
  * \param startNode A pointer to the Start node.
  * \param context The context needed to generate the bytecode.
  */
-/*
-DECISION_API BCode d_generate_bytecode_for_start(struct _sheetNode *startNode,
-                                                 BuildContext *context);
-*/
+DECISION_API BCode d_generate_start(struct _sheetNode *startNode,
+                                    BuildContext *context);
 
 /**
- * \fn BCode d_generate_bytecode_for_function(SheetFunction *func,
- *                                            BuildContext *context)
+ * \fn BCode d_generate_function(SheetFunction *func, BuildContext *context)
  * \brief Given a function, generate the bytecode for it.
  *
  * \return The bytecode generated for the function.
@@ -498,10 +494,8 @@ DECISION_API BCode d_generate_bytecode_for_start(struct _sheetNode *startNode,
  * \param func The function to generate the bytecode for.
  * \param context The context needed to generate the bytecode.
  */
-/*
-DECISION_API BCode d_generate_bytecode_for_function(struct _sheetFunction *func,
-                                                    BuildContext *context);
-*/
+DECISION_API BCode d_generate_function(struct _sheetFunction *func,
+                                       BuildContext *context);
 
 /**
  * \fn void d_codegen_compile(Sheet *sheet)

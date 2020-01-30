@@ -1619,6 +1619,8 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context) {
 
         switch (coreFunc) {
             case CORE_FOR:;
+                // TODO: This.
+                /*
                 // The "index" output.
                 SheetSocket *indexSocket = node->sockets[5];
 
@@ -1874,7 +1876,7 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context) {
                 d_free_reg(context, endReg);
                 if (!stepImmediate)
                     d_free_reg(context, stepReg);
-
+                */
                 break;
 
             case CORE_IF_THEN:
@@ -1942,8 +1944,7 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context) {
 
                 fimmediate_t jmpToThen =
                     d_vm_ins_size(OP_JRCON) + elseBranch.size;
-                fimmediate_t jmpToEnd =
-                    d_vm_ins_size(OP_JR) + thenBranch.size;
+                fimmediate_t jmpToEnd = d_vm_ins_size(OP_JR) + thenBranch.size;
 
                 // There's a possibility that the then branch doesn't have any
                 // code, which means the jump instruction that goes over the
@@ -2201,8 +2202,7 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context) {
 }
 
 /**
- * \fn BCode d_generate_bytecode_for_start(SheetNode *startNode,
- *                                         BuildContext *context)
+ * \fn BCode d_generate_start(SheetNode *startNode, BuildContext *context)
  * \brief Given a Start node, generate the bytecode for the sequence starting
  * from this node.
  *
@@ -2211,17 +2211,11 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context) {
  * \param startNode A pointer to the Start node.
  * \param context The context needed to generate the bytecode.
  */
-/*
-BCode d_generate_bytecode_for_start(SheetNode *startNode,
-                                    BuildContext *context) {
-    // New function means all registers are free before we generate bytecode.
-    d_reg_new_function(context);
-
+BCode d_generate_start(SheetNode *startNode, BuildContext *context) {
     // As the first instruction, place a RET, which acts as a safety barrier
     // for any function that is defined before this one (this ensures the
     // previous function doesn't "leak" into this one).
-    BCode out = d_malloc_bytecode(1);
-    d_bytecode_set_byte(out, 0, OP_RET);
+    BCode out = d_bytecode_ins(OP_RET);
 
     // In terms of generating the bytecode from the Start node, this is easy.
     // We just need to call the bytecode generation functions starting from the
@@ -2235,8 +2229,7 @@ BCode d_generate_bytecode_for_start(SheetNode *startNode,
 
             socket = socket->connections[0];
 
-            BCode exe = d_generate_bytecode_for_execution_node(
-                socket->node, context, true, false);
+            BCode exe = d_generate_execution_node(socket->node, context);
 
             d_concat_bytecode(&out, &exe);
             d_free_bytecode(&exe);
@@ -2245,11 +2238,9 @@ BCode d_generate_bytecode_for_start(SheetNode *startNode,
 
     return out;
 }
-*/
 
 /**
- * \fn BCode d_generate_bytecode_for_function(SheetFunction *func,
- *                                            BuildContext *context)
+ * \fn BCode d_generate_function(SheetFunction *func, BuildContext *context)
  * \brief Given a function, generate the bytecode for it.
  *
  * \return The bytecode generated for the function.
@@ -2257,18 +2248,13 @@ BCode d_generate_bytecode_for_start(SheetNode *startNode,
  * \param func The function to generate the bytecode for.
  * \param context The context needed to generate the bytecode.
  */
-/*
-BCode d_generate_bytecode_for_function(SheetFunction *func,
-                                       BuildContext *context) {
-    // New function means all registers are free before we generate bytecode.
-    d_reg_new_function(context);
-
+BCode d_generate_function(SheetFunction *func, BuildContext *context) {
     // As the first instruction, place a RET, which allows linkers to link to
     // this instruction, since the program counter of the virtual machine will
     // ALWAYS increment, it will increment to the actual first instruction of
     // the function.
-    BCode out = d_malloc_bytecode(1);
-    d_bytecode_set_byte(out, 0, OP_RET);
+    // TODO: Is this still true?
+    BCode out = d_bytecode_ins(OP_RET);
 
     if (func->isSubroutine) {
         if (func->defineNode != NULL) {
@@ -2280,49 +2266,10 @@ BCode d_generate_bytecode_for_function(SheetFunction *func,
             // NOTE: The first argument should be the name of the function.
             SheetSocket *socket = func->defineNode->sockets[1];
 
-            // Pop arguments from the stack.
-            d_setup_arguments(func->defineNode, context, &out, true);
-
             if (socket->numConnections == 1 && socket->type == TYPE_EXECUTION) {
                 socket = socket->connections[0];
 
-                BCode exe = d_generate_bytecode_for_execution_node(
-                    socket->node, context, true, false);
-
-                // Now we've compiled the function, we know what safe
-                // registers it uses. Save these before the function
-                // executes.
-                d_save_safe_reg(context, &out);
-
-                // Let's keep bytecode to load them back in handy as well
-                // for later...
-                BCode loadSafeReg = (BCode){NULL, 0};
-                d_load_safe_reg(context, &loadSafeReg);
-
-                // Before we continue, we need to address something.
-                // If there are any Returns in exe, then they will have no
-                // pops for restoring safe registers... NONE OF THEM. Let's
-                // go ahead and add the instructions that pop safe registers
-                // this function uses.
-
-                // We will add the pop instructions at the positions of return
-                // markers, then remove the return markers to show that we've
-                // dealt with them.
-
-                for (size_t i = 0; i < exe.numStartOfReturnMarkers; i++) {
-                    size_t returnMarker = exe.startOfReturnMarkers[i];
-
-                    d_insert_bytecode(&exe, &loadSafeReg, returnMarker);
-                }
-
-                if (exe.startOfReturnMarkers != NULL) {
-                    free(exe.startOfReturnMarkers);
-                    exe.startOfReturnMarkers = NULL;
-                }
-
-                exe.numStartOfReturnMarkers = 0;
-
-                d_free_bytecode(&loadSafeReg);
+                BCode exe = d_generate_execution_node(socket->node, context);
 
                 d_concat_bytecode(&out, &exe);
                 d_free_bytecode(&exe);
@@ -2338,58 +2285,18 @@ BCode d_generate_bytecode_for_function(SheetFunction *func,
         SheetNode *returnNode = func->lastReturnNode;
 
         if (returnNode != NULL) {
-            // Now to generate the bytecode.
-            // Firstly, we need to pop the arguments of the function from
-            // the stack. But if it's a function, it may not have a Define
-            // node!
-            if (func->defineNode != NULL) {
-                d_setup_arguments(func->defineNode, context, &out, false);
-            }
-
             // Now we recursively generate the bytecode for the inputs
             // of the Return node, so the final Return values are
             // calculated.
-            BCode funcCode = d_generate_bytecode_for_inputs(returnNode, context,
-                                                            false, true);
-
-            // Now we've compiled the function, we know what safe
-            // registers it uses. Save these before the function
-            // executes.
-            d_save_safe_reg(context, &out);
-
+            BCode funcCode = d_generate_return(returnNode, context);
+            
             d_concat_bytecode(&out, &funcCode);
             d_free_bytecode(&funcCode);
-
-            // While we're here, we'll load back the saved register
-            // values.
-            d_load_safe_reg(context, &out);
-
-            // Now we need to push the return values onto the stack,
-            // return, then we're done!
-            d_setup_returns(returnNode, context, &out, false, true);
-        }
-    }
-
-    // We've generated the bytecode for the function.
-    // Since we copy the arguments of the function into different
-    // registers to preserve the original data, the registers
-    // containing the original data are never freed. BE FREE, MY
-    // MINIONS!
-    if (func->defineNode != NULL) {
-        for (size_t j = 1 + (size_t)func->isSubroutine;
-             j < func->defineNode->numSockets; j++) {
-            SheetSocket *outputSocket = func->defineNode->sockets[j];
-
-            if (!outputSocket->isInput &&
-                (outputSocket->type & TYPE_VAR_ANY) != 0) {
-                d_free_reg(context, outputSocket->_reg);
-            }
         }
     }
 
     return out;
 }
-*/
 
 /**
  * \fn void d_codegen_compile(Sheet *sheet)
@@ -2404,14 +2311,7 @@ void d_codegen_compile(Sheet *sheet) {
 
     // Create a context object for the build.
     BuildContext context;
-    context.nextReg      = NUM_SAFE_GENERAL_REGISTERS;
-    context.nextFloatReg = VM_REG_FLOAT_START + NUM_SAFE_FLOAT_REGISTERS;
-
-    context.nextSafeReg      = 0;
-    context.nextSafeFloatReg = VM_REG_FLOAT_START;
-
-    // Set all of the bits in the register arrays to 0, so they're all "free".
-    d_reg_new_function(&context);
+    context.stackTop = -1;
 
     context.linkMetaList = d_link_new_meta_list();
 
@@ -2445,7 +2345,7 @@ void d_codegen_compile(Sheet *sheet) {
     for (size_t i = 0; i < sheet->numFunctions; i++) {
         SheetFunction *func = sheet->functions + i;
 
-        BCode code = d_generate_bytecode_for_function(func, &context);
+        BCode code = d_generate_function(func, &context);
 
         // Before we concatenate the bytecode, we need to take a note of where
         // it will go in the text section, so the linker knows where to call to
@@ -2484,7 +2384,7 @@ void d_codegen_compile(Sheet *sheet) {
 
     // And end with the Start function.
     if (sheet->startNode != NULL) {
-        BCode start = d_generate_bytecode_for_start(sheet->startNode, &context);
+        BCode start = d_generate_start(sheet->startNode, &context);
 
         // We need to set the .main value of the sheet to the index of the
         // first instruction (not the RET before!), but if there is only one
