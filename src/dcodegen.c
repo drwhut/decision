@@ -1038,7 +1038,8 @@ BCode d_generate_operator(SheetNode *node, BuildContext *context, DIns opcode,
         socket = node->sockets[++i];
 
         if (socket->isInput) {
-            if (socket->type == TYPE_INT && socket->numConnections == 0) {
+            if (!convertFloat && socket->type != TYPE_FLOAT &&
+                socket->numConnections == 0) {
                 // This input is a literal, so we can use the immediate opcode.
                 subaction = d_bytecode_ins(fiopcode);
                 d_bytecode_set_fimmediate(
@@ -1448,10 +1449,21 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
                     break;
                 case CORE_DIV:
                 case CORE_DIVIDE:;
-                    // TODO: Verify if it is Div, integers are going in only!
                     action =
                         d_generate_operator(node, context, OP_DIV, OP_DIVF,
                                             OP_DIVFI, coreFunc == CORE_DIVIDE);
+
+                    if (coreFunc == CORE_DIV) {
+                        if (node->sockets[0]->type == TYPE_FLOAT ||
+                            node->sockets[1]->type == TYPE_FLOAT) {
+                            // If this is Div, and either of the inputs are
+                            // floats, we need to turn the answer back into
+                            // an integer.
+                            BCode cvti = d_bytecode_ins(OP_CVTI);
+                            d_concat_bytecode(&action, &cvti);
+                            d_free_bytecode(&cvti);
+                        }
+                    }
                     break;
                 case CORE_EQUAL:;
                     action = d_generate_comparator(node, context, OP_CEQ,
