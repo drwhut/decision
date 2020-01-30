@@ -80,16 +80,11 @@ void d_optimize_remove_bytecode(Sheet *sheet, size_t start, size_t len) {
             if (i + insSize >= sheet->_textSize)
                 break;
 
-            if (opcode == OP_CALLR || opcode == OP_JR || opcode == OP_JRCON) {
-                // Depending on the instruction, there may be a register index
-                // inbetween the opcode and the immediate...
-                unsigned char jmpAmtOffset = 1;
+            if (opcode == OP_CALLRF || opcode == OP_JRFI ||
+                opcode == OP_JRCONFI) {
 
-                if (opcode == OP_JRCON)
-                    jmpAmtOffset = 2;
-
-                immediate_t jmpAmt =
-                    GET_IMMEDIATE_PTR(sheet->_text + i + jmpAmtOffset);
+                fimmediate_t *jmpPtr = (fimmediate_t *)(sheet->_text + i + 1);
+                fimmediate_t jmpAmt  = *jmpPtr;
 
                 // TODO: Deal with the case that it jumped INTO the deleted
                 // region.
@@ -100,9 +95,8 @@ void d_optimize_remove_bytecode(Sheet *sheet, size_t start, size_t len) {
                     // Did it jump over the deleted region?
                     if (i + len + jmpAmt < start) {
                         // Then fix the jump amount.
-                        jmpAmt = jmpAmt + (immediate_t)len;
-                        *(immediate_t *)(sheet->_text + i + jmpAmtOffset) =
-                            (jmpAmt & IMMEDIATE_MASK);
+                        jmpAmt = jmpAmt + (fimmediate_t)len;
+                        *jmpPtr = jmpAmt;
                     }
                 }
 
@@ -112,9 +106,8 @@ void d_optimize_remove_bytecode(Sheet *sheet, size_t start, size_t len) {
                     // Did it jump over the deleted region?
                     if (i + jmpAmt >= start + len) {
                         // Then fix the jump amount.
-                        jmpAmt = jmpAmt - (immediate_t)len;
-                        *(immediate_t *)(sheet->_text + i + jmpAmtOffset) =
-                            (jmpAmt & IMMEDIATE_MASK);
+                        jmpAmt = jmpAmt - (fimmediate_t)len;
+                        *jmpPtr = jmpAmt;
                     }
                 }
             }
@@ -163,11 +156,12 @@ void d_optimize_remove_bytecode(Sheet *sheet, size_t start, size_t len) {
                 if ((intptr_t)ptr != -1) {
                     size_t funcStartIndex = (size_t)ptr;
 
-                    if (funcStartIndex >= start && funcStartIndex < start + len) {
+                    if (funcStartIndex >= start &&
+                        funcStartIndex < start + len) {
                         sheet->_link.list[i]._ptr = (char *)start;
-                    }
-                    else if (funcStartIndex >= start + len) {
-                        sheet->_link.list[i]._ptr = (char *)(funcStartIndex - len);
+                    } else if (funcStartIndex >= start + len) {
+                        sheet->_link.list[i]._ptr =
+                            (char *)(funcStartIndex - len);
                     }
                 }
             }
@@ -195,16 +189,6 @@ void d_optimize_all(Sheet *sheet) {
     // Could we try and optimize further?
     bool repeat = false;
 
-    // d_optimize_pop_push_consecutive
-    VERBOSE(5, "-- Checking for cancelling stack operations... ");
-    repeat = d_optimize_pop_push_consecutive(sheet);
-    if (repeat) {
-        while (repeat) {
-            repeat = d_optimize_pop_push_consecutive(sheet);
-        }
-    }
-    VERBOSE(5, "done.\n");
-
     // d_optimize_not_consecutive
     VERBOSE(5, "-- Checking for cancelling NOT operations... ");
     repeat = d_optimize_not_consecutive(sheet);
@@ -221,70 +205,7 @@ void d_optimize_all(Sheet *sheet) {
     d_optimize_call_func_relative(sheet);
     VERBOSE(5, "done.\n");
 
-    // d_optimize_move_consecutive
-    VERBOSE(5, "-- Checking for consecutive move operations... ");
-    repeat = d_optimize_move_consecutive(sheet);
-    if (repeat) {
-        while (repeat) {
-            repeat = d_optimize_move_consecutive(sheet);
-        }
-    }
-    VERBOSE(5, "done.\n");
-}
-
-/**
- * \fn bool d_optimize_pop_push_consecutive(Sheet *sheet)
- * \brief Try and find consecutive instructions that push and pop the general
- * stack into / from the same register. The push and pop order doesn't matter.
- *
- * \return If we were able to optimise.
- *
- * \param sheet The sheet containing the bytecode to optimize.
- */
-bool d_optimize_pop_push_consecutive(Sheet *sheet) {
-    bool optimized = false;
-
-    for (size_t i = 0; i < sheet->_textSize;) {
-        DIns firstOpcode              = sheet->_text[i];
-        const unsigned char firstSize = d_vm_ins_size(firstOpcode);
-        bool deleted                  = false;
-
-        if (i + firstSize >= sheet->_textSize)
-            break;
-
-        if (firstOpcode == OP_POP || firstOpcode == OP_PUSH) {
-            DIns secondOpcode = sheet->_text[i + firstSize];
-
-            // Is it PUSH then POP or POP then PUSH?
-            if (firstOpcode != secondOpcode &&
-                (secondOpcode == OP_POP || secondOpcode == OP_PUSH)) {
-                // Are the registers the same?
-                if (sheet->_text[i + 1] == sheet->_text[i + firstSize + 1]) {
-                    // We can get rid of these 2 instructions, since they
-                    // cancel each other out.
-                    d_optimize_remove_bytecode(sheet, i,
-                                               (size_t)d_vm_ins_size(OP_POP) +
-                                                   d_vm_ins_size(OP_POP));
-                    optimized = true;
-                    deleted   = true;
-                }
-            }
-        }
-
-        // If we've gone wrong somewhere, error and exit.
-        if (firstSize == 0) {
-            printf(
-                "Fatal: (internal:d_optimize_pop_push_consecutive) Byte %zu of "
-                "part-optimized bytecode for sheet %s is not a valid opcode",
-                i, sheet->filePath);
-            exit(1);
-        }
-
-        if (!deleted)
-            i += firstSize;
-    }
-
-    return optimized;
+    // TODO: Add function to compress immediate instructions.
 }
 
 /**
@@ -361,111 +282,30 @@ bool d_optimize_call_func_relative(Sheet *sheet) {
 
             // Check if the function is defined in this sheet.
             if (func->sheet == sheet) {
-                // Calculate the jump. Is it possible to fit it into an
-                // immediate?
+                // Calculate the jump.
                 dint jmp = (size_t)linkMeta._ptr - itl.ins;
 
-                if ((jmp & IMMEDIATE_UPPER_MASK) == 0 ||
-                    (jmp & IMMEDIATE_UPPER_MASK) == IMMEDIATE_UPPER_MASK) {
-                    // We're good to go! The idea is to replace the LOADUI
-                    // instruction with a CALLR one, and delete the
-                    // following ORI and CALL instructions.
-                    // We delete first so we get the CORRECT jump amount,
-                    // just in case the location of the function changes.
-                    size_t amtToDelete = (size_t)d_vm_ins_size(OP_LOADUI) +
-                                         d_vm_ins_size(OP_ORI) +
-                                         d_vm_ins_size(OP_CALL) -
-                                         d_vm_ins_size(OP_CALLR);
+                // The idea is to replace the CALLI instruction with a
+                // CALLRF one.
+                sheet->_text[itl.ins] = OP_CALLRF;
 
-                    // We need to set the new opcode NOW so that the sizes
-                    // of each instruction give the correct result. We need
-                    // to do this in case CALLR and LOADUI are different
-                    // sizes.
-                    sheet->_text[itl.ins] = OP_CALLR;
+                // Replace the full immediate.
+                linkMeta = sheet->_link.list[itl.link];
+                jmp      = (size_t)linkMeta._ptr - itl.ins;
+                *(fimmediate_t *)(sheet->_text + itl.ins + 1) = jmp;
 
-                    d_optimize_remove_bytecode(
-                        sheet, itl.ins + d_vm_ins_size(OP_CALLR), amtToDelete);
+                // We also remove the link record here since we don't
+                // want the linker to overwrite what beautiful art
+                // this is.
+                d_optimize_remove_ins_to_link(sheet, i);
 
-                    linkMeta = sheet->_link.list[itl.link];
-                    jmp      = (size_t)linkMeta._ptr - itl.ins;
-                    *(immediate_t *)(sheet->_text + itl.ins + 1) =
-                        (immediate_t)(jmp & IMMEDIATE_MASK);
+                // Keep the index on the same spot in the array, since
+                // the next InstructionToLink will have moved to this
+                // spot.
+                i--;
 
-                    // We also remove the link record here since we don't
-                    // want the linker to overwrite what beautiful art
-                    // this is.
-                    d_optimize_remove_ins_to_link(sheet, i);
-
-                    // Keep the index on the same spot in the array, since
-                    // the next InstructionToLink will have moved to this
-                    // spot.
-                    i--;
-
-                    optimized = true;
-                }
+                optimized = true;
             }
-        }
-    }
-
-    return optimized;
-}
-
-/**
- * \fn bool d_optimize_move_consecutive(Sheet *sheet)
- * \brief Try and find consecutive MVTF and MVTI instructions that move a value
- * in and out the same register.
- *
- * \return If we were able to optimise.
- *
- * \param sheet The sheet containing the bytecode to optimize.
- */
-bool d_optimize_move_consecutive(struct _sheet *sheet) {
-    bool optimized = false;
-
-    for (size_t i = 0; i < sheet->_textSize;) {
-        DIns firstOpcode              = sheet->_text[i];
-        const unsigned char firstSize = d_vm_ins_size(firstOpcode);
-        bool deleted                  = false;
-
-        if (i + firstSize >= sheet->_textSize) {
-            break;
-        }
-
-        if (firstOpcode == OP_MVTF || firstOpcode == OP_MVTI) {
-            DIns secondOpcode = sheet->_text[i + firstSize];
-
-            // Is it MVTF then MVTI or MVTI then MVTF?
-            if (firstOpcode != secondOpcode &&
-                (secondOpcode == OP_MVTF || secondOpcode == OP_MVTI)) {
-
-                // Are the registers the same?
-                if (sheet->_text[i + 1] == sheet->_text[i + firstSize + 2]) {
-                    if (sheet->_text[i + 2] ==
-                        sheet->_text[i + firstSize + 1]) {
-                        // We can get rid of the second instruction, since it
-                        // just moves the value that just got moved back to
-                        // where it came from.
-                        d_optimize_remove_bytecode(sheet, i + firstSize,
-                                                   d_vm_ins_size(secondOpcode));
-
-                        optimized = true;
-                        deleted   = true;
-                    }
-                }
-            }
-        }
-
-        // If we've gone wrong somewhere, error and exit.
-        if (firstSize == 0) {
-            printf(
-                "Fatal: (internal:d_optimize_pop_push_consecutive) Byte %zu of "
-                "part-optimized bytecode for sheet %s is not a valid opcode",
-                i, sheet->filePath);
-            exit(1);
-        }
-
-        if (!deleted) {
-            i += firstSize;
         }
     }
 
