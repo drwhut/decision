@@ -26,8 +26,9 @@
 #ifndef DOPTIMIZE_H
 #define DOPTIMIZE_H
 
-#include <stdbool.h>
 #include "dcfg.h"
+#include <stdbool.h>
+
 
 #include <stddef.h>
 
@@ -74,7 +75,7 @@ DECISION_API void d_optimize_all(struct _sheet *sheet);
 
 /**
  * \fn bool d_optimize_not_consecutive(Sheet *sheet)
- * \brief Try and find consecutive NOT instructions that NOT the same register.
+ * \brief Try and find consecutive NOT instructions.
  *
  * \return If we were able to optimise.
  *

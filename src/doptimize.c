@@ -95,7 +95,7 @@ void d_optimize_remove_bytecode(Sheet *sheet, size_t start, size_t len) {
                     // Did it jump over the deleted region?
                     if (i + len + jmpAmt < start) {
                         // Then fix the jump amount.
-                        jmpAmt = jmpAmt + (fimmediate_t)len;
+                        jmpAmt  = jmpAmt + (fimmediate_t)len;
                         *jmpPtr = jmpAmt;
                     }
                 }
@@ -106,7 +106,7 @@ void d_optimize_remove_bytecode(Sheet *sheet, size_t start, size_t len) {
                     // Did it jump over the deleted region?
                     if (i + jmpAmt >= start + len) {
                         // Then fix the jump amount.
-                        jmpAmt = jmpAmt - (fimmediate_t)len;
+                        jmpAmt  = jmpAmt - (fimmediate_t)len;
                         *jmpPtr = jmpAmt;
                     }
                 }
@@ -210,7 +210,7 @@ void d_optimize_all(Sheet *sheet) {
 
 /**
  * \fn bool d_optimize_not_consecutive(Sheet *sheet)
- * \brief Try and find consecutive NOT instructions that NOT the same register.
+ * \brief Try and find consecutive NOT instructions..
  *
  * \return If we were able to optimise.
  *
