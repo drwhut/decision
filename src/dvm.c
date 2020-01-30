@@ -1479,7 +1479,7 @@ void d_vm_dump(DVM *vm) {
         dint intValue     = *ptr;
         dfloat floatValue = *((dfloat *)ptr);
 
-        printf("%d\t= %d\t|\t%x\t|\t%f\n", offset, intValue, intValue,
+        printf("%d\t= %d\t|\t0x%x\t|\t%f\n", offset, intValue, intValue,
                floatValue);
 
         ptr--;
