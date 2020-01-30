@@ -1615,6 +1615,7 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context) {
         // Generate bytecode depending on the core function.
         // Remember that it's only execution functions we care about.
         SheetSocket *socket;
+        SheetSocket *firstNode;
 
         switch (coreFunc) {
             case CORE_FOR:;
@@ -1878,33 +1879,58 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context) {
 
             case CORE_IF_THEN:
             case CORE_IF_THEN_ELSE:;
-                // Get the socket with the condition input.
-                socket = node->sockets[1];
-                d_setup_input(socket, context, false, false, &action);
-
-                // Get it's register.
-                reg_t condReg = socket->_reg;
-                d_free_reg(context, condReg);
-
                 BCode thenBranch = (BCode){NULL, 0};
                 BCode elseBranch = (BCode){NULL, 0};
+
+                int initStackTop = context->stackTop;
 
                 // Get the individual branches compiled.
                 socket = node->sockets[2];
                 if (socket->numConnections == 1) {
                     firstNode  = socket->connections[0]->node;
-                    thenBranch = d_generate_bytecode_for_execution_node(
-                        firstNode, context, false, inLoop);
+                    thenBranch = d_generate_execution_node(firstNode, context);
                 }
+
+                int thenTopDiff = context->stackTop - initStackTop;
+
+                // Reset the context stack top.
+                context->stackTop = initStackTop;
 
                 if (coreFunc == CORE_IF_THEN_ELSE) {
                     socket = node->sockets[3];
                     if (socket->numConnections == 1) {
-                        firstNode  = socket->connections[0]->node;
-                        elseBranch = d_generate_bytecode_for_execution_node(
-                            firstNode, context, false, inLoop);
+                        firstNode = socket->connections[0]->node;
+                        elseBranch =
+                            d_generate_execution_node(firstNode, context);
                     }
                 }
+
+                int elseTopDiff = context->stackTop - initStackTop;
+
+                // We want both branches to have the same stack top. So if one
+                // branch has a bigger stack top, pop it enough so it's stack
+                // top is equal to the other.
+                int finalTop = initStackTop + thenTopDiff;
+
+                if (thenTopDiff > elseTopDiff) {
+                    finalTop = initStackTop + elseTopDiff;
+
+                    fimmediate_t numPop = thenTopDiff - elseTopDiff;
+
+                    BCode popExtra = d_bytecode_ins(OP_POPF);
+                    d_bytecode_set_fimmediate(popExtra, 1, numPop);
+                    d_concat_bytecode(&thenBranch, &popExtra);
+                    d_free_bytecode(&popExtra);
+                } else if (thenTopDiff < elseTopDiff) {
+                    fimmediate_t numPop = elseTopDiff - thenTopDiff;
+
+                    BCode popExtra = d_bytecode_ins(OP_POPF);
+                    d_bytecode_set_fimmediate(popExtra, 1, numPop);
+                    d_concat_bytecode(&elseBranch, &popExtra);
+                    d_free_bytecode(&popExtra);
+                }
+
+                context->stackTop = finalTop;
 
                 // We put a JRCON at the start to jump to the THEN branch if
                 // the condition is true, which comes after the ELSE branch.
@@ -1914,10 +1940,10 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context) {
                 //    \-----------\-/     /
                 //                 \-----/
 
-                immediate_t jmpToThen =
-                    d_vm_ins_size(OP_JRCON) + (immediate_t)elseBranch.size;
-                immediate_t jmpToEnd =
-                    d_vm_ins_size(OP_JR) + (immediate_t)thenBranch.size;
+                fimmediate_t jmpToThen =
+                    d_vm_ins_size(OP_JRCON) + elseBranch.size;
+                fimmediate_t jmpToEnd =
+                    d_vm_ins_size(OP_JR) + thenBranch.size;
 
                 // There's a possibility that the then branch doesn't have any
                 // code, which means the jump instruction that goes over the
@@ -1928,17 +1954,14 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context) {
                     jmpToThen += d_vm_ins_size(OP_JR);
                 }
 
-                BCode conAtStart = d_malloc_bytecode(d_vm_ins_size(OP_JRCON));
-                d_bytecode_set_byte(conAtStart, 0, OP_JRCON);
-                d_bytecode_set_byte(conAtStart, 1, (char)condReg);
-                d_bytecode_set_immediate(conAtStart, 2, jmpToThen);
+                BCode conAtStart = d_bytecode_ins(OP_JRCONFI);
+                d_bytecode_set_fimmediate(conAtStart, 1, jmpToThen);
 
                 BCode conAtEndElse = (BCode){NULL, 0};
 
                 if (!optimizeJmpToEnd) {
-                    conAtEndElse = d_malloc_bytecode(d_vm_ins_size(OP_JR));
-                    d_bytecode_set_byte(conAtEndElse, 0, OP_JR);
-                    d_bytecode_set_immediate(conAtEndElse, 1, jmpToEnd);
+                    conAtEndElse = d_bytecode_ins(OP_JRFI);
+                    d_bytecode_set_fimmediate(conAtEndElse, 1, jmpToEnd);
                 }
 
                 // Now to combine the bytecode in the correct order.
@@ -1999,16 +2022,7 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context) {
                 d_concat_bytecode(&action, &print);
                 d_free_bytecode(&print);
 
-                // Pop both the return value of the syscall and the value that
-                // was to be printed.
-                BCode popBoth = d_bytecode_ins(OP_POPF);
-                d_bytecode_set_fimmediate(popBoth, 1, 2);
-                d_concat_bytecode(&action, &popBoth);
-                d_free_bytecode(&popBoth);
-
-                // Decrement the top of the stack, as we have poped the value
-                // to be printed.
-                context->stackTop--;
+                context->stackTop++;
 
                 break;
 
@@ -2022,140 +2036,34 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context) {
                 // opcodes and link types.
                 size_t varSize =
                     (var->dataType == TYPE_BOOL) ? 1 : sizeof(dint);
-                DIns storeAdr     = (varSize == 1) ? OP_STOADRB : OP_STOADR;
+                DIns storeAdr     = (varSize == 1) ? OP_SETADRB : OP_SETADR;
                 LinkType linkType = (var->dataType == TYPE_STRING)
                                         ? LINK_VARIABLE_POINTER
                                         : LINK_VARIABLE;
 
-                // We also need the socket containing the value we want to set.
-                socket = node->sockets[2];
-                d_setup_input(socket, context, false, false, &out);
+                // Push the address of the variable onto the stack.
+                // This will be linked later.
+                action = d_bytecode_ins(OP_PUSHF);
 
-                // We'll need a register to store the address of the variable
-                // in.
-                reg_t adrReg = d_next_general_reg(context, false);
-
-                // And get the value's register.
-                reg_t valReg = socket->_reg;
-
-                // If we need to set a malloc'd bit of memory, use this to
-                // store the address of the bit of memory, i.e. the start of
-                // a variable string.
-                reg_t dataAdrReg = valReg;
-
-                // Firstly, generate the starting bytecode to store the value
-                // at the sonn-to-be linked address.
-                // TODO: Can this be optimized for strings?
-                BCode subaction = d_malloc_bytecode(
-                    (size_t)d_vm_ins_size(OP_LOADUI) + d_vm_ins_size(OP_ORI));
-                d_bytecode_set_byte(subaction, 0, OP_LOADUI);
-                d_bytecode_set_byte(subaction, 1, (char)adrReg);
-
-                d_bytecode_set_byte(subaction, d_vm_ins_size(OP_LOADUI),
-                                    OP_ORI);
-                d_bytecode_set_byte(subaction,
-                                    (size_t)d_vm_ins_size(OP_LOADUI) + 1,
-                                    (char)adrReg);
-
-                d_concat_bytecode(&action, &subaction);
-                d_free_bytecode(&subaction);
-
-                // If we're setting a string, we need to use a special opcode
-                // to reallocate the string variable and copy over the content
-                // of the string.
+                // TODO: Implement copying strings.
                 if (var->dataType == TYPE_STRING) {
-                    // We need to save the original address to the variable to
-                    // write back to it afterwards, in case the memory changes
-                    // location.
-                    dataAdrReg = d_next_general_reg(context, false);
-                    d_free_reg(context, dataAdrReg);
-
-                    subaction = d_malloc_bytecode(
-                        (size_t)d_vm_ins_size(OP_LOAD) +
-                        d_vm_ins_size(OP_LOADADR) +
-                        2 * (size_t)d_vm_ins_size(OP_LOADARGI) +
-                        d_vm_ins_size(OP_SYSCALL));
-
-                    d_bytecode_set_byte(subaction, 0, OP_LOAD);
-                    d_bytecode_set_byte(subaction, 1, (char)dataAdrReg);
-                    d_bytecode_set_byte(subaction, 2, (char)adrReg);
-
-                    d_bytecode_set_byte(subaction, d_vm_ins_size(OP_LOAD),
-                                        OP_LOADADR);
-                    d_bytecode_set_byte(subaction,
-                                        (size_t)d_vm_ins_size(OP_LOAD) + 1,
-                                        (char)dataAdrReg);
-                    d_bytecode_set_byte(subaction,
-                                        (size_t)d_vm_ins_size(OP_LOAD) + 2,
-                                        (char)dataAdrReg);
-
-                    // Make the LOADSTR system call.
-                    d_bytecode_set_byte(subaction,
-                                        (size_t)d_vm_ins_size(OP_LOAD) +
-                                            d_vm_ins_size(OP_LOADADR),
-                                        OP_LOADARGI);
-                    d_bytecode_set_byte(subaction,
-                                        (size_t)d_vm_ins_size(OP_LOAD) +
-                                            d_vm_ins_size(OP_LOADADR) + 1,
-                                        0);
-                    d_bytecode_set_immediate(subaction,
-                                             (size_t)d_vm_ins_size(OP_LOAD) +
-                                                 d_vm_ins_size(OP_LOADADR) + 2,
-                                             (char)dataAdrReg);
-
-                    d_bytecode_set_byte(subaction,
-                                        (size_t)d_vm_ins_size(OP_LOAD) +
-                                            d_vm_ins_size(OP_LOADADR) +
-                                            d_vm_ins_size(OP_LOADARGI),
-                                        OP_LOADARGI);
-                    d_bytecode_set_byte(subaction,
-                                        (size_t)d_vm_ins_size(OP_LOAD) +
-                                            d_vm_ins_size(OP_LOADADR) +
-                                            d_vm_ins_size(OP_LOADARGI) + 1,
-                                        1);
-                    d_bytecode_set_immediate(subaction,
-                                             (size_t)d_vm_ins_size(OP_LOAD) +
-                                                 d_vm_ins_size(OP_LOADADR) +
-                                                 d_vm_ins_size(OP_LOADARGI) + 2,
-                                             (char)valReg);
-
-                    d_bytecode_set_byte(subaction,
-                                        (size_t)d_vm_ins_size(OP_LOAD) +
-                                            d_vm_ins_size(OP_LOADADR) +
-                                            (size_t)d_vm_ins_size(OP_LOADARGI) *
-                                                2,
-                                        OP_SYSCALL);
-                    d_bytecode_set_byte(
-                        subaction,
-                        (size_t)d_vm_ins_size(OP_LOAD) +
-                            d_vm_ins_size(OP_LOADADR) +
-                            (size_t)d_vm_ins_size(OP_LOADARGI) * 2 + 1,
-                        SYS_LOADSTR);
-
-                    d_concat_bytecode(&action, &subaction);
-                    d_free_bytecode(&subaction);
                 }
 
-                subaction = d_malloc_bytecode(d_vm_ins_size(storeAdr));
-                d_bytecode_set_byte(subaction, 0, (char)storeAdr);
-                d_bytecode_set_byte(subaction, 1, (char)dataAdrReg);
-                d_bytecode_set_byte(subaction, 2, (char)adrReg);
+                // At this point the address of the variable should be at the
+                // top of the stack, and the new value should be one below.
+                BCode store = d_bytecode_ins(storeAdr);
+                d_concat_bytecode(&action, &store);
+                d_free_bytecode(&store);
 
-                d_concat_bytecode(&action, &subaction);
-                d_free_bytecode(&subaction);
+                context->stackTop--;
 
-                // Now we've generated the bytecode, we don't need the value
-                // register or address anymore.
-                d_free_reg(context, adrReg);
-                d_free_reg(context, valReg);
-
-                // Secondly, setup the link to the variable.
+                // Now set up the link to the variable.
                 LinkMeta varMeta = d_link_new_meta(linkType, var->name, var);
 
-                size_t index;
-                bool wasDuplicate;
-                d_add_link_to_ins(context, &action, 0, varMeta, &index,
-                                  &wasDuplicate);
+                size_t _index;
+                bool _wasDuplicate;
+                d_add_link_to_ins(context, &action, 0, varMeta, &_index,
+                                  &_wasDuplicate);
 
                 break;
 
@@ -2172,8 +2080,8 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context) {
 
                 // Now generate the bytecode for the code that executes if the
                 // condition is true.
-                socket                 = node->sockets[2];
-                SheetSocket *firstNode = socket->connections[0]->node;
+                socket    = node->sockets[2];
+                firstNode = socket->connections[0]->node;
 
                 // TODO: Do NOT add a return.
                 BCode trueCode = d_generate_execution_node(firstNode, context);
@@ -2215,23 +2123,10 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context) {
                 d_concat_bytecode(&action, &trueCode);
                 d_free_bytecode(&trueCode);
 
-                // Finally, so the top of the stack is consistent at the end
-                // of this node's execution, we pop back to before the boolean
-                // value was being calculated.
                 // No matter if the while loop didn't activate once, or it
                 // activated multiple times, there should be only one "instance"
                 // of the boolean being calculated on the stack.
-                numPop = stackTopAfterInputs - stackTopBeforeInputs;
-                if (numPop < 0) {
-                    numPop = 0;
-                }
-
-                popExtra = d_bytecode_ins(OP_POPF);
-                d_bytecode_set_fimmediate(popExtra, 1, numPop);
-                d_concat_bytecode(&action, &popExtra);
-                d_free_bytecode(&popExtra);
-
-                context->stackTop = stackTopBeforeInputs;
+                context->stackTop = stackTopAfterInputs;
 
                 break;
 
@@ -2250,6 +2145,21 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context) {
 
     d_concat_bytecode(&out, &action);
     d_free_bytecode(&action);
+
+    // Now, in order to optimise the usage of the stack, we pop from the stack
+    // back to before the inputs were generated. We've used the inputs in this
+    // node, we don't need them anymore!
+    fimmediate_t numPop = context->stackTop - stackTopBeforeInputs;
+    if (numPop < 0) {
+        numPop = 0;
+    }
+
+    BCode popBack = d_bytecode_ins(OP_POPF);
+    d_bytecode_set_fimmediate(popBack, 1, numPop);
+    d_concat_bytecode(&out, &popBack);
+    d_free_bytecode(&popBack);
+
+    context->stackTop = stackTopBeforeInputs;
 
     // Thirdly, we generate the bytecode for the next execution node.
     BCode nextCode = {NULL, 0};
