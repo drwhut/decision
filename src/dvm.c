@@ -850,18 +850,18 @@ void d_vm_runtime_error(DVM *vm, const char *error) {
  * \def CALL_GENERIC(sym, newPC, offset)
  * \brief A generic helper macro for call opcodes.
  */
-#define CALL_GENERIC(sym, newPC, offset)                              \
-    {                                                                 \
-        const uint8_t numArguments = (uint8_t)GET_BIMMEDIATE(offset); \
-        char *returnAdr            = vm->pc + VM_INS_SIZE[*(vm->pc)]; \
-        vm->pc sym newPC;                                             \
-        dint *insertPtr = vm->stackPtr - numArguments + 1;            \
-        VM_INSERT_LEN(vm, insertPtr, 2, numArguments)                 \
-        *insertPtr = (dint)vm->framePtr;                              \
-        insertPtr++;                                                  \
-        *insertPtr   = (dint)returnAdr;                               \
-        vm->framePtr = insertPtr;                                     \
-        vm->_inc_pc  = 0;                                             \
+#define CALL_GENERIC(sym, newPC, offset)                                  \
+    {                                                                     \
+        const uint8_t numArguments = (uint8_t)GET_BIMMEDIATE(offset);     \
+        char *returnAdr = vm->pc + VM_INS_SIZE[(unsigned char)*(vm->pc)]; \
+        vm->pc sym newPC;                                                 \
+        dint *insertPtr = vm->stackPtr - numArguments + 1;                \
+        VM_INSERT_LEN(vm, insertPtr, 2, numArguments)                     \
+        *insertPtr = (dint)vm->framePtr;                                  \
+        insertPtr++;                                                      \
+        *insertPtr   = (dint)returnAdr;                                   \
+        vm->framePtr = insertPtr;                                         \
+        vm->_inc_pc  = 0;                                                 \
     }
 
 /**
@@ -1537,9 +1537,10 @@ void d_vm_dump(DVM *vm) {
         dint intValue     = *ptr;
         dfloat floatValue = *((dfloat *)ptr);
 
-        printf("%d\t= %d\t|\t0x%x\t|\t%f", offset, intValue, intValue,
-               floatValue);
-        
+        printf("%" DINT_PRINTF_d "\t= %" DINT_PRINTF_d "\t|\t0x%" DINT_PRINTF_x
+               "\t|\t%f",
+               offset, intValue, intValue, floatValue);
+
         if (ptr == vm->framePtr) {
             printf("\t< frame ptr");
         }

@@ -212,23 +212,36 @@ typedef struct _DVM {
 } DVM;
 
 #define BIMMEDIATE_SIZE   1
-#define BIMMEDIATE_PRINTF "hh"
 #define bimmediate_t      int8_t
+#define BIMMEDIATE_PRINTF "hh"
 
 #ifdef DECISION_32
-#define HIMMEDIATE_SIZE   2
+#define HIMMEDIATE_SIZE 2
+#define himmediate_t    int16_t
+#define FIMMEDIATE_SIZE 4
+#define fimmediate_t    int32_t
+
+#if defined(WIN32)
 #define HIMMEDIATE_PRINTF "h"
-#define himmediate_t      int16_t
-#define FIMMEDIATE_SIZE   4
 #define FIMMEDIATE_PRINTF "l"
-#define fimmediate_t      int32_t
 #else
-#define HIMMEDIATE_SIZE   4
+#define HIMMEDIATE_PRINTF "hh"
+#define FIMMEDIATE_PRINTF "h"
+#endif // defined(WIN32)
+
+#else // 64-bit.
+#define HIMMEDIATE_SIZE 4
+#define himmediate_t    int32_t
+#define FIMMEDIATE_SIZE 8
+#define fimmediate_t    int64_t
+
+#if defined(WIN32)
 #define HIMMEDIATE_PRINTF "l"
-#define himmediate_t      int32_t
-#define FIMMEDIATE_SIZE   8
 #define FIMMEDIATE_PRINTF "ll"
-#define fimmediate_t      int64_t
+#else
+#define HIMMEDIATE_PRINTF "h"
+#define FIMMEDIATE_PRINTF "l"
+#endif // defined(WIN32)
 #endif // DECISION_32
 
 /*
