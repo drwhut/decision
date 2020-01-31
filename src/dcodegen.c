@@ -2069,6 +2069,10 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context,
                 socket    = node->sockets[2];
                 firstNode = socket->connections[0]->node;
 
+                // We need to simulate the boolean getting poped from the stack
+                // by JRCONFI.
+                context->stackTop--;
+
                 BCode trueCode =
                     d_generate_execution_node(firstNode, context, false);
 
@@ -2112,7 +2116,9 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context,
                 // No matter if the while loop didn't activate once, or it
                 // activated multiple times, there should be only one "instance"
                 // of the boolean being calculated on the stack.
-                context->stackTop = stackTopAfterInputs;
+                // The -1 is because JRCONFI will pop the condition from the
+                // top of the stack.
+                context->stackTop = stackTopAfterInputs - 1;
 
                 break;
 
