@@ -270,40 +270,6 @@ DECISION_API void d_allocate_variable(BuildContext *context,
                                       size_t size, size_t indexInLinkMeta);
 
 /*
-=== CALLING CONVENTION FUNCTIONS ==========================
-*/
-
-/**
- * \fn bool d_is_node_call(SheetNode *node)
- * \brief Is the node a function that needs to be called?
- *
- * \return The answer to the question above.
- *
- * \param node The node to query.
- */
-DECISION_API bool d_is_node_call(struct _sheetNode *node);
-
-/**
- * \fn bool d_does_input_involve_call(SheetNode *node)
- * \brief Does getting the input of a node require calling another function?
- *
- * \return The answer to the above question.
- *
- * \param node The node whose inputs to query.
- */
-DECISION_API bool d_does_input_involve_call(struct _sheetNode *node);
-
-/**
- * \fn bool d_does_output_involve_call(SheetNode *node)
- * \brief Does the execution sequence starting from node require a call?
- *
- * \return The answer to the above question.
- *
- * \param node The node to start querying from.
- */
-DECISION_API bool d_does_output_involve_call(struct _sheetNode *node);
-
-/*
 === GENERATOR FUNCTIONS ===================================
 */
 
@@ -373,7 +339,6 @@ DECISION_API BCode d_push_node_inputs(struct _sheetNode *node,
 /**
  * \fn BCode d_generate_operator(SheetNode *node, BuildContext *context,
  *                               DIns opcode, DIns fopcode, DIns fiopcode,
- *                               bool oneInput, bool infiniteInputs,
  *                               bool forceFloat)
  * \brief Given an operator node, generate the bytecode for it.
  *

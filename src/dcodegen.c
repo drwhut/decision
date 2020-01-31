@@ -559,119 +559,6 @@ void d_allocate_variable(BuildContext *context, SheetVariable *variable,
 }
 
 /*
-=== CALLING CONVENTION FUNCTIONS ==========================
-*/
-
-/**
- * \fn bool d_is_node_call(SheetNode *node)
- * \brief Is the node a function that needs to be called?
- *
- * \return The answer to the question above.
- *
- * \param node The node to query.
- */
-bool d_is_node_call(SheetNode *node) {
-    if (node == NULL)
-        return false;
-
-    // To answer the question, we just want to check if it's a function that
-    // isn't a core function, and it isn't Start, Define or Return (which
-    // aren't in the list of core functions)
-    NameDefinition definition = node->definition;
-
-    if (definition.type == NAME_FUNCTION && definition.coreFunc == -1)
-        if (strcmp(node->name, "Start") != 0 &&
-            strcmp(node->name, "Define") != 0 &&
-            strcmp(node->name, "Return") != 0)
-            return true;
-
-    return false;
-}
-
-/**
- * \fn bool d_does_input_involve_call(SheetNode *node)
- * \brief Does getting the input of a node require calling another function?
- *
- * \return The answer to the above question.
- *
- * \param node The node whose inputs to query.
- */
-bool d_does_input_involve_call(SheetNode *node) {
-    if (node == NULL)
-        return false;
-
-    // Firstly, is this node a calling node?
-    if (d_is_node_call(node))
-        return true;
-
-    // Alright, so let's try our inputs.
-    if (node->sockets != NULL && node->numSockets > 0) {
-        for (size_t i = 0; i < node->numSockets; i++) {
-            SheetSocket *socket = node->sockets[i];
-
-            // We only care about inputs with the variable data types.
-            if (socket->isInput &&
-                (socket->type & TYPE_VAR_ANY) == socket->type) {
-                // Is this socket connected to a node?
-                if (socket->numConnections == 1) {
-                    SheetSocket *socketConnectedTo = socket->connections[0];
-                    SheetNode *nodeConnectedTo     = socketConnectedTo->node;
-
-                    if (!nodeConnectedTo->isExecution) {
-                        if (d_does_input_involve_call(nodeConnectedTo))
-                            return true;
-                    }
-                }
-            }
-        }
-    }
-
-    return false;
-}
-
-/**
- * \fn bool d_does_output_involve_call(SheetNode *node)
- * \brief Does the execution sequence starting from node require a call?
- *
- * \return The answer to the above question.
- *
- * \param node The node to start querying from.
- */
-bool d_does_output_involve_call(SheetNode *node) {
-    if (node == NULL)
-        return false;
-
-    // Firstly, is this node a calling node?
-    if (d_is_node_call(node))
-        return true;
-
-    // What about our inputs?
-    if (d_does_input_involve_call(node))
-        return true;
-
-    // Alright, so let's try our outputs.
-    if (node->sockets != NULL && node->numSockets > 0) {
-        for (size_t i = 0; i < node->numSockets; i++) {
-            SheetSocket *socket = node->sockets[i];
-
-            // We only care about output execution sockets.
-            if (!socket->isInput && socket->type == TYPE_EXECUTION) {
-                // Is this socket connected to a node?
-                if (socket->numConnections == 1) {
-                    SheetSocket *socketConnectedTo = socket->connections[0];
-                    SheetNode *nodeConnectedTo     = socketConnectedTo->node;
-
-                    if (d_does_output_involve_call(nodeConnectedTo))
-                        return true;
-                }
-            }
-        }
-    }
-
-    return false;
-}
-
-/*
 === GENERATOR FUNCTIONS ===================================
 */
 
@@ -1010,7 +897,6 @@ BCode d_push_node_inputs(SheetNode *node, BuildContext *context, bool order,
 /**
  * \fn BCode d_generate_operator(SheetNode *node, BuildContext *context,
  *                               DIns opcode, DIns fopcode, DIns fiopcode,
- *                               bool oneInput, bool infiniteInputs,
  *                               bool forceFloat)
  * \brief Given an operator node, generate the bytecode for it.
  *
@@ -1268,7 +1154,8 @@ BCode d_push_argument(SheetSocket *socket, BuildContext *context) {
         for (size_t i = 0; i < node->numSockets; i++) {
             SheetSocket *testSocket = node->sockets[i];
 
-            if (!testSocket->isInput && (testSocket->type & TYPE_VAR_ANY) != 0) {
+            if (!testSocket->isInput &&
+                (testSocket->type & TYPE_VAR_ANY) != 0) {
                 // Sockets are separately malloc'd.
                 if (socket == testSocket) {
                     index = numOutputs;
