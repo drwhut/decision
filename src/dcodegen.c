@@ -784,15 +784,31 @@ BCode d_push_input(SheetSocket *socket, BuildContext *context,
         } else {
             // The socket has a connected socket.
             SheetSocket *connSocket = socket->connections[0];
+            SheetNode *connNode     = connSocket->node;
+
+            // Determine if the node is an execution node.
+            bool isExecutionNode = false;
+
+            for (size_t i = 0; i < connNode->numSockets; i++) {
+                SheetSocket *testSocket = connNode->sockets[i];
+
+                if (testSocket->type == TYPE_EXECUTION) {
+                    isExecutionNode = true;
+                    break;
+                }
+            }
 
             // Set to false if you can determine socket->_stackIndex.
             bool checkIfOnTop = true;
+
+            // Set to true if you want the value to be pushed on top, even if
+            // it already is on top.
+            bool forceOnTop = false;
 
             // Has this output not already been generated, or has it been poped
             // off?
             if (connSocket->_stackIndex < 0 ||
                 connSocket->_stackIndex > context->stackTop) {
-                SheetNode *connNode = connSocket->node;
 
                 // If this is the Define node, we need to push the argument.
                 if (strcmp(connNode->name, "Define") == 0) {
@@ -802,39 +818,35 @@ BCode d_push_input(SheetSocket *socket, BuildContext *context,
                     // stack index now.
                     socket->_stackIndex = context->stackTop;
                     checkIfOnTop        = false;
-                } else {
-                    // Determine if the node is an execution node.
-                    bool isExecutionNode = false;
-
-                    for (size_t i = 0; i < connNode->numSockets; i++) {
-                        SheetSocket *testSocket = connNode->sockets[i];
-
-                        if (testSocket->type == TYPE_EXECUTION) {
-                            isExecutionNode = true;
-                            break;
-                        }
-                    }
-
-                    if (isExecutionNode) {
-                        // TODO: This.
-                    } else {
-                        out = d_generate_nonexecution_node(connNode, context);
-                    }
+                } else if (!isExecutionNode) {
+                    out = d_generate_nonexecution_node(connNode, context);
                 }
+            } else if (isExecutionNode) {
+                // Semantic Analysis should have confirmed that there
+                // are no loops in the program, which implies that the
+                // value we want should have already been generated.
+                // We just need to get it and push it to the top of the
+                // stack like an argument.
+                forceOnTop = true;
             }
 
-            if (checkIfOnTop) {
+            if (checkIfOnTop || forceOnTop) {
                 // If the value is not at the top of the stack, make sure it is.
                 int inputIndex = connSocket->_stackIndex;
 
-                if (!IS_INDEX_TOP(context, inputIndex)) {
+                if (!IS_INDEX_TOP(context, inputIndex) || forceOnTop) {
                     BCode get = d_bytecode_ins(OP_GETFI);
                     d_bytecode_set_fimmediate(
-                        get, 1, (fimmediate_t)STACK_INDEX_TOP(context, inputIndex));
+                        get, 1,
+                        (fimmediate_t)STACK_INDEX_TOP(context, inputIndex));
                     d_concat_bytecode(&out, &get);
                     d_free_bytecode(&get);
 
-                    connSocket->_stackIndex = context->stackTop;
+                    if (!forceOnTop) {
+                        connSocket->_stackIndex = context->stackTop;
+                    }
+
+                    context->stackTop++;
                 }
 
                 socket->_stackIndex = connSocket->_stackIndex;
@@ -1617,18 +1629,28 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context,
                                 bool retAtEnd) {
     VERBOSE(5, "- Generating bytecode for execution node %s...\n", node->name);
 
+    const CoreFunction coreFunc = d_core_find_name(node->name);
+
+    bool forceFloats = false;
+
+    if (coreFunc == CORE_FOR) {
+        // If the output is going to be a float, we need the inputs to be
+        // floats.
+        if (node->sockets[5]->type == TYPE_FLOAT) {
+            forceFloats = true;
+        }
+    }
+
     int stackTopBeforeInputs = context->stackTop;
 
     // Firstly, we need the bytecode to get the inputs, such that the first
     // input is at the top of the stack.
-    BCode out = d_push_node_inputs(node, context, false, false, false);
+    BCode out = d_push_node_inputs(node, context, false, false, forceFloats);
 
     int stackTopAfterInputs = context->stackTop;
 
     // Secondly, we use the inputs to perform an action.
     BCode action = {NULL, 0};
-
-    const CoreFunction coreFunc = d_core_find_name(node->name);
 
     // We don't want to have multiple returns at the end, so if we know we've
     // added one, then there is no need to add another.
@@ -1642,264 +1664,195 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context,
 
         switch (coreFunc) {
             case CORE_FOR:;
-                // TODO: This.
-                /*
-                // The "index" output.
+                // We will be using the "start" input as the index.
                 SheetSocket *indexSocket = node->sockets[5];
+                indexSocket->_stackIndex = context->stackTop;
 
-                // We just need to check if our output is a float.
-                bool indexIsFloat = (indexSocket->type == TYPE_FLOAT);
-
-                // We also want to make sure our registers are "safe", if the
-                // iteration uses calls.
-                socket                        = node->sockets[4];
-                SheetNode *iterationStartNode = NULL;
-                bool useSafeRegisters         = false;
-
-                if (socket->numConnections == 1) {
-                    socket             = socket->connections[0];
-                    iterationStartNode = socket->node;
-
-                    useSafeRegisters =
-                        d_does_output_involve_call(iterationStartNode);
-                }
-
-                // The "start" input.
-                socket = node->sockets[1];
-                d_setup_input(socket, context, indexIsFloat, useSafeRegisters,
-                              &action);
-                reg_t indexReg = socket->_reg;
-
-                // Set the register of the "index" output, so other nodes
-                // can get it's value.
-                indexSocket->_reg = indexReg;
-
-                // The "end" input.
-                socket = node->sockets[2];
-                d_setup_input(socket, context, indexIsFloat, useSafeRegisters,
-                              &action);
-                reg_t endReg = socket->_reg;
-
-                // The "step" input.
-                // Optimize: If the step is constant, don't bother putting it
-                // into a register. It's only going to get used in one ADD
-                // instruction. If it's a float, or it can't fit into an
-                // immediate, then we don't have a choice but to put it into a
-                // register.
+                // If the step input is an immediate, we can determine here what
+                // instruction to use to compare the index with the stop value.
+                // If not, we need to insert bytecode to decide.
                 SheetSocket *stepSocket = node->sockets[3];
-                bool stepImmediate =
-                    stepSocket->numConnections == 0 && !indexIsFloat &&
-                    ((stepSocket->defaultValue.integerValue &
-                      IMMEDIATE_UPPER_MASK) == 0 ||
-                     (stepSocket->defaultValue.integerValue &
-                      IMMEDIATE_UPPER_MASK) == IMMEDIATE_UPPER_MASK);
+                bool isStepImmediate    = (stepSocket->numConnections == 0);
+                LexData stepValue       = stepSocket->defaultValue;
 
-                dint stepImmediateVal =
-                    0;             // Only defined if it's a literal int.
-                reg_t stepReg = 0; // Only defined otherwise.
+                // Start off the loop by getting the stop value, then getting
+                // the current index value.
+                BCode loop = d_bytecode_ins(OP_GETFI);
+                d_bytecode_set_fimmediate(loop, 1, -1);
 
-                if (stepImmediate) {
-                    stepImmediateVal = stepSocket->defaultValue.integerValue;
-                } else {
-                    d_setup_input(stepSocket, context, indexIsFloat,
-                                  useSafeRegisters, &action);
-                    stepReg = stepSocket->_reg;
-                }
+                BCode getIndex = d_bytecode_ins(OP_GETFI);
+                d_bytecode_set_fimmediate(getIndex, 1, -1);
+                d_concat_bytecode(&loop, &getIndex);
+                d_free_bytecode(&getIndex);
 
-                // The "iteration" socket, which gets executed each pass.
-                BCode pass = (BCode){NULL, 0};
-                if (iterationStartNode != NULL) {
-                    pass = d_generate_bytecode_for_execution_node(
-                        iterationStartNode, context, false, true);
-                }
+                // Bytecode for the comparison between the index and stop value.
+                // NOTE: We want this to push 1 if we want to exit the loop,
+                // and 0 if we want to stay in it!
+                BCode cmp = {NULL, 0};
 
-                d_concat_bytecode(&action, &pass);
+                if (isStepImmediate) {
+                    DIns cmpOp;
 
-                // We need another register to determine if we are still in
-                // the for loop or not.
-                // We can immediately free it again since it's only going to
-                // be used for this node only.
-                reg_t inLoopReg = d_next_general_reg(context, false);
-                d_free_reg(context, inLoopReg);
-
-                // Which operator do we use to determine if we're done?
-                // If the step value is variable, then we'll need to hard-code
-                // which to use into the bytecode.
-                DIns compareOp             = (indexIsFloat) ? OP_CMTF : OP_CMT;
-                bool canDetermineCompareOp = false;
-
-                if (stepSocket->numConnections == 0) {
-                    canDetermineCompareOp = true;
-
-                    if (stepSocket->type == TYPE_INT) {
-                        if (stepSocket->defaultValue.integerValue < 0)
-                            compareOp = (indexIsFloat) ? OP_CLTF : OP_CLT;
+                    // We already know from above if we should use a floating
+                    // point comparison instruction.
+                    if (forceFloats) {
+                        if (stepValue.floatValue > 0) {
+                            cmpOp = OP_CMTF;
+                        } else {
+                            cmpOp = OP_CLTF;
+                        }
                     } else {
-                        if (stepSocket->defaultValue.floatValue < 0.0)
-                            compareOp = (indexIsFloat) ? OP_CLTF : OP_CLT;
+                        if (stepValue.integerValue > 0) {
+                            cmpOp = OP_CMT;
+                        } else {
+                            cmpOp = OP_CLT;
+                        }
+                    }
+
+                    // Add the comparison instruction to the loop.
+                    cmp = d_bytecode_ins(cmpOp);
+                } else {
+                    // We need to put in bytecode to determine the instruction
+                    // to use depending on the step value.
+
+                    // Push the value 0.
+                    BCode determineCmp = d_bytecode_ins(OP_PUSHF);
+                    d_bytecode_set_fimmediate(determineCmp, 1, 0);
+
+                    // Push the step value.
+                    BCode pushStep = d_bytecode_ins(OP_GETFI);
+                    d_bytecode_set_fimmediate(pushStep, 1, -5);
+                    d_concat_bytecode(&determineCmp, &pushStep);
+                    d_free_bytecode(&pushStep);
+
+                    // Check if the step value is > 0.
+                    DIns opMoreThan0 = (forceFloats) ? OP_CMTF : OP_CMT;
+                    BCode moreThan0  = d_bytecode_ins(opMoreThan0);
+                    d_concat_bytecode(&determineCmp, &moreThan0);
+                    d_free_bytecode(&moreThan0);
+
+                    // If step > 0.
+                    DIns cmpIfStepMore = (forceFloats) ? OP_CMTF : OP_CMT;
+                    BCode stepPos      = d_bytecode_ins(cmpIfStepMore);
+
+                    // If step <= 0.
+                    DIns cmpIfStepLess = (forceFloats) ? OP_CLTF : OP_CLT;
+                    BCode stepNeg      = d_bytecode_ins(cmpIfStepLess);
+
+                    // Add a jump after stepNeg to jump over the stepPos.
+                    fimmediate_t jmpAmt =
+                        (fimmediate_t)(d_vm_ins_size(OP_JRFI) + stepPos.size);
+                    BCode jmpOverPos = d_bytecode_ins(OP_JRFI);
+                    d_bytecode_set_fimmediate(jmpOverPos, 1, jmpAmt);
+                    d_concat_bytecode(&stepNeg, &jmpOverPos);
+                    d_free_bytecode(&jmpOverPos);
+
+                    // Add a jump instruction if step > 0 to go to stepPos.
+                    jmpAmt = (fimmediate_t)(d_vm_ins_size(OP_JRCONFI) +
+                                            stepNeg.size);
+
+                    BCode jmpToPos = d_bytecode_ins(OP_JRCONFI);
+                    d_bytecode_set_fimmediate(jmpToPos, 1, jmpAmt);
+                    d_concat_bytecode(&determineCmp, &jmpToPos);
+                    d_free_bytecode(&jmpToPos);
+
+                    // Add stepNeg and then stepPos.
+                    d_concat_bytecode(&determineCmp, &stepNeg);
+                    d_concat_bytecode(&determineCmp, &stepPos);
+
+                    d_free_bytecode(&stepNeg);
+                    d_free_bytecode(&stepPos);
+                }
+
+                d_concat_bytecode(&loop, &cmp);
+                d_free_bytecode(&cmp);
+
+                // If the condition is true, jump over the code we're making.
+                // We will concatenate this later once we know how much to jump.
+                BCode jmpOverLoop = d_bytecode_ins(OP_JRCONFI);
+
+                // Get the bytecode for the loop.
+                int stackTopBeforeLoop  = context->stackTop;
+                SheetSocket *loopSocket = node->sockets[4];
+
+                BCode loopAfterJump = {NULL, 0};
+
+                if (loopSocket->numConnections == 1) {
+                    SheetSocket *connectedTo = loopSocket->connections[0];
+                    firstNode                = connectedTo->node;
+
+                    loopAfterJump =
+                        d_generate_execution_node(firstNode, context, false);
+                }
+
+                // Pop back to the index value.
+                fimmediate_t numPopFromLoop =
+                    context->stackTop - stackTopBeforeLoop;
+                if (numPopFromLoop < 0) {
+                    numPopFromLoop = 0;
+                }
+
+                BCode popLoop = d_bytecode_ins(OP_POPF);
+                d_bytecode_set_fimmediate(popLoop, 1, numPopFromLoop);
+                d_concat_bytecode(&loopAfterJump, &popLoop);
+                d_free_bytecode(&popLoop);
+
+                context->stackTop = stackTopBeforeLoop;
+
+                // Get the step value, and add it on to the index value.v
+                bool addImmediate = false;
+                DIns addOp;
+
+                if (forceFloats) {
+                    addOp = OP_ADDF;
+                } else {
+                    if (isStepImmediate) {
+                        addOp        = OP_ADDFI;
+                        addImmediate = true;
+                    } else {
+                        addOp = OP_ADD;
                     }
                 }
 
-                // TODO: Check if the jump amount is too big, i.e. we cannot
-                // add to the index with an immediate.
-
-                DIns addOpcode = OP_ADDI;
-                if (!stepImmediate) {
-                    addOpcode = (indexIsFloat) ? OP_ADDF : OP_ADD;
+                if (!addImmediate) {
+                    BCode getStep = d_bytecode_ins(OP_GETFI);
+                    d_bytecode_set_fimmediate(getStep, 1, -2);
+                    d_concat_bytecode(&loopAfterJump, &getStep);
+                    d_free_bytecode(&getStep);
                 }
 
-                BCode afterPass = d_malloc_bytecode(d_vm_ins_size(addOpcode));
+                BCode addStep = d_bytecode_ins(addOp);
 
-                // Add the step value onto the index.
-                d_bytecode_set_byte(afterPass, 0, addOpcode);
-
-                if (stepImmediate) {
-                    d_bytecode_set_byte(afterPass, 1, (char)indexReg);
-                    d_bytecode_set_immediate(
-                        afterPass, 2,
-                        (immediate_t)(stepImmediateVal & IMMEDIATE_MASK));
-                } else {
-                    d_bytecode_set_byte(afterPass, 1, (char)indexReg);
-                    d_bytecode_set_byte(afterPass, 2, (char)stepReg);
+                if (addImmediate) {
+                    d_bytecode_set_fimmediate(
+                        addStep, 1, (fimmediate_t)stepValue.integerValue);
                 }
 
-                dint jumpBackAmt =
-                    -((dint)pass.size + d_vm_ins_size(addOpcode));
+                d_concat_bytecode(&loopAfterJump, &addStep);
+                d_free_bytecode(&addStep);
 
-                DIns firstCmpOp   = compareOp;
-                BCode firstGoBack = d_malloc_bytecode(
-                    d_vm_ins_size(firstCmpOp) + d_vm_ins_size(OP_JRCON) +
-                    d_vm_ins_size(OP_JR));
+                // Finally, loop back to the start of the loop to check the
+                // condition again.
+                fimmediate_t jmpAmt = -(fimmediate_t)(
+                    loop.size + jmpOverLoop.size + loopAfterJump.size);
 
-                if (!canDetermineCompareOp) {
+                BCode loopBack = d_bytecode_ins(OP_JRFI);
+                d_bytecode_set_fimmediate(loopBack, 1, jmpAmt);
+                d_concat_bytecode(&loopAfterJump, &loopBack);
+                d_free_bytecode(&loopBack);
 
-                    // NOTE: firstCmpOp is the opcode used if the step counter
-                    // is >= 0, otherwise secondCmpOp is the opcode used.
-                    DIns secondCmpOp   = (indexIsFloat) ? OP_CLTF : OP_CLT;
-                    BCode secondGoBack = d_malloc_bytecode(
-                        d_vm_ins_size(secondCmpOp) + d_vm_ins_size(OP_JRCON) +
-                        d_vm_ins_size(OP_JR));
+                // Now we know how much to jump once the index has reached the
+                // stop value.
+                jmpAmt = (fimmediate_t)(jmpOverLoop.size + loopAfterJump.size);
+                d_bytecode_set_fimmediate(jmpOverLoop, 1, jmpAmt);
+                d_concat_bytecode(&loop, &jmpOverLoop);
+                d_free_bytecode(&jmpOverLoop);
 
-                    DIns decideOp   = (indexIsFloat) ? OP_CMEQF : OP_CMEQ;
-                    BCode decideCmp = d_malloc_bytecode(
-                        d_vm_ins_size(OP_LOADI) + d_vm_ins_size(decideOp) +
-                        d_vm_ins_size(OP_JRCON));
+                d_concat_bytecode(&loop, &loopAfterJump);
+                d_free_bytecode(&loopAfterJump);
 
-                    // NOTE: We are using the inLoopReg to both determine which
-                    // comparison to use, as well as to check if we are still
-                    // in the loop.
+                action = loop;
 
-                    // decideCmp (LOADI)
-                    d_bytecode_set_byte(decideCmp, 0, OP_LOADI);
-                    d_bytecode_set_byte(decideCmp, 1, (char)inLoopReg);
-                    d_bytecode_set_immediate(decideCmp, 2, 0);
-
-                    // decideCmp (decideOp)
-                    d_bytecode_set_byte(decideCmp, d_vm_ins_size(OP_LOADI),
-                                        decideOp);
-                    d_bytecode_set_byte(decideCmp, d_vm_ins_size(OP_LOADI) + 1,
-                                        (char)inLoopReg);
-                    d_bytecode_set_byte(decideCmp, d_vm_ins_size(OP_LOADI) + 2,
-                                        (char)stepReg);
-                    d_bytecode_set_byte(decideCmp, d_vm_ins_size(OP_LOADI) + 3,
-                                        (char)inLoopReg);
-
-                    // decideCmp (JRCON)
-                    d_bytecode_set_byte(decideCmp,
-                                        d_vm_ins_size(OP_LOADI) +
-                                            d_vm_ins_size(decideOp),
-                                        OP_JRCON);
-                    d_bytecode_set_byte(decideCmp,
-                                        d_vm_ins_size(OP_LOADI) +
-                                            d_vm_ins_size(decideOp) + 1,
-                                        (char)inLoopReg);
-                    d_bytecode_set_immediate(
-                        decideCmp,
-                        d_vm_ins_size(OP_LOADI) + d_vm_ins_size(decideOp) + 2,
-                        d_vm_ins_size(OP_JRCON) +
-                            (immediate_t)secondGoBack.size);
-
-                    // secondGoBack (secondCmpOp)
-                    d_bytecode_set_byte(secondGoBack, 0, secondCmpOp);
-                    d_bytecode_set_byte(secondGoBack, 1, (char)inLoopReg);
-                    d_bytecode_set_byte(secondGoBack, 2, (char)indexReg);
-                    d_bytecode_set_byte(secondGoBack, 3, (char)endReg);
-
-                    // secondGoBack (JRCON)
-                    d_bytecode_set_byte(secondGoBack,
-                                        d_vm_ins_size(secondCmpOp), OP_JRCON);
-                    d_bytecode_set_byte(secondGoBack,
-                                        d_vm_ins_size(secondCmpOp) + 1,
-                                        (char)inLoopReg);
-                    d_bytecode_set_immediate(
-                        secondGoBack, d_vm_ins_size(secondCmpOp) + 2,
-                        d_vm_ins_size(OP_JRCON) + d_vm_ins_size(OP_JR) +
-                            (immediate_t)firstGoBack.size);
-
-                    jumpBackAmt -=
-                        (decideCmp.size + d_vm_ins_size(secondCmpOp) +
-                         d_vm_ins_size(OP_JRCON));
-
-                    // secondGoBack (JR)
-                    d_bytecode_set_byte(secondGoBack,
-                                        d_vm_ins_size(secondCmpOp) +
-                                            d_vm_ins_size(OP_JRCON),
-                                        OP_JR);
-                    d_bytecode_set_immediate(secondGoBack,
-                                             d_vm_ins_size(secondCmpOp) +
-                                                 d_vm_ins_size(OP_JRCON) + 1,
-                                             (jumpBackAmt & IMMEDIATE_MASK));
-
-                    // Need to take the JR into account for when firstGoBack
-                    // calculates how many bytes it needs to go back.
-                    jumpBackAmt -= d_vm_ins_size(OP_JR);
-
-                    d_concat_bytecode(&afterPass, &decideCmp);
-                    d_free_bytecode(&decideCmp);
-
-                    d_concat_bytecode(&afterPass, &secondGoBack);
-                    d_free_bytecode(&secondGoBack);
-                }
-
-                // firstGoBack (firstCmpOp)
-                d_bytecode_set_byte(firstGoBack, 0, firstCmpOp);
-                d_bytecode_set_byte(firstGoBack, 1, (char)inLoopReg);
-                d_bytecode_set_byte(firstGoBack, 2, (char)indexReg);
-                d_bytecode_set_byte(firstGoBack, 3, (char)endReg);
-
-                // firstGoBack (JRCON)
-                d_bytecode_set_byte(firstGoBack, d_vm_ins_size(firstCmpOp),
-                                    OP_JRCON);
-                d_bytecode_set_byte(firstGoBack, d_vm_ins_size(firstCmpOp) + 1,
-                                    (char)inLoopReg);
-                d_bytecode_set_immediate(
-                    firstGoBack, d_vm_ins_size(firstCmpOp) + 2,
-                    (dint)d_vm_ins_size(OP_JRCON) + d_vm_ins_size(OP_JR));
-
-                jumpBackAmt -=
-                    (d_vm_ins_size(firstCmpOp) + d_vm_ins_size(OP_JRCON));
-
-                // firstGoBack (JR)
-                d_bytecode_set_byte(
-                    firstGoBack,
-                    d_vm_ins_size(firstCmpOp) + d_vm_ins_size(OP_JRCON), OP_JR);
-                d_bytecode_set_immediate(firstGoBack,
-                                         d_vm_ins_size(firstCmpOp) +
-                                             d_vm_ins_size(OP_JRCON) + 1,
-                                         (jumpBackAmt & IMMEDIATE_MASK));
-
-                d_concat_bytecode(&afterPass, &firstGoBack);
-                d_free_bytecode(&firstGoBack);
-
-                d_concat_bytecode(&action, &afterPass);
-                d_free_bytecode(&afterPass);
-                d_free_bytecode(&pass);
-
-                d_free_reg(context, indexReg);
-                d_free_reg(context, endReg);
-                if (!stepImmediate)
-                    d_free_reg(context, stepReg);
-                */
                 break;
 
             case CORE_IF_THEN:
@@ -2042,7 +1995,7 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context,
                 d_bytecode_set_byte(print, 1, SYS_PRINT);
                 d_concat_bytecode(&action, &print);
                 d_free_bytecode(&print);
-                
+
                 // The return value should have replaced the original value,
                 // so there is no need to change the stack top.
 
