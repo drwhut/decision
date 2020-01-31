@@ -211,7 +211,7 @@ SheetSocket *d_socket_create(DType dataType, LexData defaultValue,
     socket->connections    = NULL;
     socket->numConnections = 0;
 
-    socket->_reg = 0;
+    socket->_stackIndex = -1;
 
     return socket;
 }

@@ -112,7 +112,9 @@ them.
 
 .. note::
 
-   Floating-point constants cannot be represented as immediates.
+   Floating-point constants cannot be represented as immediates, except for
+   when you are pushing them to the stack, since that's the only way they can
+   get on the stack.
 
 Diagrams
 ========
@@ -212,7 +214,7 @@ Calling Procedure
 3. Set the program counter of the VM to the pointer provided in step 2.
 
 4. Insert two values before the arguments in the stack: the first being the
-   current frame pointer, and the second being the current program counter.
+   current frame pointer, and the second being the return address.
 
 5. Set the current frame pointer to point to where the program counter was
    saved, i.e. the value above the new frame pointer should be the first

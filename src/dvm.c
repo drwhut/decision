@@ -59,7 +59,9 @@ static const unsigned char VM_INS_SIZE[NUM_OPCODES] = {
     1,                                     // OP_CVTF
     1,                                     // OP_CVTI
     1,                                     // OP_DEREF
+    1 + FIMMEDIATE_SIZE,                   // OP_DEREFI
     1,                                     // OP_DEREFB
+    1 + FIMMEDIATE_SIZE,                   // OP_DEREFBI
     1,                                     // OP_DIV
     1,                                     // OP_DIVF
     1 + BIMMEDIATE_SIZE,                   // OP_DIVBI
@@ -95,12 +97,16 @@ static const unsigned char VM_INS_SIZE[NUM_OPCODES] = {
     1 + BIMMEDIATE_SIZE,                   // OP_ORBI
     1 + HIMMEDIATE_SIZE,                   // OP_ORHI
     1 + FIMMEDIATE_SIZE,                   // OP_ORFI
+    1,                                     // OP_POP
     1 + BIMMEDIATE_SIZE,                   // OP_POPB
     1 + HIMMEDIATE_SIZE,                   // OP_POPH
     1 + FIMMEDIATE_SIZE,                   // OP_POPF
     1 + BIMMEDIATE_SIZE,                   // OP_PUSHB
     1 + HIMMEDIATE_SIZE,                   // OP_PUSHH
     1 + FIMMEDIATE_SIZE,                   // OP_PUSHF
+    1 + BIMMEDIATE_SIZE,                   // OP_PUSHNB
+    1 + HIMMEDIATE_SIZE,                   // OP_PUSHNH
+    1 + FIMMEDIATE_SIZE,                   // OP_PUSHNF
     1,                                     // OP_SETADR
     1,                                     // OP_SETADRB
     1,                                     // OP_SUB
@@ -133,9 +139,9 @@ static void vm_set_stack_size_to(DVM *vm, duint size) {
     const size_t newAlloc = size * sizeof(dint);
 
     if (vm->basePtr == NULL) {
-        vm->basePtr = d_malloc(size);
+        vm->basePtr = d_malloc(newAlloc);
     } else {
-        vm->basePtr = d_realloc(vm->basePtr, size);
+        vm->basePtr = d_realloc(vm->basePtr, newAlloc);
     }
 }
 
@@ -285,7 +291,7 @@ dfloat d_vm_get_float(DVM *vm, dint index) {
 }
 
 /**
- * \fn void *d_vm_get_float(DVM *vm, dint index)
+ * \fn void *d_vm_get_ptr(DVM *vm, dint index)
  * \brief Get a pointer from a value in the stack at a particular index.
  *
  * * If `index` is positive, it will index relative to the start of the stack
@@ -298,7 +304,7 @@ dfloat d_vm_get_float(DVM *vm, dint index) {
  * \param index The index of the stack.
  */
 void *d_vm_get_ptr(DVM *vm, dint index) {
-    dint value = d_vm_get(vm, value);
+    dint value = d_vm_get(vm, index);
 
     return (void *)value;
 }
@@ -422,7 +428,7 @@ void d_vm_popn(DVM *vm, size_t n) {
 
         vm->stackPtr = vm->stackPtr - n;
 
-        if (maxN - n < (dint)(vm->stackSize * VM_STACK_SIZE_SCALE_DEC)) {
+        if (maxN - n < (size_t)(vm->stackSize * VM_STACK_SIZE_SCALE_DEC)) {
             vm_decrease_stack_size(vm);
         }
     }
@@ -623,7 +629,7 @@ void d_vm_set(DVM *vm, dint index, dint value) {
  * \param value The value to set.
  */
 void d_vm_set_float(DVM *vm, dint index, dfloat value) {
-    dint intValue = *((dfloat *)(&value));
+    dint intValue = *((dint *)(&value));
 
     d_vm_set(vm, index, intValue);
 }
@@ -655,7 +661,7 @@ void d_vm_set_ptr(DVM *vm, dint index, void *ptr) {
  * \param vm The VM whose stack to query.
  */
 size_t d_vm_top(DVM *vm) {
-    if (vm->basePtr != NULL) {
+    if (vm->basePtr == NULL) {
         return 0;
     }
 
@@ -827,30 +833,9 @@ void d_vm_runtime_error(DVM *vm, const char *error) {
     {                                                                   \
         dint value =                                                    \
             (VM_GET_STACK_FLOAT(vm, 0) sym VM_GET_STACK_FLOAT(vm, -1)); \
-        *VM_GET_STACK_FLOAT_PTR(vm, -1) = value;                        \
+        *VM_GET_STACK_PTR(vm, -1) = value;                              \
         d_vm_popn(vm, 1);                                               \
     }
-
-/*
-            vm->pc = VM_GET_STACK(vm, 0);
-
-            const uint8_t numArguments = (uint8_t)GET_BIMMEDIATE(1);
-            dint *insertPtr            = vm->stackPtr - numArguments - 1;
-
-            VM_INSERT_LEN(vm, insertPtr, 2, numArguments)
-
-            // Save the frame pointer first...
-            *insertPtr = (dint)vm->framePtr;
-
-            // ... then the program counter.
-            insertPtr++;
-            *insertPtr = (dint)vm->pc;
-
-            // Then set the new frame pointer.
-            vm->framePtr = insertPtr;
-
-            vm->_inc_pc = 0;
-*/
 
 /**
  * \def CALL_GENERIC(sym, newPC, offset)
@@ -858,13 +843,14 @@ void d_vm_runtime_error(DVM *vm, const char *error) {
  */
 #define CALL_GENERIC(sym, newPC, offset)                              \
     {                                                                 \
-        vm->pc sym newPC;                                             \
         const uint8_t numArguments = (uint8_t)GET_BIMMEDIATE(offset); \
-        dint *insertPtr            = vm->stackPtr - numArguments - 1; \
+        char *returnAdr            = vm->pc + VM_INS_SIZE[*(vm->pc)]; \
+        vm->pc sym newPC;                                             \
+        dint *insertPtr = vm->stackPtr - numArguments + 1;            \
         VM_INSERT_LEN(vm, insertPtr, 2, numArguments)                 \
         *insertPtr = (dint)vm->framePtr;                              \
         insertPtr++;                                                  \
-        *insertPtr   = (dint)vm->pc;                                  \
+        *insertPtr   = (dint)returnAdr;                               \
         vm->framePtr = insertPtr;                                     \
         vm->_inc_pc  = 0;                                             \
     }
@@ -872,7 +858,7 @@ void d_vm_runtime_error(DVM *vm, const char *error) {
 /**
  * \def CALL_1_0(sym)
  * \brief A helper macro for call opcodes with 1 input and 0 outputs.
- * 
+ *
  * **NOTE:** Here we just decrement the stack pointer instead of using
  * `d_vm_popn`, since `VM_INSERT_LEN` pushed 2 times, it makes an overall
  * difference of 1 element being pushed on, so the stack should not have to be
@@ -958,6 +944,17 @@ void d_vm_runtime_error(DVM *vm, const char *error) {
     }
 
 /**
+ * \union _ptrToC
+ * \brief A union of a pointer to a C function, and the pointer value.
+ *
+ * \typedef union _ptrToC PtrToC
+ */
+typedef union _ptrToC {
+    DecisionCFunction func;
+    intptr_t ptr;
+} PtrToC;
+
+/**
  * \fn void d_vm_parse_ins_at_pc(DVM *vm)
  * \brief Given a Decision VM, at it's current position in the program, parse
  * the instruction at that position.
@@ -1005,6 +1002,8 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
                     (vm->stackPtr - ptr) + 1 - numReturnValues;
 
                 VM_REMOVE_LEN(vm, ptr, lenRemove, numReturnValues);
+
+                vm->_inc_pc = 0;
             }
             break;
 
@@ -1045,14 +1044,11 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             break;
 
         case OP_CALL:;
-            CALL_1_0(=)
+            CALL_1_0(= (char *))
             break;
 
         case OP_CALLC:;
-            union _ptrToC {
-                DecisionCFunction func;
-                intptr_t ptr;
-            } funcPtr;
+            PtrToC funcPtr;
 
             funcPtr.ptr = VM_GET_STACK(vm, 0);
             d_vm_popn(vm, 1);
@@ -1062,19 +1058,16 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             break;
 
         case OP_CALLCI:;
-            union _ptrToC {
-                DecisionCFunction func;
-                intptr_t ptr;
-            } funcPtr;
+            PtrToC funcPtrImmediate;
 
-            funcPtr.ptr = GET_FIMMEDIATE(1);
+            funcPtrImmediate.ptr = GET_FIMMEDIATE(1);
 
             // Call the C function.
-            funcPtr.func(vm);
+            funcPtrImmediate.func(vm);
             break;
 
         case OP_CALLI:;
-            CALL_0_0_FI(=)
+            CALL_0_0_FI(= (char *))
             break;
 
         case OP_CALLR:;
@@ -1145,8 +1138,18 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             *VM_GET_STACK_PTR(vm, 0) = *((dint *)VM_GET_STACK(vm, 0));
             break;
 
+        case OP_DEREFI:;
+            d_vm_pushn(vm, 1);
+            *VM_GET_STACK_PTR(vm, 0) = *((dint *)GET_FIMMEDIATE(1));
+            break;
+
         case OP_DEREFB:;
             *VM_GET_STACK_PTR(vm, 0) = *((uint8_t *)VM_GET_STACK(vm, 0));
+            break;
+
+        case OP_DEREFBI:;
+            d_vm_pushn(vm, 1);
+            *VM_GET_STACK_PTR(vm, 0) = *((uint8_t *)GET_FIMMEDIATE(1));
             break;
 
         case OP_DIV:;
@@ -1186,19 +1189,19 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             break;
 
         case OP_J:;
-            J_1_0(=)
+            J_1_0(= (char *))
             break;
 
         case OP_JCON:;
-            JCON_2_0(=)
+            JCON_2_0(= (char *))
             break;
 
         case OP_JCONI:;
-            JCON_1_0_I(=, GET_FIMMEDIATE)
+            JCON_1_0_I(= (char *), GET_FIMMEDIATE)
             break;
 
         case OP_JI:;
-            J_0_0_I(=, GET_FIMMEDIATE)
+            J_0_0_I(= (char *), GET_FIMMEDIATE)
             break;
 
         case OP_JR:;
@@ -1289,6 +1292,10 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             OP_1_1_I(|, GET_FIMMEDIATE)
             break;
 
+        case OP_POP:;
+            d_vm_popn(vm, 1);
+            break;
+
         case OP_POPB:;
             d_vm_popn(vm, GET_BIMMEDIATE(1));
             break;
@@ -1313,13 +1320,25 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             d_vm_push(vm, GET_FIMMEDIATE(1));
             break;
 
+        case OP_PUSHNB:;
+            d_vm_pushn(vm, GET_BIMMEDIATE(1));
+            break;
+
+        case OP_PUSHNH:;
+            d_vm_pushn(vm, GET_HIMMEDIATE(1));
+            break;
+
+        case OP_PUSHNF:;
+            d_vm_pushn(vm, GET_FIMMEDIATE(1));
+            break;
+
         case OP_SETADR:;
             *((dint *)VM_GET_STACK(vm, 0)) = VM_GET_STACK(vm, -1);
             d_vm_popn(vm, 2);
             break;
 
         case OP_SETADRB:;
-            *((uint8_t *)VM_GET_STACK(vm, 0)) = VM_GET_STACK(vm, -1);
+            *((uint8_t *)VM_GET_STACK(vm, 0)) = (uint8_t)VM_GET_STACK(vm, -1);
             d_vm_popn(vm, 2);
             break;
 
@@ -1344,29 +1363,63 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             break;
 
         case OP_SYSCALL:;
+            dint result;
             switch (GET_BIMMEDIATE(1)) {
                 case SYS_PRINT:;
                     switch (VM_GET_STACK(vm, 0)) {
                         case 0: // Integer
-                            printf("%" DINT_PRINTF_d, VM_GET_STACK(vm, -1));
+                            printf("%" DINT_PRINTF_d, VM_GET_STACK(vm, -2));
                             break;
                         case 1: // Float
-                            printf("%f", VM_GET_STACK_FLOAT(vm, -1));
+                            printf("%g", VM_GET_STACK_FLOAT(vm, -2));
                             break;
                         case 2: // String
-                            printf("%s", (char *)VM_GET_STACK(vm, -1));
+                            printf("%s", (char *)VM_GET_STACK(vm, -2));
                             break;
                         case 3: // Boolean
                             printf("%s",
-                                   VM_GET_STACK(vm, -1) ? "true" : "false");
+                                   VM_GET_STACK(vm, -2) ? "true" : "false");
                             break;
                     }
 
-                    if (VM_GET_STACK(vm, -2)) {
+                    if (VM_GET_STACK(vm, -1)) {
                         printf("\n");
                     }
 
                     *VM_GET_STACK_PTR(vm, -2) = 0;
+                    break;
+
+                case SYS_STRCMP:;
+                    result = strcmp((char *)VM_GET_STACK(vm, -1),
+                                    (char *)VM_GET_STACK(vm, -2));
+
+                    switch (VM_GET_STACK(vm, 0)) {
+                        case 0:
+                            result = (result == 0);
+                            break;
+                        case 1:
+                            result = (result <= 0);
+                            break;
+                        case 2:
+                            result = (result < 0);
+                            break;
+                        case 3:
+                            result = (result >= 0);
+                            break;
+                        case 4:
+                            result = (result > 0);
+                            break;
+                        default:
+                            result = 0;
+                            break;
+                    }
+
+                    *VM_GET_STACK_PTR(vm, -2) = result;
+                    break;
+
+                case SYS_STRLEN:;
+                    result = strlen((char *)VM_GET_STACK(vm, -2));
+                    *VM_GET_STACK_PTR(vm, -2) = result;
                     break;
             }
             d_vm_popn(vm, 2);
@@ -1465,9 +1518,11 @@ void d_vm_dump(DVM *vm) {
         dint intValue     = *ptr;
         dfloat floatValue = *((dfloat *)ptr);
 
-        printf("%d\t= %d\t|\t%x\t|\t%f\n", offset, intValue, intValue,
+        printf("%d\t= %d\t|\t0x%x\t|\t%f\n", offset, intValue, intValue,
                floatValue);
 
         ptr--;
     }
+
+    printf("\n");
 }

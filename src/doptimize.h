@@ -26,8 +26,9 @@
 #ifndef DOPTIMIZE_H
 #define DOPTIMIZE_H
 
-#include <stdbool.h>
 #include "dcfg.h"
+#include <stdbool.h>
+
 
 #include <stddef.h>
 
@@ -73,19 +74,8 @@ DECISION_API void d_optimize_remove_bytecode(struct _sheet *sheet, size_t start,
 DECISION_API void d_optimize_all(struct _sheet *sheet);
 
 /**
- * \fn bool d_optimize_pop_push_consecutive(Sheet *sheet)
- * \brief Try and find consecutive instructions that push and pop the general
- * stack into / from the same register. The push and pop order doesn't matter.
- *
- * \return If we were able to optimise.
- *
- * \param sheet The sheet containing the bytecode to optimize.
- */
-DECISION_API bool d_optimize_pop_push_consecutive(struct _sheet *sheet);
-
-/**
  * \fn bool d_optimize_not_consecutive(Sheet *sheet)
- * \brief Try and find consecutive NOT instructions that NOT the same register.
+ * \brief Try and find consecutive NOT instructions.
  *
  * \return If we were able to optimise.
  *
@@ -104,16 +94,5 @@ DECISION_API bool d_optimize_not_consecutive(struct _sheet *sheet);
  * \param sheet The sheet containing the bytecode to optimize.
  */
 DECISION_API bool d_optimize_call_func_relative(struct _sheet *sheet);
-
-/**
- * \fn bool d_optimize_move_consecutive(Sheet *sheet)
- * \brief Try and find consecutive MVTF and MVTI instructions that move a value
- * in and out the same register.
- * 
- * \return If we were able to optimise.
- * 
- * \param sheet The sheet containing the bytecode to optimize.
- */
-DECISION_API bool d_optimize_move_consecutive(struct _sheet *sheet);
 
 #endif // DOPTIMIZE_H

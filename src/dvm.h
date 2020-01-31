@@ -74,60 +74,66 @@ typedef enum _dIns {
     OP_CVTF    = 29, ///< push((dfloat)pop())
     OP_CVTI    = 30, ///< push((dint)pop())
     OP_DEREF   = 31, ///< push(*pop())
-    OP_DEREFB  = 32, ///< push(*((uint8_t *)pop()))
-    OP_DIV     = 33, ///< push(pop() / pop())
-    OP_DIVF    = 34, ///< pushFloat(popFloat() / popFloat())
-    OP_DIVBI   = 35, ///< push(pop() / I(1))
-    OP_DIVHI   = 36, ///< push(pop() / I(|M|/2))
-    OP_DIVFI   = 37, ///< push(pop() / I(|M|))
-    OP_GET     = 38, ///< push(get(pop()))
-    OP_GETBI   = 39, ///< push(get(I(1)))
-    OP_GETHI   = 40, ///< push(get(I(|M|/2)))
-    OP_GETFI   = 41, ///< push(get(I(|M|)))
-    OP_J       = 42, ///< pc = pop()
-    OP_JCON    = 43, ///< IF pop() THEN pc = pop() ELSE pop()
-    OP_JCONI   = 44, ///< IF pop() THEN pc = I(|M|)
-    OP_JI      = 45, ///< pc = I(|M|)
-    OP_JR      = 46, ///< pc += pop()
-    OP_JRBI    = 47, ///< pc += I(1)
-    OP_JRHI    = 48, ///< pc += I(|M|/2)
-    OP_JRFI    = 49, ///< pc += I(|M|)
-    OP_JRCON   = 50, ///< IF pop() THEN pc += pop() ELSE pop()
-    OP_JRCONBI = 51, ///< IF pop() THEN pc += I(1)
-    OP_JRCONHI = 52, ///< IF pop() THEN pc += I(|M|/2)
-    OP_JRCONFI = 53, ///< IF pop() THEN pc += I(|M|)
-    OP_MOD     = 54, ///< push(pop() % pop())
-    OP_MODBI   = 55, ///< push(pop() % I(1))
-    OP_MODHI   = 56, ///< push(pop() % I(|M|/2))
-    OP_MODFI   = 57, ///< push(pop() % I(|M|))
-    OP_MUL     = 58, ///< push(pop() * pop())
-    OP_MULF    = 59, ///< pushFloat(popFloat() * popFloat())
-    OP_MULBI   = 60, ///< push(pop() * I(1))
-    OP_MULHI   = 61, ///< push(pop() * I(|M|/2))
-    OP_MULFI   = 62, ///< push(pop() * I(|M|))
-    OP_NOT     = 63, ///< push(!pop())
-    OP_OR      = 64, ///< push(pop() | pop())
-    OP_ORBI    = 65, ///< push(pop() | I(1))
-    OP_ORHI    = 66, ///< push(pop() | I(|M|/2))
-    OP_ORFI    = 67, ///< push(pop() | I(|M|))
-    OP_POPB    = 68, ///< pop() I(1) times
-    OP_POPH    = 69, ///< pop() I(|M|/2) times
-    OP_POPF    = 70, ///< pop() I(|M|) times
-    OP_PUSHB   = 71, ///< push(I(1))
-    OP_PUSHH   = 72, ///< push(I(|M|/2))
-    OP_PUSHF   = 73, ///< push(I(|M|))
-    OP_SETADR  = 74, ///< *((dint *)pop()) = pop()
-    OP_SETADRB = 75, ///< *((uint8_t *)pop()) = pop()
-    OP_SUB     = 76, ///< push(pop() - pop())
-    OP_SUBF    = 77, ///< pushFloat(popFloat() - popFloat())
-    OP_SUBBI   = 78, ///< push(pop() - I(1))
-    OP_SUBHI   = 79, ///< push(pop() - I(|M|/2))
-    OP_SUBFI   = 80, ///< push(pop() - I(|M|))
-    OP_SYSCALL = 81, ///< push(syscall(I(1), pop(), pop(), pop()))
-    OP_XOR     = 82, ///< push(pop() ^ pop())
-    OP_XORBI   = 83, ///< push(pop() ^ I(1))
-    OP_XORHI   = 84, ///< push(pop() ^ I(|M|/2))
-    OP_XORFI   = 85, ///< push(pop() ^ I(|M|))
+    OP_DEREFI  = 32, ///< push(*I(|M|))
+    OP_DEREFB  = 33, ///< push(*((uint8_t *)pop()))
+    OP_DEREFBI = 34, ///< push(*((uint8_t *)I(|M|)))
+    OP_DIV     = 35, ///< push(pop() / pop())
+    OP_DIVF    = 36, ///< pushFloat(popFloat() / popFloat())
+    OP_DIVBI   = 37, ///< push(pop() / I(1))
+    OP_DIVHI   = 38, ///< push(pop() / I(|M|/2))
+    OP_DIVFI   = 39, ///< push(pop() / I(|M|))
+    OP_GET     = 40, ///< push(get(pop()))
+    OP_GETBI   = 41, ///< push(get(I(1)))
+    OP_GETHI   = 42, ///< push(get(I(|M|/2)))
+    OP_GETFI   = 43, ///< push(get(I(|M|)))
+    OP_J       = 44, ///< pc = pop()
+    OP_JCON    = 45, ///< IF pop() THEN pc = pop() ELSE pop()
+    OP_JCONI   = 46, ///< IF pop() THEN pc = I(|M|)
+    OP_JI      = 47, ///< pc = I(|M|)
+    OP_JR      = 48, ///< pc += pop()
+    OP_JRBI    = 49, ///< pc += I(1)
+    OP_JRHI    = 50, ///< pc += I(|M|/2)
+    OP_JRFI    = 51, ///< pc += I(|M|)
+    OP_JRCON   = 52, ///< IF pop() THEN pc += pop() ELSE pop()
+    OP_JRCONBI = 53, ///< IF pop() THEN pc += I(1)
+    OP_JRCONHI = 54, ///< IF pop() THEN pc += I(|M|/2)
+    OP_JRCONFI = 55, ///< IF pop() THEN pc += I(|M|)
+    OP_MOD     = 56, ///< push(pop() % pop())
+    OP_MODBI   = 57, ///< push(pop() % I(1))
+    OP_MODHI   = 58, ///< push(pop() % I(|M|/2))
+    OP_MODFI   = 59, ///< push(pop() % I(|M|))
+    OP_MUL     = 60, ///< push(pop() * pop())
+    OP_MULF    = 61, ///< pushFloat(popFloat() * popFloat())
+    OP_MULBI   = 62, ///< push(pop() * I(1))
+    OP_MULHI   = 63, ///< push(pop() * I(|M|/2))
+    OP_MULFI   = 64, ///< push(pop() * I(|M|))
+    OP_NOT     = 65, ///< push(!pop())
+    OP_OR      = 66, ///< push(pop() | pop())
+    OP_ORBI    = 67, ///< push(pop() | I(1))
+    OP_ORHI    = 68, ///< push(pop() | I(|M|/2))
+    OP_ORFI    = 69, ///< push(pop() | I(|M|))
+    OP_POP     = 70, ///< pop() once
+    OP_POPB    = 71, ///< pop() I(1) times
+    OP_POPH    = 72, ///< pop() I(|M|/2) times
+    OP_POPF    = 73, ///< pop() I(|M|) times
+    OP_PUSHB   = 74, ///< push(I(1))
+    OP_PUSHH   = 75, ///< push(I(|M|/2))
+    OP_PUSHF   = 76, ///< push(I(|M|))
+    OP_PUSHNB  = 77, ///< push(0) I(1) times
+    OP_PUSHNH  = 78, ///< push(0) I(|M|/2) times
+    OP_PUSHNF  = 79, ///< push(0) I(|M|) times
+    OP_SETADR  = 80, ///< *((dint *)pop()) = pop()
+    OP_SETADRB = 81, ///< *((uint8_t *)pop()) = pop()
+    OP_SUB     = 82, ///< push(pop() - pop())
+    OP_SUBF    = 83, ///< pushFloat(popFloat() - popFloat())
+    OP_SUBBI   = 84, ///< push(pop() - I(1))
+    OP_SUBHI   = 85, ///< push(pop() - I(|M|/2))
+    OP_SUBFI   = 86, ///< push(pop() - I(|M|))
+    OP_SYSCALL = 87, ///< push(syscall(I(1), pop(), pop(), pop()))
+    OP_XOR     = 88, ///< push(pop() ^ pop())
+    OP_XORBI   = 89, ///< push(pop() ^ I(1))
+    OP_XORHI   = 90, ///< push(pop() ^ I(|M|/2))
+    OP_XORFI   = 91, ///< push(pop() ^ I(|M|))
 } DIns;
 
 /**
@@ -146,10 +152,24 @@ typedef enum _dSyscall {
     SYS_PRINT = 0, ///< Print a value to `stdout`.
                    ///< * `arg0`: `0`: `Integer`, `1`: `Float`, `2`: `String`,
                    ///< `3`: `Boolean`.
-                   ///< * `arg1`: The value to print.
-                   ///< * `arg2`: If set to `1`, it will print a newline at the
+                   ///< * `arg1`: If set to `1`, it will print a newline at the
                    ///< end, otherwise it will not.
+                   ///< * `arg2`: The value to print.
                    ///< * Returns: The value 0.
+
+    SYS_STRCMP = 1, ///< Compare two strings.
+                    ///< * `arg0`: `0`: Equal, `1`: Less Than or Equal,
+                    ///< `2`: Less Than, `3`: More Than or Equal,
+                    ///< `4`: More Than.
+                    ///< * `arg1`: The first string pointer.
+                    ///< * `arg2`: The second string pointer.
+                    ///< * Returns: 1 if true, 0 if false.
+
+    SYS_STRLEN = 2, ///< Get the length of a string.
+                    ///< * `arg0`: Unused.
+                    ///< * `arg1`: Unused.
+                    ///< * `arg2`: The string to get the length of.
+                    ///< * Returns: The length of the string.
 } DSyscall;
 
 /**
@@ -191,19 +211,24 @@ typedef struct _DVM {
     bool runtimeError; ///< The runtime error flag.
 } DVM;
 
-#define BIMMEDIATE_SIZE 1
-#define bimmediate_t    int8_t
+#define BIMMEDIATE_SIZE   1
+#define BIMMEDIATE_PRINTF "hh"
+#define bimmediate_t      int8_t
 
 #ifdef DECISION_32
-#define HIMMEDIATE_SIZE 2
-#define himmediate_t    int16_t
-#define FIMMEDIATE_SIZE 4
-#define fimmediate_t    int32_t
+#define HIMMEDIATE_SIZE   2
+#define HIMMEDIATE_PRINTF "h"
+#define himmediate_t      int16_t
+#define FIMMEDIATE_SIZE   4
+#define FIMMEDIATE_PRINTF "l"
+#define fimmediate_t      int32_t
 #else
-#define HIMMEDIATE_SIZE 4
-#define himmediate_t    int32_t
-#define FIMMEDIATE_SIZE 8
-#define fimmediate_t    int64_t
+#define HIMMEDIATE_SIZE   4
+#define HIMMEDIATE_PRINTF "l"
+#define himmediate_t      int32_t
+#define FIMMEDIATE_SIZE   8
+#define FIMMEDIATE_PRINTF "ll"
+#define fimmediate_t      int64_t
 #endif // DECISION_32
 
 /*
