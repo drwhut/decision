@@ -87,7 +87,7 @@ DECISION_API void d_asm_text_dump(char *code, size_t size) {
 
         printf("\t%s ", mnemonic);
 
-        bimmediate_t b1;
+        bimmediate_t b2;
 
         // We group together instructions with the same "format" to simplify.
         switch (opcode) {
@@ -156,27 +156,27 @@ DECISION_API void d_asm_text_dump(char *code, size_t size) {
 
             // Byte Immediate + Byte Immediate.
             case OP_CALLRB:
-                b1              = *(bimmediate_t *)(ins + 1);
-                bimmediate_t b2 = *(bimmediate_t *)(ins + 1 + BIMMEDIATE_SIZE);
+                bimmediate_t b1 = *(bimmediate_t *)(ins + 1);
+                b2              = *(bimmediate_t *)(ins + 1 + BIMMEDIATE_SIZE);
                 printf("0x%" BIMMEDIATE_PRINTF "x, 0x%" BIMMEDIATE_PRINTF "x",
                        b1, b2);
                 break;
 
             // Half Immediate + Byte Immediate.
             case OP_CALLRH:
-                b1              = *(bimmediate_t *)(ins + 1);
-                himmediate_t h2 = *(himmediate_t *)(ins + 1 + BIMMEDIATE_SIZE);
-                printf("0x%" BIMMEDIATE_PRINTF "x, 0x%" HIMMEDIATE_PRINTF "x",
-                       b1, h2);
+                himmediate_t h1 = *(himmediate_t *)(ins + 1);
+                b2              = *(bimmediate_t *)(ins + 1 + HIMMEDIATE_SIZE);
+                printf("0x%" HIMMEDIATE_PRINTF "x, 0x%" BIMMEDIATE_PRINTF "x",
+                       h1, b2);
                 break;
 
             // Full Immediate + Byte Immediate.
             case OP_CALLI:
             case OP_CALLRF:
-                b1              = *(bimmediate_t *)(ins + 1);
-                fimmediate_t f2 = *(fimmediate_t *)(ins + 1 + BIMMEDIATE_SIZE);
-                printf("0x%" BIMMEDIATE_PRINTF "x, 0x%" FIMMEDIATE_PRINTF "x",
-                       b1, f2);
+                fimmediate_t f1 = *(fimmediate_t *)(ins + 1);
+                b2              = *(bimmediate_t *)(ins + 1 + FIMMEDIATE_SIZE);
+                printf("0x%" FIMMEDIATE_PRINTF "x, 0x%" BIMMEDIATE_PRINTF "x",
+                       f1, b2);
                 break;
 
             // No immediates.
