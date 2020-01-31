@@ -1139,6 +1139,7 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             break;
 
         case OP_DEREFI:;
+            d_vm_pushn(vm, 1);
             *VM_GET_STACK_PTR(vm, 0) = *((dint *)GET_FIMMEDIATE(1));
             break;
 
@@ -1147,6 +1148,7 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             break;
 
         case OP_DEREFBI:;
+            d_vm_pushn(vm, 1);
             *VM_GET_STACK_PTR(vm, 0) = *((uint8_t *)GET_FIMMEDIATE(1));
             break;
 
