@@ -1071,7 +1071,8 @@ BCode d_generate_operator(SheetNode *node, BuildContext *context, DIns opcode,
 
 /**
  * \fn BCode d_generate_comparator(SheetNode *node, BuildContext *context,
- *                                 DIns opcode, DIns fopcode, bool notAfter)
+ *                                 DIns opcode, DIns fopcode,
+ *                                 fimmediate_t strCmpArg, bool notAfter)
  * \brief Given a comparator node, generate the bytecode for it.
  *
  * \return Bytecode to get the output of a comparator.
@@ -1080,10 +1081,12 @@ BCode d_generate_operator(SheetNode *node, BuildContext *context, DIns opcode,
  * \param context The context needed to generate the bytecode.
  * \param opcode The comparator instruction.
  * \param fopcode The float variant of the instruction.
+ * \param strCmpArg The SYS_STRCMP argument to use to compare strings.
  * \param notAfter Do we invert the answer at the end?
  */
 BCode d_generate_comparator(SheetNode *node, BuildContext *context, DIns opcode,
-                            DIns fopcode, bool notAfter) {
+                            DIns fopcode, fimmediate_t strCmpArg,
+                            bool notAfter) {
     VERBOSE(5, "Generating bytecode for comparator %s...\n", node->name);
 
     // First, we need to check what types our inputs are.
@@ -1107,7 +1110,18 @@ BCode d_generate_comparator(SheetNode *node, BuildContext *context, DIns opcode,
     BCode out = d_push_node_inputs(node, context, false, false, isFloat);
 
     if (isString) {
-        // TODO: Add syscall for string comparisons.
+        // The SYS_STRCMP syscall will be used here.
+        // Add on the given syscall argument.
+        BCode arg = d_bytecode_ins(OP_PUSHF);
+        d_bytecode_set_fimmediate(arg, 1, strCmpArg);
+        d_concat_bytecode(&out, &arg);
+        d_free_bytecode(&arg);
+
+        // Use the syscall.
+        BCode syscall = d_bytecode_ins(OP_SYSCALL);
+        d_bytecode_set_byte(syscall, 1, SYS_STRCMP);
+        d_concat_bytecode(&out, &syscall);
+        d_free_bytecode(&syscall);
     } else {
         DIns compOpcode = (isFloat) ? fopcode : opcode;
 
@@ -1467,96 +1481,33 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
                     break;
                 case CORE_EQUAL:;
                     action = d_generate_comparator(node, context, OP_CEQ,
-                                                   OP_CEQF, false);
+                                                   OP_CEQF, 0, false);
                     break;
                 case CORE_MULTIPLY:;
                     action = d_generate_operator(node, context, OP_MUL, OP_MULF,
                                                  OP_MULFI, false);
                     break;
                 case CORE_LENGTH:;
-                    // For the length of a string, we're essentially going to
-                    // do in Decision bytecode what strlen() does, which is
-                    // loop through the string until we find the terminating
-                    // NULL, and return how many characters there were.
-                    action =
-                        d_push_node_inputs(node, context, false, false, false);
+                    action = d_push_input(node->sockets[0], context, false);
 
-                    // Before we start the loop, we want to create a copy of
-                    // the string pointer, which we will increment as we check
-                    // the characters of the string.
-                    BCode cpyPtr = d_bytecode_ins(OP_GETFI);
-                    d_bytecode_set_fimmediate(cpyPtr, 1, 0);
-                    d_concat_bytecode(&action, &cpyPtr);
-                    d_free_bytecode(&cpyPtr);
+                    // Here we will use the SYS_STRLEN syscall.
+                    BCode pushArgs = d_bytecode_ins(OP_PUSHNF);
+                    d_bytecode_set_fimmediate(pushArgs, 1, 2);
+                    d_concat_bytecode(&action, &pushArgs);
+                    d_free_bytecode(&pushArgs);
 
-                    // For the bytecode of the loop, the first thing we need to
-                    // do is push a copy of the temporary pointer, since it will
-                    // get poped by DEREFB.
-                    BCode loop = d_bytecode_ins(OP_GETFI);
-                    d_bytecode_set_fimmediate(loop, 1, 0);
-
-                    // Secondly, get the character the pointer points to. If
-                    // it is 0, we exit the loop.
-                    BCode getChar = d_bytecode_ins(OP_DEREFB);
-                    d_concat_bytecode(&loop, &getChar);
-                    d_free_bytecode(&getChar);
-
-                    BCode pushZero = d_bytecode_ins(OP_PUSHF);
-                    d_bytecode_set_fimmediate(pushZero, 1, 0);
-                    d_concat_bytecode(&loop, &pushZero);
-                    d_free_bytecode(&pushZero);
-
-                    BCode equalsZero = d_bytecode_ins(OP_CEQ);
-                    d_concat_bytecode(&loop, &equalsZero);
-                    d_free_bytecode(&equalsZero);
-
-                    fimmediate_t jmpToAfterLoop = d_vm_ins_size(OP_JRCONFI) +
-                                                  d_vm_ins_size(OP_ADDFI) +
-                                                  d_vm_ins_size(OP_JRFI);
-
-                    BCode jmpIfZero = d_bytecode_ins(OP_JRCONFI);
-                    d_bytecode_set_fimmediate(jmpIfZero, 1, jmpToAfterLoop);
-                    d_concat_bytecode(&loop, &jmpIfZero);
-                    d_free_bytecode(&jmpIfZero);
-
-                    // At this point, the temporary string pointer should be
-                    // the item at the top of the stack.
-                    BCode incPtr = d_bytecode_ins(OP_ADDFI);
-                    d_bytecode_set_fimmediate(incPtr, 1, 1);
-                    d_concat_bytecode(&loop, &incPtr);
-                    d_free_bytecode(&incPtr);
-
-                    fimmediate_t jmpToStart = -(fimmediate_t)(loop.size);
-
-                    BCode jmpBack = d_bytecode_ins(OP_JRFI);
-                    d_bytecode_set_fimmediate(jmpBack, 1, jmpToStart);
-                    d_concat_bytecode(&loop, &jmpBack);
-                    d_free_bytecode(&jmpBack);
-
-                    d_concat_bytecode(&action, &loop);
-                    d_free_bytecode(&loop);
-
-                    // Now the pointer is pointing to the terminating NULL
-                    // at the end of the string. So if we want the length,
-                    // we can just subtract the pointer from the string
-                    // pointer!
-                    BCode subPtr = d_bytecode_ins(OP_SUB);
-                    d_concat_bytecode(&action, &subPtr);
-                    d_free_bytecode(&subPtr);
-
-                    // Now the original string pointer should be replaced with
-                    // the length of the string.
-                    SheetSocket *outputSocket = node->sockets[1];
-                    outputSocket->_stackIndex = context->stackTop;
-
+                    BCode syscall = d_bytecode_ins(OP_SYSCALL);
+                    d_bytecode_set_byte(syscall, 1, SYS_STRLEN);
+                    d_concat_bytecode(&action, &syscall);
+                    d_free_bytecode(&syscall);
                     break;
                 case CORE_LESS_THAN:;
                     action = d_generate_comparator(node, context, OP_CLT,
-                                                   OP_CLTF, false);
+                                                   OP_CLTF, 2, false);
                     break;
                 case CORE_LESS_THAN_OR_EQUAL:;
                     action = d_generate_comparator(node, context, OP_CLEQ,
-                                                   OP_CLEQF, false);
+                                                   OP_CLEQF, 1, false);
                     break;
                 case CORE_MOD:;
                     action = d_generate_operator(node, context, OP_MOD, 0,
@@ -1564,11 +1515,11 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
                     break;
                 case CORE_MORE_THAN:;
                     action = d_generate_comparator(node, context, OP_CMT,
-                                                   OP_CMTF, false);
+                                                   OP_CMTF, 4, false);
                     break;
                 case CORE_MORE_THAN_OR_EQUAL:;
                     action = d_generate_comparator(node, context, OP_CMEQ,
-                                                   OP_CMEQF, false);
+                                                   OP_CMEQF, 3, false);
                     break;
                 case CORE_NOT:;
                     action =
@@ -1576,7 +1527,7 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
                     break;
                 case CORE_NOT_EQUAL:;
                     action = d_generate_comparator(node, context, OP_CEQ,
-                                                   OP_CEQF, true);
+                                                   OP_CEQF, 0, true);
                     break;
                 case CORE_OR:;
                     action = d_generate_operator(node, context, OP_OR, 0,
@@ -2021,20 +1972,14 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context) {
                 break;
 
             case CORE_PRINT:;
-                // Get the socket with the variable input.
                 socket = node->sockets[1];
+
+                // The value to print should already be at the top of the stack.
 
                 // Setup the arguments for this syscall.
                 // TODO: Add a way to not print a newline.
                 action = d_bytecode_ins(OP_PUSHF);
                 d_bytecode_set_fimmediate(action, 1, 1);
-
-                // Push the value to print, which is now one below the top of
-                // the stack (the top being the type argument).
-                BCode getArg = d_bytecode_ins(OP_GETFI);
-                d_bytecode_set_fimmediate(getArg, 1, -1);
-                d_concat_bytecode(&action, &getArg);
-                d_free_bytecode(&getArg);
 
                 fimmediate_t typeArg = 0;
                 switch (socket->type) {

@@ -393,7 +393,8 @@ DECISION_API BCode d_generate_operator(struct _sheetNode *node,
 
 /**
  * \fn BCode d_generate_comparator(SheetNode *node, BuildContext *context,
- *                                 DIns opcode, DIns fopcode, bool notAfter)
+ *                                 DIns opcode, DIns fopcode,
+ *                                 fimmediate_t strCmpArg, bool notAfter)
  * \brief Given a comparator node, generate the bytecode for it.
  *
  * \return Bytecode to get the output of a comparator.
@@ -402,11 +403,13 @@ DECISION_API BCode d_generate_operator(struct _sheetNode *node,
  * \param context The context needed to generate the bytecode.
  * \param opcode The comparator instruction.
  * \param fopcode The float variant of the instruction.
+ * \param strCmpArg The SYS_STRCMP argument to use to compare strings.
  * \param notAfter Do we invert the answer at the end?
  */
 DECISION_API BCode d_generate_comparator(struct _sheetNode *node,
                                          BuildContext *context, DIns opcode,
-                                         DIns fopcode, bool notAfter);
+                                         DIns fopcode, fimmediate_t strCmpArg,
+                                         bool notAfter);
 
 /**
  * \fn BCode d_generate_call(SheetNode *node, BuildContext *context)

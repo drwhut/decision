@@ -1358,29 +1358,63 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             break;
 
         case OP_SYSCALL:;
+            dint result;
             switch (GET_BIMMEDIATE(1)) {
                 case SYS_PRINT:;
                     switch (VM_GET_STACK(vm, 0)) {
                         case 0: // Integer
-                            printf("%" DINT_PRINTF_d, VM_GET_STACK(vm, -1));
+                            printf("%" DINT_PRINTF_d, VM_GET_STACK(vm, -2));
                             break;
                         case 1: // Float
-                            printf("%g", VM_GET_STACK_FLOAT(vm, -1));
+                            printf("%g", VM_GET_STACK_FLOAT(vm, -2));
                             break;
                         case 2: // String
-                            printf("%s", (char *)VM_GET_STACK(vm, -1));
+                            printf("%s", (char *)VM_GET_STACK(vm, -2));
                             break;
                         case 3: // Boolean
                             printf("%s",
-                                   VM_GET_STACK(vm, -1) ? "true" : "false");
+                                   VM_GET_STACK(vm, -2) ? "true" : "false");
                             break;
                     }
 
-                    if (VM_GET_STACK(vm, -2)) {
+                    if (VM_GET_STACK(vm, -1)) {
                         printf("\n");
                     }
 
                     *VM_GET_STACK_PTR(vm, -2) = 0;
+                    break;
+
+                case SYS_STRCMP:;
+                    result = strcmp((char *)VM_GET_STACK(vm, -1),
+                                    (char *)VM_GET_STACK(vm, -2));
+
+                    switch (VM_GET_STACK(vm, 0)) {
+                        case 0:
+                            result = (result == 0);
+                            break;
+                        case 1:
+                            result = (result <= 0);
+                            break;
+                        case 2:
+                            result = (result < 0);
+                            break;
+                        case 3:
+                            result = (result >= 0);
+                            break;
+                        case 4:
+                            result = (result > 0);
+                            break;
+                        default:
+                            result = 0;
+                            break;
+                    }
+
+                    *VM_GET_STACK_PTR(vm, -2) = result;
+                    break;
+
+                case SYS_STRLEN:;
+                    result = strlen((char *)VM_GET_STACK(vm, -2));
+                    *VM_GET_STACK_PTR(vm, -2) = result;
                     break;
             }
             d_vm_popn(vm, 2);

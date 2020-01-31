@@ -152,10 +152,24 @@ typedef enum _dSyscall {
     SYS_PRINT = 0, ///< Print a value to `stdout`.
                    ///< * `arg0`: `0`: `Integer`, `1`: `Float`, `2`: `String`,
                    ///< `3`: `Boolean`.
-                   ///< * `arg1`: The value to print.
-                   ///< * `arg2`: If set to `1`, it will print a newline at the
+                   ///< * `arg1`: If set to `1`, it will print a newline at the
                    ///< end, otherwise it will not.
+                   ///< * `arg2`: The value to print.
                    ///< * Returns: The value 0.
+
+    SYS_STRCMP = 1, ///< Compare two strings.
+                    ///< * `arg0`: `0`: Equal, `1`: Less Than or Equal,
+                    ///< `2`: Less Than, `3`: More Than or Equal,
+                    ///< `4`: More Than.
+                    ///< * `arg1`: The first string pointer.
+                    ///< * `arg2`: The second string pointer.
+                    ///< * Returns: 1 if true, 0 if false.
+
+    SYS_STRLEN = 2, ///< Get the length of a string.
+                    ///< * `arg0`: Unused.
+                    ///< * `arg1`: Unused.
+                    ///< * `arg2`: The string to get the length of.
+                    ///< * Returns: The length of the string.
 } DSyscall;
 
 /**
