@@ -109,7 +109,7 @@ DECISION_API void d_asm_text_dump(char *code, size_t size) {
             case OP_PUSHNB:
             case OP_SUBBI:
             case OP_SYSCALL:
-            case OP_XORBI:
+            case OP_XORBI:;
                 printf("0x%" BIMMEDIATE_PRINTF "x", *(bimmediate_t *)(ins + 1));
                 break;
 
@@ -127,7 +127,7 @@ DECISION_API void d_asm_text_dump(char *code, size_t size) {
             case OP_PUSHH:
             case OP_PUSHNH:
             case OP_SUBHI:
-            case OP_XORHI:
+            case OP_XORHI:;
                 printf("0x%" HIMMEDIATE_PRINTF "x", *(himmediate_t *)(ins + 1));
                 break;
 
@@ -150,12 +150,12 @@ DECISION_API void d_asm_text_dump(char *code, size_t size) {
             case OP_PUSHF:
             case OP_PUSHNF:
             case OP_SUBFI:
-            case OP_XORFI:
+            case OP_XORFI:;
                 printf("0x%" FIMMEDIATE_PRINTF "x", *(fimmediate_t *)(ins + 1));
                 break;
 
             // Byte Immediate + Byte Immediate.
-            case OP_CALLRB:
+            case OP_CALLRB:;
                 bimmediate_t b1 = *(bimmediate_t *)(ins + 1);
                 b2              = *(bimmediate_t *)(ins + 1 + BIMMEDIATE_SIZE);
                 printf("0x%" BIMMEDIATE_PRINTF "x, 0x%" BIMMEDIATE_PRINTF "x",
@@ -163,7 +163,7 @@ DECISION_API void d_asm_text_dump(char *code, size_t size) {
                 break;
 
             // Half Immediate + Byte Immediate.
-            case OP_CALLRH:
+            case OP_CALLRH:;
                 himmediate_t h1 = *(himmediate_t *)(ins + 1);
                 b2              = *(bimmediate_t *)(ins + 1 + HIMMEDIATE_SIZE);
                 printf("0x%" HIMMEDIATE_PRINTF "x, 0x%" BIMMEDIATE_PRINTF "x",
@@ -171,8 +171,8 @@ DECISION_API void d_asm_text_dump(char *code, size_t size) {
                 break;
 
             // Full Immediate + Byte Immediate.
-            case OP_CALLI:
-            case OP_CALLRF:
+            case OP_CALLI:;
+            case OP_CALLRF:;
                 fimmediate_t f1 = *(fimmediate_t *)(ins + 1);
                 b2              = *(bimmediate_t *)(ins + 1 + FIMMEDIATE_SIZE);
                 printf("0x%" FIMMEDIATE_PRINTF "x, 0x%" BIMMEDIATE_PRINTF "x",
