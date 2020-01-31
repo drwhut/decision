@@ -972,8 +972,6 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
     // 0.
     vm->_inc_pc = VM_INS_SIZE[opcode];
 
-    d_vm_dump(vm);
-
     // Do stuff depending on what the opcode is.
     switch (opcode) {
         case OP_RET:
