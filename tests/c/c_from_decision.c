@@ -28,16 +28,16 @@
 #include <stdio.h>
 
 void myHalf(DVM *vm) {
-    dfloat input  = d_vm_pop_stack_float(vm);
+    dfloat input  = d_vm_get_float(vm, 1);
     dfloat output = input / 2;
-    d_vm_push_stack_float(vm, output);
+    d_vm_push_float(vm, output);
 }
 
 char *reasonStr;
 
 void myCanDrive(DVM *vm) {
-    dint age        = d_vm_pop_stack(vm);
-    dint hasLicense = d_vm_pop_stack(vm);
+    dint age        = d_vm_get(vm, 1);
+    dint hasLicense = d_vm_get(vm, 2);
 
     dint canDrive = 0;
 
@@ -52,8 +52,8 @@ void myCanDrive(DVM *vm) {
         reasonStr = "You are not old enough to drive.";
     }
 
-    d_vm_push_stack_ptr(vm, reasonStr);
-    d_vm_push_stack(vm, canDrive);
+    d_vm_push_ptr(vm, reasonStr);
+    d_vm_push(vm, canDrive);
 }
 
 dint recursive_factorial(dint n) {
@@ -65,9 +65,9 @@ dint recursive_factorial(dint n) {
 }
 
 void myFactorial(DVM *vm) {
-    dint input  = d_vm_pop_stack(vm);
+    dint input  = d_vm_get(vm, 1);
     dint output = recursive_factorial(input);
-    d_vm_push_stack(vm, output);
+    d_vm_push(vm, output);
 }
 
 int main() {

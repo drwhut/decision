@@ -96,6 +96,7 @@ DECISION_API void d_asm_text_dump(char *code, size_t size) {
             case OP_ADDBI:
             case OP_ANDBI:
             case OP_CALL:
+            case OP_CALLC:
             case OP_CALLR:
             case OP_DIVBI:
             case OP_GETBI:
@@ -134,7 +135,6 @@ DECISION_API void d_asm_text_dump(char *code, size_t size) {
             // Full Immediate.
             case OP_ADDFI:
             case OP_ANDFI:
-            case OP_CALLCI:
             case OP_DEREFI:
             case OP_DEREFBI:
             case OP_DIVFI:
@@ -171,7 +171,8 @@ DECISION_API void d_asm_text_dump(char *code, size_t size) {
                 break;
 
             // Full Immediate + Byte Immediate.
-            case OP_CALLI:;
+            case OP_CALLCI:
+            case OP_CALLI:
             case OP_CALLRF:;
                 fimmediate_t f1 = *(fimmediate_t *)(ins + 1);
                 b2              = *(bimmediate_t *)(ins + 1 + FIMMEDIATE_SIZE);

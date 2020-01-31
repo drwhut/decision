@@ -39,8 +39,8 @@ static const unsigned char VM_INS_SIZE[NUM_OPCODES] = {
     1 + HIMMEDIATE_SIZE,                   // OP_ANDHI
     1 + FIMMEDIATE_SIZE,                   // OP_ANDFI
     1 + BIMMEDIATE_SIZE,                   // OP_CALL
-    1,                                     // OP_CALLC
-    1 + FIMMEDIATE_SIZE,                   // OP_CALLCI
+    1 + BIMMEDIATE_SIZE,                   // OP_CALLC
+    1 + FIMMEDIATE_SIZE + BIMMEDIATE_SIZE, // OP_CALLCI
     1 + FIMMEDIATE_SIZE + BIMMEDIATE_SIZE, // OP_CALLI
     1 + BIMMEDIATE_SIZE,                   // OP_CALLR
     1 + BIMMEDIATE_SIZE + BIMMEDIATE_SIZE, // OP_CALLRB
@@ -1056,23 +1056,33 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             CALL_1_0(= (char *))
             break;
 
-        case OP_CALLC:;
+        case OP_CALLC:
+        case OP_CALLCI:;
             PtrToC funcPtr;
+            uint8_t numArgs;
 
-            funcPtr.ptr = VM_GET_STACK(vm, 0);
-            d_vm_popn(vm, 1);
+            if (opcode == OP_CALLC) {
+                funcPtr.ptr = VM_GET_STACK(vm, 0);
+                d_vm_popn(vm, 1);
+
+                numArgs = (uint8_t)GET_BIMMEDIATE(1);
+            } else {
+                funcPtr.ptr = GET_FIMMEDIATE(1);
+                numArgs     = (uint8_t)GET_BIMMEDIATE(1 + FIMMEDIATE_SIZE);
+            }
+
+            // Save the current frame pointer.
+            dint *savedFramePtr = vm->framePtr;
+
+            // Set the frame pointer such that it is one below the first
+            // argument.
+            vm->framePtr = vm->stackPtr - numArgs;
 
             // Call the C function.
             funcPtr.func(vm);
-            break;
 
-        case OP_CALLCI:;
-            PtrToC funcPtrImmediate;
-
-            funcPtrImmediate.ptr = GET_FIMMEDIATE(1);
-
-            // Call the C function.
-            funcPtrImmediate.func(vm);
+            // Restore the original frame pointer.
+            vm->framePtr = savedFramePtr;
             break;
 
         case OP_CALLI:;
@@ -1527,10 +1537,20 @@ void d_vm_dump(DVM *vm) {
         dint intValue     = *ptr;
         dfloat floatValue = *((dfloat *)ptr);
 
-        printf("%d\t= %d\t|\t0x%x\t|\t%f\n", offset, intValue, intValue,
+        printf("%d\t= %d\t|\t0x%x\t|\t%f", offset, intValue, intValue,
                floatValue);
+        
+        if (ptr == vm->framePtr) {
+            printf("\t< frame ptr");
+        }
+
+        printf("\n");
 
         ptr--;
+    }
+
+    if (ptr == vm->framePtr) {
+        printf("< frame ptr\n");
     }
 
     printf("\n");

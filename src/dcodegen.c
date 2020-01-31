@@ -19,6 +19,7 @@
 #include "dcodegen.h"
 
 #include "dasm.h"
+#include "dcfunc.h"
 #include "dcore.h"
 #include "decision.h"
 #include "derror.h"
@@ -1086,6 +1087,19 @@ BCode d_generate_call(SheetNode *node, BuildContext *context) {
         opcode   = OP_CALLI;
         linkType = LINK_FUNCTION;
         metaData = (void *)node->definition.function;
+    } else if (node->definition.type == NAME_CFUNCTION) {
+        CFunction *cFunc = node->definition.cFunction;
+        numArgs          = cFunc->numInputs;
+        numRets          = cFunc->numOutputs;
+
+        // The C function could be a subroutine!
+        if (numArgs > 0 && numRets > 0) {
+            if (cFunc->inputs[0] == TYPE_EXECUTION &&
+                cFunc->outputs[0] == TYPE_EXECUTION) {
+                numArgs--;
+                numRets--;
+            }
+        }
     }
 
     // Push the arguments in order, such that the first argument gets pushed
@@ -1095,9 +1109,7 @@ BCode d_generate_call(SheetNode *node, BuildContext *context) {
     // Call the function/subroutine, and link to it later.
     BCode call = d_bytecode_ins(opcode);
 
-    if (opcode == OP_CALLI) {
-        d_bytecode_set_byte(call, FIMMEDIATE_SIZE + 1, (char)numArgs);
-    }
+    d_bytecode_set_byte(call, FIMMEDIATE_SIZE + 1, (char)numArgs);
 
     // We don't care if there's a duplicate entry of the metadata. It won't
     // affect how we allocate data in the data section or anything like that.
@@ -1535,6 +1547,10 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context,
 
     int stackTopBefore = context->stackTop;
     BCode out          = {NULL, 0};
+
+    // Usually we will want to pop all of the stack that got us the input,
+    // but sometimes we need to keep things on the stack.
+    bool popAfter = true;
 
     // We don't want to have multiple returns at the end, so if we know we've
     // added one, then there is no need to add another.
@@ -2023,24 +2039,29 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context,
     } else {
         // Put arguments into the stack and call the subroutine.
         out = d_generate_call(node, context);
+
+        // This will push return values we will want to keep!
+        popAfter = false;
     }
 
     // Now, in order to optimise the usage of the stack, we pop from the stack
     // back to before the inputs were generated. We've used the inputs in this
     // node, we don't need them anymore!
-    fimmediate_t numPop = context->stackTop - stackTopBefore;
-    if (numPop < 0) {
-        numPop = 0;
+    if (popAfter) {
+        fimmediate_t numPop = context->stackTop - stackTopBefore;
+        if (numPop < 0) {
+            numPop = 0;
+        }
+
+        BCode popBack = d_bytecode_ins(OP_POPF);
+        d_bytecode_set_fimmediate(popBack, 1, numPop);
+        d_concat_bytecode(&out, &popBack);
+        d_free_bytecode(&popBack);
+
+        context->stackTop = stackTopBefore;
     }
 
-    BCode popBack = d_bytecode_ins(OP_POPF);
-    d_bytecode_set_fimmediate(popBack, 1, numPop);
-    d_concat_bytecode(&out, &popBack);
-    d_free_bytecode(&popBack);
-
-    context->stackTop = stackTopBefore;
-
-    // Thirdly, we generate the bytecode for the next execution node.
+    // Now, we generate the bytecode for the next execution node.
     BCode nextCode = {NULL, 0};
 
     SheetSocket *lastExecSocket = NULL;

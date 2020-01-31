@@ -27,15 +27,12 @@
 #include <stdio.h>
 
 int test_sheet(Sheet *sheet) {
-    DVM vm;
-
-    // d_vm_reset
-    d_vm_reset(&vm);
+    DVM vm = d_vm_create();
 
     char *from = "drwhut";
 
-    // d_vm_push_stack_ptr
-    d_vm_push_stack_ptr(&vm, from);
+    // d_vm_push_ptr
+    d_vm_push_ptr(&vm, from);
 
     // d_run_function
     START_CAPTURE_STDOUT()
@@ -46,28 +43,28 @@ int test_sheet(Sheet *sheet) {
     // d_vm_reset
     d_vm_reset(&vm);
 
-    // d_vm_push_stack
-    d_vm_push_stack(&vm, 51);
-    d_vm_push_stack(&vm, 1377);
+    // d_vm_push
+    d_vm_push(&vm, 1377);
+    d_vm_push(&vm, 51);
 
     // d_run_function
     d_run_function(&vm, sheet, "FactorOf");
 
-    // d_vm_pop_stack
-    dint answer = d_vm_pop_stack(&vm);
+    // d_vm_pop
+    dint answer = d_vm_pop(&vm);
     ASSERT_EQUAL(answer, 1)
 
     // d_vm_reset
     d_vm_reset(&vm);
 
-    // d_vm_push_stack_float
-    d_vm_push_stack_float(&vm, 4.75);
+    // d_vm_push_float
+    d_vm_push_float(&vm, 4.75);
 
     // d_run_function
     d_run_function(&vm, sheet, "Double");
 
-    // d_vm_pop_stack_float
-    dfloat fAnswer = d_vm_pop_stack_float(&vm);
+    // d_vm_pop_float
+    dfloat fAnswer = d_vm_pop_float(&vm);
     ASSERT_EQUAL(fAnswer, 9.5)
 
     return 0;

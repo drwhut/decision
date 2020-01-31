@@ -54,8 +54,8 @@ typedef enum _dIns {
     OP_ANDHI   = 9,  ///< push(pop() & I(|M|/2))
     OP_ANDFI   = 10, ///< push(pop() & I(|M|))
     OP_CALL    = 11, ///< pc = pop(); push(stackFrame w/ I(1) arguments)
-    OP_CALLC   = 12, ///< (*pop())(this)
-    OP_CALLCI  = 13, ///< (*I(|M|))(this)
+    OP_CALLC   = 12, ///< (*pop())(this) w/ I(1) arguments
+    OP_CALLCI  = 13, ///< (*I(|M|))(this) w/ I(1) arguments
     OP_CALLI   = 14, ///< pc = I(|M|); push(stackFrame w/ I(1) arguments)
     OP_CALLR   = 15, ///< pc += pop(); push(stackFrame w/ I(1) arguments)
     OP_CALLRB  = 16, ///< pc += I(1); push(stackFrame w/ I(1) arguments)
