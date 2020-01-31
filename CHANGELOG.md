@@ -2,6 +2,7 @@
 versions of the compiler.
 
 * Changed the Decision VM to be stack-based, rather than register-based.
+* Reimplemented `Length` to use the C function `strlen`.
 
 # Decision v0.2.0 - 16th January 2020
 
