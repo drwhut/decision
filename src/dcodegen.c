@@ -1230,8 +1230,6 @@ BCode d_push_argument(SheetSocket *socket, BuildContext *context) {
         // Due to the calling convention, the argument should already be on the
         // stack, but relative to the frame pointer. We just need to figure out
         // which index.
-        // TODO: When generating bytecode for functions, make sure that the
-        // stackTop is set correctly before generation!
         fimmediate_t index      = 0;
         fimmediate_t numOutputs = 0;
 
@@ -1332,9 +1330,6 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
 
         BCode boolCode = d_push_input(boolSocket, context, false);
 
-        d_concat_bytecode(&out, &boolCode);
-        d_free_bytecode(&boolCode);
-
         // The problem with this node is that either the true bytecode or false
         // bytecode will get run, which means the top of the stack can be in
         // different positions by the end of the node's bytecode.
@@ -1400,6 +1395,7 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
         context->stackTop = finalStackTop;
 
         SheetSocket *outputSocket = node->sockets[3];
+        outputSocket->_stackIndex = finalStackTop;
 
         // If the boolean input is a literal, then it's easy! We just output
         // the bytecode that gives us the output corresponding to if the
@@ -1415,10 +1411,12 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
             outputSocket->_stackIndex = inputSocket->_stackIndex;
 
         } else {
-
             // Wise guy, eh? So we need to include the bytecode for both the
             // true AND the false inputs, and only run the correct one
             // depending on the value of the boolean input.
+
+            d_concat_bytecode(&out, &boolCode);
+            d_free_bytecode(&boolCode);
 
             // At the end of the false code, we need to add a JRFI to jump over
             // the true code.
@@ -1431,7 +1429,7 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
             // After we have evaluated the boolean input, we need to add a
             // JRCONFI instruction to jump to the true code if the boolean is
             // true, and run the false code otherwise.
-            jmpAmt = d_vm_ins_size(OP_JRCON) + falseCode.size;
+            jmpAmt = d_vm_ins_size(OP_JRCONFI) + falseCode.size;
 
             BCode jumpToCode = d_bytecode_ins(OP_JRCONFI);
             d_bytecode_set_fimmediate(jumpToCode, 1, jmpAmt);
@@ -1576,15 +1574,18 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
 }
 
 /**
- * \fn BCode d_generate_execution_node(SheetNode *node, BuildContext* context)
+ * \fn BCode d_generate_execution_node(SheetNode *node, BuildContext* context,
+ *                                     bool retAtEnd)
  * \brief Given an execution node, generate the bytecode to get the output.
  *
  * \return Bytecode to run the execution node's subroutine.
  *
  * \param node The execution node.
  * \param context The context needed to generate the bytecode.
+ * \param retAtEnd Should the bytecode return at the end?
  */
-BCode d_generate_execution_node(SheetNode *node, BuildContext *context) {
+BCode d_generate_execution_node(SheetNode *node, BuildContext *context,
+                                bool retAtEnd) {
     VERBOSE(5, "- Generating bytecode for execution node %s...\n", node->name);
 
     int stackTopBeforeInputs = context->stackTop;
@@ -1882,8 +1883,9 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context) {
                 // Get the individual branches compiled.
                 socket = node->sockets[2];
                 if (socket->numConnections == 1) {
-                    firstNode  = socket->connections[0]->node;
-                    thenBranch = d_generate_execution_node(firstNode, context);
+                    firstNode = socket->connections[0]->node;
+                    thenBranch =
+                        d_generate_execution_node(firstNode, context, false);
                 }
 
                 int thenTopDiff = context->stackTop - initStackTop;
@@ -1894,9 +1896,9 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context) {
                 if (coreFunc == CORE_IF_THEN_ELSE) {
                     socket = node->sockets[3];
                     if (socket->numConnections == 1) {
-                        firstNode = socket->connections[0]->node;
-                        elseBranch =
-                            d_generate_execution_node(firstNode, context);
+                        firstNode  = socket->connections[0]->node;
+                        elseBranch = d_generate_execution_node(firstNode,
+                                                               context, false);
                     }
                 }
 
@@ -1936,8 +1938,9 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context) {
                 //                 \-----/
 
                 fimmediate_t jmpToThen =
-                    d_vm_ins_size(OP_JRCON) + elseBranch.size;
-                fimmediate_t jmpToEnd = d_vm_ins_size(OP_JR) + thenBranch.size;
+                    d_vm_ins_size(OP_JRCONFI) + elseBranch.size;
+                fimmediate_t jmpToEnd =
+                    d_vm_ins_size(OP_JRFI) + thenBranch.size;
 
                 // There's a possibility that the then branch doesn't have any
                 // code, which means the jump instruction that goes over the
@@ -1945,7 +1948,7 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context) {
                 bool optimizeJmpToEnd = thenBranch.size == 0;
 
                 if (!optimizeJmpToEnd) {
-                    jmpToThen += d_vm_ins_size(OP_JR);
+                    jmpToThen += d_vm_ins_size(OP_JRFI);
                 }
 
                 BCode conAtStart = d_bytecode_ins(OP_JRCONFI);
@@ -2072,8 +2075,8 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context) {
                 socket    = node->sockets[2];
                 firstNode = socket->connections[0]->node;
 
-                // TODO: Do NOT add a return.
-                BCode trueCode = d_generate_execution_node(firstNode, context);
+                BCode trueCode =
+                    d_generate_execution_node(firstNode, context, false);
 
                 // After the loop has executed, we want to pop from the stack
                 // to the point before the boolean variable got calculated,
@@ -2174,11 +2177,12 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context) {
 
             // Recursively call d_generate_execution_node to generate the
             // bytecode after this node's bytecode.
-            nextCode = d_generate_execution_node(nodeConnectedTo, context);
+            nextCode =
+                d_generate_execution_node(nodeConnectedTo, context, retAtEnd);
         }
     }
 
-    if (!(isNextNode || addedReturn)) {
+    if (!(isNextNode || addedReturn) && retAtEnd) {
         // Add a RET instruction here, so the VM returns.
         nextCode = d_bytecode_ins(OP_RET);
     }
@@ -2217,7 +2221,7 @@ BCode d_generate_start(SheetNode *startNode, BuildContext *context) {
 
             socket = socket->connections[0];
 
-            BCode exe = d_generate_execution_node(socket->node, context);
+            BCode exe = d_generate_execution_node(socket->node, context, true);
 
             d_concat_bytecode(&out, &exe);
             d_free_bytecode(&exe);
@@ -2244,6 +2248,10 @@ BCode d_generate_function(SheetFunction *func, BuildContext *context) {
     // TODO: Is this still true?
     BCode out = d_bytecode_ins(OP_RET);
 
+    // Set the top of the stack to be accurate, i.e. there will be arguments
+    // pushed in before the function runs.
+    context->stackTop = func->numArguments - 1;
+
     if (func->isSubroutine) {
         if (func->defineNode != NULL) {
             VERBOSE(5, "-- Generating bytecode for subroutine %s...\n",
@@ -2257,7 +2265,8 @@ BCode d_generate_function(SheetFunction *func, BuildContext *context) {
             if (socket->numConnections == 1 && socket->type == TYPE_EXECUTION) {
                 socket = socket->connections[0];
 
-                BCode exe = d_generate_execution_node(socket->node, context);
+                BCode exe =
+                    d_generate_execution_node(socket->node, context, true);
 
                 d_concat_bytecode(&out, &exe);
                 d_free_bytecode(&exe);

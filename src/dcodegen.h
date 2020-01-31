@@ -464,16 +464,19 @@ DECISION_API BCode d_generate_nonexecution_node(struct _sheetNode *node,
                                                 BuildContext *context);
 
 /**
- * \fn BCode d_generate_execution_node(SheetNode *node, BuildContext* context)
+ * \fn BCode d_generate_execution_node(SheetNode *node, BuildContext* context,
+ *                                     bool retAtEnd)
  * \brief Given an execution node, generate the bytecode to get the output.
  *
  * \return Bytecode to run the execution node's subroutine.
  *
  * \param node The execution node.
  * \param context The context needed to generate the bytecode.
+ * \param retAtEnd Should the bytecode return at the end?
  */
 DECISION_API BCode d_generate_execution_node(struct _sheetNode *node,
-                                             BuildContext *context);
+                                             BuildContext *context,
+                                             bool retAtEnd);
 
 /**
  * \fn BCode d_generate_start(SheetNode *startNode, BuildContext *context)
