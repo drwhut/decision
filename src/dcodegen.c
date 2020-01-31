@@ -1872,10 +1872,10 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context,
 
                 int thenTopDiff = context->stackTop - initStackTop;
 
-                // Reset the context stack top.
-                context->stackTop = initStackTop;
-
                 if (coreFunc == CORE_IF_THEN_ELSE) {
+                    // Reset the context stack top.
+                    context->stackTop = initStackTop;
+
                     socket = node->sockets[3];
                     if (socket->numConnections == 1) {
                         firstNode  = socket->connections[0]->node;
@@ -1884,32 +1884,34 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context,
                     }
                 }
 
+                // Reset the context stack top.
+                context->stackTop = initStackTop;
+
                 int elseTopDiff = context->stackTop - initStackTop;
 
-                // We want both branches to have the same stack top. So if one
-                // branch has a bigger stack top, pop it enough so it's stack
-                // top is equal to the other.
-                int finalTop = initStackTop + thenTopDiff;
-
-                if (thenTopDiff > elseTopDiff) {
-                    finalTop = initStackTop + elseTopDiff;
-
-                    fimmediate_t numPop = thenTopDiff - elseTopDiff;
-
-                    BCode popExtra = d_bytecode_ins(OP_POPF);
-                    d_bytecode_set_fimmediate(popExtra, 1, numPop);
-                    d_concat_bytecode(&thenBranch, &popExtra);
-                    d_free_bytecode(&popExtra);
-                } else if (thenTopDiff < elseTopDiff) {
-                    fimmediate_t numPop = elseTopDiff - thenTopDiff;
-
-                    BCode popExtra = d_bytecode_ins(OP_POPF);
-                    d_bytecode_set_fimmediate(popExtra, 1, numPop);
-                    d_concat_bytecode(&elseBranch, &popExtra);
-                    d_free_bytecode(&popExtra);
+                // We want both branches to pop whatever they push onto the
+                // stack.
+                fimmediate_t numPopThen = thenTopDiff;
+                if (numPopThen < 0) {
+                    numPopThen = 0;
                 }
 
-                context->stackTop = finalTop;
+                BCode popThen = d_bytecode_ins(OP_POPF);
+                d_bytecode_set_fimmediate(popThen, 1, numPopThen);
+                d_concat_bytecode(&thenBranch, &popThen);
+                d_free_bytecode(&popThen);
+
+                if (coreFunc == CORE_IF_THEN_ELSE) {
+                    fimmediate_t numPopElse = elseTopDiff;
+                    if (numPopElse < 0) {
+                        numPopElse = 0;
+                    }
+
+                    BCode popElse = d_bytecode_ins(OP_POPF);
+                    d_bytecode_set_fimmediate(popElse, 1, numPopElse);
+                    d_concat_bytecode(&elseBranch, &popElse);
+                    d_free_bytecode(&popElse);
+                }
 
                 // We put a JRCON at the start to jump to the THEN branch if
                 // the condition is true, which comes after the ELSE branch.
@@ -1935,6 +1937,10 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context,
 
                 BCode conAtStart = d_bytecode_ins(OP_JRCONFI);
                 d_bytecode_set_fimmediate(conAtStart, 1, jmpToThen);
+
+                // This JRCONFI will pop the condition from the top of the
+                // stack!
+                context->stackTop--;
 
                 BCode conAtEndElse = (BCode){NULL, 0};
 
