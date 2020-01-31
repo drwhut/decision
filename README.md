@@ -119,7 +119,7 @@ See [tests/README.md](tests/README.md) for more details.
 ## License
 
 Decision
-Copyright (C) 2019  Benjamin Beddows
+Copyright (C) 2019-2020  Benjamin Beddows
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

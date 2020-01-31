@@ -1,6 +1,6 @@
 /*
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@
 /* String constant for displaying the version and copyright notice. */
 static const char *VERSION =
     "Decision " DECISION_VERSION "\n"
-    "Copyright (C) 2019  Benjamin Beddows\n"
+    "Copyright (C) 2019-2020  Benjamin Beddows\n"
     "This program comes with ABSOLUTELY NO WARRANTY.\n"
     "This is free software, and you are welcome to redistribute it under the\n"
     "conditions of the GNU GPLv3: "

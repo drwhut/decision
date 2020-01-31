@@ -20,7 +20,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'Decision'
-copyright = '2019, Benjamin Beddows'
+copyright = '2019-2020, Benjamin Beddows'
 author = 'Benjamin Beddows'
 
 # The short X.Y version
