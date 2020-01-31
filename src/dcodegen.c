@@ -1498,6 +1498,8 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
                     d_bytecode_set_byte(syscall, 1, SYS_STRLEN);
                     d_concat_bytecode(&action, &syscall);
                     d_free_bytecode(&syscall);
+
+                    node->sockets[1]->_stackIndex = context->stackTop;
                     break;
                 case CORE_LESS_THAN:;
                     action = d_generate_comparator(node, context, OP_CLT,
