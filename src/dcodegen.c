@@ -1263,7 +1263,7 @@ BCode d_push_argument(SheetSocket *socket, BuildContext *context) {
         for (size_t i = 0; i < node->numSockets; i++) {
             SheetSocket *testSocket = node->sockets[i];
 
-            if (!testSocket->isInput) {
+            if (!testSocket->isInput && (testSocket->type & TYPE_VAR_ANY) != 0) {
                 // Sockets are separately malloc'd.
                 if (socket == testSocket) {
                     index = numOutputs;
