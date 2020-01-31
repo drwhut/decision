@@ -1435,6 +1435,16 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
             d_concat_bytecode(&out, &boolCode);
             d_free_bytecode(&boolCode);
 
+            // Since the boolean is going to get poped off by the JRCONFI
+            // instruction, copy it on the stack in case other nodes still need
+            // its value.
+            if (node->sockets[0]->connections[0]->numConnections > 1) {
+                BCode copyBool = d_bytecode_ins(OP_GETFI);
+                d_bytecode_set_fimmediate(copyBool, 1, 0);
+                d_concat_bytecode(&out, &copyBool);
+                d_free_bytecode(&boolCode);
+            }
+
             // At the end of the false code, we need to add a JRFI to jump over
             // the true code.
             fimmediate_t jmpAmt = d_vm_ins_size(OP_JRFI) + trueCode.size;
