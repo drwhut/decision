@@ -843,13 +843,14 @@ void d_vm_runtime_error(DVM *vm, const char *error) {
  */
 #define CALL_GENERIC(sym, newPC, offset)                              \
     {                                                                 \
-        vm->pc sym newPC;                                             \
         const uint8_t numArguments = (uint8_t)GET_BIMMEDIATE(offset); \
-        dint *insertPtr            = vm->stackPtr - numArguments - 1; \
+        char *returnAdr            = vm->pc + VM_INS_SIZE[*(vm->pc)]; \
+        vm->pc sym newPC;                                             \
+        dint *insertPtr = vm->stackPtr - numArguments + 1;            \
         VM_INSERT_LEN(vm, insertPtr, 2, numArguments)                 \
         *insertPtr = (dint)vm->framePtr;                              \
         insertPtr++;                                                  \
-        *insertPtr   = (dint)vm->pc;                                  \
+        *insertPtr   = (dint)returnAdr;                               \
         vm->framePtr = insertPtr;                                     \
         vm->_inc_pc  = 0;                                             \
     }
@@ -971,6 +972,8 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
     // 0.
     vm->_inc_pc = VM_INS_SIZE[opcode];
 
+    d_vm_dump(vm);
+
     // Do stuff depending on what the opcode is.
     switch (opcode) {
         case OP_RET:
@@ -1001,6 +1004,8 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
                     (vm->stackPtr - ptr) + 1 - numReturnValues;
 
                 VM_REMOVE_LEN(vm, ptr, lenRemove, numReturnValues);
+
+                vm->_inc_pc = 0;
             }
             break;
 
@@ -1518,4 +1523,6 @@ void d_vm_dump(DVM *vm) {
 
         ptr--;
     }
+
+    printf("\n");
 }

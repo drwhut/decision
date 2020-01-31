@@ -785,45 +785,60 @@ BCode d_push_input(SheetSocket *socket, BuildContext *context,
             // The socket has a connected socket.
             SheetSocket *connSocket = socket->connections[0];
 
+            // Set to false if you can determine socket->_stackIndex.
+            bool checkIfOnTop = true;
+
             // Has this output not already been generated, or has it been poped
             // off?
             if (connSocket->_stackIndex < 0 ||
                 connSocket->_stackIndex > context->stackTop) {
                 SheetNode *connNode = connSocket->node;
 
-                // Determine if the node is an execution node.
-                bool isExecutionNode = false;
+                // If this is the Define node, we need to push the argument.
+                if (strcmp(connNode->name, "Define") == 0) {
+                    out = d_push_argument(connSocket, context);
 
-                for (size_t i = 0; i < connNode->numSockets; i++) {
-                    SheetSocket *testSocket = connNode->sockets[i];
+                    // Since we're copying the argument, set the socket's
+                    // stack index now.
+                    socket->_stackIndex = context->stackTop;
+                    checkIfOnTop        = false;
+                } else {
+                    // Determine if the node is an execution node.
+                    bool isExecutionNode = false;
 
-                    if (testSocket->type == TYPE_EXECUTION) {
-                        isExecutionNode = true;
-                        break;
+                    for (size_t i = 0; i < connNode->numSockets; i++) {
+                        SheetSocket *testSocket = connNode->sockets[i];
+
+                        if (testSocket->type == TYPE_EXECUTION) {
+                            isExecutionNode = true;
+                            break;
+                        }
+                    }
+
+                    if (isExecutionNode) {
+                        // TODO: This.
+                    } else {
+                        out = d_generate_nonexecution_node(connNode, context);
                     }
                 }
+            }
 
-                if (isExecutionNode) {
-                    // TODO: This.
-                } else {
-                    out = d_generate_nonexecution_node(connNode, context);
+            if (checkIfOnTop) {
+                // If the value is not at the top of the stack, make sure it is.
+                int inputIndex = connSocket->_stackIndex;
+
+                if (!IS_INDEX_TOP(context, inputIndex)) {
+                    BCode get = d_bytecode_ins(OP_GETFI);
+                    d_bytecode_set_fimmediate(
+                        get, 1, (fimmediate_t)STACK_INDEX_TOP(context, inputIndex));
+                    d_concat_bytecode(&out, &get);
+                    d_free_bytecode(&get);
+
+                    connSocket->_stackIndex = context->stackTop;
                 }
+
+                socket->_stackIndex = connSocket->_stackIndex;
             }
-
-            // If the value is not at the top of the stack, make sure it is.
-            int inputIndex = connSocket->_stackIndex;
-
-            if (!IS_INDEX_TOP(context, inputIndex)) {
-                BCode get = d_bytecode_ins(OP_GETFI);
-                d_bytecode_set_fimmediate(
-                    get, 1, (fimmediate_t)STACK_INDEX_TOP(context, inputIndex));
-                d_concat_bytecode(&out, &get);
-                d_free_bytecode(&get);
-
-                connSocket->_stackIndex = context->stackTop;
-            }
-
-            socket->_stackIndex = connSocket->_stackIndex;
         }
     }
 
@@ -875,7 +890,7 @@ BCode d_push_node_inputs(SheetNode *node, BuildContext *context, bool order,
     while (inLoop) {
         SheetSocket *socket = node->sockets[i];
 
-        if (socket->isInput && socket->type != TYPE_EXECUTION) {
+        if (socket->isInput && (socket->type & TYPE_VAR_ANY) != 0) {
             if (socket->numConnections > 0 || socket->type == TYPE_FLOAT ||
                 !ignoreLiterals) {
 
@@ -911,7 +926,7 @@ BCode d_push_node_inputs(SheetNode *node, BuildContext *context, bool order,
     while (inLoop) {
         SheetSocket *socket = node->sockets[i];
 
-        if (socket->isInput && socket->type != TYPE_EXECUTION) {
+        if (socket->isInput && (socket->type & TYPE_VAR_ANY) != 0) {
             if (socket->numConnections > 0 || socket->type == TYPE_FLOAT ||
                 !ignoreLiterals) {
 
@@ -946,7 +961,7 @@ BCode d_push_node_inputs(SheetNode *node, BuildContext *context, bool order,
         while (inLoop) {
             SheetSocket *socket = node->sockets[i];
 
-            if (socket->isInput && socket->type != TYPE_EXECUTION) {
+            if (socket->isInput && (socket->type & TYPE_VAR_ANY) != 0) {
                 if (socket->numConnections > 0 || socket->type == TYPE_FLOAT ||
                     !ignoreLiterals) {
 
@@ -1250,6 +1265,9 @@ BCode d_push_argument(SheetSocket *socket, BuildContext *context) {
         out = d_bytecode_ins(OP_GETFI);
         d_bytecode_set_fimmediate(out, 1, index + 1);
 
+        // It is up to the caller to set the socket's stack index,
+        // as it should not be set here, since it should be copied.
+
         context->stackTop++;
     }
 
@@ -1414,7 +1432,6 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
             // Wise guy, eh? So we need to include the bytecode for both the
             // true AND the false inputs, and only run the correct one
             // depending on the value of the boolean input.
-
             d_concat_bytecode(&out, &boolCode);
             d_free_bytecode(&boolCode);
 
@@ -2015,8 +2032,9 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context,
                 d_bytecode_set_byte(print, 1, SYS_PRINT);
                 d_concat_bytecode(&action, &print);
                 d_free_bytecode(&print);
-
-                context->stackTop++;
+                
+                // The return value should have replaced the original value,
+                // so there is no need to change the stack top.
 
                 break;
 

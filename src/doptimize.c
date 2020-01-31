@@ -283,7 +283,7 @@ bool d_optimize_call_func_relative(Sheet *sheet) {
             // Check if the function is defined in this sheet.
             if (func->sheet == sheet) {
                 // Calculate the jump.
-                dint jmp = (size_t)linkMeta._ptr - itl.ins;
+                dint jmp = (fimmediate_t)linkMeta._ptr - itl.ins;
 
                 // The idea is to replace the CALLI instruction with a
                 // CALLRF one.
@@ -291,7 +291,7 @@ bool d_optimize_call_func_relative(Sheet *sheet) {
 
                 // Replace the full immediate.
                 linkMeta = sheet->_link.list[itl.link];
-                jmp      = (size_t)linkMeta._ptr - itl.ins;
+                jmp      = (fimmediate_t)linkMeta._ptr - itl.ins;
                 *(fimmediate_t *)(sheet->_text + itl.ins + 1) = jmp;
 
                 // We also remove the link record here since we don't
