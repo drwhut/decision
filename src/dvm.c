@@ -141,7 +141,16 @@ static void vm_set_stack_size_to(DVM *vm, duint size) {
     if (vm->basePtr == NULL) {
         vm->basePtr = d_malloc(newAlloc);
     } else {
+        // The problem with reallocing the base pointer is that it can move,
+        // which would invalidate both the stack pointer and the frame
+        // pointer!
+        ptrdiff_t stackDiff = vm->stackPtr - vm->basePtr;
+        ptrdiff_t frameDiff = vm->framePtr - vm->basePtr;
+
         vm->basePtr = d_realloc(vm->basePtr, newAlloc);
+
+        vm->stackPtr = vm->basePtr + stackDiff;
+        vm->framePtr = vm->basePtr + frameDiff;
     }
 }
 

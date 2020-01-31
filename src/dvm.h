@@ -176,7 +176,7 @@ typedef enum _dSyscall {
  * \def VM_STACK_SIZE_MIN
  * \brief The minimum, and starting, size of the VM's stack.
  */
-#define VM_STACK_SIZE_MIN 64
+#define VM_STACK_SIZE_MIN 16
 
 /**
  * \def VM_STACK_SIZE_SCALE_INC
