@@ -828,6 +828,11 @@ BCode d_push_input(SheetSocket *socket, BuildContext *context,
                 // We just need to get it and push it to the top of the
                 // stack like an argument.
                 forceOnTop = true;
+            } else if (connNode->definition.type == NAME_VARIABLE) {
+                // This getter of a variable has already been used, and the
+                // variable's value is somewhere in the stack. But what if
+                // the value of the variable has changed?
+                out = d_push_variable(connNode, context);
             }
 
             if (checkIfOnTop || forceOnTop) {
