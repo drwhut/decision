@@ -1641,16 +1641,8 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context,
         }
     }
 
-    int stackTopBeforeInputs = context->stackTop;
-
-    // Firstly, we need the bytecode to get the inputs, such that the first
-    // input is at the top of the stack.
-    BCode out = d_push_node_inputs(node, context, false, false, forceFloats);
-
-    int stackTopAfterInputs = context->stackTop;
-
-    // Secondly, we use the inputs to perform an action.
-    BCode action = {NULL, 0};
+    int stackTopBefore = context->stackTop;
+    BCode out          = {NULL, 0};
 
     // We don't want to have multiple returns at the end, so if we know we've
     // added one, then there is no need to add another.
@@ -1661,6 +1653,14 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context,
         // Remember that it's only execution functions we care about.
         SheetSocket *socket;
         SheetNode *firstNode;
+
+        // Generate bytecode to get the inputs, such that the first input is at
+        // the top of the stack.
+        out = d_push_node_inputs(node, context, false, false, forceFloats);
+
+        BCode action = {NULL, 0};
+
+        int stackTopAfterInputs = context->stackTop;
 
         switch (coreFunc) {
             case CORE_FOR:;
@@ -2064,7 +2064,7 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context,
                 // After the loop has executed, we want to pop from the stack
                 // to the point before the boolean variable got calculated,
                 // and jump back far enough as to recalculate the boolean value.
-                fimmediate_t numPop = context->stackTop - stackTopBeforeInputs;
+                fimmediate_t numPop = context->stackTop - stackTopBefore;
                 if (numPop < 0) {
                     numPop = 0;
                 }
@@ -2108,23 +2108,23 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context,
             default:
                 break;
         }
+
+        d_concat_bytecode(&out, &action);
+        d_free_bytecode(&action);
     }
     // TODO: Add define here for safety.
     else if (strcmp(node->name, "Return") == 0) {
-        action      = d_generate_return(node, context);
+        out         = d_generate_return(node, context);
         addedReturn = true;
     } else {
         // Put arguments into the stack and call the subroutine.
-        action = d_generate_call(node, context);
+        out = d_generate_call(node, context);
     }
-
-    d_concat_bytecode(&out, &action);
-    d_free_bytecode(&action);
 
     // Now, in order to optimise the usage of the stack, we pop from the stack
     // back to before the inputs were generated. We've used the inputs in this
     // node, we don't need them anymore!
-    fimmediate_t numPop = context->stackTop - stackTopBeforeInputs;
+    fimmediate_t numPop = context->stackTop - stackTopBefore;
     if (numPop < 0) {
         numPop = 0;
     }
@@ -2134,7 +2134,7 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context,
     d_concat_bytecode(&out, &popBack);
     d_free_bytecode(&popBack);
 
-    context->stackTop = stackTopBeforeInputs;
+    context->stackTop = stackTopBefore;
 
     // Thirdly, we generate the bytecode for the next execution node.
     BCode nextCode = {NULL, 0};
