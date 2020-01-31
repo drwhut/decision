@@ -2088,7 +2088,7 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context,
                 action = d_bytecode_ins(OP_NOT);
 
                 fimmediate_t jmpOverAmt =
-                    trueCode.size + d_vm_ins_size(OP_JRCON);
+                    trueCode.size + d_vm_ins_size(OP_JRCONFI);
 
                 BCode jmpOver = d_bytecode_ins(OP_JRCONFI);
                 d_bytecode_set_fimmediate(jmpOver, 1, jmpOverAmt);
