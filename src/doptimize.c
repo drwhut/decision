@@ -187,17 +187,39 @@ void d_optimize_remove_bytecode(Sheet *sheet, size_t start, size_t len) {
  */
 void d_optimize_all(Sheet *sheet) {
     // Could we try and optimize further?
-    bool repeat = false;
+    bool repeat = true;
 
-    // d_optimize_not_consecutive
-    VERBOSE(5, "-- Checking for cancelling NOT operations... ");
-    repeat = d_optimize_not_consecutive(sheet);
-    if (repeat) {
-        while (repeat) {
-            repeat = d_optimize_not_consecutive(sheet);
+    while (repeat) {
+        repeat = false;
+
+        VERBOSE(5, "- Starting an optimisation pass...\n");
+
+        // d_optimize_not_consecutive
+        VERBOSE(5, "-- Checking for cancelling NOT instructions... ");
+        bool consecNot = d_optimize_not_consecutive(sheet);
+        if (consecNot) {
+            repeat = true;
+        }
+        VERBOSE(5, "done.\n");
+
+        // d_optimize_useless
+        VERBOSE(5, "-- Checking for useless instructions... ");
+        bool useless = d_optimize_useless(sheet);
+        if (useless) {
+            repeat = true;
+        }
+        VERBOSE(5, "done.\n");
+
+        if (repeat) {
+            VERBOSE(5,
+                    "- Optimisations were found, starting another pass...\n");
+        } else {
+            VERBOSE(5, "- No optimisations were found.\n");
         }
     }
-    VERBOSE(5, "done.\n");
+
+    // These optimisations should only be run once:
+    VERBOSE(5, "- Checking for further optimisations...\n");
 
     // d_optimize_call_func_relative
     VERBOSE(
@@ -205,7 +227,16 @@ void d_optimize_all(Sheet *sheet) {
     d_optimize_call_func_relative(sheet);
     VERBOSE(5, "done.\n");
 
-    // TODO: Add function to compress immediate instructions.
+    // d_optimize_simplify
+    VERBOSE(5, "-- Checking if we can simplify instructions... ");
+    d_optimize_simplify(sheet);
+    VERBOSE(5, "done.\n");
+
+    // d_optimize_shrink_fimmediate
+    // NOTE: This should be the last thing to optimise!
+    VERBOSE(5, "-- Checking if we can shrink instruction operands... ");
+    d_optimize_shrink_fimmediate(sheet);
+    VERBOSE(5, "done.\n");
 }
 
 /**
@@ -232,15 +263,12 @@ bool d_optimize_not_consecutive(Sheet *sheet) {
 
             // Is it a NOT followed by a NOT?
             if (secondOpcode == OP_NOT) {
-                // Are the registers the same?
-                if (sheet->_text[i + 1] == sheet->_text[i + firstSize + 1]) {
-                    // We can get rid of these 2 instructions, since they
-                    // cancel each other out.
-                    d_optimize_remove_bytecode(
-                        sheet, i, 2 * (size_t)d_vm_ins_size(OP_NOT));
-                    optimized = true;
-                    deleted   = true;
-                }
+                // We can get rid of these 2 instructions, since they
+                // cancel each other out.
+                d_optimize_remove_bytecode(sheet, i,
+                                           2 * (size_t)d_vm_ins_size(OP_NOT));
+                optimized = true;
+                deleted   = true;
             }
         }
 
@@ -252,11 +280,25 @@ bool d_optimize_not_consecutive(Sheet *sheet) {
             exit(1);
         }
 
-        if (!deleted)
+        if (!deleted) {
             i += firstSize;
+        }
     }
 
     return optimized;
+}
+
+/**
+ * \fn d_optimize_useless(Sheet *sheet)
+ * \brief Try and find useless instructions in the bytecode, e.g. poping 0
+ * items.
+ * 
+ * \return If we were able to optimise.
+ * 
+ * \param sheet The sheet containing the bytecode to optimise.
+ */
+bool d_optimize_useless(Sheet *sheet) {
+    return false;
 }
 
 /**
@@ -310,4 +352,44 @@ bool d_optimize_call_func_relative(Sheet *sheet) {
     }
 
     return optimized;
+}
+
+/**
+ * \fn bool d_optimize_simplify(Sheet *sheet)
+ * \brief Try and find instructions that can be simplified, i.e. POPB 1 = POP.
+ * 
+ * \return If we were able to optimise.
+ * 
+ * \param sheet The sheet containing the bytecode to optimise.
+ */
+bool d_optimize_simplify(Sheet *sheet) {
+    return false;
+}
+
+// An array of arrays where the first element is the opcode that has the full
+// immediate, and the second and third elements are the opcodes that have the
+// half and byte immediates, respectively.
+#define NUM_SHRINK_FIMMEDIATE_OPS 15
+static const DIns SHRINK_FIMMEDIATE_OPS[NUM_SHRINK_FIMMEDIATE_OPS][3] = {
+    {OP_ADDFI, OP_ADDHI, OP_ADDBI},       {OP_ANDFI, OP_ANDHI, OP_ANDBI},
+    {OP_CALLRF, OP_CALLRH, OP_CALLRB},    {OP_DIVFI, OP_DIVHI, OP_DIVBI},
+    {OP_GETFI, OP_GETHI, OP_GETBI},       {OP_JRFI, OP_JRHI, OP_JRBI},
+    {OP_JRCONFI, OP_JRCONHI, OP_JRCONBI}, {OP_MODFI, OP_MODHI, OP_MODBI},
+    {OP_MULFI, OP_MULHI, OP_MULBI},       {OP_ORFI, OP_ORHI, OP_ORBI},
+    {OP_POPF, OP_POPH, OP_POPB},          {OP_PUSHF, OP_PUSHH, OP_PUSHB},
+    {OP_PUSHNF, OP_PUSHNH, OP_PUSHNB},    {OP_SUBFI, OP_SUBHI, OP_SUBBI},
+    {OP_XORFI, OP_XORHI, OP_XORBI}};
+
+/**
+ * \fn bool d_optimize_shrink_fimmediate(Sheet *sheet)
+ * \brief For instructions that have full immediate operands, try and replace
+ * them with equivalent instructions that use immediates that are smaller, i.e.
+ * half and byte immediates.
+ *
+ * \return If we were able to optimise.
+ *
+ * \param sheet The sheet containing the bytecode to optimise.
+ */
+bool d_optimize_shrink_fimmediate(Sheet *sheet) {
+    return false;
 }
