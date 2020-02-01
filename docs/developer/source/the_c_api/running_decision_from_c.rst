@@ -245,6 +245,9 @@ Finally, you can call the function or subroutine itself using:
            printf("%" DINT_PRINTF_d " is odd!\n", value);
        }
 
+       // Free the VM.
+       d_vm_free(&vm);
+
        d_sheet_free(sheet);
        return 0;
    }

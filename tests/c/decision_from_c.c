@@ -67,6 +67,8 @@ int test_sheet(Sheet *sheet) {
     dfloat fAnswer = d_vm_pop_float(&vm);
     ASSERT_EQUAL(fAnswer, 9.5)
 
+    d_vm_free(&vm);
+
     return 0;
 }
 

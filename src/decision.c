@@ -205,7 +205,9 @@ bool d_run_sheet(Sheet *sheet) {
             if (sheet->_main > 0) // A Start function exists.
             {
                 DVM vm = d_vm_create();
-                return d_vm_run(&vm, sheet->_text + sheet->_main);
+                bool success = d_vm_run(&vm, sheet->_text + sheet->_main);
+                d_vm_free(&vm);
+                return success;
             } else {
                 printf("Fatal: Sheet %s has no Start function defined",
                        sheet->filePath);
