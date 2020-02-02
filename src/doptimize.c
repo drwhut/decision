@@ -46,6 +46,10 @@ void d_optimize_remove_ins_to_link(Sheet *sheet, size_t index) {
     }
 }
 
+// TODO: The fact this runs every time bytecode is removed is REALLY
+// inefficient. Maybe instead "mark" which bits to remove and do it all in one
+// go at the end?
+
 /**
  * \fn void d_optimize_remove_bytecode(Sheet *sheet, size_t start, size_t len)
  * \brief Remove a section of bytecode, and make any adjustments to the data
@@ -352,7 +356,87 @@ bool d_optimize_not_consecutive(Sheet *sheet) {
  * \param sheet The sheet containing the bytecode to optimise.
  */
 bool d_optimize_useless(Sheet *sheet) {
-    return false;
+    bool optimised = false;
+
+    for (size_t i = 0; i < sheet->_textSize;) {
+        DIns opcode = sheet->_text[i];
+
+        bool removed = false;
+
+        if (opcode == OP_POPB) {
+            bimmediate_t numPop = *(bimmediate_t *)(sheet->_text + i + 1);
+
+            // POPB 0
+            if (numPop == 0) {
+                // Remove the unnessesary bytecode.
+                d_optimize_remove_bytecode(sheet, i, d_vm_ins_size(opcode));
+
+                optimised = true;
+                removed   = true;
+            }
+        } else if (opcode == OP_POPH) {
+            himmediate_t numPop = *(himmediate_t *)(sheet->_text + i + 1);
+
+            // POPH 0
+            if (numPop == 0) {
+                // Remove the unnessesary bytecode.
+                d_optimize_remove_bytecode(sheet, i, d_vm_ins_size(opcode));
+
+                optimised = true;
+                removed   = true;
+            }
+        } else if (opcode == OP_POPF) {
+            fimmediate_t numPop = *(fimmediate_t *)(sheet->_text + i + 1);
+
+            // POPF 0
+            if (numPop == 0) {
+                // Remove the unnessesary bytecode.
+                d_optimize_remove_bytecode(sheet, i, d_vm_ins_size(opcode));
+
+                optimised = true;
+                removed   = true;
+            }
+        } else if (opcode == OP_PUSHNB) {
+            bimmediate_t numPush = *(bimmediate_t *)(sheet->_text + i + 1);
+
+            // PUSHNB 0
+            if (numPush == 0) {
+                // Remove the unnessesary bytecode.
+                d_optimize_remove_bytecode(sheet, i, d_vm_ins_size(opcode));
+
+                optimised = true;
+                removed   = true;
+            }
+        } else if (opcode == OP_PUSHNH) {
+            himmediate_t numPush = *(himmediate_t *)(sheet->_text + i + 1);
+
+            // PUSHNH 0
+            if (numPush == 0) {
+                // Remove the unnessesary bytecode.
+                d_optimize_remove_bytecode(sheet, i, d_vm_ins_size(opcode));
+
+                optimised = true;
+                removed   = true;
+            }
+        } else if (opcode == OP_PUSHNF) {
+            fimmediate_t numPush = *(fimmediate_t *)(sheet->_text + i + 1);
+
+            // PUSHNF 0
+            if (numPush == 0) {
+                // Remove the unnessesary bytecode.
+                d_optimize_remove_bytecode(sheet, i, d_vm_ins_size(opcode));
+
+                optimised = true;
+                removed   = true;
+            }
+        }
+
+        if (!removed) {
+            i += d_vm_ins_size(opcode);
+        }
+    }
+
+    return optimised;
 }
 
 /**
@@ -417,7 +501,77 @@ bool d_optimize_call_func_relative(Sheet *sheet) {
  * \param sheet The sheet containing the bytecode to optimise.
  */
 bool d_optimize_simplify(Sheet *sheet) {
-    return false;
+    bool optimised = false;
+
+    for (size_t i = 0; i < sheet->_textSize;) {
+        DIns opcode = sheet->_text[i];
+
+        if (opcode == OP_RETN) {
+            bimmediate_t numRets = *(bimmediate_t *)(sheet->_text + i + 1);
+
+            // RETN 0 == RET
+            if (numRets == 0) {
+                opcode = OP_RET;
+
+                // Replace the opcode.
+                *(sheet->_text + i) = opcode;
+
+                // Remove the unnessesary bytecode.
+                d_optimize_remove_bytecode(sheet, i + 1, BIMMEDIATE_SIZE);
+
+                optimised = true;
+            }
+        } else if (opcode == OP_POPB) {
+            bimmediate_t numPop = *(bimmediate_t *)(sheet->_text + i + 1);
+
+            // POPB 1 == POP
+            if (numPop == 1) {
+                opcode = OP_POP;
+
+                // Replace the opcode.
+                *(sheet->_text + i) = opcode;
+
+                // Remove the unnessesary bytecode.
+                d_optimize_remove_bytecode(sheet, i + 1, BIMMEDIATE_SIZE);
+
+                optimised = true;
+            }
+        } else if (opcode == OP_POPH) {
+            himmediate_t numPop = *(himmediate_t *)(sheet->_text + i + 1);
+
+            // POPH 1 == POP
+            if (numPop == 1) {
+                opcode = OP_POP;
+
+                // Replace the opcode.
+                *(sheet->_text + i) = opcode;
+
+                // Remove the unnessesary bytecode.
+                d_optimize_remove_bytecode(sheet, i + 1, HIMMEDIATE_SIZE);
+
+                optimised = true;
+            }
+        } else if (opcode == OP_POPF) {
+            fimmediate_t numPop = *(fimmediate_t *)(sheet->_text + i + 1);
+
+            // POPF 1 == POP
+            if (numPop == 1) {
+                opcode = OP_POP;
+
+                // Replace the opcode.
+                *(sheet->_text + i) = opcode;
+
+                // Remove the unnessesary bytecode.
+                d_optimize_remove_bytecode(sheet, i + 1, FIMMEDIATE_SIZE);
+
+                optimised = true;
+            }
+        }
+
+        i += d_vm_ins_size(opcode);
+    }
+
+    return optimised;
 }
 
 // An array of arrays where the first element is the opcode that has the full
