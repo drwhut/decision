@@ -111,7 +111,9 @@ DECISION_API void d_asm_text_dump(char *code, size_t size) {
             case OP_SUBBI:
             case OP_SYSCALL:
             case OP_XORBI:;
-                printf("0x%" BIMMEDIATE_PRINTF "x", *(bimmediate_t *)(ins + 1));
+                bimmediate_t b = *(bimmediate_t *)(ins + 1);
+                printf("0x%" BIMMEDIATE_PRINTF "x (%" BIMMEDIATE_PRINTF "d)", b,
+                       b);
                 break;
 
             // Half Immediate.
@@ -129,7 +131,9 @@ DECISION_API void d_asm_text_dump(char *code, size_t size) {
             case OP_PUSHNH:
             case OP_SUBHI:
             case OP_XORHI:;
-                printf("0x%" HIMMEDIATE_PRINTF "x", *(himmediate_t *)(ins + 1));
+                himmediate_t h = *(himmediate_t *)(ins + 1);
+                printf("0x%" HIMMEDIATE_PRINTF "x (%" HIMMEDIATE_PRINTF "d)", h,
+                       h);
                 break;
 
             // Full Immediate.
@@ -151,23 +155,29 @@ DECISION_API void d_asm_text_dump(char *code, size_t size) {
             case OP_PUSHNF:
             case OP_SUBFI:
             case OP_XORFI:;
-                printf("0x%" FIMMEDIATE_PRINTF "x", *(fimmediate_t *)(ins + 1));
+                fimmediate_t f = *(fimmediate_t *)(ins + 1);
+                printf("0x%" FIMMEDIATE_PRINTF "x (%" FIMMEDIATE_PRINTF "d)", f,
+                       f);
                 break;
 
             // Byte Immediate + Byte Immediate.
             case OP_CALLRB:;
                 bimmediate_t b1 = *(bimmediate_t *)(ins + 1);
                 b2              = *(bimmediate_t *)(ins + 1 + BIMMEDIATE_SIZE);
-                printf("0x%" BIMMEDIATE_PRINTF "x, 0x%" BIMMEDIATE_PRINTF "x",
-                       b1, b2);
+                printf("0x%" BIMMEDIATE_PRINTF "x (%" BIMMEDIATE_PRINTF
+                       "d), 0x%" BIMMEDIATE_PRINTF "x (%" BIMMEDIATE_PRINTF
+                       "d)",
+                       b1, b1, b2, b2);
                 break;
 
             // Half Immediate + Byte Immediate.
             case OP_CALLRH:;
                 himmediate_t h1 = *(himmediate_t *)(ins + 1);
                 b2              = *(bimmediate_t *)(ins + 1 + HIMMEDIATE_SIZE);
-                printf("0x%" HIMMEDIATE_PRINTF "x, 0x%" BIMMEDIATE_PRINTF "x",
-                       h1, b2);
+                printf("0x%" HIMMEDIATE_PRINTF "x (%" HIMMEDIATE_PRINTF
+                       "d), 0x%" BIMMEDIATE_PRINTF "x (%" BIMMEDIATE_PRINTF
+                       "d)",
+                       h1, h1, b2, b2);
                 break;
 
             // Full Immediate + Byte Immediate.
@@ -176,8 +186,10 @@ DECISION_API void d_asm_text_dump(char *code, size_t size) {
             case OP_CALLRF:;
                 fimmediate_t f1 = *(fimmediate_t *)(ins + 1);
                 b2              = *(bimmediate_t *)(ins + 1 + FIMMEDIATE_SIZE);
-                printf("0x%" FIMMEDIATE_PRINTF "x, 0x%" BIMMEDIATE_PRINTF "x",
-                       f1, b2);
+                printf("0x%" FIMMEDIATE_PRINTF "x (%" FIMMEDIATE_PRINTF
+                       "d), 0x%" BIMMEDIATE_PRINTF "x (%" BIMMEDIATE_PRINTF
+                       "d)",
+                       f1, f1, b2, b2);
                 break;
 
             // No immediates.
