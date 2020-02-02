@@ -604,67 +604,87 @@ bool d_optimize_shrink_fimmediate(Sheet *sheet) {
     for (size_t i = 0; i < sheet->_textSize;) {
         DIns opcode = sheet->_text[i];
 
-        // TODO: Optimise with binary search, or a lookup table?
-        int shrinkOpsIndex = -1;
-        for (int j = 0; j < NUM_SHRINK_FIMMEDIATE_OPS; j++) {
-            if (opcode == SHRINK_FIMMEDIATE_OPS[j][0]) {
-                shrinkOpsIndex = j;
+        // Check first if we should even reduce the immediate here.
+        // If this instruction should be linked, then we CANNOT REDUCE IT.
+        // Linking relies on the fact that it will be a full immediate.
+        bool canOptimise = true;
+
+        for (size_t j = 0; j < sheet->_insLinkListSize; j++) {
+            InstructionToLink itl = sheet->_insLinkList[j];
+
+            if (i == itl.ins) {
+                canOptimise = false;
                 break;
             }
         }
 
-        // Is our opcode in the above list?
-        if (shrinkOpsIndex >= 0) {
-            // Then attempt to shrink it.
-            fimmediate_t immediate = *(fimmediate_t *)(sheet->_text + i + 1);
-
-            if (immediate >= BIMMEDIATE_MIN && immediate <= BIMMEDIATE_MAX) {
-                // The immediate needs to be adjusted for certain instructions.
-                if (opcode == OP_CALLRF || opcode == OP_JRFI ||
-                    opcode == OP_JRCONFI) {
-                    if (immediate > 0) {
-                        immediate -= (FIMMEDIATE_SIZE - BIMMEDIATE_SIZE);
-                    }
+        if (canOptimise) {
+            // TODO: Optimise with binary search, or a lookup table?
+            int shrinkOpsIndex = -1;
+            for (int j = 0; j < NUM_SHRINK_FIMMEDIATE_OPS; j++) {
+                if (opcode == SHRINK_FIMMEDIATE_OPS[j][0]) {
+                    shrinkOpsIndex = j;
+                    break;
                 }
+            }
 
-                opcode = SHRINK_FIMMEDIATE_OPS[shrinkOpsIndex][2];
+            // Is our opcode in the above list?
+            if (shrinkOpsIndex >= 0) {
+                // Then attempt to shrink it.
+                fimmediate_t immediate =
+                    *(fimmediate_t *)(sheet->_text + i + 1);
 
-                // Replace the opcode.
-                // This needs to be done before removing the bytecode.
-                *(sheet->_text + i) = opcode;
-
-                // Remove from the bytecode.
-                d_optimize_remove_bytecode(sheet, i + 1,
-                                           FIMMEDIATE_SIZE - BIMMEDIATE_SIZE);
-
-                bimmediate_t bImmediate = (bimmediate_t)immediate;
-                *(bimmediate_t *)(sheet->_text + i + 1) = bImmediate;
-
-                optimised = true;
-            } else if (immediate >= HIMMEDIATE_MIN &&
-                       immediate <= HIMMEDIATE_MAX) {
-                // The immediate needs to be adjusted for certain instructions.
-                if (opcode == OP_CALLRF || opcode == OP_JRFI ||
-                    opcode == OP_JRCONFI) {
-                    if (immediate > 0) {
-                        immediate -= (FIMMEDIATE_SIZE - HIMMEDIATE_SIZE);
+                if (immediate >= BIMMEDIATE_MIN &&
+                    immediate <= BIMMEDIATE_MAX) {
+                    // The immediate needs to be adjusted for certain
+                    // instructions.
+                    if (opcode == OP_CALLRF || opcode == OP_JRFI ||
+                        opcode == OP_JRCONFI) {
+                        if (immediate > 0) {
+                            immediate -= (FIMMEDIATE_SIZE - BIMMEDIATE_SIZE);
+                        }
                     }
+
+                    opcode = SHRINK_FIMMEDIATE_OPS[shrinkOpsIndex][2];
+
+                    // Replace the opcode.
+                    // This needs to be done before removing the bytecode.
+                    *(sheet->_text + i) = opcode;
+
+                    // Remove from the bytecode.
+                    d_optimize_remove_bytecode(
+                        sheet, i + 1, FIMMEDIATE_SIZE - BIMMEDIATE_SIZE);
+
+                    bimmediate_t bImmediate = (bimmediate_t)immediate;
+                    *(bimmediate_t *)(sheet->_text + i + 1) = bImmediate;
+
+                    optimised = true;
+                } else if (immediate >= HIMMEDIATE_MIN &&
+                           immediate <= HIMMEDIATE_MAX) {
+                    // The immediate needs to be adjusted for certain
+                    // instructions.
+                    if (opcode == OP_CALLRF || opcode == OP_JRFI ||
+                        opcode == OP_JRCONFI) {
+                        if (immediate > 0) {
+                            immediate -= (FIMMEDIATE_SIZE - HIMMEDIATE_SIZE);
+                        }
+                    }
+
+                    opcode = SHRINK_FIMMEDIATE_OPS[shrinkOpsIndex][1];
+
+                    // Replace the opcode.
+                    // This needs to be done before removing the bytecode.
+                    *(sheet->_text + i) = opcode;
+
+                    // Remove from the bytecode.
+                    d_optimize_remove_bytecode(
+                        sheet, i + 1, FIMMEDIATE_SIZE - HIMMEDIATE_SIZE);
+
+                    himmediate_t hImmediate = (himmediate_t)immediate;
+                    *(himmediate_t *)(sheet->_text + i + 1) = hImmediate;
+
+                    optimised = true;
                 }
-
-                opcode = SHRINK_FIMMEDIATE_OPS[shrinkOpsIndex][1];
-
-                // Replace the opcode.
-                // This needs to be done before removing the bytecode.
-                *(sheet->_text + i) = opcode;
-
-                // Remove from the bytecode.
-                d_optimize_remove_bytecode(sheet, i + 1,
-                                           FIMMEDIATE_SIZE - HIMMEDIATE_SIZE);
-
-                himmediate_t hImmediate = (himmediate_t)immediate;
-                *(himmediate_t *)(sheet->_text + i + 1) = hImmediate;
-
-                optimised = true;
             }
         }
 
