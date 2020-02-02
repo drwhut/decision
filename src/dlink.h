@@ -131,17 +131,16 @@ DECISION_API void d_link_meta_list_push(LinkMetaList *list, LinkMeta item);
 DECISION_API void d_link_free_list(LinkMetaList *list);
 
 /**
- * \fn void d_link_replace_load_ins(char *ins, char *ptr)
- * \brief Change a LOADUI/ORI instruction combination to load a specific
- * pointer.
+ * \fn void d_link_replace_fimmediate(char *ins, char *ptr)
+ * \brief Change an instruction's full immediate to point somewhere.
  *
  * **NOTE:** If you don't like the fact that you can't run 32-bit Decision code
  * on 64-bit machines and vice versa, blame it on this function.
  *
- * \param ins A pointer to first byte of the LOADUI instruction.
- * \param ptr The memory address for the instructions to load.
+ * \param ins A pointer to first byte of the instruction.
+ * \param ptr The memory address for the instruction to load.
  */
-DECISION_API void d_link_replace_load_ins(char *ins, char *ptr);
+DECISION_API void d_link_replace_fimmediate(char *ins, char *ptr);
 
 /**
  * \fn void d_link_precalculate_ptr(Sheet *sheet)

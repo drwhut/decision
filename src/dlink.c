@@ -97,25 +97,17 @@ void d_link_free_list(LinkMetaList *list) {
 }
 
 /**
- * \fn void d_link_replace_load_ins(char *ins, char *ptr)
- * \brief Change a LOADUI/ORI instruction combination to load a specific
- * pointer.
+ * \fn void d_link_replace_fimmediate(char *ins, char *ptr)
+ * \brief Change an instruction's full immediate to point somewhere.
  *
  * **NOTE:** If you don't like the fact that you can't run 32-bit Decision code
  * on 64-bit machines and vice versa, blame it on this function.
  *
- * \param ins A pointer to first byte of the LOADUI instruction.
- * \param ptr The memory address for the instructions to load.
+ * \param ins A pointer to first byte of the instruction.
+ * \param ptr The memory address for the instruction to load.
  */
-void d_link_replace_load_ins(char *ins, char *ptr) {
-    // LOADUI
-    *(immediate_t *)(ins + 2) =
-        (immediate_t)((dint)ptr >> IMMEDIATE_SIZE * 8) & IMMEDIATE_MASK;
-
-    ins += d_vm_ins_size(OP_LOADUI);
-
-    // ORI
-    *(immediate_t *)(ins + 2) = (immediate_t)((dint)ptr & IMMEDIATE_MASK);
+void d_link_replace_fimmediate(char *ins, char *ptr) {
+    *(fimmediate_t *)(ins + 1) = (fimmediate_t)ptr;
 }
 
 /**
@@ -172,7 +164,7 @@ void d_link_precalculate_ptr(struct _sheet *sheet) {
                     }
                 } else if (meta->type == LINK_CFUNCTION) {
                     CFunction *cFunc = (CFunction *)meta->meta;
-                    meta->_ptr = (char *)cFunc->function;
+                    meta->_ptr       = (char *)cFunc->function;
                 }
             }
         }
@@ -218,7 +210,7 @@ void d_link_self(Sheet *sheet) {
                     }
                 }
 
-                d_link_replace_load_ins(ins, dataPtr);
+                d_link_replace_fimmediate(ins, dataPtr);
             }
             // Functions need to link to an instruction in the text section.
             else if (meta.type == LINK_FUNCTION) {
@@ -235,12 +227,12 @@ void d_link_self(Sheet *sheet) {
                     textPtr = meta._ptr;
                 }
 
-                d_link_replace_load_ins(ins, textPtr);
+                d_link_replace_fimmediate(ins, textPtr);
             }
             // C functions need to link to the C function pointer.
             else if (meta.type == LINK_CFUNCTION) {
                 CFunction *cFunc = (CFunction *)meta.meta;
-                d_link_replace_load_ins(ins, (char *)cFunc->function);
+                d_link_replace_fimmediate(ins, (char *)cFunc->function);
             }
         }
 

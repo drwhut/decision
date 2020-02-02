@@ -145,32 +145,32 @@ Passing Arguments
 -----------------
 
 To pass arguments to a function or subroutine, you need to push the values
-onto the Decision Virtual Machine's general stack **in reverse order**.
+onto the Decision Virtual Machine's stack **in the correct order**.
 This can be done with the following functions:
 
-.. doxygenfunction:: d_vm_push_stack
+.. doxygenfunction:: d_vm_push
    :no-link:
 
-.. doxygenfunction:: d_vm_push_stack_float
+.. doxygenfunction:: d_vm_push_float
    :no-link:
 
-.. doxygenfunction:: d_vm_push_stack_ptr
+.. doxygenfunction:: d_vm_push_ptr
    :no-link:
 
 Getting Return Values
 ---------------------
 
 To get return values from a function or subroutine, you need to pop the values
-from the Decision Virtual Machine's general stack **in the correct order**.
+from the Decision Virtual Machine's stack **in reverse order**.
 This can be done with the following functions:
 
-.. doxygenfunction:: d_vm_pop_stack
+.. doxygenfunction:: d_vm_pop
    :no-link:
 
-.. doxygenfunction:: d_vm_pop_stack_float
+.. doxygenfunction:: d_vm_pop_float
    :no-link:
 
-.. doxygenfunction:: d_vm_pop_stack_ptr
+.. doxygenfunction:: d_vm_pop_ptr
    :no-link:
 
 Calling Decision Functions
@@ -214,10 +214,7 @@ Finally, you can call the function or subroutine itself using:
        Sheet *sheet = d_load_file("decision.dc");
 
        // Create a Decision Virtual Machine.
-       DVM vm;
-
-       // Set it to it's starting state.
-       d_vm_reset(&vm);
+       DVM vm = d_vm_create();
 
        // Calling a function/subroutine with no inputs or outputs is easy:
        d_run_function(&vm, sheet, "SayHi");
@@ -229,16 +226,16 @@ Finally, you can call the function or subroutine itself using:
 
        // To call the IsEven function, we first need to push the argument onto
        // the stack.
-       d_vm_push_stack(&vm, value);
+       d_vm_push(&vm, value);
 
        // REMEMBER: If you have more than one argument, push the arguments IN
-       // REVERSE ORDER.
+       // THE CORRECT ORDER.
 
        // Then call the function:
        d_run_function(&vm, sheet, "IsEven");
 
-       // Then pop the return values out IN THE CORRECT ORDER.
-       dint isEven = d_vm_pop_stack(&vm);
+       // Then pop the return values out IN REVERSE ORDER.
+       dint isEven = d_vm_pop(&vm);
 
        // dcfg.h has some handy macros for when you want to print dint or
        // dfloat types:
@@ -247,6 +244,9 @@ Finally, you can call the function or subroutine itself using:
        } else {
            printf("%" DINT_PRINTF_d " is odd!\n", value);
        }
+
+       // Free the VM.
+       d_vm_free(&vm);
 
        d_sheet_free(sheet);
        return 0;

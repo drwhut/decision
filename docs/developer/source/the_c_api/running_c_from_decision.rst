@@ -48,7 +48,7 @@ anything, and they take a Decision Virtual Machine pointer as input.
 
 But wait, what if I want my C function to return values? The answer to that
 question is that inputs and outputs are taken from the Virtual Machine's
-general stack, with the same functions described in :ref:`decision-functions`.
+stack, with the same functions described in :ref:`decision-functions`.
 
 For example, lets say you want to create a ``Sin`` function that you want to
 call from a Decision sheet. A way you could implement the C function would be
@@ -62,29 +62,30 @@ like this:
    #include <math.h>
 
    void mySin(DVM *vm) {
-       // Pop the argument from the stack.
-       dfloat input = d_vm_pop_stack_float(vm);
+       // Get the "first" argument from the stack.
+       dfloat input = d_vm_get_float(vm, 1);
 
        dfloat output = sin(input) // sin defined in math.h
 
        // Push the return value back onto the stack.
-       d_vm_push_stack_float(vm);
+       d_vm_push_float(vm);
    }
 
 Notice that the ``mySin`` function doesn't return anything, and it takes a
-``DVM *`` input, so it fits the prototype explained above. It then pops a float
+``DVM *`` input, so it fits the prototype explained above. It then gets a float
 value from the stack, takes the ``sin`` of that value, and pushes the result
 onto the stack as the return value.
 
 .. note::
 
    As per the calling convention, the VM before calling will push arguments in
-   reverse order, and after calling will pop return values in the correct
-   order.
+   the correct order, during the call the VM's frame pointer will be set, and
+   after the call the VM will get the return values assuming the first return
+   value is at the top of the stack.
    
-   This is why, when defining C functions to be called from Decision, you
-   should **pop arguments in the correct order** and **push return values in
-   reverse order**.
+   This is why, when defining C functions to be called from Decision, in order
+   to get the nth argument, you should use ``d_vm_get(vm, n)``, and when you
+   push the return values, you should push them **in reverse order.**
 
 So now you know how to create C functions so you can call them from Decision,
 so how do you call them from Decision?
@@ -116,13 +117,13 @@ Here is an example that uses the ``mySin`` function that we defined earlier:
    #include <math.h>
 
    void mySin(DVM *vm) {
-       // Pop the argument from the stack.
-       dfloat input = d_vm_pop_stack_float(vm);
+       // Get the "first" argument from the stack.
+       dfloat input = d_vm_get_float(vm, 1);
 
        dfloat output = sin(input) // sin defined in math.h
 
        // Push the return value back onto the stack.
-       d_vm_push_stack_float(vm);
+       d_vm_push_float(vm);
    }
 
    int main() {
@@ -182,8 +183,8 @@ Here is an example of a subroutine that reads the contents of a given file:
    char buffer[256];
 
    void myReadFile(DVM *vm) {
-       // Pop the file name argument from the stack.
-       char *fileName = (char *)d_vm_pop_stack_ptr(vm);
+       // Get the file name argument from the stack.
+       char *fileName = (char *)d_vm_get_ptr(vm, 1);
 
        FILE *fp = fopen(fileName, "r");
     
@@ -200,7 +201,7 @@ Here is an example of a subroutine that reads the contents of a given file:
        }
 
        // Push the buffer pointer return value to the stack.
-       d_vm_push_stack_ptr(vm, buffer);
+       d_vm_push_ptr(vm, buffer);
    }
 
    int main() {

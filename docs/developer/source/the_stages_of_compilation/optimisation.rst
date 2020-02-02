@@ -39,13 +39,20 @@ reduced in the code):
 ::
 
    #      Instruction
-   41 ... AND r0, r1
-   42 ... NOT r0
-   43 ... NOT r0
-   44 ... JRCON r0, 0x43
+   41 ... AND
+   42 ... NOT
+   43 ... NOT
+   44 ... JRCON
 
 There is no point in those 2 NOT instructions being there, they cancel each
 other out!
+
+.. note::
+
+   Another example is since code generation, for simplicity, only works with
+   full immediate variations of instructions, optimisation tries to reduce
+   those instructions to half or byte immediate variations of the same
+   instruction.
 
 Implementation
 ==============
