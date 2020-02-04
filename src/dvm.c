@@ -857,7 +857,7 @@ void d_vm_runtime_error(DVM *vm, const char *error) {
         vm->pc sym newPC;                                                 \
         dint *insertPtr = vm->stackPtr - numArguments + 1;                \
         VM_INSERT_LEN(vm, insertPtr, 2, numArguments)                     \
-        *insertPtr = (dint)vm->framePtr;                                  \
+        *insertPtr = (dint)(vm->framePtr - vm->basePtr);                  \
         insertPtr++;                                                      \
         *insertPtr   = (dint)returnAdr;                                   \
         vm->framePtr = insertPtr;                                         \
@@ -1001,10 +1001,10 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
                 dint *ptr = vm->framePtr;
                 vm->pc    = (char *)(*ptr);
 
-                // The element before that is the saved frame pointer of the
-                // previous stack frame.
+                // The element before that is the saved frame pointer
+                // difference of the last stack frame.
                 ptr--;
-                vm->framePtr = (dint *)(*ptr);
+                vm->framePtr = vm->basePtr + *ptr;
 
                 // Now this position is where the return values should go.
                 const size_t lenRemove =
