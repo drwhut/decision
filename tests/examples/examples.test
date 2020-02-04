@@ -13,3 +13,6 @@ testdecisioncompile fibonacci.dc fibonacci.out
 
 testdecision hello_world.dc hello_world.out
 testdecisioncompile hello_world.dc hello_world.out
+
+testdecision inefficient_fibonacci.dc inefficient_fibonacci.out
+testdecisioncompile inefficient_fibonacci.dc inefficient_fibonacci.out

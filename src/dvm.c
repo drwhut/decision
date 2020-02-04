@@ -319,14 +319,15 @@ void *d_vm_get_ptr(DVM *vm, dint index) {
 }
 
 /**
- * \def VM_INSERT_LEN(vm, ptr, len, numMove)
+ * \def VM_INSERT_LEN(vm, baseIndex, len, numMove)
  * \brief A helper macro for for inserting a length of items onto the stack,
  * without the checks.
  */
-#define VM_INSERT_LEN(vm, ptr, len, numMove)                     \
-    {                                                            \
-        d_vm_pushn(vm, len);                                     \
-        memmove((ptr) + (len), (ptr), (numMove) * sizeof(dint)); \
+#define VM_INSERT_LEN(vm, baseIndex, len, numMove)                         \
+    {                                                                      \
+        d_vm_pushn(vm, len);                                               \
+        dint *_insertPtr = (vm)->basePtr + (baseIndex);                    \
+        memmove(_insertPtr + (len), _insertPtr, (numMove) * sizeof(dint)); \
     }
 
 /**
@@ -362,8 +363,14 @@ void d_vm_insert(DVM *vm, dint index, dint value) {
 
         if (insertPtr >= vm->basePtr && insertPtr <= vm->stackPtr) {
             const size_t numElemsToMove = ((vm->stackPtr - insertPtr) + 1);
-            VM_INSERT_LEN(vm, insertPtr, 1, numElemsToMove)
-            *insertPtr = value;
+            ptrdiff_t baseIndex         = insertPtr - vm->basePtr;
+
+            VM_INSERT_LEN(vm, baseIndex, 1, numElemsToMove)
+
+            // Need to use this rather than reuse insertPtr, since inserting
+            // may have increased the capacity of the stack, and thus could
+            // have changed the base pointer.
+            *(vm->basePtr + baseIndex) = value;
         }
     }
 }
@@ -495,8 +502,7 @@ void d_vm_push(DVM *vm, dint value) {
  */
 void d_vm_pushn(DVM *vm, size_t n) {
     if (n > 0) {
-        dint *newStackPtr    = vm->stackPtr + n;
-        const size_t newSize = (newStackPtr - vm->basePtr) + 1;
+        const size_t newSize = (vm->stackPtr + n - vm->basePtr) + 1;
 
         if (newSize >= vm->stackSize) {
             // Make space for the new elements if needed, plus a bit extra.
@@ -506,7 +512,7 @@ void d_vm_pushn(DVM *vm, size_t n) {
 
         memset(vm->stackPtr + 1, 0, n * sizeof(dint));
 
-        vm->stackPtr = newStackPtr;
+        vm->stackPtr = vm->stackPtr + n;
     }
 }
 
@@ -855,8 +861,10 @@ void d_vm_runtime_error(DVM *vm, const char *error) {
         const uint8_t numArguments = (uint8_t)GET_BIMMEDIATE(offset);     \
         char *returnAdr = vm->pc + VM_INS_SIZE[(unsigned char)*(vm->pc)]; \
         vm->pc sym newPC;                                                 \
-        dint *insertPtr = vm->stackPtr - numArguments + 1;                \
-        VM_INSERT_LEN(vm, insertPtr, 2, numArguments)                     \
+        dint *insertPtr     = vm->stackPtr - numArguments + 1;            \
+        ptrdiff_t baseIndex = insertPtr - vm->basePtr;                    \
+        VM_INSERT_LEN(vm, baseIndex, 2, numArguments)                     \
+        insertPtr  = vm->basePtr + baseIndex;                             \
         *insertPtr = (dint)(vm->framePtr - vm->basePtr);                  \
         insertPtr++;                                                      \
         *insertPtr   = (dint)returnAdr;                                   \

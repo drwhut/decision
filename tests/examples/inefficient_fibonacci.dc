@@ -1,0 +1,28 @@
+<
+    This test is purely meant to determine if the stack will actually
+    dynamically resize. Please don't actually implement a Fibonacci function
+    like this, or you will be judged.
+>
+
+[Function(Fibonacci)]
+[FunctionInput(Fibonacci, Integer)]
+[FunctionOutput(Fibonacci, Integer)]
+
+Define(Fibonacci)~#1
+
+LessThanOrEqual(#1, 0)~#2
+Equal(#1, 1)~#3
+
+Subtract(#1, 1)~#4
+Subtract(#1, 2)~#5
+Fibonacci(#4)~#6
+Fibonacci(#5)~#7
+Add(#6, #7)~#8
+
+Ternary(#3, 1, #8)~#9
+Ternary(#2, 0, #9)~#10
+Return(Fibonacci, #10)
+
+Start~#100
+Fibonacci(35)~#101
+Print(#100, #101)
