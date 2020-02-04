@@ -214,7 +214,8 @@ Calling Procedure
 3. Set the program counter of the VM to the pointer provided in step 2.
 
 4. Insert two values before the arguments in the stack: the first being the
-   current frame pointer, and the second being the return address.
+   current difference between the frame pointer and the base of the stack,
+   and the second being the return address.
 
 5. Set the current frame pointer to point to where the program counter was
    saved, i.e. the value above the new frame pointer should be the first
@@ -235,7 +236,7 @@ Returning Procedure
    pointer.
 
 4. Set the frame pointer by getting the value below the one pointed at by the
-   current frame pointer.
+   current frame pointer, and adding it onto the base of the stack.
 
 5. Remove all of the values inbetween the saved frame pointer, up to the top of
    stack, except for the top ``n`` values, which will be the return values.
