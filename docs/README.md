@@ -30,6 +30,9 @@ Firstly, you will need `pip` installed alongside Python. `pip` is a package
 manager for Python that allows you to install libraries and tools made in
 Python.
 
+**NOTE:** If you are on Linux, it is recommended to use the Python 3 version
+of `pip`, called `pip3`, for the following commands.
+
 With pip installed, you need to run this command to install the dependencies:
 ```bash
 pip install -U sphinx sphinx_rtd_theme
