@@ -1,13 +1,13 @@
 Start~#1
 
-< IfThen literal conditions >
+> IfThen literal conditions
 IfThen(#1, true)~#2, #3
 Print(#2, "#1 true")
 
 IfThen(#3, false)~#4, #5
 Print(#4, "#3 true")
 
-< IfThenElse literal conditions >
+> IfThenElse literal conditions
 IfThenElse(#5, true)~#6, #7, #8
 Print(#6, "#5 true")
 Print(#7, "#5 false")
@@ -16,13 +16,13 @@ IfThenElse(#8, false)~#9, #10, #11
 Print(#9, "#8 true")
 Print(#10, "#8 false")
 
-< True condition being passed in from another node. >
+> True condition being passed in from another node.
 MoreThan(56, 2)~#12
 IfThenElse(#11, #12)~#13, #14, #15
 Print(#13, "#11 true")
 Print(#14, "#11 false")
 
-< False condition being passed in from another node. >
+> False condition being passed in from another node.
 LessThan(56, 2)~#16
 IfThenElse(#15, #16)~#17, #18, #19
 Print(#17, "#15 true")

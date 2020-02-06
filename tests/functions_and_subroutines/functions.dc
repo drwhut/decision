@@ -1,11 +1,11 @@
-< function that takes no input >
+> function that takes no input
 [Function(myStrings)]
 [FunctionOutput(myStrings, String)]
 [FunctionOutput(myStrings, String)]
 
 Return(myStrings, "bleep", "boop")
 
-< function that takes one input >
+> function that takes one input
 [Function(Double)]
 [FunctionInput(Double, Float)]
 [FunctionOutput(Double, Float)]
@@ -14,7 +14,7 @@ Define(Double)~#1
 Multiply(#1, 2)~#2
 Return(Double, #2)
 
-< function that uses another function >
+> function that uses another function
 [Function(Quadruple)]
 [FunctionInput(Quadruple, Float)]
 [FunctionOutput(Quadruple, Float)]
@@ -24,7 +24,7 @@ Double(#10)~#11
 Double(#11)~#12
 Return(Quadruple, #12)
 
-< function that takes 2 inputs >
+> function that takes 2 inputs
 [Function(IsDivisor)]
 [FunctionInput(IsDivisor, Integer)]
 [FunctionInput(IsDivisor, Integer)]
@@ -35,11 +35,11 @@ Mod(#20, #21)~#22
 Equal(#22, 0)~#23
 Return(IsDivisor, #23)
 
-< function that uses Ternary node >
+> function that uses Ternary node
 [Function(CanDrink)]
-[FunctionInput(CanDrink, Integer)] < age >
-[FunctionOutput(CanDrink, Boolean)] < can they drink? >
-[FunctionOutput(CanDrink, Integer)] < how many years until they can drink? >
+[FunctionInput(CanDrink, Integer)] > age
+[FunctionOutput(CanDrink, Boolean)] > can they drink?
+[FunctionOutput(CanDrink, Integer)] > how many years until they can drink?
 
 Define(CanDrink)~#30
 MoreThanOrEqual(#30, 18)~#31
@@ -47,7 +47,7 @@ Subtract(18, #30)~#32
 Ternary(#31, 0, #32)~#33
 Return(CanDrink, #31, #33)
 
-< using the functions >
+> using the functions
 Start~#100
 
 Print(#100, "my strings:")~#101
@@ -58,10 +58,8 @@ Print(#104, #103)~#105
 Double(125.5)~#106
 Print(#105, #106)~#107
 
-<
-    We are also testing here if an integer literal will be changed to a float
-    literal by the compiler automatically.
->
+> We are also testing here if an integer literal will be changed to a float
+> literal by the compiler automatically.
 Quadruple(10)~#108
 Print(#107, #108)~#109
 

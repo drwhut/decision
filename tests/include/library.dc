@@ -1,10 +1,10 @@
-< Library variables >
+> Library variables
 [Variable(libInteger, Integer, 666)]
 [Variable(libFloat, Float, 0.99)]
 [Variable(libString, String, "Woah.")]
 [Variable(libBoolean, Boolean, false)]
 
-< Library function >
+> Library function
 [Function(IsEven)]
 [FunctionInput(IsEven, Integer)]
 [FunctionOutput(IsEven, Boolean)]
@@ -14,7 +14,7 @@ Mod(#1, 2)~#2
 Equal(#2, 0)~#3
 Return(IsEven, #3)
 
-< Library subroutine >
+> Library subroutine
 [Subroutine(SendLetter)]
 [FunctionInput(SendLetter, String)]
 [FunctionInput(SendLetter, String)]
@@ -24,6 +24,6 @@ Print(#10, #11)~#13
 Print(#13, "\nFrom,")~#14
 Print(#14, #12)
 
-< So we can test if the sheet compiles >
+> So we can test if the sheet compiles
 Start~#100
 Print(#100, "Hey!")

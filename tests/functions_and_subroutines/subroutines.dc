@@ -1,10 +1,10 @@
-< subroutine that only has standard execution input and output >
+> subroutine that only has standard execution input and output
 [Subroutine(SayHi)]
 
 Define(SayHi)~#1
 Print(#1, "Hi!")
 
-< subroutine that takes another input >
+> subroutine that takes another input
 [Subroutine(CountTo)]
 [FunctionInput(CountTo, Integer)]
 
@@ -12,7 +12,7 @@ Define(CountTo)~#10, #11
 For(#10, 1, #11, 1)~#12, #13
 Print(#12, #13)
 
-< subroutine that takes an input and returns an output >
+> subroutine that takes an input and returns an output
 [Subroutine(IsPrime)]
 [FunctionInput(IsPrime, Integer)]
 [FunctionOutput(IsPrime, Boolean)]
@@ -41,7 +41,7 @@ Set(_isPrime, #35, false)
 _isPrime~#36
 Return(IsPrime, #32, #36)
 
-< using the subroutines >
+> using the subroutines
 Start~#100
 
 SayHi(#100)~#101

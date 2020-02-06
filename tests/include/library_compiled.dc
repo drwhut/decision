@@ -1,16 +1,16 @@
-< Library variables >
+> Library variables
 [Variable(libInteger, Integer, 69)]
 [Variable(libFloat, Float, 3.14159)]
 [Variable(libString, String, "G'day mate.")]
 [Variable(libBoolean, Boolean, true)]
 
-< Library function >
+> Library function
 [Function(Quadratic)]
-[FunctionInput(Quadratic, Float)] < a >
-[FunctionInput(Quadratic, Float)] < b >
-[FunctionInput(Quadratic, Float)] < c >
-[FunctionInput(Quadratic, Float)] < x >
-[FunctionOutput(Quadratic, Float)] < ax^2 + bx + c >
+[FunctionInput(Quadratic, Float)] > a
+[FunctionInput(Quadratic, Float)] > b
+[FunctionInput(Quadratic, Float)] > c
+[FunctionInput(Quadratic, Float)] > x
+[FunctionOutput(Quadratic, Float)] > ax^2 + bx + c
 
 Define(Quadratic)~#1, #2, #3, #4
 Multiply(#1, #4, #4)~#5
@@ -18,7 +18,7 @@ Multiply(#2, #4)~#6
 Add(#5, #6, #3)~#7
 Return(Quadratic, #7)
 
-< Library subroutine >
+> Library subroutine
 [Subroutine(IsPowerOfTwo)]
 [FunctionInput(IsPowerOfTwo, Integer)]
 [FunctionOutput(IsPowerOfTwo, Boolean)]
@@ -47,6 +47,6 @@ Set(_num, #23, #24)
 
 Return(IsPowerOfTwo, #19, #15)
 
-< So we can test if the sheet compiles >
+> So we can test if the sheet compiles
 Start~#100
 Print(#100, "Hey!")

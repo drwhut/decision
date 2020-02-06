@@ -1,25 +1,25 @@
 Start~#1
 
-< 2 integers equal = true >
+> 2 integers equal = true
 Equal(69, 69)~#2
 Print(#1, #2)~#3
 
-< 2 integers equal = false >
+> 2 integers equal = false
 Equal(69, 420)~#4
 Print(#3, #4)~#5
 
-< 2 floats equal = true >
+> 2 floats equal = true
 Equal(3.14159, 3.14159)~#6
 Print(#5, #6)~#7
 
-< 2 floats equal = false >
+> 2 floats equal = false
 Equal(-2.4, 2.4)~#8
 Print(#7, #8)~#9
 
-< 2 strings equal = true >
+> 2 strings equal = true
 Equal("Hello, world!", "Hello, world!")~#10
 Print(#9, #10)~#11
 
-< 2 strings equal = false >
+> 2 strings equal = false
 Equal("Hello, world!", "Goodbye, world!")~#12
 Print(#11, #12)~#13
