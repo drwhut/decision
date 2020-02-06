@@ -99,7 +99,7 @@ as you need (since your flow of execution could go down different paths).
 
    [Subroutine(PrintFactorsOf)]
    [FunctionInput(PrintFactorsOf, Integer)]
-   [FunctionOutput(PrintFactorsOf, Integer)] <How may factors?>
+   [FunctionOutput(PrintFactorsOf, Integer)] > How may factors?
 
    Define(CountTo)~#1, #2
    For(#1, 1, #2, 1)~#3, #4, #5

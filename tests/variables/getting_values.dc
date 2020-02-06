@@ -1,22 +1,22 @@
 Start~#1
 
 [Variable(myIntegerVar, Integer, 69)]
-[Variable(myFloatVar, Float, 420)] < the compiler should automatically convert this integer literal into a float literal >
+[Variable(myFloatVar, Float, 420)] > the compiler should automatically convert this integer literal into a float literal
 [Variable(myStringVar, String, "Hello, world!")]
 [Variable(myBooleanVar, Boolean, true)]
 
-< getting integer variable value >
+> getting integer variable value
 myIntegerVar~#2
 Print(#1, #2)~#3
 
-< getting float variable value >
+> getting float variable value
 myFloatVar~#4
 Print(#3, #4)~#5
 
-< getting string variable value >
+> getting string variable value
 myStringVar~#6
 Print(#5, #6)~#7
 
-< getting boolean variable value >
+> getting boolean variable value
 myBooleanVar~#8
 Print(#7, #8)~#9

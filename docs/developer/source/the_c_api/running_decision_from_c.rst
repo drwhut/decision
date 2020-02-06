@@ -183,7 +183,7 @@ Finally, you can call the function or subroutine itself using:
 
 .. code-block:: decision
 
-   < decision.dc >
+   > decision.dc
 
    [Function(IsEven)]
    [FunctionInput(IsEven, Integer)]

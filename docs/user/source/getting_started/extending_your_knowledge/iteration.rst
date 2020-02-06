@@ -81,10 +81,8 @@ It's outputs are:
 
    [Variable(gcf, Integer, 1)]
 
-   <
-       A program to calculate the greatest common factor of num1 and num2,
-       given that num1 is greater than num2.
-   >
+   > A program to calculate the greatest common factor of num1 and num2,
+   > given that num1 is greater than num2.
    Start~#1
 
    num1~#2
@@ -95,7 +93,7 @@ It's outputs are:
    Mod(#3, #5)~#8
    Equal(#7, 0)~#9
    Equal(#8, 0)~#10
-   And(#9, #10)~#11 <#5 is a factor of num1 AND num2>
+   And(#9, #10)~#11 > #5 is a factor of num1 AND num2
    IfThen(#4, #11)~#12
    Set(gcf, #12, #5)
 
@@ -170,7 +168,7 @@ It also has 2 outputs:
    [Variable(num2, Integer, 1)]
    [Variable(temp, Integer, 1)]
 
-   < A program to calculate the fibonacci numbers from 0 to stop >
+   > A program to calculate the fibonacci numbers from 0 to stop
 
    Start~#1
 
@@ -186,10 +184,10 @@ It also has 2 outputs:
 
    While(#8, #6)~#9
    Print(#9, #4)~#10
-   Set(temp, #10, #4)~#11  <temp = num1 + num2>
-   Set(num1, #11, #3)~#12  <num1 = num2>
+   Set(temp, #10, #4)~#11  > temp = num1 + num2
+   Set(num1, #11, #3)~#12  > num1 = num2
    temp~#13
-   Set(num2, #12, #13)~#14 <num2 = temp>
+   Set(num2, #12, #13)~#14 > num2 = temp
 
 .. code-block::
 

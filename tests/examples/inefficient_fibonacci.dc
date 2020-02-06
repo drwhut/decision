@@ -1,8 +1,6 @@
-<
-    This test is purely meant to determine if the stack will actually
-    dynamically resize. Please don't actually implement a Fibonacci function
-    like this, or you will be judged.
->
+> This test is purely meant to determine if the stack will actually
+> dynamically resize. Please don't actually implement a Fibonacci function
+> like this, or you will be judged.
 
 [Function(Fibonacci)]
 [FunctionInput(Fibonacci, Integer)]
