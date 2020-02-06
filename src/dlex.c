@@ -325,6 +325,9 @@ LexStream d_lex_create_stream(const char *source, const char *filePath) {
             if (source[i] == '\n') {
                 currentToken.type = TK_EOSNL;
                 lineNum++;
+
+                // If we were in a comment, we aren't now.
+                inComment = false;
             }
 
             else if (!inComment)
@@ -332,7 +335,7 @@ LexStream d_lex_create_stream(const char *source, const char *filePath) {
                     case ' ': // Whitespace, ignore.
                         break;
 
-                    case '<':; // Comment, ignore until we hit a '>'.
+                    case '>':; // Comment, ignore until we hit a newline.
                         inComment = true;
                         break;
 
@@ -526,12 +529,9 @@ LexStream d_lex_create_stream(const char *source, const char *filePath) {
 
             ADD_TOKEN()
 
-            // We are now out of a comment!
-            if (source[i] == '>')
-                inComment = false;
-
-            if (++i >= sourceLength)
+            if (++i >= sourceLength) {
                 break;
+            }
         }
 
         // Format output and reduce size of stream.
