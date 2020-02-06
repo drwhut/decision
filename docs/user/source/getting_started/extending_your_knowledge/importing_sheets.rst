@@ -29,7 +29,7 @@ functions, subroutines, and variables**.
 
 .. code-block:: decision
 
-   < my_math.dc >
+   > my_math.dc
 
    [Function(IsEven)]
    [FunctionInput(IsEven, Integer)]
@@ -63,7 +63,7 @@ functions, subroutines, and variables**.
 
 .. code-block:: decision
 
-   < main.dc >
+   > main.dc
 
    [Include("my_math.dc")]
 

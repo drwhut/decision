@@ -22,19 +22,20 @@ Comments are blocks of text within scripts that are not read by the compiler.
 They are mostly used to help the reader, and to help GUI programs store extra
 data about the nodes.
 
-Comments are text that are inbetween two angled brackets, ``<`` and ``>``.
+Comments are anything after and including the ``>`` symbol on the same line,
+as long as the symbol isn't in a string!
 
 .. code-block:: decision
 
    Start~#1
 
-   < Now this is a story all about how my life got flipped-turned upside down... >
+   > Now this is a story all about how my life got flipped-turned upside down...
 
-   <
-   Since this is within the angled brackets, the compiler cannot see the Print node.
-   You may have also noticed comments can span multiple lines!
-   Print(#1, "Hello, world!")
-   >
+   > This next line is in a comment, so the program won't actually print here.
+   > Print(#1, "Hello, world!")
+
+   > This next line still prints as you'd expect.
+   Print(#1, "So, 2 > 1? Wow.")
 
 .. code-block::
 

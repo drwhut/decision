@@ -2,6 +2,9 @@
 versions of the compiler.
 
 * Changed the Decision VM to be stack-based, rather than register-based.
+* Removed multi-line comments.
+* Added single-line comments: Anything after and including the `>` symbol on
+the same line will be ignored by the compiler.
 * Reimplemented `Length` to use the C function `strlen`.
 
 # Decision v0.2.0 - 16th January 2020
