@@ -179,6 +179,24 @@ bool d_is_node_socket_valid(Sheet *sheet, NodeSocket nodeSocket) {
 }
 
 /**
+ * \fn bool d_is_input_socket(Sheet *sheet, NodeSocket socket)
+ * \brief Is the given socket an input socket?
+ *
+ * \return If the socket is an input socket.
+ *
+ * \param sheet The sheet the socket belongs to.
+ * \param socket The socket to query.
+ */
+bool d_is_input_socket(Sheet *sheet, NodeSocket socket) {
+    if (!d_is_node_socket_valid(sheet, socket)) {
+        return false;
+    }
+
+    NodeDefinition *nodeDef = d_get_node_definition(sheet, socket.nodeIndex);
+    return socket.socketIndex < nodeDef->startOutputIndex;
+}
+
+/**
  * \fn SocketMeta *d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket)
  * \brief Get the metadata of a node's socket.
  *
@@ -200,91 +218,131 @@ SocketMeta *d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket) {
 }
 
 /**
- * \fn void d_socket_add_connection(SheetSocket *socket,
- *                                  SheetSocket *connection, Sheet *sheet,
- *                                  SheetNode *node)
- * \brief Add a connection to a socket. If sheet or node are `NULL`, it will
- * not display any errors if they occur.
+ * \fn short d_wire_cmp(SheetWire wire1, SheetWire wire2)
+ * \brief Since wires are stored in lexicographical order, return an integer
+ * value stating the equality, or inequality of the wires.
  *
- * \param socket The socket to add the connection to.
- * \param connection The connection to add.
- * \param sheet In case we error, say what sheet we errored on.
- * \param node In case we error, say what node caused the error.
+ * \return 0 if wire1 == wire2, > 0 if wire1 > wire2, and < 0 if wire1 < wire2.
+ *
+ * \param wire1 The first wire.
+ * \param wire2 The second wire.
  */
-void d_socket_add_connection(SheetSocket *socket, SheetSocket *connection,
-                             Sheet *sheet, SheetNode *node) {
-    LIST_PUSH(socket->connections, SheetSocket *, socket->numConnections,
-              connection);
-
-    const char *filePath = NULL;
-    size_t lineNum       = 0;
-
-    if (sheet != NULL && node != NULL) {
-        filePath = sheet->filePath;
-        lineNum  = node->lineNum;
+short d_wire_cmp(SheetWire wire1, SheetWire wire2) {
+    if (wire1.socketFrom.nodeIndex < wire2.socketFrom.nodeIndex) {
+        return -1;
+    } else if (wire1.socketFrom.nodeIndex > wire2.socketFrom.nodeIndex) {
+        return 1;
+    } else {
+        if (wire1.socketFrom.socketIndex < wire2.socketFrom.socketIndex) {
+            return -1;
+        } else if (wire1.socketFrom.socketIndex >
+                   wire2.socketFrom.socketIndex) {
+            return 1;
+        } else {
+            if (wire1.socketTo.nodeIndex < wire2.socketTo.nodeIndex) {
+                return -1;
+            } else if (wire1.socketTo.nodeIndex < wire2.socketTo.nodeIndex) {
+                return 1;
+            } else {
+                if (wire1.socketTo.socketIndex < wire2.socketTo.socketIndex) {
+                    return -1;
+                } else if (wire1.socketTo.socketIndex >
+                           wire2.socketTo.socketIndex) {
+                    return 1;
+                }
+            }
+        }
     }
 
-    // Build up a string of the connection's line numbers, in case we error.
-    char connLineNums[MAX_ERROR_SIZE];
+    return 0;
+}
 
-    size_t lineNumIndex = 0;
+/**
+ * \fn int d_wire_find_first(Sheet *sheet, NodeSocket socket)
+ * \brief Given a socket, find the first wire in a sheet that originates from
+ * the given socket.
+ *
+ * \returns The index of the wire, or -1 if it is not found.
+ *
+ * \param sheet The sheet to search for the wire.
+ * \param socket The "from" socket to search for.
+ */
+int d_wire_find_first(Sheet *sheet, NodeSocket socket) {
+    int left  = 0;
+    int right = sheet->numWires - 1;
+    int middle;
 
-    for (size_t i = 0; i < socket->numConnections; i++) {
-        SheetSocket *conn  = socket->connections[i];
-        size_t connLineNum = conn->node->lineNum;
+    bool found = false;
 
-        if (i > 0) {
-#ifdef DECISION_SAFE_FUNCTIONS
-            sprintf_s(connLineNums + lineNumIndex,
-                      MAX_ERROR_SIZE - lineNumIndex, ", ");
-#else
-            sprintf(connLineNums + lineNumIndex, ", ");
-#endif // DECISION_SAFE_FUNCTIONS
-            lineNumIndex += 2;
+    while (left <= right) {
+        middle = (left + right) / 2;
 
-            if (lineNumIndex >= MAX_ERROR_SIZE) {
-                break;
+        short cmp      = 0;
+        SheetWire wire = sheet->wires[middle];
+
+        if (socket.nodeIndex < wire.socketFrom.nodeIndex) {
+            cmp = -1;
+        } else if (socket.nodeIndex > wire.socketFrom.nodeIndex) {
+            cmp = 1;
+        } else {
+            if (socket.socketIndex < wire.socketFrom.socketIndex) {
+                cmp = -1;
+            } else if (socket.socketIndex > wire.socketFrom.socketIndex) {
+                cmp = 1;
             }
         }
 
-#ifdef DECISION_SAFE_FUNCTIONS
-        sprintf_s(connLineNums + lineNumIndex, MAX_ERROR_SIZE - lineNumIndex,
-                  "%zu", connLineNum);
-#else
-        sprintf(connLineNums + lineNumIndex, "%zu", connLineNum);
-#endif // DECISION_SAFE_FUNCTIONS
-
-        while (connLineNums[lineNumIndex] != 0 &&
-               lineNumIndex < MAX_ERROR_SIZE) {
-            lineNumIndex++;
-        }
-
-        if (lineNumIndex >= MAX_ERROR_SIZE) {
+        if (cmp > 0) {
+            left = middle + 1;
+        } else if (cmp < 0) {
+            right = middle - 1;
+        } else {
+            found = true;
             break;
         }
     }
 
-    // If the socket is non-execution, an input socket, and we have more than
-    // one connection...
-    if (socket->numConnections > 1 && socket->type != TYPE_EXECUTION &&
-        socket->isInput) {
-        ERROR_COMPILER(
-            filePath, lineNum, true,
-            "Input non-execution socket on line %zu has more than one "
-            "connection (has %zu, on lines %s)",
-            socket->node->lineNum, socket->numConnections, connLineNums);
+    if (!found) {
+        return -1;
     }
 
-    // If the socket is execution, an output socket, and we have more than one
-    // connection...
-    else if (socket->numConnections > 1 && socket->type == TYPE_EXECUTION &&
-             !socket->isInput) {
-        ERROR_COMPILER(
-            filePath, lineNum, true,
-            "Output execution socket on line %zu has more than one connection "
-            "(has %zu, on lines %s)",
-            socket->node->lineNum, socket->numConnections, connLineNums);
+    // We found *a* wire with the correct from socket, so we just need to go
+    // backwards until we find the *first*.
+    SheetWire wire = sheet->wires[middle];
+
+    while (socket.nodeIndex == wire.socketFrom.nodeIndex &&
+           socket.socketIndex == wire.socketFrom.socketIndex) {
+        middle--;
+
+        wire = sheet->wires[middle];
     }
+
+    return middle + 1;
+}
+
+/**
+ * \fn size_t d_socket_num_connections(Sheet *sheet, NodeSocket socket)
+ * \brief Get the number of connections via wires a socket has.
+ *
+ * \return The number of connected wires to a socket.
+ *
+ * \param sheet The sheet the socket belongs to.
+ * \param socket The socket to query.
+ */
+size_t d_socket_num_connections(Sheet *sheet, NodeSocket socket) {
+    int first = d_wire_find_first(sheet, socket);
+
+    if (first < 0) {
+        return 0;
+    }
+
+    int index = first;
+
+    while (IS_WIRE_FROM(sheet, index, socket)) {
+        index++;
+    }
+
+    return (size_t)(index - first);
 }
 
 /**
@@ -296,7 +354,131 @@ void d_socket_add_connection(SheetSocket *socket, SheetSocket *connection,
  * \param wire The edge to add.
  */
 static void add_edge(Sheet *sheet, SheetWire wire) {
-    // TODO: This!
+    // We can't just add the wire to the end of the list here. The list is
+    // being stored in lexicographical order, so we need to insert it into the
+    // correct position.
+    if (sheet->wires == NULL) {
+        sheet->numWires = 1;
+        sheet->wires    = (SheetWire *)d_malloc(sizeof(SheetWire));
+        *(sheet->wires) = wire;
+    } else {
+        // Use binary insertion, since the list should be sorted!
+        size_t left   = 0;
+        size_t right  = sheet->numWires - 1;
+        size_t middle = (left + right) / 2;
+
+        while (left <= right) {
+            middle = (left + right) / 2;
+
+            short cmp = d_wire_cmp(wire, sheet->wires[middle]);
+
+            if (cmp > 0) {
+                left = middle + 1;
+            } else if (cmp < 0) {
+                right = middle - 1;
+            } else {
+                break;
+            }
+        }
+
+        if (d_wire_cmp(wire, sheet->wires[middle]) > 0) {
+            middle++;
+        }
+
+        sheet->numWires++;
+        sheet->wires = (SheetWire *)d_realloc(
+            sheet->wires, sheet->numWires * sizeof(SheetWire));
+
+        if (middle < sheet->numWires - 1) {
+            memmove(sheet->wires + middle + 1, sheet->wires + middle,
+                    (sheet->numWires - middle - 1) * sizeof(SheetWire));
+        }
+
+        sheet->wires[middle] = wire;
+    }
+
+    const char *filePath = NULL;
+    size_t lineNum       = 0;
+
+    size_t fromNodeIndex = wire.socketFrom.nodeIndex;
+
+    if (sheet != NULL && d_is_node_index_valid(sheet, fromNodeIndex)) {
+        filePath = sheet->filePath;
+        lineNum  = sheet->nodes[fromNodeIndex].lineNum;
+    }
+
+    // Build up a string of the connection's line numbers, in case we error.
+    char connLineNums[MAX_ERROR_SIZE];
+    size_t lineNumIndex = 0;
+
+    int wireStart = d_wire_find_first(sheet, wire.socketFrom);
+    int wireIndex = wireStart;
+
+    while (IS_WIRE_FROM(sheet, wireIndex, wire.socketFrom)) {
+        size_t connNodeIndex = sheet->wires[wireIndex].socketTo.nodeIndex;
+
+        if (d_is_node_index_valid(sheet, connNodeIndex)) {
+            size_t connLineNum = sheet->nodes[connNodeIndex].lineNum;
+
+            if (wireIndex > wireStart) {
+#ifdef DECISION_SAFE_FUNCTIONS
+                sprintf_s(connLineNums + lineNumIndex,
+                          MAX_ERROR_SIZE - lineNumIndex, ", ");
+#else
+                sprintf(connLineNums + lineNumIndex, ", ");
+#endif // DECISION_SAFE_FUNCTIONS
+                lineNumIndex += 2;
+
+                if (lineNumIndex >= MAX_ERROR_SIZE) {
+                    break;
+                }
+            }
+
+#ifdef DECISION_SAFE_FUNCTIONS
+            sprintf_s(connLineNums + lineNumIndex,
+                      MAX_ERROR_SIZE - lineNumIndex, "%zu", connLineNum);
+#else
+            sprintf(connLineNums + lineNumIndex, "%zu", connLineNum);
+#endif // DECISION_SAFE_FUNCTIONS
+
+            while (connLineNums[lineNumIndex] != 0 &&
+                   lineNumIndex < MAX_ERROR_SIZE) {
+                lineNumIndex++;
+            }
+
+            if (lineNumIndex >= MAX_ERROR_SIZE) {
+                break;
+            }
+        }
+
+        wireIndex++;
+    }
+
+    size_t numConnections = d_socket_num_connections(sheet, wire.socketFrom);
+    SocketMeta *meta      = d_get_socket_meta(sheet, wire.socketFrom);
+    bool isInputSocket    = d_is_input_socket(sheet, wire.socketFrom);
+    DType socketType      = meta->type;
+
+    // If the socket is non-execution, an input socket, and we have more than
+    // one connection...
+    if (numConnections > 1 && socketType != TYPE_EXECUTION && isInputSocket) {
+        ERROR_COMPILER(filePath, lineNum, true,
+                       "Input non-execution socket (#%zu) has more than one "
+                       "connection (has %zu, on lines %s)",
+                       wire.socketFrom.socketIndex, numConnections,
+                       connLineNums);
+    }
+
+    // If the socket is execution, an output socket, and we have more than one
+    // connection...
+    else if (numConnections > 1 && socketType == TYPE_EXECUTION &&
+             !isInputSocket) {
+        ERROR_COMPILER(
+            filePath, lineNum, true,
+            "Output execution socket (#%zu) has more than one connection "
+            "(has %zu, on lines %s)",
+            wire.socketFrom.socketIndex, numConnections, connLineNums);
+    }
 }
 
 /**

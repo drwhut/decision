@@ -110,8 +110,6 @@ typedef struct _sheetWire {
     NodeSocket socketTo;
 } SheetWire;
 
-// TODO: Create a macro to check if one wire is "less" than another.
-
 /**
  * \struct _sheetNode
  * \brief A struct for storing node data.
@@ -205,9 +203,9 @@ typedef struct _sheet {
 /**
  * \fn size_t d_node_num_inputs(NodeDefinition *nodeDef)
  * \brief Get the number of input sockets a node has.
- * 
+ *
  * \return The number of input sockets the node has.
- * 
+ *
  * \param nodeDef The definition of the node.
  */
 DECISION_API size_t d_node_num_inputs(NodeDefinition *nodeDef);
@@ -215,9 +213,9 @@ DECISION_API size_t d_node_num_inputs(NodeDefinition *nodeDef);
 /**
  * \fn size_t d_node_num_outputs(NodeDefinition *nodeDef)
  * \brief Get the number of output sockets a node has.
- * 
+ *
  * \return The number of output sockets the node has.
- * 
+ *
  * \param nodeDef The definition of the node.
  */
 DECISION_API size_t d_node_num_outputs(NodeDefinition *nodeDef);
@@ -226,9 +224,9 @@ DECISION_API size_t d_node_num_outputs(NodeDefinition *nodeDef);
  * \fn bool d_is_execution_node(NodeDefinition *nodeDef)
  * \brief Is the node an execution node, i.e. does it have at least one
  * execution socket?
- * 
+ *
  * \return If the node is an execution node.
- * 
+ *
  * \param nodeDef The definition of the node.
  */
 DECISION_API bool d_is_execution_node(NodeDefinition *nodeDef);
@@ -282,6 +280,17 @@ DECISION_API NodeDefinition *d_get_node_definition(Sheet *sheet,
 DECISION_API bool d_is_node_socket_valid(Sheet *sheet, NodeSocket nodeSocket);
 
 /**
+ * \fn bool d_is_input_socket(Sheet *sheet, NodeSocket socket)
+ * \brief Is the given socket an input socket?
+ *
+ * \return If the socket is an input socket.
+ *
+ * \param sheet The sheet the socket belongs to.
+ * \param socket The socket to query.
+ */
+DECISION_API bool d_is_input_socket(Sheet *sheet, NodeSocket socket);
+
+/**
  * \fn SocketMeta *d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket)
  * \brief Get the metadata of a node's socket.
  *
@@ -291,6 +300,51 @@ DECISION_API bool d_is_node_socket_valid(Sheet *sheet, NodeSocket nodeSocket);
  * \param nodeSocket The socket to get the metadata for.
  */
 DECISION_API SocketMeta *d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket);
+
+/**
+ * \fn short d_wire_cmp(SheetWire wire1, SheetWire wire2)
+ * \brief Since wires are stored in lexicographical order, return an integer
+ * value stating the equality, or inequality of the wires.
+ *
+ * \return 0 if wire1 == wire2, > 0 if wire1 > wire2, and < 0 if wire1 < wire2.
+ *
+ * \param wire1 The first wire.
+ * \param wire2 The second wire.
+ */
+DECISION_API short d_wire_cmp(SheetWire wire1, SheetWire wire2);
+
+/**
+ * \fn int d_wire_find_first(Sheet *sheet, NodeSocket socket)
+ * \brief Given a socket, find the first wire in a sheet that originates from
+ * the given socket.
+ *
+ * \return The index of the wire, or -1 if it is not found.
+ *
+ * \param sheet The sheet to search for the wire.
+ * \param socket The "from" socket to search for.
+ */
+DECISION_API int d_wire_find_first(Sheet *sheet, NodeSocket socket);
+
+/**
+ * \def IS_WIRE_FROM(sheet, wireIndex, socket)
+ * \brief Check if a wire starts from a given socket.
+ */
+#define IS_WIRE_FROM(sheet, wireIndex, socket)                                 \
+    ((wireIndex) >= 0 && (wireIndex) < (sheet)->numWires &&                    \
+     (socket).nodeIndex == (sheet)->wires[(wireIndex)].socketFrom.nodeIndex && \
+     (socket).socketIndex ==                                                   \
+         (sheet)->wires[(wireIndex)].socketFrom.socketIndex)
+
+/**
+ * \fn size_t d_socket_num_connections(Sheet *sheet, NodeSocket socket)
+ * \brief Get the number of connections via wires a socket has.
+ *
+ * \return The number of connected wires to a socket.
+ *
+ * \param sheet The sheet the socket belongs to.
+ * \param socket The socket to query.
+ */
+DECISION_API size_t d_socket_num_connections(Sheet *sheet, NodeSocket socket);
 
 /**
  * \fn bool d_sheet_add_wire(Sheet *sheet, SheetWire wire)
@@ -371,7 +425,7 @@ DECISION_API Sheet *d_sheet_create(const char *filePath);
 /**
  * \fn void d_definition_free(NodeDefinition *nodeDef)
  * \brief Free a malloc'd definition from memory.
- * 
+ *
  * \param nodeDef The definition to free from memory.
  */
 DECISION_API void d_definition_free(NodeDefinition *nodeDef);
