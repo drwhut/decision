@@ -354,6 +354,10 @@ size_t d_socket_num_connections(Sheet *sheet, NodeSocket socket) {
  * \param wire The edge to add.
  */
 static void add_edge(Sheet *sheet, SheetWire wire) {
+    if (sheet == NULL) {
+        return;
+    }
+
     // We can't just add the wire to the end of the list here. The list is
     // being stored in lexicographical order, so we need to insert it into the
     // correct position.
