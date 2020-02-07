@@ -192,8 +192,16 @@ bool d_is_input_socket(Sheet *sheet, NodeSocket socket) {
         return false;
     }
 
-    NodeDefinition *nodeDef = d_get_node_definition(sheet, socket.nodeIndex);
-    return socket.socketIndex < nodeDef->startOutputIndex;
+    SheetNode node          = sheet->nodes[socket.nodeIndex];
+    NodeDefinition *nodeDef = node.definition;
+
+    size_t startOutput = nodeDef->startOutputIndex;
+
+    if (nodeDef->infiniteInputs) {
+        startOutput = node.startOutputIndex;
+    }
+
+    return (socket.socketIndex < startOutput);
 }
 
 /**
@@ -211,9 +219,25 @@ SocketMeta *d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket) {
     }
 
     size_t nodeIndex        = nodeSocket.nodeIndex;
-    NodeDefinition *nodeDef = d_get_node_definition(sheet, nodeIndex);
+    SheetNode node          = sheet->nodes[nodeIndex];
+    NodeDefinition *nodeDef = node.definition;
 
     size_t socketIndex = nodeSocket.socketIndex;
+
+    if (nodeDef->infiniteInputs) {
+        // If we have more inputs to deal with than we expected, convert the
+        // socket index we've been given to one that the node definition
+        // expects.
+
+        if (socketIndex >= node.startOutputIndex) {
+            // This is an output after all of the inputs.
+            socketIndex -= (node.startOutputIndex - nodeDef->startOutputIndex);
+        } else if (socketIndex >= nodeDef->startOutputIndex) {
+            // This is one of the extra inputs.
+            socketIndex = nodeDef->startOutputIndex - 1;
+        }
+    }
+
     return nodeDef->sockets + socketIndex;
 }
 
@@ -991,33 +1015,39 @@ void d_sheet_dump(Sheet *sheet) {
 
     if (sheet->nodes != NULL && sheet->numNodes > 0) {
         for (size_t i = 0; i < sheet->numNodes; i++) {
-            SheetNode node          = sheet->nodes[i];
-            NodeDefinition *nodeDef = node.definition;
+            SheetNode node      = sheet->nodes[i];
+            NodeDefinition *def = node.definition;
 
-            printf(
-                "Node #%zd named %s is %s node on line %zu with %zu sockets\n",
-                i, nodeDef->name,
-                d_is_execution_node(nodeDef) ? "an execution"
-                                             : "a non-execution",
-                node.lineNum, nodeDef->numSockets);
+            printf("[%zu] %s (Line %zu)\n", i, def->name, node.lineNum);
 
-            if (nodeDef->sockets != NULL && nodeDef->numSockets > 0) {
-                for (size_t j = 0; j < nodeDef->numSockets; j++) {
-                    SocketMeta socket = nodeDef->sockets[j];
+            size_t numInputs     = def->startOutputIndex;
+            size_t maxNumSockets = def->numSockets;
 
-                    printf("\n\tSocket #%zd is of type %s, isInput = "
-                           "%d\n",
-                           j, d_type_name(socket.type),
-                           j < nodeDef->startOutputIndex);
-                }
+            if (def->infiniteInputs) {
+                numInputs = node.startOutputIndex;
+                maxNumSockets +=
+                    (node.startOutputIndex - def->startOutputIndex);
             }
 
-            printf("\n");
+            if (def->sockets != NULL && def->numSockets > 0) {
+                for (size_t j = 0; j < maxNumSockets; j++) {
+                    NodeSocket socket;
+                    socket.nodeIndex   = i;
+                    socket.socketIndex = j;
+                    SocketMeta *meta   = d_get_socket_meta(sheet, socket);
+
+                    bool isInput = (j < numInputs);
+
+                    printf("\t[%zu|%s] %s (%s)\n", j,
+                           (isInput) ? "Input" : "Output", meta->name,
+                           d_type_name(meta->type));
+                }
+            }
         }
     }
 
     // Dump the wires.
-    printf("# Wires: %zu\n", sheet->numWires);
+    printf("\n# Wires: %zu\n", sheet->numWires);
 
     if (sheet->wires != NULL && sheet->numWires > 0) {
         for (size_t i = 0; i < sheet->numWires; i++) {
@@ -1026,11 +1056,11 @@ void d_sheet_dump(Sheet *sheet) {
             NodeSocket from = wire.socketFrom;
             NodeSocket to   = wire.socketTo;
 
-            printf("Node %zu\tSocket %zu\t->\tNode %zu\tSocket %zu\n",
+            printf("Node %zu Socket %zu\t->\tNode %zu Socket %zu\n",
                    from.nodeIndex, from.socketIndex, to.nodeIndex,
                    to.socketIndex);
         }
-
-        printf("\n");
     }
+
+    printf("\n");
 }

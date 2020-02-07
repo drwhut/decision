@@ -85,6 +85,7 @@ typedef struct _nodeDefinition {
     size_t numSockets;
     size_t startOutputIndex; ///< Any socket before this index is an input
                              ///< socket, the rest are output sockets.
+    bool infiniteInputs;
 } NodeDefinition;
 
 /**
@@ -119,6 +120,11 @@ typedef struct _sheetWire {
 typedef struct _sheetNode {
     NodeDefinition *definition;
     size_t lineNum;
+    size_t startOutputIndex; ///< This will by default be the same value as in
+                             ///< the definition, but in the event that the
+                             ///< definition allows for infinite inputs, this
+                             ///< value will change to signify where the start
+                             ///< of the outputs actually is.
 } SheetNode;
 
 /**
