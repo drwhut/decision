@@ -25,6 +25,7 @@
 #define DCORE_H
 
 #include "dcfg.h"
+#include "dsheet.h"
 #include "dtype.h"
 
 /*
@@ -82,19 +83,19 @@ typedef enum _coreFunction {
 */
 
 /**
- * \fn const char *d_core_get_name(CoreFunction func)
- * \brief Get the name of a core function as a string.
+ * \fn const NodeDefinition *d_core_get_definition(const CoreFunction core)
+ * \brief Get the definition of a core function.
  *
- * \return The name of the core function.
+ * \return The definition of the core function.
  *
- * \param func The core function to get the name of.
+ * \param core The core function to get the definition of.
  */
-DECISION_API const char *d_core_get_name(CoreFunction func);
+DECISION_API const NodeDefinition *
+d_core_get_definition(const CoreFunction core);
 
 /**
  * \fn const CoreFunction d_core_find_name(const char *name)
- * \brief Opposite of `d_core_get_name`, get the CoreFunction from the
- * corresponding name.
+ * \brief Given the name of the core function, get the CoreFunction.
  *
  * \return The corresponding CoreFunction. Value is -1 if the name doesn't
  * exist as a core function.
@@ -102,47 +103,5 @@ DECISION_API const char *d_core_get_name(CoreFunction func);
  * \param name The name to query.
  */
 DECISION_API const CoreFunction d_core_find_name(const char *name);
-
-/**
- * \fn const short d_core_num_input_sockets(CoreFunction func)
- * \brief Get the number of input sockets the core function has.
- *
- * \return The number of input sockets the function is defined to have.
- * If -1, then any number is allowed.
- *
- * \param func The function to query.
- */
-DECISION_API const short d_core_num_input_sockets(CoreFunction func);
-
-/**
- * \fn const short d_core_num_output_sockets(CoreFunction func)
- * \brief Get the number of output sockets the core function has.
- *
- * \return The number of output sockets the function is defined to have.
- * If -1, then any number is allowed.
- *
- * \param func The function to query.
- */
-DECISION_API const short d_core_num_output_sockets(CoreFunction func);
-
-/**
- * \fn const DType *d_core_get_input_types(CoreFunction func)
- * \brief Get the core functions input data types.
- *
- * \return The core functions input data types. It is a 0-terminating array.
- *
- * \param func The function to query.
- */
-DECISION_API const DType *d_core_get_input_types(CoreFunction func);
-
-/**
- * \fn const DType *d_core_get_output_types(CoreFunction func)
- * \brief Get the core functions output data types.
- *
- * \return The core functions output data types. It is a 0-terminating array.
- *
- * \param func The function to query.
- */
-DECISION_API const DType *d_core_get_output_types(CoreFunction func);
 
 #endif // DCORE_H
