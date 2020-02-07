@@ -154,27 +154,27 @@ static const SocketMeta CORE_FUNC_SOCKETS[NUM_CORE_FUNCTIONS][7] = {
 };
 
 static const NodeDefinition CORE_FUNC_DEFINITIONS[NUM_CORE_FUNCTIONS] = {
-    {"Add", "Calculate the addition of two or more numbers.", CORE_FUNC_SOCKETS[CORE_ADD], 3, 2},
-    {"And", "Calculate the bitwise AND of two integers or booleans.", CORE_FUNC_SOCKETS[CORE_AND], 3, 2},
-    {"Div", "Calculate the truncated division of two numbers.", CORE_FUNC_SOCKETS[CORE_DIV], 3, 2},
-    {"Divide", "Calculate the division of two numbers.", CORE_FUNC_SOCKETS[CORE_DIVIDE], 3, 2},
-    {"Equal", "Check if two values are equal.", CORE_FUNC_SOCKETS[CORE_EQUAL], 3, 2},
-    {"For", "For each iteration of a numerical value, activate an execution path.", CORE_FUNC_SOCKETS[CORE_FOR], 7, 4},
-    {"IfThen", "Activate an execution path if a condition is true.", CORE_FUNC_SOCKETS[CORE_IF_THEN], 4, 2},
-    {"IfThenElse", "Activate an execution path if a condition is true, or another if the condition is false.", CORE_FUNC_SOCKETS[CORE_IF_THEN_ELSE], 5, 2},
-    {"Length", "Output the number of characters in a string.", CORE_FUNC_SOCKETS[CORE_LENGTH], 2, 1},
-    {"LessThan", "Check if one value is less than another.", CORE_FUNC_SOCKETS[CORE_LESS_THAN], 3, 2},
-    {"LessThanOrEqual", "Check if one value is less than or equal to another.", CORE_FUNC_SOCKETS[CORE_LESS_THAN_OR_EQUAL], 3, 2},
-    {"Mod", "Calculate the remainder after division of two integers.", CORE_FUNC_SOCKETS[CORE_MOD], 3, 2},
-    {"Multiply", "Calculate the multiplication of two or more numbers.", CORE_FUNC_SOCKETS[CORE_MULTIPLY], 3, 2},
-    {"Not", "Calculate the bitwise NOT of an integer or boolean.", CORE_FUNC_SOCKETS[CORE_NOT], 2, 1},
-    {"NotEqual", "Check if two values are not equal.", CORE_FUNC_SOCKETS[CORE_NOT_EQUAL], 3, 2},
-    {"Or", "Calculate the bitwise OR of two integers or booleans.", CORE_FUNC_SOCKETS[CORE_OR], 3, 2},
-    {"Print", "Print a value to the standard output.", CORE_FUNC_SOCKETS[CORE_PRINT], 3, 2},
-    {"Set", "Set the value of a variable.", CORE_FUNC_SOCKETS[CORE_SET], 4, 3},
-    {"Ternary", "Output one input or another, depending on a condition.", CORE_FUNC_SOCKETS[CORE_TERNARY], 4, 3},
-    {"While", "Keep activating an execution path while a condition is true.", CORE_FUNC_SOCKETS[CORE_WHILE], 4, 2},
-    {"Xor", "Calculate the bitwise XOR of two integers or booleans.", CORE_FUNC_SOCKETS[CORE_XOR], 3, 2}
+    {"Add", "Calculate the addition of two or more numbers.", CORE_FUNC_SOCKETS[CORE_ADD], 3, 2, true},
+    {"And", "Calculate the bitwise AND of two integers or booleans.", CORE_FUNC_SOCKETS[CORE_AND], 3, 2, false},
+    {"Div", "Calculate the truncated division of two numbers.", CORE_FUNC_SOCKETS[CORE_DIV], 3, 2, false},
+    {"Divide", "Calculate the division of two numbers.", CORE_FUNC_SOCKETS[CORE_DIVIDE], 3, 2, false},
+    {"Equal", "Check if two values are equal.", CORE_FUNC_SOCKETS[CORE_EQUAL], 3, 2, false},
+    {"For", "For each iteration of a numerical value, activate an execution path.", CORE_FUNC_SOCKETS[CORE_FOR], 7, 4, false},
+    {"IfThen", "Activate an execution path if a condition is true.", CORE_FUNC_SOCKETS[CORE_IF_THEN], 4, 2, false},
+    {"IfThenElse", "Activate an execution path if a condition is true, or another if the condition is false.", CORE_FUNC_SOCKETS[CORE_IF_THEN_ELSE], 5, 2, false},
+    {"Length", "Output the number of characters in a string.", CORE_FUNC_SOCKETS[CORE_LENGTH], 2, 1, false},
+    {"LessThan", "Check if one value is less than another.", CORE_FUNC_SOCKETS[CORE_LESS_THAN], 3, 2, false},
+    {"LessThanOrEqual", "Check if one value is less than or equal to another.", CORE_FUNC_SOCKETS[CORE_LESS_THAN_OR_EQUAL], 3, 2, false},
+    {"Mod", "Calculate the remainder after division of two integers.", CORE_FUNC_SOCKETS[CORE_MOD], 3, 2, false},
+    {"Multiply", "Calculate the multiplication of two or more numbers.", CORE_FUNC_SOCKETS[CORE_MULTIPLY], 3, 2, true},
+    {"Not", "Calculate the bitwise NOT of an integer or boolean.", CORE_FUNC_SOCKETS[CORE_NOT], 2, 1, false},
+    {"NotEqual", "Check if two values are not equal.", CORE_FUNC_SOCKETS[CORE_NOT_EQUAL], 3, 2, false},
+    {"Or", "Calculate the bitwise OR of two integers or booleans.", CORE_FUNC_SOCKETS[CORE_OR], 3, 2, false},
+    {"Print", "Print a value to the standard output.", CORE_FUNC_SOCKETS[CORE_PRINT], 3, 2, false},
+    {"Set", "Set the value of a variable.", CORE_FUNC_SOCKETS[CORE_SET], 4, 3, false},
+    {"Ternary", "Output one input or another, depending on a condition.", CORE_FUNC_SOCKETS[CORE_TERNARY], 4, 3, false},
+    {"While", "Keep activating an execution path while a condition is true.", CORE_FUNC_SOCKETS[CORE_WHILE], 4, 2, false},
+    {"Xor", "Calculate the bitwise XOR of two integers or booleans.", CORE_FUNC_SOCKETS[CORE_XOR], 3, 2, false}
 };
 
 // clang-format on
