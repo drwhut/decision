@@ -57,22 +57,58 @@ typedef struct _insToLink {
 } InstructionToLink;
 
 /**
- * \struct _sheetSocket
- * \brief A struct for storing sockets.
- *
- * \typedef struct _sheetSocket SheetSocket
+ * \struct _socketMeta
+ * \brief Defines the metadata of a socket, i.e. it's type, name, description,
+ * etc.
+ * 
+ * \typedef struct _socketMeta SocketMeta
  */
-typedef struct _sheetSocket {
+typedef struct _socketMeta {
     DType type;
-    LexData defaultValue; ///< If there is no input wire, use a given value.
-    bool isInput;         ///< If it's an input socket, it can only have up to 1
-                          ///< connection.
-    struct _sheetNode *node; ///< The node we're a part of.
-    struct _sheetSocket **connections;
-    size_t numConnections;
+    LexData defaultValue; ///< If there is no input wire, use this value.
 
-    int _stackIndex; ///< Used in code generation.
-} SheetSocket;
+    const char *name;
+    const char *description;
+} SocketMeta;
+
+/**
+ * \struct _nodeDefinition
+ * \brief Defined a node in Decision, i.e. it's name, what sockets it has, etc.
+ * 
+ * \typedef struct _nodeDefinition NodeDefinition
+ */
+typedef struct _nodeDefinition {
+    const char *name;
+    const char *description;
+
+    SocketMeta *sockets;
+    size_t numSockets;
+    size_t startOutputIndex; ///< Any socket before this index is an input
+                             ///< socket, the rest are output sockets.
+} NodeDefinition;
+
+/**
+ * \struct _nodeSocket
+ * \brief A struct for indexing a node's socket.
+ *
+ * \typedef struct _nodeSocket NodeSocket
+ */
+typedef struct _nodeSocket {
+    size_t nodeIndex;
+    size_t socketIndex;
+} NodeSocket;
+
+/**
+ * \struct _sheetWire
+ * \brief A struct for connecting two sockets together, effectively an edge of
+ * a graph.
+ * 
+ * \typedef struct _sheetWire SheetWire
+ */
+typedef struct _sheetWire {
+    NodeSocket socketFrom;
+    NodeSocket socketTo;
+} SheetWire;
 
 /**
  * \struct _sheetNode
@@ -81,22 +117,8 @@ typedef struct _sheetSocket {
  * \typedef struct _sheetNode SheetNode
  */
 typedef struct _sheetNode {
-    const char *name;
+    NodeDefinition *definition;
     size_t lineNum;
-    SheetSocket **sockets;
-    size_t numSockets;
-    bool isExecution;
-    struct _sheet *sheet; ///< The sheet we're a part of.
-
-    NameDefinition definition; ///< * If the node is the getter or setter of a
-                               ///< variable, it states where the variable is
-                               ///< defined.
-                               ///< * Else, if the node is either `Define` or
-                               ///< `Return`, it states wherer the function
-                               ///< being defined or returned from is defined
-                               ///< (should be on the same sheet).
-                               ///< * Otherwise, it states where the function
-                               ///< being called is defined from.
 } SheetNode;
 
 /**
@@ -106,10 +128,7 @@ typedef struct _sheetNode {
  * \typedef struct _sheetVariable SheetVariable.
  */
 typedef struct _sheetVariable {
-    const char *name;
-    DType dataType;
-    LexData defaultValue;
-    struct _sheet *sheet; ///< The sheet we're defined in.
+    SocketMeta variableMeta;
 } SheetVariable;
 
 /**
@@ -119,15 +138,7 @@ typedef struct _sheetVariable {
  * \typedef struct _sheetFunction SheetFunction.
  */
 typedef struct _sheetFunction {
-    const char *name;
-    bool isSubroutine;
-
-    SheetVariable *arguments;
-    size_t numArguments;
-    SheetVariable *returns;
-    size_t numReturns;
-
-    struct _sheet *sheet; ///< The sheet we're defined in.
+    NodeDefinition functionDefinition;
 
     struct _sheetNode *defineNode; ///< Used in Semantic Analysis.
     size_t numDefineNodes;         ///< Used in Semantic Analysis.
@@ -160,10 +171,13 @@ typedef struct _sheet {
     SheetFunction *functions;
     size_t numFunctions;
 
-    SheetNode **nodes;
+    SheetNode *nodes;
     size_t numNodes;
 
-    SheetNode *startNode;
+    SheetWire *wires;
+    size_t numWires;
+
+    size_t startNodeIndex;
     size_t numStarts;
     size_t _main; ///< Points to the index of the first instruction of Start,
                   ///< *not* the `RET` instruction one before.
