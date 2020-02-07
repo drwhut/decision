@@ -27,10 +27,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-/*
-    A macro for adding an item to a dynamic array.
-    This exists because it happens a lot in this file.
-*/
+/**
+ * \def LIST_PUSH(array, arrayType, numCurrentItems, newItem)
+ * \brief A generic macro for adding items to a dynamic array.
+ */
 #define LIST_PUSH(array, arrayType, numCurrentItems, newItem)               \
     size_t newNumItems = (numCurrentItems) + 1;                             \
     if (newNumItems == 1)                                                   \
@@ -39,6 +39,165 @@
         array =                                                             \
             (arrayType *)d_realloc(array, newNumItems * sizeof(arrayType)); \
     array[numCurrentItems++] = newItem;
+
+/**
+ * \fn size_t d_node_num_inputs(NodeDefinition *nodeDef)
+ * \brief Get the number of input sockets a node has.
+ *
+ * \return The number of input sockets the node has.
+ *
+ * \param nodeDef The definition of the node.
+ */
+size_t d_node_num_inputs(NodeDefinition *nodeDef) {
+    if (nodeDef == NULL) {
+        return 0;
+    }
+
+    return nodeDef->startOutputIndex;
+}
+
+/**
+ * \fn size_t d_node_num_outputs(NodeDefinition *nodeDef)
+ * \brief Get the number of output sockets a node has.
+ *
+ * \return The number of output sockets the node has.
+ *
+ * \param nodeDef The definition of the node.
+ */
+size_t d_node_num_outputs(NodeDefinition *nodeDef) {
+    if (nodeDef == NULL) {
+        return 0;
+    }
+
+    return nodeDef->numSockets - nodeDef->startOutputIndex;
+}
+
+/**
+ * \fn bool d_is_execution_node(NodeDefinition *nodeDef)
+ * \brief Is the node an execution node, i.e. does it have at least one
+ * execution socket?
+ *
+ * \return If the node is an execution node.
+ *
+ * \param nodeDef The definition of the node.
+ */
+bool d_is_execution_node(NodeDefinition *nodeDef) {
+    if (nodeDef == NULL) {
+        return false;
+    }
+
+    for (size_t i = 0; i < nodeDef->numSockets; i++) {
+        SocketMeta socket = nodeDef->sockets[i];
+
+        if (socket.type == TYPE_EXECUTION) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * \def bool d_is_node_index_valid(Sheet *sheet, size_t nodeIndex)
+ * \brief Given a sheet, does a given node index exist within that sheet?
+ *
+ * \returns If the node index exists in the sheet.
+ *
+ * \param sheet The sheet to query.
+ * \param nodeIndex The node index to query.
+ */
+bool d_is_node_index_valid(Sheet *sheet, size_t nodeIndex) {
+    if (sheet == NULL) {
+        return false;
+    }
+
+    return nodeIndex < sheet->numNodes;
+}
+
+/**
+ * \def bool d_is_socket_index_valid(NodeDefinition *nodeDef,
+ *                                   size_t socketIndex)
+ * \brief Given a node definition, does a given socket index exist within that
+ * node?
+ *
+ * \return If the socket index exists in the node.
+ *
+ * \param nodeDef The node definition to query.
+ * \param socketIndex The socket index to query.
+ */
+bool d_is_socket_index_valid(NodeDefinition *nodeDef, size_t socketIndex) {
+    if (nodeDef == NULL) {
+        return false;
+    }
+
+    return socketIndex < nodeDef->numSockets;
+}
+
+/**
+ * \fn NodeDefinition *d_get_node_definition(Sheet *sheet, size_t nodeIndex)
+ * \brief Given the index of a node, get the definition of the node.
+ *
+ * \return The definition of the node, or NULL if the index does not exist.
+ *
+ * \param sheet The sheet the node belongs to.
+ * \param nodeIndex The node to get the definition of.
+ */
+NodeDefinition *d_get_node_definition(Sheet *sheet, size_t nodeIndex) {
+    if (!d_is_node_index_valid(sheet, nodeIndex)) {
+        return NULL;
+    }
+
+    return sheet->nodes[nodeIndex].definition;
+}
+
+/**
+ * \fn bool d_is_node_socket_valid(Sheet *sheet, NodeSocket nodeSocket)
+ * \brief Given a NodeSocket, does it exist in the sheet?
+ *
+ * \return If the node socket index exists in the given sheet.
+ *
+ * \param sheet The sheet to query.
+ * \param nodeSocket The node socket index to query.
+ */
+bool d_is_node_socket_valid(Sheet *sheet, NodeSocket nodeSocket) {
+    size_t nodeIndex = nodeSocket.nodeIndex;
+    if (!d_is_node_index_valid(sheet, nodeSocket.nodeIndex)) {
+        return false;
+    }
+
+    NodeDefinition *nodeDef = d_get_node_definition(sheet, nodeIndex);
+    if (nodeDef == NULL) {
+        return false;
+    }
+
+    size_t socketIndex = nodeSocket.socketIndex;
+    if (!d_is_socket_index_valid(nodeDef, socketIndex)) {
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * \fn SocketMeta *d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket)
+ * \brief Get the metadata of a node's socket.
+ *
+ * \return The socket's metadata, or NULL if the index does not exist.
+ *
+ * \param sheet The sheet the socket belongs to.
+ * \param nodeSocket The socket to get the metadata for.
+ */
+SocketMeta *d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket) {
+    if (!d_is_node_socket_valid(sheet, nodeSocket)) {
+        return NULL;
+    }
+
+    size_t nodeIndex        = nodeSocket.nodeIndex;
+    NodeDefinition *nodeDef = d_get_node_definition(sheet, nodeIndex);
+
+    size_t socketIndex = nodeSocket.socketIndex;
+    return nodeDef->sockets + socketIndex;
+}
 
 /**
  * \fn void d_socket_add_connection(SheetSocket *socket,
@@ -129,338 +288,115 @@ void d_socket_add_connection(SheetSocket *socket, SheetSocket *connection,
 }
 
 /**
- * \fn void d_socket_connect(SheetSocket *from, SheetSocket *to, Sheet *sheet,
- *                           SheetNode *nodeTo)
- * \brief Connect 2 sockets together with a wire.
+ * \fn static void add_edge(Sheet *sheet, SheetWire wire)
+ * \brief Add an edge to a sheet. Detect "too many connections" errors in the
+ * process.
  *
- * \param from Where the connection is from. `from->isInput` must be `false`.
- * \param to Where the connection goes to. `from->isInput` must be `true.`
- * \param sheet In case we error, say what sheet we errored from.
- * \param nodeTo In case we error, say what node caused the error.
+ * \param sheet The sheet to add the edge to.
+ * \param wire The edge to add.
  */
-void d_socket_connect(SheetSocket *from, SheetSocket *to, Sheet *sheet,
-                      SheetNode *nodeTo) {
-    if (!from->isInput && to->isInput) {
-        d_socket_add_connection(from, to, sheet, nodeTo);
-        d_socket_add_connection(to, from, sheet, nodeTo);
-
-        // We need to check that the data types of both ends are the same!
-        if ((from->type & to->type) == TYPE_NONE) {
-
-            // Find out information about the sockets before giving the error.
-            // NOTE: If you change it so that sockets are stored directly in
-            // their sockets, CHANGE THIS FUNCTION!
-            size_t outIndex      = 0;
-            size_t numOutSockets = 0;
-
-            for (size_t i = 0; i < from->node->numSockets; i++) {
-                if (!from->node->sockets[i]->isInput) {
-                    numOutSockets++;
-
-                    if (from == from->node->sockets[i]) {
-                        outIndex = numOutSockets;
-                    }
-                }
-            }
-
-            size_t inIndex      = 0;
-            size_t numInSockets = 0;
-
-            for (size_t i = 0; i < to->node->numSockets; i++) {
-                if (to->node->sockets[i]->isInput) {
-                    numInSockets++;
-
-                    if (to == to->node->sockets[i]) {
-                        inIndex = numInSockets;
-                    }
-                }
-            }
-
-            ERROR_COMPILER(sheet->filePath, nodeTo->lineNum, true,
-                           "Wire data type mismatch between socket of type %s "
-                           "(Output %zu/%zu of node %s on line %zu) and socket "
-                           "of type %s (Input %zu/%zu of node %s on line %zu)",
-                           d_type_name(from->type), outIndex, numOutSockets,
-                           from->node->name, from->node->lineNum,
-                           d_type_name(to->type), inIndex, numInSockets,
-                           to->node->name, to->node->lineNum);
-        }
-    }
+static void add_edge(Sheet *sheet, SheetWire wire) {
+    // TODO: This!
 }
 
 /**
- * \fn SheetSocket *d_socket_create(DType dataType, LexData defaultValue,
- *                                  bool isInput)
- * \brief Create a socket, with no initial connections.
+ * \fn bool d_sheet_add_wire(Sheet *sheet, SheetWire wire)
+ * \brief Add a wire to a sheet, connecting two sockets.
  *
- * \return A malloc'd socket with no connections.
+ * \return If the operation was successful.
  *
- * \param dataType The data type of the socket.
- * \param defaultValue If there is no input connection, use this value as input.
- * \param isInput Is the socket an input socket? This determines how many
- * connections it can have.
+ * \param sheet The sheet to add the wire to. Both nodes have to belong to this
+ * node.
+ * \param wire The wire to add to the sheet.
  */
-SheetSocket *d_socket_create(DType dataType, LexData defaultValue,
-                             bool isInput) {
-    SheetSocket *socket = (SheetSocket *)d_malloc(sizeof(SheetSocket));
+bool d_sheet_add_wire(Sheet *sheet, SheetWire wire) {
+    NodeSocket from = wire.socketFrom;
+    NodeSocket to   = wire.socketTo;
 
-    socket->type           = dataType;
-    socket->defaultValue   = defaultValue;
-    socket->isInput        = isInput;
-    socket->node           = NULL;
-    socket->connections    = NULL;
-    socket->numConnections = 0;
+    if (!d_is_node_socket_valid(sheet, from)) {
+        return false;
+    }
 
-    socket->_stackIndex = -1;
+    if (!d_is_node_socket_valid(sheet, to)) {
+        return false;
+    }
 
-    return socket;
+    SheetWire oppositeDir;
+    oppositeDir.socketFrom = to;
+    oppositeDir.socketTo   = from;
+
+    add_edge(sheet, wire);
+    add_edge(sheet, oppositeDir);
+
+    // We need to check that the data types of both ends are the same!
+    SocketMeta *fromMeta = d_get_socket_meta(sheet, from);
+    SocketMeta *toMeta   = d_get_socket_meta(sheet, to);
+
+    if ((fromMeta->type & toMeta->type) == TYPE_NONE) {
+        SheetNode fromNode = sheet->nodes[from.nodeIndex];
+        SheetNode toNode   = sheet->nodes[to.nodeIndex];
+
+        NodeDefinition *fromDef = fromNode.definition;
+        NodeDefinition *toDef   = toNode.definition;
+
+        ERROR_COMPILER(sheet->filePath, toNode.lineNum, true,
+                       "Wire data type mismatch between socket of type %s "
+                       "(Output %zu/%zu of node %s on line %zu) and socket "
+                       "of type %s (Input %zu/%zu of node %s on line %zu)",
+                       d_type_name(fromMeta->type), from.socketIndex + 1,
+                       fromDef->numSockets, fromDef->name, fromNode.lineNum,
+                       d_type_name(toMeta->type), to.socketIndex + 1,
+                       toDef->numSockets, toDef->name, toNode.lineNum);
+    }
+
+    return true;
 }
 
 /**
- * \fn void d_socket_free(SheetSocket *socket)
- * \brief Free a malloc'd socket.
- *
- * \param socket The socket to free.
- */
-void d_socket_free(SheetSocket *socket) {
-    // If the default value is a string (or the name of something), free it.
-    if ((socket->type == TYPE_STRING || socket->type == TYPE_NAME) &&
-        socket->defaultValue.stringValue != NULL) {
-        free(socket->defaultValue.stringValue);
-    }
-
-    if (socket->connections != NULL) {
-        free(socket->connections);
-    }
-
-    free(socket);
-}
-
-/**
- * \fn void d_node_add_socket(SheetNode *node, SheetSocket *socket)
- * \brief Add a socket definition to a node.
- *
- * \param node The node to add the socket onto.
- * \param socket The socket definition to add.
- */
-void d_node_add_socket(SheetNode *node, SheetSocket *socket) {
-    LIST_PUSH(node->sockets, SheetSocket *, node->numSockets, socket);
-    socket->node = node;
-}
-
-/**
- * \fn void d_node_free(SheetNode *node)
- * \brief Free a malloc'd node.
- *
- * \param node The node to free.
- */
-void d_node_free(SheetNode *node) {
-    if (node->sockets != NULL) {
-        for (size_t i = 0; i < node->numSockets; i++) {
-            SheetSocket *socket = node->sockets[i];
-            d_socket_free(socket);
-        }
-
-        free(node->sockets);
-    }
-
-    free((char *)node->name);
-    free(node);
-}
-
-/**
- * \fn SheetNode *d_node_create(const char *name, size_t lineNum,
- *                              bool isExecution)
- * \brief Create a node with no sockets by default.
- *
- * \return A malloc'd node with no sockets.
- *
- * \param name The name of the node, i.e. the function or variable name.
- * \param lineNum The line number the node was defined on.
- * \param isExecution Is the node an execution node?
- */
-SheetNode *d_node_create(const char *name, size_t lineNum, bool isExecution) {
-    SheetNode *node = (SheetNode *)d_malloc(sizeof(SheetNode));
-
-    node->name        = name;
-    node->lineNum     = lineNum;
-    node->sockets     = NULL;
-    node->numSockets  = 0;
-    node->isExecution = isExecution;
-    node->definition  = (NameDefinition){NULL, -1, -1, NULL, NULL};
-
-    return node;
-}
-
-/**
- * \fn void d_sheet_add_variable(Sheet *sheet, SheetVariable variable)
- * \brief Add a variable property to the sheet.
- *
- * \param sheet The sheet to add the variable onto.
- * \param variable The variable to add.
- */
-void d_sheet_add_variable(Sheet *sheet, SheetVariable variable) {
-    if (variable.name != NULL && (int)variable.dataType != -1) {
-        // Set the variable's parent sheet pointer.
-        variable.sheet = sheet;
-
-        LIST_PUSH(sheet->variables, SheetVariable, sheet->numVariables,
-                  variable);
-    }
-}
-
-/**
- * \fn void d_sheet_free_variable(SheetVariable variable)
- * \brief Free malloc'd elements of a variable structure.
- *
- * \param variable The variable whose elements to free.
- */
-void d_sheet_free_variable(SheetVariable variable) {
-    // If the variable's default value is a string, free it.
-    if (variable.dataType == TYPE_STRING &&
-        variable.defaultValue.stringValue != NULL) {
-        free(variable.defaultValue.stringValue);
-    }
-
-    // Free the variable name.
-    free((char *)variable.name);
-}
-
-/**
- * \fn void d_sheet_create_function(Sheet *sheet, const char *name,
- *                                  bool isSubroutine)
- * \brief Add a template function to a sheet, with no arguments or returns.
- *
- * \param sheet The sheet to add the function to.
- * \param name The name of the function.
- * \param isSubroutine Is the function we're adding a subroutine (execution)
- * function?
- */
-void d_sheet_create_function(Sheet *sheet, const char *name,
-                             bool isSubroutine) {
-    SheetFunction func;
-    func.name           = name;
-    func.isSubroutine   = isSubroutine;
-    func.arguments      = NULL;
-    func.numArguments   = 0;
-    func.returns        = NULL;
-    func.numReturns     = 0;
-    func.sheet          = sheet;
-    func.defineNode     = NULL;
-    func.numDefineNodes = 0;
-    func.lastReturnNode = NULL;
-    func.numReturnNodes = 0;
-
-    LIST_PUSH(sheet->functions, SheetFunction, sheet->numFunctions, func);
-}
-
-/**
- * \fn void d_sheet_function_add_argument(Sheet *sheet, const char *funcName,
- *                                        const char *argName, DType argType,
- *                                        LexData defaultValue)
- * \brief Add an argument to the last occurance of a sheet's function, i.e.
- * the one created last with the name `funcName`.
- *
- * \param sheet The sheet where the function lives.
- * \param funcName The name of the function to add the argument to.
- * \param argName The name of the argument, if any.
- * \param argType The data type(s) of the argument that are allowed.
- * \param defaultValue The default value of the argument if a value / wire is
- * not passed.
- */
-void d_sheet_function_add_argument(Sheet *sheet, const char *funcName,
-                                   const char *argName, DType argType,
-                                   LexData defaultValue) {
-    SheetFunction *func = sheet->functions;
-    SheetFunction *last = NULL;
-    bool foundFunc      = false;
-
-    for (size_t i = 0; i < sheet->numFunctions; i++) {
-        if (strcmp(funcName, func->name) == 0) {
-            foundFunc = true;
-            last      = func;
-        }
-
-        func++;
-    }
-
-    if (foundFunc && last != NULL) {
-        SheetVariable arg;
-        arg.name         = argName;
-        arg.dataType     = argType;
-        arg.defaultValue = defaultValue;
-
-        LIST_PUSH(last->arguments, SheetVariable, last->numArguments, arg);
-    }
-}
-
-/**
- * \fn void d_sheet_function_add_return(Sheet *sheet, const char *funcName,
- *                                      const char *retName, DType retType)
- * \brief Add an return value to the last occurance of a sheet's function, i.e.
- * the one created last with the name funcName.
- *
- * \param sheet The sheet where the function lives.
- * \param funcName The name of the function to add the return value to.
- * \param retName The name of the return value, if any.
- * \param retType The data type(s) of the return value that are allowed.
- */
-void d_sheet_function_add_return(Sheet *sheet, const char *funcName,
-                                 const char *retName, DType retType) {
-    SheetFunction *func = sheet->functions;
-    SheetFunction *last = NULL;
-    bool foundFunc      = false;
-
-    for (size_t i = 0; i < sheet->numFunctions; i++) {
-        if (strcmp(funcName, func->name) == 0) {
-            foundFunc = true;
-            last      = func;
-        }
-
-        func++;
-    }
-
-    if (foundFunc && last != NULL) {
-        SheetVariable ret;
-        ret.name                      = retName;
-        ret.dataType                  = retType;
-        ret.defaultValue.integerValue = 0;
-
-        LIST_PUSH(last->returns, SheetVariable, last->numReturns, ret);
-    }
-}
-
-/**
- * \fn void d_sheet_free_function(SheetFunction func)
- * \brief Free malloc'd elements of a function structure.
- *
- * \param func The function whose elements to free.
- */
-void d_sheet_free_function(SheetFunction func) {
-    // TODO: Since below we are freeing SheetVariables, shouldn't we free them
-    // with d_sheet_free_variable?
-
-    if (func.arguments != NULL) {
-        free(func.arguments);
-    }
-
-    if (func.returns != NULL) {
-        free(func.returns);
-    }
-}
-
-/**
- * \fn void d_sheet_add_node(Sheet *sheet, SheetNode *node)
+ * \fn size_t d_sheet_add_node(Sheet *sheet, SheetNode node)
  * \brief Add a node to a sheet.
+ *
+ * \return The new node index.
  *
  * \param sheet The sheet to add the node to.
  * \param node The node to add.
  */
-void d_sheet_add_node(Sheet *sheet, SheetNode *node) {
-    LIST_PUSH(sheet->nodes, SheetNode *, sheet->numNodes, node);
+size_t d_sheet_add_node(Sheet *sheet, SheetNode node) {
+    LIST_PUSH(sheet->nodes, SheetNode, sheet->numNodes, node)
+    return sheet->numNodes - 1;
+}
 
-    // Let the node know what sheet it's a part of.
-    node->sheet = sheet;
+/**
+ * \fn void d_sheet_add_variable(Sheet *sheet, SocketMeta varMeta)
+ * \brief Add a variable property to the sheet.
+ *
+ * \param sheet The sheet to add the variable onto.
+ * \param varMeta The variable metadata to add.
+ */
+void d_sheet_add_variable(Sheet *sheet, SocketMeta varMeta) {
+    SheetVariable variable;
+    variable.variableMeta = varMeta;
+    variable.sheet        = sheet;
+
+    LIST_PUSH(sheet->variables, SheetVariable, sheet->numVariables, variable)
+}
+
+/**
+ * \fn void d_sheet_add_function(Sheet *sheet, NodeDefinition funcDef)
+ * \brief Add a function to a sheet.
+ *
+ * \param sheet The sheet to add the function to.
+ * \param funcDef The function definition to add.
+ */
+void d_sheet_add_function(Sheet *sheet, NodeDefinition funcDef) {
+    SheetFunction func;
+    func.functionDefinition = funcDef;
+    func.defineNode         = NULL;
+    func.numDefineNodes     = 0;
+    func.lastReturnNode     = NULL;
+    func.numReturnNodes     = 0;
+
+    LIST_PUSH(sheet->functions, SheetFunction, sheet->numFunctions, func)
 }
 
 /**
@@ -580,7 +516,9 @@ Sheet *d_sheet_create(const char *filePath) {
     sheet->numFunctions     = 0;
     sheet->nodes            = NULL;
     sheet->numNodes         = 0;
-    sheet->startNode        = NULL;
+    sheet->wires            = NULL;
+    sheet->numWires         = 0;
+    sheet->startNodeIndex   = 0;
     sheet->numStarts        = 0;
     sheet->_main            = 0;
     sheet->_text            = NULL;
@@ -595,6 +533,34 @@ Sheet *d_sheet_create(const char *filePath) {
 }
 
 /**
+ * \fn void d_definition_free(NodeDefinition *nodeDef)
+ * \brief Free a malloc'd definition from memory.
+ *
+ * \param nodeDef The definition to free from memory.
+ */
+void d_definition_free(NodeDefinition *nodeDef) {
+    if (nodeDef != NULL) {
+        if (nodeDef->name != NULL) {
+            free(nodeDef->name);
+            nodeDef->name = NULL;
+        }
+
+        if (nodeDef->description != NULL) {
+            free(nodeDef->description);
+            nodeDef->description = NULL;
+        }
+
+        if (nodeDef->sockets != NULL) {
+            free(nodeDef->sockets);
+            nodeDef->sockets    = NULL;
+            nodeDef->numSockets = 0;
+        }
+
+        free(nodeDef);
+    }
+}
+
+/**
  * \fn void d_sheet_free(Sheet *sheet)
  * \brief Free malloc'd memory in a sheet.
  *
@@ -606,35 +572,36 @@ void d_sheet_free(Sheet *sheet) {
         // one line.
         Sheet sheetDeref = *sheet;
         free((char *)sheetDeref.filePath);
+        sheet->filePath = NULL;
 
-        if (sheet->includePath != NULL)
+        if (sheet->includePath != NULL) {
             free((char *)sheet->includePath);
+            sheet->includePath = NULL;
+        }
 
         if (sheet->variables != NULL) {
-            for (size_t i = 0; i < sheet->numVariables; i++) {
-                SheetVariable variable = sheet->variables[i];
-                d_sheet_free_variable(variable);
-            }
-
             free(sheet->variables);
+            sheet->variables    = NULL;
+            sheet->numVariables = 0;
         }
 
         if (sheet->nodes != NULL) {
-            for (size_t i = 0; i < sheet->numNodes; i++) {
-                SheetNode *node = sheet->nodes[i];
-                d_node_free(node);
-            }
-
             free(sheet->nodes);
+            sheet->nodes    = NULL;
+            sheet->numNodes = 0;
         }
 
         if (sheet->functions != NULL) {
             for (size_t i = 0; i < sheet->numFunctions; i++) {
                 SheetFunction func = sheet->functions[i];
-                d_sheet_free_function(func);
+
+                // Free the definition.
+                d_definition_free(&(func.functionDefinition));
             }
 
             free(sheet->functions);
+            sheet->functions    = NULL;
+            sheet->numFunctions = 0;
         }
 
         if (sheet->includes != NULL) {
@@ -644,10 +611,15 @@ void d_sheet_free(Sheet *sheet) {
             }
 
             free(sheet->includes);
+            sheet->includes    = NULL;
+            sheet->numIncludes = 0;
         }
 
-        if (sheet->_text != NULL)
+        if (sheet->_text != NULL) {
             free(sheet->_text);
+            sheet->_text     = NULL;
+            sheet->_textSize = 0;
+        }
 
         // Before we free the data section, we need to free any string variables
         // that will have been malloc'd. These pointers should only be malloc'd
@@ -681,13 +653,19 @@ void d_sheet_free(Sheet *sheet) {
             }
         }
 
-        if (sheet->_data != NULL)
+        if (sheet->_data != NULL) {
             free(sheet->_data);
+            sheet->_data     = NULL;
+            sheet->_dataSize = 0;
+        }
 
         d_link_free_list(&(sheet->_link));
 
-        if (sheet->_insLinkList != NULL)
+        if (sheet->_insLinkList != NULL) {
             free(sheet->_insLinkList);
+            sheet->_insLinkList     = NULL;
+            sheet->_insLinkListSize = 0;
+        }
 
         free(sheet);
     }
@@ -706,22 +684,24 @@ void d_variables_dump(SheetVariable *variables, size_t numVariables) {
     // Dump the variables, if there are any.
     if (variables != NULL && numVariables > 0) {
         for (size_t i = 0; i < numVariables; i++) {
-            SheetVariable var = variables[i];
+            SheetVariable var  = variables[i];
+            SocketMeta varMeta = var.variableMeta;
 
-            printf("\tVariable %s is of type %d with default value ", var.name,
-                   var.dataType);
-            switch (var.dataType) {
+            printf("\tVariable %s is of type %s with default value ",
+                   varMeta.name, d_type_name(varMeta.type));
+            switch (varMeta.type) {
                 case TYPE_INT:
-                    printf("%" DINT_PRINTF_d, var.defaultValue.integerValue);
+                    printf("%" DINT_PRINTF_d,
+                           varMeta.defaultValue.integerValue);
                     break;
                 case TYPE_FLOAT:
-                    printf("%f", var.defaultValue.floatValue);
+                    printf("%f", varMeta.defaultValue.floatValue);
                     break;
                 case TYPE_STRING:
-                    printf("%s", var.defaultValue.stringValue);
+                    printf("%s", varMeta.defaultValue.stringValue);
                     break;
                 case TYPE_BOOL:
-                    printf("%d", var.defaultValue.booleanValue);
+                    printf("%d", varMeta.defaultValue.booleanValue);
                     break;
                 default:
                     break;
@@ -743,20 +723,25 @@ void d_functions_dump(SheetFunction *functions, size_t numFunctions) {
 
     if (functions != NULL && numFunctions > 0) {
         for (size_t i = 0; i < numFunctions; i++) {
-            SheetFunction function = functions[i];
+            SheetFunction function  = functions[i];
+            NodeDefinition *funcDef = &(function.functionDefinition);
 
-            printf(
-                "\tFunction %s is %s with %zu arguments:\n", function.name,
-                ((function.isSubroutine) ? "an EXECUTION" : "a NON-EXECUTION"),
-                function.numArguments);
+            size_t numInputs  = d_node_num_inputs(funcDef);
+            size_t numOutputs = d_node_num_outputs(funcDef);
 
-            if (function.arguments != NULL && function.numArguments > 0) {
-                for (size_t j = 0; j < function.numArguments; j++) {
-                    SheetVariable arg = function.arguments[j];
+            printf("\tFunction %s is %s with %zu arguments:\n", funcDef->name,
+                   ((d_is_execution_node(funcDef)) ? "an EXECUTION"
+                                                   : "a NON-EXECUTION"),
+                   numInputs);
 
-                    printf("\t\tArgument %s is of type %d with default value ",
-                           arg.name, arg.dataType);
-                    switch (arg.dataType) {
+            if (funcDef->sockets != NULL && numInputs > 0) {
+                for (size_t j = 0; j < numInputs; j++) {
+                    SocketMeta arg = funcDef->sockets[j];
+
+                    printf("\t\tArgument %s (%s) is of type %s with default "
+                           "value ",
+                           arg.name, arg.description, d_type_name(arg.type));
+                    switch (arg.type) {
                         case TYPE_INT:
                             printf("%" DINT_PRINTF_d,
                                    arg.defaultValue.integerValue);
@@ -777,14 +762,15 @@ void d_functions_dump(SheetFunction *functions, size_t numFunctions) {
                 }
             }
 
-            printf("\tand %zu returns:\n", function.numReturns);
+            printf("\tand %zu returns:\n", numOutputs);
 
-            if (function.returns != NULL && function.numReturns > 0) {
-                for (size_t j = 0; j < function.numReturns; j++) {
-                    SheetVariable ret = function.returns[j];
+            if (funcDef->sockets != NULL && numOutputs > 0) {
+                for (size_t j = 0; j < numOutputs; j++) {
+                    SocketMeta ret =
+                        funcDef->sockets[funcDef->startOutputIndex + j];
 
-                    printf("\t\tReturn %s is of type %d\n", ret.name,
-                           ret.dataType);
+                    printf("\t\tReturn %s (%s) is of type %s\n", ret.name,
+                           ret.description, d_type_name(ret.type));
                 }
             }
         }
@@ -819,57 +805,46 @@ void d_sheet_dump(Sheet *sheet) {
 
     if (sheet->nodes != NULL && sheet->numNodes > 0) {
         for (size_t i = 0; i < sheet->numNodes; i++) {
-            SheetNode *node = sheet->nodes[i];
+            SheetNode node          = sheet->nodes[i];
+            NodeDefinition *nodeDef = node.definition;
 
             printf(
                 "Node #%zd named %s is %s node on line %zu with %zu sockets\n",
-                i, node->name,
-                (node->isExecution) ? "an execution" : "a non-execution",
-                node->lineNum, node->numSockets);
+                i, nodeDef->name,
+                d_is_execution_node(nodeDef) ? "an execution"
+                                             : "a non-execution",
+                node.lineNum, nodeDef->numSockets);
 
-            if (node->sockets != NULL && node->numSockets > 0) {
-                for (size_t j = 0; j < node->numSockets; j++) {
-                    SheetSocket *socket = node->sockets[j];
+            if (nodeDef->sockets != NULL && nodeDef->numSockets > 0) {
+                for (size_t j = 0; j < nodeDef->numSockets; j++) {
+                    SocketMeta socket = nodeDef->sockets[j];
 
-                    printf("\n\tSocket #%zd (%p) is of type %d, isInput = "
-                           "%d\n\tConnections: ",
-                           j, (void *)socket, socket->type, socket->isInput);
-
-                    if (socket->connections != NULL &&
-                        socket->numConnections > 0) {
-                        for (size_t k = 0; k < socket->numConnections; k++) {
-                            printf("%p ", (void *)socket->connections[k]);
-                        }
-                    }
-
-                    printf("\n");
+                    printf("\n\tSocket #%zd is of type %s, isInput = "
+                           "%d\n",
+                           j, d_type_name(socket.type),
+                           j < nodeDef->startOutputIndex);
                 }
             }
 
-            // Variables to print to explain the definition.
-            const char *sheetName = (node->definition.sheet != NULL)
-                                        ? node->definition.sheet->filePath
-                                        : "NULL";
-
-            const char *varName = (node->definition.variable != NULL)
-                                      ? node->definition.variable->name
-                                      : "NULL";
-
-            const char *funcName = (node->definition.function != NULL)
-                                       ? node->definition.function->name
-                                       : "NULL";
-
-            const char *cFuncName = (node->definition.cFunction != NULL)
-                                        ? node->definition.cFunction->name
-                                        : "NULL";
-
-            printf("\n\tDefinition:\n\t\tSheet: %s\n\t\tType: %d"
-                   "\n\t\tCore Function: %d\n\t\tVariable: %s\n\t\tFunction: "
-                   "%s\n\t\tC Function: %s\n",
-                   sheetName, node->definition.type, node->definition.coreFunc,
-                   varName, funcName, cFuncName);
-
             printf("\n");
         }
+    }
+
+    // Dump the wires.
+    printf("# Wires: %zu\n", sheet->numWires);
+
+    if (sheet->wires != NULL && sheet->numWires > 0) {
+        for (size_t i = 0; i < sheet->numWires; i++) {
+            SheetWire wire = sheet->wires[i];
+
+            NodeSocket from = wire.socketFrom;
+            NodeSocket to   = wire.socketTo;
+
+            printf("Node %zu\tSocket %zu\t->\tNode %zu\tSocket %zu\n",
+                   from.nodeIndex, from.socketIndex, to.nodeIndex,
+                   to.socketIndex);
+        }
+
+        printf("\n");
     }
 }

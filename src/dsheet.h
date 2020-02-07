@@ -24,13 +24,13 @@
 #ifndef DSHEET_H
 #define DSHEET_H
 
-#include <stdbool.h>
 #include "dcfg.h"
 #include "dlex.h"
 #include "dlink.h"
 #include "dsemantic.h"
 #include "dtype.h"
 #include "dvm.h"
+#include <stdbool.h>
 
 #include <stddef.h>
 
@@ -60,21 +60,21 @@ typedef struct _insToLink {
  * \struct _socketMeta
  * \brief Defines the metadata of a socket, i.e. it's type, name, description,
  * etc.
- * 
+ *
  * \typedef struct _socketMeta SocketMeta
  */
 typedef struct _socketMeta {
-    DType type;
-    LexData defaultValue; ///< If there is no input wire, use this value.
-
     const char *name;
     const char *description;
+
+    DType type;
+    LexData defaultValue; ///< If there is no input wire, use this value.
 } SocketMeta;
 
 /**
  * \struct _nodeDefinition
  * \brief Defined a node in Decision, i.e. it's name, what sockets it has, etc.
- * 
+ *
  * \typedef struct _nodeDefinition NodeDefinition
  */
 typedef struct _nodeDefinition {
@@ -102,13 +102,15 @@ typedef struct _nodeSocket {
  * \struct _sheetWire
  * \brief A struct for connecting two sockets together, effectively an edge of
  * a graph.
- * 
+ *
  * \typedef struct _sheetWire SheetWire
  */
 typedef struct _sheetWire {
     NodeSocket socketFrom;
     NodeSocket socketTo;
 } SheetWire;
+
+// TODO: Create a macro to check if one wire is "less" than another.
 
 /**
  * \struct _sheetNode
@@ -129,6 +131,8 @@ typedef struct _sheetNode {
  */
 typedef struct _sheetVariable {
     SocketMeta variableMeta;
+
+    struct _sheet *sheet;
 } SheetVariable;
 
 /**
@@ -174,7 +178,8 @@ typedef struct _sheet {
     SheetNode *nodes;
     size_t numNodes;
 
-    SheetWire *wires;
+    SheetWire *wires; ///< This list will be stored in lexicographical order,
+                      ///< so binary search can be performed on it.
     size_t numWires;
 
     size_t startNodeIndex;
@@ -198,170 +203,135 @@ typedef struct _sheet {
 */
 
 /**
- * \fn void d_socket_add_connection(SheetSocket *socket,
- *                                  SheetSocket *connection, Sheet *sheet,
- *                                  SheetNode *node)
- * \brief Add a connection to a socket. If sheet or node are `NULL`, it will
- * not display any errors if they occur.
- *
- * \param socket The socket to add the connection to.
- * \param connection The connection to add.
- * \param sheet In case we error, say what sheet we errored on.
- * \param node In case we error, say what node caused the error.
+ * \fn size_t d_node_num_inputs(NodeDefinition *nodeDef)
+ * \brief Get the number of input sockets a node has.
+ * 
+ * \return The number of input sockets the node has.
+ * 
+ * \param nodeDef The definition of the node.
  */
-DECISION_API void d_socket_add_connection(SheetSocket *socket,
-                                          SheetSocket *connection, Sheet *sheet,
-                                          SheetNode *node);
+DECISION_API size_t d_node_num_inputs(NodeDefinition *nodeDef);
 
 /**
- * \fn void d_socket_connect(SheetSocket *from, SheetSocket *to, Sheet *sheet,
- *                           SheetNode *nodeTo)
- * \brief Connect 2 sockets together with a wire.
- *
- * \param from Where the connection is from. `from->isInput` must be `false`.
- * \param to Where the connection goes to. `from->isInput` must be `true.`
- * \param sheet In case we error, say what sheet we errored from.
- * \param nodeTo In case we error, say what node caused the error.
+ * \fn size_t d_node_num_outputs(NodeDefinition *nodeDef)
+ * \brief Get the number of output sockets a node has.
+ * 
+ * \return The number of output sockets the node has.
+ * 
+ * \param nodeDef The definition of the node.
  */
-DECISION_API void d_socket_connect(SheetSocket *from, SheetSocket *to,
-                                   Sheet *sheet, SheetNode *nodeTo);
+DECISION_API size_t d_node_num_outputs(NodeDefinition *nodeDef);
 
 /**
- * \fn SheetSocket *d_socket_create(DType dataType, LexData defaultValue,
- *                                  bool isInput)
- * \brief Create a socket, with no initial connections.
- *
- * \return A malloc'd socket with no connections.
- *
- * \param dataType The data type of the socket.
- * \param defaultValue If there is no input connection, use this value as input.
- * \param isInput Is the socket an input socket? This determines how many
- * connections it can have.
+ * \fn bool d_is_execution_node(NodeDefinition *nodeDef)
+ * \brief Is the node an execution node, i.e. does it have at least one
+ * execution socket?
+ * 
+ * \return If the node is an execution node.
+ * 
+ * \param nodeDef The definition of the node.
  */
-DECISION_API SheetSocket *d_socket_create(DType dataType, LexData defaultValue,
-                                          bool isInput);
+DECISION_API bool d_is_execution_node(NodeDefinition *nodeDef);
 
 /**
- * \fn void d_socket_free(SheetSocket *socket)
- * \brief Free a malloc'd socket.
+ * \def bool d_is_node_index_valid(Sheet *sheet, size_t nodeIndex)
+ * \brief Given a sheet, does a given node index exist within that sheet?
  *
- * \param socket The socket to free.
+ * \return If the node index exists in the sheet.
+ *
+ * \param sheet The sheet to query.
+ * \param nodeIndex The node index to query.
  */
-DECISION_API void d_socket_free(SheetSocket *socket);
+DECISION_API bool d_is_node_index_valid(Sheet *sheet, size_t nodeIndex);
 
 /**
- * \fn void d_node_add_socket(SheetNode *node, SheetSocket *socket)
- * \brief Add a socket definition to a node.
+ * \def bool d_is_socket_index_valid(NodeDefinition *nodeDef,
+ *                                   size_t socketIndex)
+ * \brief Given a node definition, does a given socket index exist within that
+ * node?
  *
- * \param node The node to add the socket onto.
- * \param socket The socket definition to add.
+ * \return If the socket index exists in the node.
+ *
+ * \param nodeDef The node definition to query.
+ * \param socketIndex The socket index to query.
  */
-DECISION_API void d_node_add_socket(SheetNode *node, SheetSocket *socket);
+DECISION_API bool d_is_socket_index_valid(NodeDefinition *nodeDef,
+                                          size_t socketIndex);
 
 /**
- * \fn void d_node_free(SheetNode *node)
- * \brief Free a malloc'd node.
+ * \fn NodeDefinition *d_get_node_definition(Sheet *sheet, size_t nodeIndex)
+ * \brief Given the index of a node, get the definition of the node.
  *
- * \param node The node to free.
+ * \return The definition of the node, or NULL if the index does not exist.
+ *
+ * \param sheet The sheet the node belongs to.
+ * \param nodeIndex The node to get the definition of.
  */
-DECISION_API void d_node_free(SheetNode *node);
+DECISION_API NodeDefinition *d_get_node_definition(Sheet *sheet,
+                                                   size_t nodeIndex);
 
 /**
- * \fn SheetNode *d_node_create(const char *name, size_t lineNum,
- *                              bool isExecution)
- * \brief Create a node with no sockets by default.
+ * \fn bool d_is_node_socket_valid(Sheet *sheet, NodeSocket nodeSocket)
+ * \brief Given a NodeSocket, does it exist in the sheet?
  *
- * \return A malloc'd node with no sockets.
+ * \return If the node socket index exists in the given sheet.
  *
- * \param name The name of the node, i.e. the function or variable name.
- * \param lineNum The line number the node was defined on.
- * \param isExecution Is the node an execution node?
+ * \param sheet The sheet to query.
+ * \param nodeSocket The node socket index to query.
  */
-DECISION_API SheetNode *d_node_create(const char *name, size_t lineNum,
-                                      bool isExecution);
+DECISION_API bool d_is_node_socket_valid(Sheet *sheet, NodeSocket nodeSocket);
 
 /**
- * \fn void d_sheet_add_variable(Sheet *sheet, SheetVariable variable)
- * \brief Add a variable property to the sheet.
+ * \fn SocketMeta *d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket)
+ * \brief Get the metadata of a node's socket.
  *
- * \param sheet The sheet to add the variable onto.
- * \param variable The variable to add.
+ * \return The socket's metadata, or NULL if the index does not exist.
+ *
+ * \param sheet The sheet the socket belongs to.
+ * \param nodeSocket The socket to get the metadata for.
  */
-DECISION_API void d_sheet_add_variable(Sheet *sheet, SheetVariable variable);
+DECISION_API SocketMeta *d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket);
 
 /**
- * \fn void d_sheet_free_variable(SheetVariable variable)
- * \brief Free malloc'd elements of a variable structure.
+ * \fn bool d_sheet_add_wire(Sheet *sheet, SheetWire wire)
+ * \brief Add a wire to a sheet, connecting two sockets.
  *
- * \param variable The variable whose elements to free.
+ * \return If the operation was successful.
+ *
+ * \param sheet The sheet to add the wire to. Both nodes have to belong to this
+ * node.
+ * \param wire The wire to add to the sheet.
  */
-DECISION_API void d_sheet_free_variable(SheetVariable variable);
+DECISION_API bool d_sheet_add_wire(Sheet *sheet, SheetWire wire);
 
 /**
- * \fn void d_sheet_create_function(Sheet *sheet, const char *name,
- *                                  bool isSubroutine)
- * \brief Add a template function to a sheet, with no arguments or returns.
- *
- * \param sheet The sheet to add the function to.
- * \param name The name of the function.
- * \param isSubroutine Is the function we're adding a subroutine (execution)
- * function?
- */
-DECISION_API void d_sheet_create_function(Sheet *sheet, const char *name,
-                                          bool isSubroutine);
-
-/**
- * \fn void d_sheet_function_add_argument(Sheet *sheet, const char *funcName,
- *                                        const char *argName, DType argType,
- *                                        LexData defaultValue)
- * \brief Add an argument to the last occurance of a sheet's function, i.e.
- * the one created last with the name `funcName`.
- *
- * \param sheet The sheet where the function lives.
- * \param funcName The name of the function to add the argument to.
- * \param argName The name of the argument, if any.
- * \param argType The data type(s) of the argument that are allowed.
- * \param defaultValue The default value of the argument if a value / wire is
- * not passed.
- */
-DECISION_API void d_sheet_function_add_argument(Sheet *sheet,
-                                                const char *funcName,
-                                                const char *argName,
-                                                DType argType,
-                                                LexData defaultValue);
-
-/**
- * \fn void d_sheet_function_add_return(Sheet *sheet, const char *funcName,
- *                                      const char *retName, DType retType)
- * \brief Add an return value to the last occurance of a sheet's function, i.e.
- * the one created last with the name funcName.
- *
- * \param sheet The sheet where the function lives.
- * \param funcName The name of the function to add the return value to.
- * \param retName The name of the return value, if any.
- * \param retType The data type(s) of the return value that are allowed.
- */
-DECISION_API void d_sheet_function_add_return(Sheet *sheet,
-                                              const char *funcName,
-                                              const char *retName,
-                                              DType retType);
-
-/**
- * \fn void d_sheet_free_function(SheetFunction func)
- * \brief Free malloc'd elements of a function structure.
- *
- * \param func The function whose elements to free.
- */
-DECISION_API void d_sheet_free_function(SheetFunction func);
-
-/**
- * \fn void d_sheet_add_node(Sheet *sheet, SheetNode *node)
+ * \fn size_t d_sheet_add_node(Sheet *sheet, SheetNode node)
  * \brief Add a node to a sheet.
+ *
+ * \return The new node index.
  *
  * \param sheet The sheet to add the node to.
  * \param node The node to add.
  */
-DECISION_API void d_sheet_add_node(Sheet *sheet, SheetNode *node);
+DECISION_API size_t d_sheet_add_node(Sheet *sheet, SheetNode node);
+
+/**
+ * \fn void d_sheet_add_variable(Sheet *sheet, SocketMeta varMeta)
+ * \brief Add a variable property to the sheet.
+ *
+ * \param sheet The sheet to add the variable onto.
+ * \param varMeta The variable metadata to add.
+ */
+DECISION_API void d_sheet_add_variable(Sheet *sheet, SocketMeta varMeta);
+
+/**
+ * \fn void d_sheet_add_function(Sheet *sheet, NodeDefinition funcDef)
+ * \brief Add a function to a sheet.
+ *
+ * \param sheet The sheet to add the function to.
+ * \param funcDef The function definition to add.
+ */
+DECISION_API void d_sheet_add_function(Sheet *sheet, NodeDefinition funcDef);
 
 /**
  * \fn void d_sheet_add_include(Sheet *sheet, Sheet *include)
@@ -397,6 +367,14 @@ DECISION_API Sheet *d_sheet_add_include_from_path(Sheet *sheet,
  * \param filePath The file where this sheet originated.
  */
 DECISION_API Sheet *d_sheet_create(const char *filePath);
+
+/**
+ * \fn void d_definition_free(NodeDefinition *nodeDef)
+ * \brief Free a malloc'd definition from memory.
+ * 
+ * \param nodeDef The definition to free from memory.
+ */
+DECISION_API void d_definition_free(NodeDefinition *nodeDef);
 
 /**
  * \fn void d_sheet_free(Sheet *sheet)
