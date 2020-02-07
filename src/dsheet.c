@@ -605,6 +605,7 @@ void d_sheet_add_function(Sheet *sheet, NodeDefinition funcDef) {
     func.numDefineNodes     = 0;
     func.lastReturnNode     = NULL;
     func.numReturnNodes     = 0;
+    func.sheet              = sheet;
 
     LIST_PUSH(sheet->functions, SheetFunction, sheet->numFunctions, func)
 }

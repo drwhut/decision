@@ -364,6 +364,222 @@ void d_asm_dump_all(Sheet *sheet) {
 }
 
 /**
+ * \fn static size_t get_socket_meta_length(SocketMeta meta)
+ * \brief Get the amount of space required to store a SocketMeta.
+ *
+ * \return The number of bytes needed to store the socket meta.
+ *
+ * \param meta The socket metadata to query.
+ */
+static size_t get_socket_meta_length(SocketMeta meta) {
+    // 3 = Type + 2 \0s.
+    size_t size = strlen(meta.name) + strlen(meta.description) + 3;
+
+    // The size could still vary depending on the default value.
+    if (meta.type == TYPE_STRING) {
+        if (meta.defaultValue.stringValue != NULL) {
+            size += strlen(meta.defaultValue.stringValue) + 1;
+        } else {
+            size += 1; // 0 to say no default value.
+        }
+    } else {
+        size += sizeof(dint);
+    }
+
+    return size;
+}
+
+/**
+ * \fn static void write_socket_meta(char **ptr, SocketMeta meta)
+ * \brief Write some socket metadata into a string.
+ *
+ * \param ptr The pointer being used to write to the string.
+ * \param meta The socket metadata to write to the string.
+ */
+static void write_socket_meta(char **ptr, SocketMeta meta) {
+    char *str = *ptr;
+
+    size_t nameSize = strlen(meta.name) + 1;
+    memcpy(str, meta.name, nameSize);
+    str += nameSize;
+
+    size_t descriptionSize = strlen(meta.description) + 1;
+    memcpy(str, meta.description, descriptionSize);
+    str += descriptionSize;
+
+    *str = meta.type;
+    str++;
+
+    if (meta.type == TYPE_STRING) {
+        if (meta.defaultValue.stringValue != NULL) {
+            size_t defaultSize = strlen(meta.defaultValue.stringValue) + 1;
+            memcpy(ptr, meta.defaultValue.stringValue, defaultSize);
+            ptr += defaultSize;
+        } else {
+            *ptr = 0;
+            ptr++;
+        }
+    } else {
+        memcpy(ptr, &(meta.defaultValue.integerValue), sizeof(dint));
+        ptr += sizeof(dint);
+    }
+
+    *ptr = str;
+}
+
+/**
+ * \fn static SocketMeta read_socket_meta(char **ptr)
+ * \brief Read in from a string socket metadata.
+ *
+ * \return The socket metadata.
+ *
+ * \param ptr The pointer being used to read the string.
+ */
+static SocketMeta read_socket_meta(char **ptr) {
+    char *str = *ptr;
+
+    SocketMeta meta;
+
+    size_t nameSize = strlen(str) + 1;
+    char *name      = (char *)d_malloc(nameSize);
+    memcpy(name, str, nameSize);
+    str += nameSize;
+
+    meta.name = (const char *)name;
+
+    size_t desciptionSize = strlen(str) + 1;
+    char *description     = (char *)d_malloc(desciptionSize);
+    memcpy(description, str, desciptionSize);
+    str += desciptionSize;
+
+    meta.description = (const char *)description;
+
+    DType type = *str;
+    str++;
+
+    LexData defaultValue;
+
+    if (type == TYPE_STRING) {
+        size_t defaultSize = strlen(str) + 1;
+        char *default      = (char *)d_malloc(defaultSize);
+        memcpy(default, str, defaultSize);
+        str += defaultSize;
+
+        defaultValue.stringValue = default;
+    } else {
+        defaultValue.integerValue = *((dint *)str);
+    }
+
+    meta.defaultValue = defaultValue;
+
+    *ptr = str;
+
+    return meta;
+}
+
+/**
+ * \fn static size_t get_node_definition_length(NodeDefinition *definition)
+ * \brief Get the amount of space required to store a NodeDefinition.
+ *
+ * \return The number of bytes needed to store the node definition.
+ *
+ * \param definition The node definition to query.
+ */
+static size_t get_node_definition_length(NodeDefinition *definition) {
+    // 3 =  2 \0s.
+    size_t size = strlen(definition->name) + strlen(definition->description) +
+                  2 * sizeof(duint) + 2;
+
+    for (size_t i = 0; i < definition->numSockets; i++) {
+        SocketMeta meta = definition->sockets[i];
+        size += get_socket_meta_length(meta);
+    }
+
+    return size;
+}
+
+/**
+ * \fn static void write_node_definition(char **ptr, NodeDefinition *definition)
+ * \brief Write a node definition into a string.
+ *
+ * \param ptr The pointer being used to write the string.
+ * \param definition The node definition to write into the string.
+ */
+static void write_node_definition(char **ptr, NodeDefinition *definition) {
+    char *str = *ptr;
+
+    size_t nameSize = strlen(definition->name) + 1;
+    memcpy(str, definition->name, nameSize);
+    str += nameSize;
+
+    size_t descriptionSize = strlen(definition->description) + 1;
+    memcpy(str, definition->description, descriptionSize);
+    str += descriptionSize;
+
+    memcpy(ptr, &(definition->startOutputIndex), sizeof(duint));
+    ptr += sizeof(duint);
+
+    memcpy(ptr, &(definition->numSockets), sizeof(duint));
+    ptr += sizeof(duint);
+
+    for (size_t i = 0; i < definition->numSockets; i++) {
+        SocketMeta meta = definition->sockets[i];
+        write_socket_meta(&str, meta);
+    }
+
+    *ptr = str;
+}
+
+/**
+ * \fn static NodeDefinition read_node_definition(char **ptr)
+ * \brief Read a node definition from a string.
+ *
+ * \return The node definition.
+ *
+ * \param ptr The pointer being used to read the string.
+ */
+static NodeDefinition read_node_definition(char **ptr) {
+    char *str = *ptr;
+
+    NodeDefinition definition;
+    definition.infiniteInputs = false;
+
+    size_t nameSize = strlen(str) + 1;
+    char *name      = (char *)d_malloc(nameSize);
+    memcpy(name, str, nameSize);
+    str += nameSize;
+
+    definition.name = (const char *)name;
+
+    size_t desciptionSize = strlen(str) + 1;
+    char *description     = (char *)d_malloc(desciptionSize);
+    memcpy(description, str, desciptionSize);
+    str += desciptionSize;
+
+    definition.description = (const char *)description;
+
+    definition.startOutputIndex = *((duint *)str);
+    str += sizeof(duint);
+
+    definition.numSockets = *((duint *)str);
+    str += sizeof(duint);
+
+    SocketMeta *list =
+        (SocketMeta *)d_malloc(definition.numSockets * sizeof(SocketMeta));
+
+    for (size_t i = 0; i < definition.numSockets; i++) {
+        SocketMeta meta = read_socket_meta(&str);
+        *(list + i) = meta;
+    }
+
+    definition.sockets = list;
+
+    *ptr = str;
+
+    return definition;
+}
+
+/**
  * \fn const char *d_asm_generate_object(Sheet *sheet, size_t *size)
  * \brief Given a sheet has been compiled, create the contents of the sheet's
  * object file.
@@ -426,56 +642,9 @@ const char *d_asm_generate_object(Sheet *sheet, size_t *size) {
     // right here.
     size_t funcLen = 0;
 
-    SheetFunction *func = sheet->functions;
-
     for (size_t funcIndex = 0; funcIndex < sheet->numFunctions; funcIndex++) {
-        funcLen += sizeof(duint) + // Index of the function in .lmeta
-                   1 +             // isSubroutine.
-                   sizeof(duint) + // Number of arguments.
-                   sizeof(duint);  // Number of returns.
-
-        SheetVariable *arg = func->arguments;
-
-        for (size_t argIndex = 0; argIndex < func->numArguments; argIndex++) {
-            size_t sizeOfNamePlusNull = 1;
-
-            if (arg->name != NULL)
-                sizeOfNamePlusNull = sizeOfNamePlusNull + strlen(arg->name);
-
-            funcLen += 1 + // 0 = Argument.
-                       1;  // DType dataType.
-
-            // The default value.
-            if (arg->dataType == TYPE_STRING) {
-                if (arg->defaultValue.stringValue != NULL) {
-                    funcLen += strlen(arg->defaultValue.stringValue) + 1;
-                } else
-                    funcLen += 1; // 0 to say no default value.
-            } else
-                funcLen += sizeof(dint); // LexData defaultValue.
-
-            funcLen += sizeOfNamePlusNull; // Name + NULL.
-
-            arg++;
-        }
-
-        SheetVariable *ret = func->returns;
-
-        for (size_t retIndex = 0; retIndex < func->numReturns; retIndex++) {
-            size_t sizeOfNamePlusNull = 1;
-
-            if (ret->name != NULL)
-                sizeOfNamePlusNull = sizeOfNamePlusNull + strlen(ret->name);
-
-            funcLen += 1 + // 1 = Return.
-                       1 + // DType dataType.
-                       // sizeof(dint) +   // LexData defaultValue.
-                       sizeOfNamePlusNull; // Name + NULL.
-
-            ret++;
-        }
-
-        func++;
+        SheetFunction *func = sheet->functions + funcIndex;
+        funcLen += get_node_definition_length(&(func->functionDefinition));
     }
 
     len += funcLen;
@@ -483,15 +652,9 @@ const char *d_asm_generate_object(Sheet *sheet, size_t *size) {
     // The .var section can highly vary as well.
     size_t varLen = 0;
 
-    SheetVariable *var = sheet->variables;
-
     for (size_t varIndex = 0; varIndex < sheet->numVariables; varIndex++) {
-        varLen += sizeof(duint) + // Index of variable in LinkMeta array.
-                  sizeof(duint) + // Index of variable's string default value in
-                                  // LinkMeta.
-                  1;              // Data type.
-
-        var++;
+        SheetVariable *var = sheet->variables + varIndex;
+        varLen += get_socket_meta_length(var->variableMeta);
     }
 
     len += varLen;
@@ -657,10 +820,9 @@ const char *d_asm_generate_object(Sheet *sheet, size_t *size) {
     ptr += sizeof(duint);
 
     // .func section.
-    func = sheet->functions;
-
     for (size_t funcIndex = 0; funcIndex < sheet->numFunctions; funcIndex++) {
         // TODO: Error if it's somehow not in the meta list?
+        SheetFunction *func = sheet->functions + funcIndex;
 
         // Find the function's index in the link meta list.
         duint funcMetaIndex = 0;
@@ -671,7 +833,7 @@ const char *d_asm_generate_object(Sheet *sheet, size_t *size) {
             if (linkMeta.type == LINK_FUNCTION) {
                 // In order to identify our function, we check the names are
                 // the same.
-                if (strcmp(func->name, linkMeta.name) == 0) {
+                if (strcmp(func->functionDefinition.name, linkMeta.name) == 0) {
                     break;
                 }
             }
@@ -680,80 +842,10 @@ const char *d_asm_generate_object(Sheet *sheet, size_t *size) {
         memcpy(ptr, &funcMetaIndex, sizeof(duint));
         ptr += sizeof(duint);
 
-        *ptr = func->isSubroutine;
-        ptr++;
-
-        memcpy(ptr, &(func->numArguments), sizeof(duint));
-        ptr += sizeof(duint);
-
-        memcpy(ptr, &(func->numReturns), sizeof(duint));
-        ptr += sizeof(duint);
-
-        SheetVariable *arg = func->arguments;
-
-        // TODO: If the default argument is a string, we need to store the
-        // string! I couldn't be bothered to do this at the time of writing, so
-        // to my future self: Good luck.
-
-        for (size_t argIndex = 0; argIndex < func->numArguments; argIndex++) {
-            *ptr = 0; // Is an argument.
-            ptr++;
-
-            *ptr = arg->dataType;
-            ptr++;
-
-            if (arg->dataType == TYPE_STRING) {
-                if (arg->defaultValue.stringValue != NULL) {
-                    size_t defaultSize =
-                        strlen(arg->defaultValue.stringValue) + 1;
-                    memcpy(ptr, arg->defaultValue.stringValue, defaultSize);
-                    ptr += defaultSize;
-                } else {
-                    *ptr = 0;
-                    ptr++;
-                }
-            } else {
-                memcpy(ptr, &(arg->defaultValue.integerValue), sizeof(dint));
-                ptr += sizeof(dint);
-            }
-
-            if (arg->name == NULL) {
-                *ptr = 0;
-                ptr++;
-            } else {
-                size_t sizeOfNamePlusNull = strlen(arg->name) + 1;
-
-                memcpy(ptr, arg->name, sizeOfNamePlusNull);
-                ptr += sizeOfNamePlusNull;
-            }
-
-            arg++;
-        }
-
-        SheetVariable *ret = func->returns;
-
-        for (size_t retIndex = 0; retIndex < func->numReturns; retIndex++) {
-            *ptr = 1; // Is a return.
-            ptr++;
-
-            *ptr = ret->dataType;
-            ptr++;
-
-            // memcpy(ptr, &(ret->defaultValue.integerValue), sizeof(dint));
-            // ptr += sizeof(dint);
-
-            if (ret->name == NULL) {
-                *ptr = 0;
-                ptr++;
-            } else {
-                size_t sizeOfNamePlusNull = strlen(ret->name) + 1;
-
-                memcpy(ptr, ret->name, sizeOfNamePlusNull);
-                ptr += sizeOfNamePlusNull;
-            }
-
-            arg++;
-        }
+        // TODO: The name of the function will be written again with this call.
+        // Add a way to stop writing the name, as it's already in the link meta
+        // list?
+        write_node_definition(&ptr, &(func->functionDefinition));
 
         func++;
     }
@@ -767,19 +859,18 @@ const char *d_asm_generate_object(Sheet *sheet, size_t *size) {
     ptr += sizeof(duint);
 
     // .var section.
-    var = sheet->variables;
-
     for (size_t varIndex = 0; varIndex < sheet->numVariables; varIndex++) {
         // Find the variable's entry in the LinkMeta array.
         // TODO: Error if it cannot be found.
-        size_t metaIndex = 0;
+        SheetVariable *var = sheet->variables + varIndex;
+        size_t metaIndex   = 0;
 
         for (; metaIndex < sheet->_link.size; metaIndex++) {
             LinkMeta lm = sheet->_link.list[metaIndex];
 
             if ((lm.type == LINK_VARIABLE ||
                  lm.type == LINK_VARIABLE_POINTER) &&
-                strcmp(var->name, lm.name) == 0) {
+                strcmp(var->variableMeta.name, lm.name) == 0) {
                 break;
             }
         }
@@ -787,32 +878,10 @@ const char *d_asm_generate_object(Sheet *sheet, size_t *size) {
         memcpy(ptr, &metaIndex, sizeof(duint));
         ptr += sizeof(duint);
 
-        // If the variable is a string, we also need to include the index to the
-        // metadata containing the location of the default string value.
-        if (var->dataType == TYPE_STRING) {
-            size_t defaultStringIndex = 0;
-
-            for (; defaultStringIndex < sheet->_link.size;
-                 defaultStringIndex++) {
-                LinkMeta lm = sheet->_link.list[defaultStringIndex];
-
-                if (lm.type == LINK_VARIABLE_STRING_DEFAULT_VALUE &&
-                    strcmp(var->name, lm.name) == 0) {
-                    break;
-                }
-            }
-
-            memcpy(ptr, &defaultStringIndex, sizeof(duint));
-        } else {
-            size_t tmp = (size_t)-1;
-            memcpy(ptr, &tmp, sizeof(duint));
-        }
-
-        ptr += sizeof(duint);
-
-        // The data type of the variable.
-        *ptr = var->dataType;
-        ptr++;
+        // TODO: The name of the variable will be written again with this call.
+        // Add a way to stop writing the name, as it's already in the link meta
+        // list?
+        write_socket_meta(&ptr, var->variableMeta);
 
         var++;
     }
@@ -1050,91 +1119,10 @@ Sheet *d_asm_load_object(const char *obj, size_t size, const char *filePath) {
                 size_t metaListIndex = (size_t)(*((duint *)ptr));
                 ptr += sizeof(duint);
 
-                bool isSubroutine = *ptr;
-                ptr++;
+                NodeDefinition funcDef = read_node_definition(&ptr);
 
-                size_t numArguments = (size_t)(*((duint *)ptr));
-                ptr += sizeof(duint);
-
-                size_t numReturns = (size_t)(*((duint *)ptr));
-                ptr += sizeof(duint);
-
-                // Get the name of the function from the link meta array.
-                // TODO: Check the entry is a function.
-                const char *funcName = out->_link.list[metaListIndex].name;
-
-                // Create the function inside the sheet.
-                d_sheet_create_function(out, funcName, isSubroutine);
-
-                // Edit the LinkMeta entry's metadata pointer to be the new
-                // SheetFunction struct in the sheet array. Note that the
-                // functions are appended to the array.
-                SheetFunction *metaPtr = out->functions;
-                metaPtr += (out->numFunctions - 1);
-
-                out->_link.list[metaListIndex].meta = (void *)metaPtr;
-
-                // TODO: Implement sanity checks to check that we got the right
-                // amount of arguments and returns.
-                size_t numCurrentSockets = 0;
-
-                while (numCurrentSockets < numArguments + numReturns) {
-                    // Extract the data for this socket.
-                    bool isReturn = *ptr;
-                    ptr++;
-
-                    DType dataType = *ptr;
-                    ptr++;
-
-                    LexData defaultValue;
-
-                    if (isReturn) {
-                        defaultValue.integerValue = 0;
-                    } else {
-                        if (dataType == TYPE_STRING) {
-                            if (*ptr != 0) {
-                                size_t defaultLen = strlen(ptr);
-                                char *defaultStr =
-                                    (char *)d_malloc(defaultLen + 1);
-                                memcpy(defaultStr, ptr, defaultLen + 1);
-
-                                // TODO: Ensure this gets freed.
-
-                                defaultValue.stringValue = defaultStr;
-
-                                ptr += defaultLen + 1;
-                            } else {
-                                defaultValue.stringValue = NULL;
-                                ptr++;
-                            }
-                        } else {
-                            defaultValue.integerValue = *((dint *)ptr);
-                            ptr += sizeof(dint);
-                        }
-                    }
-
-                    char *socketName = 0;
-
-                    if (*ptr != 0) {
-                        size_t nameLen = strlen(ptr);
-                        socketName     = (char *)d_malloc(nameLen + 1);
-                        memcpy(socketName, ptr, nameLen + 1);
-
-                        ptr += nameLen;
-                    }
-
-                    ptr++;
-
-                    // Add the socket to the function.
-                    if (isReturn)
-                        d_sheet_function_add_return(out, funcName, socketName,
-                                                    dataType);
-                    else
-                        d_sheet_function_add_argument(out, funcName, socketName,
-                                                      dataType, defaultValue);
-
-                    numCurrentSockets++;
-                }
+                // Add the function to the sheet.
+                d_sheet_add_function(out, funcDef);
 
                 // Add the LinkMetaList index to the dynamic array we are
                 // creating.
@@ -1185,52 +1173,11 @@ Sheet *d_asm_load_object(const char *obj, size_t size, const char *filePath) {
                 size_t varMetaIndex = *((duint *)ptr);
                 ptr += sizeof(duint);
 
-                // TODO: Make sure this works for strings!
-                size_t stringDefaultIndex = *((duint *)ptr);
-                ptr += sizeof(duint);
-
-                DType varType = *ptr;
-                ptr++;
-
-                // Build the SheetVariable structure.
-                SheetVariable var;
-
-                // Copy the variable name.
-                LinkMeta varMeta          = out->_link.list[varMetaIndex];
-                size_t nameLengthPlusNull = strlen(varMeta.name) + 1;
-                char *varName = (char *)d_malloc(nameLengthPlusNull);
-                memcpy(varName, varMeta.name, nameLengthPlusNull);
-
-                var.name     = (const char *)varName;
-                var.dataType = varType;
-
-                // We can get the default value of the variable from the data
-                // section.
-                size_t dataOffset = (size_t)varMeta._ptr;
-                if (varType == TYPE_STRING) {
-                    LinkMeta strPtrMeta = out->_link.list[stringDefaultIndex];
-                    dataOffset          = (size_t)strPtrMeta._ptr;
-
-                    // Since it is a string default value, we need to copy it.
-                    char *defaultStr     = out->_data + dataOffset;
-                    size_t defaultStrLen = strlen(defaultStr);
-                    char *cpyDefaultStr  = (char *)d_malloc(defaultStrLen + 1);
-                    memcpy(cpyDefaultStr, defaultStr, defaultStrLen + 1);
-
-                    var.defaultValue.stringValue = cpyDefaultStr;
-                } else if (varType == TYPE_BOOL) {
-                    var.defaultValue.booleanValue =
-                        *((char *)(out->_data + dataOffset));
-                } else {
-                    var.defaultValue.integerValue =
-                        *((dint *)(out->_data + dataOffset));
-                }
-
-                // var.defaultValue.integerValue = *((dint*)(out->_data +
-                // dataOffset));
+                // TODO: The default value is already in the data section!
+                SocketMeta varMeta = read_socket_meta(&ptr);
 
                 // Add the variable to the sheet.
-                d_sheet_add_variable(out, var);
+                d_sheet_add_variable(out, varMeta);
 
                 // Add the LinkMetaList index to the dynamic array we are
                 // creating.

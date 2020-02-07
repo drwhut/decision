@@ -64,8 +64,8 @@ typedef struct _insToLink {
  * \typedef struct _socketMeta SocketMeta
  */
 typedef struct _socketMeta {
-    const char *name;
-    const char *description;
+    const char *name;        ///< != `NULL`.
+    const char *description; ///< != `NULL`.
 
     DType type;
     LexData defaultValue; ///< If there is no input wire, use this value.
@@ -78,8 +78,8 @@ typedef struct _socketMeta {
  * \typedef struct _nodeDefinition NodeDefinition
  */
 typedef struct _nodeDefinition {
-    const char *name;
-    const char *description;
+    const char *name;        ///< != `NULL`.
+    const char *description; ///< != `NULL`.
 
     SocketMeta *sockets;
     size_t numSockets;
@@ -153,6 +153,8 @@ typedef struct _sheetFunction {
 
     struct _sheetNode *lastReturnNode; ///< Used in Semantic Analysis.
     size_t numReturnNodes;             ///< Used in Semantic Analysis.
+
+    struct _sheet *sheet;
 } SheetFunction;
 
 /**
