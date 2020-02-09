@@ -894,9 +894,13 @@ void d_sheet_free(Sheet *sheet) {
             for (size_t i = 0; i < sheet->numFunctions; i++) {
                 SheetFunction func = sheet->functions[i];
 
-                // Free the definition.
+                // Free the definitions.
                 d_definition_free(
                     (NodeDefinition *)(&(func.functionDefinition)));
+                d_definition_free(
+                    (NodeDefinition *)(&(func.defineDefinition)));
+                d_definition_free(
+                    (NodeDefinition *)(&(func.returnDefinition)));
             }
 
             free(sheet->functions);
