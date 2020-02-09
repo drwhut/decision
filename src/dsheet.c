@@ -41,14 +41,14 @@
     memcpy(array + numCurrentItems++, &newItem, sizeof(arrayType));
 
 /**
- * \fn size_t d_node_num_inputs(const NodeDefinition *nodeDef)
- * \brief Get the number of input sockets a node has.
+ * \fn size_t d_definition_num_inputs(const NodeDefinition *nodeDef)
+ * \brief Get the number of input sockets a definition has.
  *
- * \return The number of input sockets the node has.
+ * \return The number of input sockets the definition has.
  *
  * \param nodeDef The definition of the node.
  */
-size_t d_node_num_inputs(const NodeDefinition *nodeDef) {
+size_t d_definition_num_inputs(const NodeDefinition *nodeDef) {
     if (nodeDef == NULL) {
         return 0;
     }
@@ -57,14 +57,14 @@ size_t d_node_num_inputs(const NodeDefinition *nodeDef) {
 }
 
 /**
- * \fn size_t d_node_num_outputs(const NodeDefinition *nodeDef)
- * \brief Get the number of output sockets a node has.
+ * \fn size_t d_definition_num_outputs(const NodeDefinition *nodeDef)
+ * \brief Get the number of output sockets a definition has.
  *
- * \return The number of output sockets the node has.
+ * \return The number of output sockets the definition has.
  *
  * \param nodeDef The definition of the node.
  */
-size_t d_node_num_outputs(const NodeDefinition *nodeDef) {
+size_t d_definition_num_outputs(const NodeDefinition *nodeDef) {
     if (nodeDef == NULL) {
         return 0;
     }
@@ -73,15 +73,15 @@ size_t d_node_num_outputs(const NodeDefinition *nodeDef) {
 }
 
 /**
- * \fn bool d_is_execution_node(const NodeDefinition *nodeDef)
- * \brief Is the node an execution node, i.e. does it have at least one
- * execution socket?
+ * \fn bool d_is_execution_definition(const NodeDefinition *nodeDef)
+ * \brief Is the definition an execution definition, i.e. does it have at least
+ * one execution socket?
  *
- * \return If the node is an execution node.
+ * \return If the definition is an execution definition.
  *
  * \param nodeDef The definition of the node.
  */
-bool d_is_execution_node(const NodeDefinition *nodeDef) {
+bool d_is_execution_definition(const NodeDefinition *nodeDef) {
     if (nodeDef == NULL) {
         return false;
     }
@@ -112,6 +112,73 @@ bool d_is_node_index_valid(Sheet *sheet, size_t nodeIndex) {
     }
 
     return nodeIndex < sheet->numNodes;
+}
+
+/**
+ * \fn size_t d_node_num_inputs(Sheet *sheet, size_t nodeIndex)
+ * \brief Get the number of input sockets a node has.
+ *
+ * \return The number of input sockets the node has, 0 if the index is not
+ * valid.
+ *
+ * \param sheet The sheet to query.
+ * \param nodeIndex The node index to query.
+ */
+size_t d_node_num_inputs(Sheet *sheet, size_t nodeIndex) {
+    if (!d_is_node_index_valid(sheet, nodeIndex)) {
+        return 0;
+    }
+
+    SheetNode node                = sheet->nodes[nodeIndex];
+    const NodeDefinition *nodeDef = node.definition;
+
+    if (nodeDef->infiniteInputs) {
+        return d_definition_num_inputs(nodeDef);
+    } else {
+        return node.startOutputIndex;
+    }
+}
+
+/**
+ * \fn size_t d_node_num_outputs(Sheet *sheet, size_t nodeIndex)
+ * \brief Get the number of output sockets a node has.
+ *
+ * \return The number of output sockets the node has, 0 if the index is not
+ * valid.
+ *
+ * \param sheet The sheet to query.
+ * \param nodeIndex The node index to query.
+ */
+size_t d_node_num_outputs(Sheet *sheet, size_t nodeIndex) {
+    if (!d_is_node_index_valid(sheet, nodeIndex)) {
+        return 0;
+    }
+
+    SheetNode node                = sheet->nodes[nodeIndex];
+    const NodeDefinition *nodeDef = node.definition;
+
+    return d_definition_num_outputs(nodeDef);
+}
+
+/**
+ * \fn size_t d_is_execution_node(Sheet *sheet, size_t nodeIndex)
+ * \brief Is the node an execution node, i.e. does it have at least one
+ * execution socket?
+ *
+ * \return If the node is an execution node.
+ *
+ * \param sheet The sheet to query.
+ * \param nodeIndex The node index to query.
+ */
+bool d_is_execution_node(Sheet *sheet, size_t nodeIndex) {
+    if (!d_is_node_index_valid(sheet, nodeIndex)) {
+        return 0;
+    }
+
+    SheetNode node                = sheet->nodes[nodeIndex];
+    const NodeDefinition *nodeDef = node.definition;
+
+    return d_is_execution_definition(nodeDef);
 }
 
 /**
@@ -206,17 +273,22 @@ bool d_is_input_socket(Sheet *sheet, NodeSocket socket) {
 }
 
 /**
- * \fn SocketMeta *d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket)
+ * \fn SocketMeta d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket)
  * \brief Get the metadata of a node's socket.
  *
- * \return The socket's metadata, or NULL if the index does not exist.
+ * \return The socket's metadata.
  *
  * \param sheet The sheet the socket belongs to.
  * \param nodeSocket The socket to get the metadata for.
  */
-SocketMeta *d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket) {
+SocketMeta d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket) {
     if (!d_is_node_socket_valid(sheet, nodeSocket)) {
-        return NULL;
+        SocketMeta meta;
+        meta.name                      = NULL;
+        meta.description               = NULL;
+        meta.type                      = TYPE_NONE;
+        meta.defaultValue.integerValue = 0;
+        return meta;
     }
 
     size_t nodeIndex        = nodeSocket.nodeIndex;
@@ -239,7 +311,16 @@ SocketMeta *d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket) {
         }
     }
 
-    return nodeDef->sockets + socketIndex;
+    SocketMeta meta = nodeDef->sockets[socketIndex];
+
+    // Replace some of the elements with what is stored in the node.
+    meta.type = node.reducedTypes[nodeSocket.socketIndex];
+
+    if (nodeSocket.socketIndex < node.startOutputIndex) {
+        meta.defaultValue = node.literalValues[nodeSocket.socketIndex];
+    }
+
+    return meta;
 }
 
 /**
@@ -484,9 +565,9 @@ static void add_edge(Sheet *sheet, SheetWire wire) {
     }
 
     size_t numConnections = d_socket_num_connections(sheet, wire.socketFrom);
-    SocketMeta *meta      = d_get_socket_meta(sheet, wire.socketFrom);
+    SocketMeta meta       = d_get_socket_meta(sheet, wire.socketFrom);
     bool isInputSocket    = d_is_input_socket(sheet, wire.socketFrom);
-    DType socketType      = meta->type;
+    DType socketType      = meta.type;
 
     // If the socket is non-execution, an input socket, and we have more than
     // one connection...
@@ -540,10 +621,10 @@ bool d_sheet_add_wire(Sheet *sheet, SheetWire wire) {
     add_edge(sheet, oppositeDir);
 
     // We need to check that the data types of both ends are the same!
-    SocketMeta *fromMeta = d_get_socket_meta(sheet, from);
-    SocketMeta *toMeta   = d_get_socket_meta(sheet, to);
+    SocketMeta fromMeta = d_get_socket_meta(sheet, from);
+    SocketMeta toMeta   = d_get_socket_meta(sheet, to);
 
-    if ((fromMeta->type & toMeta->type) == TYPE_NONE) {
+    if ((fromMeta.type & toMeta.type) == TYPE_NONE) {
         SheetNode fromNode = sheet->nodes[from.nodeIndex];
         SheetNode toNode   = sheet->nodes[to.nodeIndex];
 
@@ -554,9 +635,9 @@ bool d_sheet_add_wire(Sheet *sheet, SheetWire wire) {
                        "Wire data type mismatch between socket of type %s "
                        "(Output %zu/%zu of node %s on line %zu) and socket "
                        "of type %s (Input %zu/%zu of node %s on line %zu)",
-                       d_type_name(fromMeta->type), from.socketIndex + 1,
+                       d_type_name(fromMeta.type), from.socketIndex + 1,
                        fromDef->numSockets, fromDef->name, fromNode.lineNum,
-                       d_type_name(toMeta->type), to.socketIndex + 1,
+                       d_type_name(toMeta.type), to.socketIndex + 1,
                        toDef->numSockets, toDef->name, toNode.lineNum);
     }
 
@@ -640,7 +721,7 @@ void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef) {
     char *descriptionDefine = (char *)d_malloc(33);
     strcpy(descriptionDefine, "Define a function or subroutine.");
 
-    const size_t numInputs        = d_node_num_inputs(&funcDef);
+    const size_t numInputs        = d_definition_num_inputs(&funcDef);
     const size_t numSocketsDefine = 1 + numInputs;
 
     SocketMeta *defineMeta =
@@ -665,7 +746,7 @@ void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef) {
     char *descriptionReturn = (char *)d_malloc(38);
     strcpy(descriptionReturn, "Return from a function or subroutine.");
 
-    const size_t numOutputs       = d_node_num_outputs(&funcDef);
+    const size_t numOutputs       = d_definition_num_outputs(&funcDef);
     const size_t numSocketsReturn = 1 + numOutputs;
 
     SocketMeta *returnMeta =
@@ -689,6 +770,18 @@ void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef) {
                           0,       NULL,      0,         sheet};
 
     LIST_PUSH(sheet->functions, SheetFunction, sheet->numFunctions, func)
+}
+
+/**
+ * \fn bool d_is_subroutine(SheetFunction func)
+ * \brief Is the given function a subroutine?
+ *
+ * \return If the function is a subroutine.
+ *
+ * \param func The function to query.
+ */
+bool d_is_subroutine(SheetFunction func) {
+    return d_is_execution_definition(&(func.functionDefinition));
 }
 
 /**
@@ -825,30 +918,22 @@ Sheet *d_sheet_create(const char *filePath) {
 }
 
 /**
- * \fn void d_definition_free(NodeDefinition *nodeDef)
- * \brief Free a malloc'd definition from memory.
+ * \fn void d_definition_free(const NodeDefinition nodeDef)
+ * \brief Free the malloc'd elements of a NodeDefinition.
  *
- * \param nodeDef The definition to free from memory.
+ * \param nodeDef The definition whose elements free from memory.
  */
-void d_definition_free(NodeDefinition *nodeDef) {
-    if (nodeDef != NULL) {
-        if (nodeDef->name != NULL) {
-            free(nodeDef->name);
-            nodeDef->name = NULL;
-        }
+void d_definition_free(const NodeDefinition nodeDef) {
+    if (nodeDef.name != NULL) {
+        free(nodeDef.name);
+    }
 
-        if (nodeDef->description != NULL) {
-            free(nodeDef->description);
-            nodeDef->description = NULL;
-        }
+    if (nodeDef.description != NULL) {
+        free(nodeDef.description);
+    }
 
-        if (nodeDef->sockets != NULL) {
-            free(nodeDef->sockets);
-            nodeDef->sockets    = NULL;
-            nodeDef->numSockets = 0;
-        }
-
-        free(nodeDef);
+    if (nodeDef.sockets != NULL) {
+        free(nodeDef.sockets);
     }
 }
 
@@ -872,6 +957,18 @@ void d_sheet_free(Sheet *sheet) {
         }
 
         if (sheet->nodes != NULL) {
+            for (size_t i = 0; i < sheet->numNodes; i++) {
+                SheetNode node = sheet->nodes[i];
+
+                if (node.reducedTypes != NULL) {
+                    free(node.reducedTypes);
+                }
+
+                if (node.literalValues != NULL) {
+                    free(node.literalValues);
+                }
+            }
+
             free(sheet->nodes);
             sheet->nodes    = NULL;
             sheet->numNodes = 0;
@@ -882,7 +979,7 @@ void d_sheet_free(Sheet *sheet) {
                 SheetVariable var = sheet->variables[i];
 
                 // Free the getter definition.
-                d_definition_free((NodeDefinition *)(&(var.getterDefinition)));
+                d_definition_free(var.getterDefinition);
             }
 
             free(sheet->variables);
@@ -895,12 +992,9 @@ void d_sheet_free(Sheet *sheet) {
                 SheetFunction func = sheet->functions[i];
 
                 // Free the definitions.
-                d_definition_free(
-                    (NodeDefinition *)(&(func.functionDefinition)));
-                d_definition_free(
-                    (NodeDefinition *)(&(func.defineDefinition)));
-                d_definition_free(
-                    (NodeDefinition *)(&(func.returnDefinition)));
+                d_definition_free(func.functionDefinition);
+                d_definition_free(func.defineDefinition);
+                d_definition_free(func.returnDefinition);
             }
 
             free(sheet->functions);
@@ -1030,12 +1124,12 @@ void d_functions_dump(SheetFunction *functions, size_t numFunctions) {
             SheetFunction function  = functions[i];
             NodeDefinition *funcDef = &(function.functionDefinition);
 
-            size_t numInputs  = d_node_num_inputs(funcDef);
-            size_t numOutputs = d_node_num_outputs(funcDef);
+            size_t numInputs  = d_definition_num_inputs(funcDef);
+            size_t numOutputs = d_definition_num_outputs(funcDef);
 
             printf("\tFunction %s is %s with %zu arguments:\n", funcDef->name,
-                   ((d_is_execution_node(funcDef)) ? "an EXECUTION"
-                                                   : "a NON-EXECUTION"),
+                   ((d_is_execution_definition(funcDef)) ? "a SUBROUTINE"
+                                                         : "a FUNCTION"),
                    numInputs);
 
             if (funcDef->sockets != NULL && numInputs > 0) {
@@ -1128,13 +1222,13 @@ void d_sheet_dump(Sheet *sheet) {
                     NodeSocket socket;
                     socket.nodeIndex   = i;
                     socket.socketIndex = j;
-                    SocketMeta *meta   = d_get_socket_meta(sheet, socket);
+                    SocketMeta meta    = d_get_socket_meta(sheet, socket);
 
                     bool isInput = (j < numInputs);
 
                     printf("\t[%zu|%s] %s (%s)\n", j,
-                           (isInput) ? "Input" : "Output", meta->name,
-                           d_type_name(meta->type));
+                           (isInput) ? "Input" : "Output", meta.name,
+                           d_type_name(meta.type));
                 }
             }
         }

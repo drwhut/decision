@@ -143,7 +143,8 @@ d_semantic_free_name_definitions(AllNameDefinitions *definitions);
  * \fn const NodeDefinition *d_semantic_get_definition(Sheet *sheet,
  *                                                     const char *name,
  *                                                     size_t lineNum,
- *                                                     const char *funcName)
+ *                                                     const char *funcName,
+ *                                                     NameDefinition *nameDef)
  * \brief Get a node's definition from it's name.
  *
  * \return The node's definition.
@@ -153,10 +154,12 @@ d_semantic_free_name_definitions(AllNameDefinitions *definitions);
  * \param lineNum In case we error, say where we errored from.
  * \param funcName If the name is Define or Return, we need the function name
  * so we can get the correct sockets.
+ * \param nameDef A pointer that is set to the node's name definition. If the
+ * node definition returns NULL, do not trust this value.
  */
 DECISION_API const NodeDefinition *
 d_semantic_get_definition(Sheet *sheet, const char *name, size_t lineNum,
-                          const char *funcName);
+                          const char *funcName, NameDefinition *nameDef);
 
 /**
  * \fn void d_semantic_scan_properties(Sheet *sheet, SyntaxNode *root)

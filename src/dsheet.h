@@ -120,11 +120,23 @@ typedef struct _sheetWire {
 typedef struct _sheetNode {
     const NodeDefinition *definition;
     size_t lineNum;
+
+    DType *reducedTypes;     ///< Needs to be malloc'd, and have as many
+                             ///< elements as sockets.
+    LexData *literalValues;  ///< Needs to be malloc'd, and have
+                             ///< `startOutputIndex` elements.
     size_t startOutputIndex; ///< This will by default be the same value as in
                              ///< the definition, but in the event that the
                              ///< definition allows for infinite inputs, this
                              ///< value will change to signify where the start
                              ///< of the outputs actually is.
+
+    NameDefinition nameDefinition; ///< If the node is the getter or setter of
+                                   ///< a variable, then this points to the
+                                   ///< variable. If the node is a Define or
+                                   ///< return node, this points to the
+                                   ///< function. Otherwise, it points to the
+                                   ///< name definition of the node.
 } SheetNode;
 
 /**
@@ -153,11 +165,11 @@ typedef struct _sheetFunction {
     const NodeDefinition defineDefinition;
     const NodeDefinition returnDefinition;
 
-    struct _sheetNode *defineNode; ///< Used in Semantic Analysis.
-    size_t numDefineNodes;         ///< Used in Semantic Analysis.
+    size_t defineNodeIndex; ///< Used in Semantic Analysis.
+    size_t numDefineNodes;  ///< Used in Semantic Analysis.
 
-    struct _sheetNode *lastReturnNode; ///< Used in Semantic Analysis.
-    size_t numReturnNodes;             ///< Used in Semantic Analysis.
+    size_t lastReturnNodeIndex; ///< Used in Semantic Analysis.
+    size_t numReturnNodes;      ///< Used in Semantic Analysis.
 
     struct _sheet *sheet;
 } SheetFunction;
@@ -214,35 +226,35 @@ typedef struct _sheet {
 */
 
 /**
- * \fn size_t d_node_num_inputs(const NodeDefinition *nodeDef)
- * \brief Get the number of input sockets a node has.
+ * \fn size_t d_definition_num_inputs(const NodeDefinition *nodeDef)
+ * \brief Get the number of input sockets a definition has.
  *
- * \return The number of input sockets the node has.
+ * \return The number of input sockets the definition has.
  *
  * \param nodeDef The definition of the node.
  */
-DECISION_API size_t d_node_num_inputs(const NodeDefinition *nodeDef);
+DECISION_API size_t d_definition_num_inputs(const NodeDefinition *nodeDef);
 
 /**
- * \fn size_t d_node_num_outputs(const NodeDefinition *nodeDef)
- * \brief Get the number of output sockets a node has.
+ * \fn size_t d_definition_num_outputs(const NodeDefinition *nodeDef)
+ * \brief Get the number of output sockets a definition has.
  *
- * \return The number of output sockets the node has.
+ * \return The number of output sockets the definition has.
  *
  * \param nodeDef The definition of the node.
  */
-DECISION_API size_t d_node_num_outputs(const NodeDefinition *nodeDef);
+DECISION_API size_t d_definition_num_outputs(const NodeDefinition *nodeDef);
 
 /**
- * \fn bool d_is_execution_node(const NodeDefinition *nodeDef)
- * \brief Is the node an execution node, i.e. does it have at least one
- * execution socket?
+ * \fn bool d_is_execution_definition(const NodeDefinition *nodeDef)
+ * \brief Is the definition an execution definition, i.e. does it have at least
+ * one execution socket?
  *
- * \return If the node is an execution node.
+ * \return If the definition is an execution definition.
  *
  * \param nodeDef The definition of the node.
  */
-DECISION_API bool d_is_execution_node(const NodeDefinition *nodeDef);
+DECISION_API bool d_is_execution_definition(const NodeDefinition *nodeDef);
 
 /**
  * \def bool d_is_node_index_valid(Sheet *sheet, size_t nodeIndex)
@@ -254,6 +266,42 @@ DECISION_API bool d_is_execution_node(const NodeDefinition *nodeDef);
  * \param nodeIndex The node index to query.
  */
 DECISION_API bool d_is_node_index_valid(Sheet *sheet, size_t nodeIndex);
+
+/**
+ * \fn size_t d_node_num_inputs(Sheet *sheet, size_t nodeIndex)
+ * \brief Get the number of input sockets a node has.
+ *
+ * \return The number of input sockets the node has, 0 if the index is not
+ * valid.
+ *
+ * \param sheet The sheet to query.
+ * \param nodeIndex The node index to query.
+ */
+DECISION_API size_t d_node_num_inputs(Sheet *sheet, size_t nodeIndex);
+
+/**
+ * \fn size_t d_node_num_outputs(Sheet *sheet, size_t nodeIndex)
+ * \brief Get the number of output sockets a node has.
+ *
+ * \return The number of output sockets the node has, 0 if the index is not
+ * valid.
+ *
+ * \param sheet The sheet to query.
+ * \param nodeIndex The node index to query.
+ */
+DECISION_API size_t d_node_num_outputs(Sheet *sheet, size_t nodeIndex);
+
+/**
+ * \fn size_t d_is_execution_node(Sheet *sheet, size_t nodeIndex)
+ * \brief Is the node an execution node, i.e. does it have at least one
+ * execution socket?
+ *
+ * \return If the node is an execution node.
+ *
+ * \param sheet The sheet to query.
+ * \param nodeIndex The node index to query.
+ */
+DECISION_API bool d_is_execution_node(Sheet *sheet, size_t nodeIndex);
 
 /**
  * \def bool d_is_socket_index_valid(const NodeDefinition *nodeDef,
@@ -305,15 +353,15 @@ DECISION_API bool d_is_node_socket_valid(Sheet *sheet, NodeSocket nodeSocket);
 DECISION_API bool d_is_input_socket(Sheet *sheet, NodeSocket socket);
 
 /**
- * \fn SocketMeta *d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket)
+ * \fn SocketMeta d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket)
  * \brief Get the metadata of a node's socket.
  *
- * \return The socket's metadata, or NULL if the index does not exist.
+ * \return The socket's metadata.
  *
  * \param sheet The sheet the socket belongs to.
  * \param nodeSocket The socket to get the metadata for.
  */
-DECISION_API SocketMeta *d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket);
+DECISION_API SocketMeta d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket);
 
 /**
  * \fn short d_wire_cmp(SheetWire wire1, SheetWire wire2)
@@ -403,6 +451,16 @@ DECISION_API void d_sheet_add_function(Sheet *sheet,
                                        const NodeDefinition funcDef);
 
 /**
+ * \fn bool d_is_subroutine(SheetFunction func)
+ * \brief Is the given function a subroutine?
+ *
+ * \return If the function is a subroutine.
+ *
+ * \param func The function to query.
+ */
+DECISION_API bool d_is_subroutine(SheetFunction func);
+
+/**
  * \fn void d_sheet_add_include(Sheet *sheet, Sheet *include)
  * \brief Add a reference to another sheet to the current sheet, which can be
  * used to get extra functionality.
@@ -438,12 +496,12 @@ DECISION_API Sheet *d_sheet_add_include_from_path(Sheet *sheet,
 DECISION_API Sheet *d_sheet_create(const char *filePath);
 
 /**
- * \fn void d_definition_free(const NodeDefinition *nodeDef)
- * \brief Free a malloc'd definition from memory.
+ * \fn void d_definition_free(const NodeDefinition nodeDef)
+ * \brief Free the malloc'd elements of a NodeDefinition.
  *
- * \param nodeDef The definition to free from memory.
+ * \param nodeDef The definition whose elements free from memory.
  */
-DECISION_API void d_definition_free(const NodeDefinition *nodeDef);
+DECISION_API void d_definition_free(const NodeDefinition nodeDef);
 
 /**
  * \fn void d_sheet_free(Sheet *sheet)
