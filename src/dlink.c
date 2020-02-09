@@ -331,7 +331,8 @@ static void *recursive_find_link_meta(Sheet *sheet, LinkMeta *linkMeta) {
                         for (size_t var = 0; var < include->numVariables;
                              var++) {
                             if (strcmp(includeLinkMeta.name,
-                                       include->variables[var].name) == 0) {
+                                       include->variables[var]
+                                           .variableMeta.name) == 0) {
                                 return &(include->variables[var]);
                             }
                         }
@@ -341,7 +342,8 @@ static void *recursive_find_link_meta(Sheet *sheet, LinkMeta *linkMeta) {
                         for (size_t func = 0; func < include->numFunctions;
                              func++) {
                             if (strcmp(includeLinkMeta.name,
-                                       include->functions[func].name) == 0) {
+                                       include->functions[func]
+                                           .functionDefinition.name) == 0) {
                                 return &(include->functions[func]);
                             }
                         }
