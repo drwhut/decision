@@ -25,6 +25,7 @@
 #define DCFUNC_H
 
 #include "dcfg.h"
+#include "dsheet.h"
 #include "dtype.h"
 
 /*
@@ -49,14 +50,8 @@ typedef void (*DecisionCFunction)(struct _DVM *vm);
  * \typedef struct _cFunction CFunction
  */
 typedef struct _cFunction {
-    const char *name;
     DecisionCFunction function;
-
-    const DType *inputs;
-    size_t numInputs;
-
-    const DType *outputs;
-    size_t numOutputs;
+    NodeDefinition definition;
 } CFunction;
 
 /*
@@ -64,36 +59,49 @@ typedef struct _cFunction {
 */
 
 /**
- * \fn void d_create_c_function(const char *name, DecisionCFunction function,
- *                              DType *inputs, DType *outputs)
+ * \fn void d_create_c_function(DecisionCFunction function, const char *name,
+ *                              const char *description, SocketMeta *sockets,
+ *                              size_t numInputs, size_t numOutputs)
  * \brief Create a function that calls a C function. Any sheets that are loaded
  * after this call can use this new function.
  *
+ * \param function The C function to call when this node is activated.
  * \param name The name of the function.
- * \param function The C function to call when the node is activated.
- * \param inputs A `TYPE_NONE`-terminated array of the input data types.
- * \param outputs A `TYPE_NONE`-terminated array of the output data types.
+ * \param description The description of the function.
+ * \param sockets An array of socket metadata. This array should have at least
+ * `numInputs + numOutputs` elements in.
+ * \param numInputs The number of input sockets the function has.
+ * \param numOutputs The number of output sockets the function has.
  */
-DECISION_API void d_create_c_function(const char *name,
-                                      DecisionCFunction function, DType *inputs,
-                                      DType *outputs);
+DECISION_API void d_create_c_function(DecisionCFunction function,
+                                      const char *name, const char *description,
+                                      SocketMeta *sockets, size_t numInputs,
+                                      size_t numOutputs);
 
 /**
- * \fn void d_create_c_subroutine(const char *name, DecisionCFunction function,
- *                                DType *inputs, DType *outputs)
+ * \fn void d_create_c_subroutine(DecisionCFunction function, const char *name,
+ *                                const char *description, SocketMeta *sockets,
+ *                                size_t numInputs, size_t numOutputs)
  * \brief Create a subroutine that calls a C function. Any sheets that are
- * loaded after this call can use this new subroutine.
+ * loaded after this call can use this new function.
  *
- * \param name The name of the subroutine.
- * \param function The C function to call when the node is activated.
- * \param inputs A `TYPE_NONE`-terminated array of the input data types. Note
- * that this array should not include a `TYPE_EXECUTION` type.
- * \param outputs A `TYPE_NONE`-terminated array of the output data types. Note
- * that this array should not include a `TYPE_EXECUTION` type.
+ * **NOTE:** The `sockets` array should not have any execution sockets in,
+ * these will automatically be added. Thus `numInputs` and `numOutputs` should
+ * not account for any execution nodes either.
+ *
+ * \param function The C function to call when this node is activated.
+ * \param name The name of the function.
+ * \param description The description of the function.
+ * \param sockets An array of socket metadata. This array should have at least
+ * `numInputs + numOutputs` elements in.
+ * \param numInputs The number of input sockets the function has.
+ * \param numOutputs The number of output sockets the function has.
  */
-DECISION_API void d_create_c_subroutine(const char *name,
-                                        DecisionCFunction function,
-                                        DType *inputs, DType *outputs);
+DECISION_API void d_create_c_subroutine(DecisionCFunction function,
+                                        const char *name,
+                                        const char *description,
+                                        SocketMeta *sockets, size_t numInputs,
+                                        size_t numOutputs);
 
 /**
  * \fn size_t d_get_num_c_functions()

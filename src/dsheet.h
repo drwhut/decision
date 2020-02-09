@@ -64,8 +64,8 @@ typedef struct _insToLink {
  * \typedef struct _socketMeta SocketMeta
  */
 typedef struct _socketMeta {
-    const char *name;        ///< != `NULL`.
-    const char *description; ///< != `NULL`.
+    const char *name;
+    const char *description;
 
     DType type;
     LexData defaultValue; ///< If there is no input wire, use this value.
@@ -78,8 +78,8 @@ typedef struct _socketMeta {
  * \typedef struct _nodeDefinition NodeDefinition
  */
 typedef struct _nodeDefinition {
-    const char *name;        ///< != `NULL`.
-    const char *description; ///< != `NULL`.
+    const char *name;
+    const char *description;
 
     SocketMeta *sockets;
     size_t numSockets;

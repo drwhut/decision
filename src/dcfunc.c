@@ -28,108 +28,139 @@ static CFunction *cFunctionList = NULL;
 static size_t numCFunctions     = 0;
 
 /**
- * \fn void d_create_c_function(const char *name, DecisionCFunction function,
- *                              DType *inputs, DType *outputs)
+ * \fn void d_create_c_function(DecisionCFunction function, const char *name,
+ *                              const char *description, SocketMeta *sockets,
+ *                              size_t numInputs, size_t numOutputs)
  * \brief Create a function that calls a C function. Any sheets that are loaded
  * after this call can use this new function.
  *
+ * \param function The C function to call when this node is activated.
  * \param name The name of the function.
- * \param function The C function to call when the node is activated.
- * \param inputs A `TYPE_NONE`-terminated array of the input data types.
- * \param outputs A `TYPE_NONE`-terminated array of the output data types.
+ * \param description The description of the function.
+ * \param sockets An array of socket metadata. This array should have at least
+ * `numInputs + numOutputs` elements in.
+ * \param numInputs The number of input sockets the function has.
+ * \param numOutputs The number of output sockets the function has.
  */
-void d_create_c_function(const char *name, DecisionCFunction function,
-                         DType *inputs, DType *outputs) {
-    size_t numInputs = 0, numOutputs = 0; // NOT including the TYPE_NONE!
-    DType *inputPtr, *outputPtr;
+void d_create_c_function(DecisionCFunction function, const char *name,
+                         const char *description, SocketMeta *sockets,
+                         size_t numInputs, size_t numOutputs) {
+    // Create a node definition to define the function.
+    NodeDefinition definition;
 
-    for (inputPtr = inputs; *inputPtr != TYPE_NONE; inputPtr++) {
-        numInputs++;
+    // Copy the name over.
+    if (name != NULL) {
+        size_t nameSize = strlen(name) + 1;
+        char *newName   = (char *)d_malloc(nameSize);
+        memcpy(newName, name, nameSize);
+
+        definition.name = (const char *)newName;
+    } else {
+        definition.name = NULL;
     }
 
-    for (outputPtr = outputs; *outputPtr != TYPE_NONE; outputPtr++) {
-        numOutputs++;
+    // Copy the description over.
+    if (description != NULL) {
+        size_t descriptionSize = strlen(description) + 1;
+        char *newDescription   = (char *)d_malloc(descriptionSize);
+        memcpy(newDescription, description, descriptionSize);
+
+        definition.description = (const char *)newDescription;
+    } else {
+        definition.description = NULL;
     }
 
-    // Create a new array of the types, which does not include the terminating
-    // TYPE_NONE. These arrays will need to be free'd.
-    DType *newInputs  = (DType *)d_malloc((numInputs + 1) * sizeof(DType));
-    DType *newOutputs = (DType *)d_malloc((numOutputs + 1) * sizeof(DType));
+    // Copy the sockets array.
+    if (sockets != NULL) {
+        const size_t numSockets = numInputs + numOutputs;
+        SocketMeta *newSockets =
+            (SocketMeta *)d_malloc(numSockets * sizeof(SocketMeta));
+        memcpy(newSockets, sockets, numSockets * sizeof(SocketMeta));
 
-    memcpy(newInputs, inputs, numInputs * sizeof(DType));
-    memcpy(newOutputs, outputs, numOutputs * sizeof(DType));
+        definition.sockets          = newSockets;
+        definition.numSockets       = numSockets;
+        definition.startOutputIndex = numInputs;
+    } else {
+        definition.sockets          = NULL;
+        definition.numSockets       = 0;
+        definition.startOutputIndex = 0;
+    }
 
-    // Copy the name of the function. This will need to be free'd also.
-    size_t nameSize = strlen(name) + 1;
-    char *newName   = (char *)d_malloc(nameSize);
-    memcpy(newName, name, nameSize);
+    definition.infiniteInputs = false;
 
-    // Build the CFunction struct.
-    CFunction func;
-    func.name     = (const char *)newName;
-    func.function = function;
+    // Add the function to the global list.
+    CFunction newFunction;
+    newFunction.function   = function;
+    newFunction.definition = definition;
 
-    func.inputs    = newInputs;
-    func.numInputs = numInputs;
-
-    func.outputs    = newOutputs;
-    func.numOutputs = numOutputs;
-
-    // Add the struct to the global list.
     if (numCFunctions == 0) {
         cFunctionList    = (CFunction *)d_malloc(sizeof(CFunction));
-        cFunctionList[0] = func;
+        cFunctionList[0] = newFunction;
     } else {
         cFunctionList = (CFunction *)d_realloc(
             cFunctionList, (numCFunctions + 1) * sizeof(CFunction));
-        cFunctionList[numCFunctions] = func;
+        cFunctionList[numCFunctions] = newFunction;
     }
 
     numCFunctions++;
 }
 
 /**
- * \fn void d_create_c_subroutine(const char *name, DecisionCFunction function,
- *                                DType *inputs, DType *outputs)
+ * \fn void d_create_c_subroutine(DecisionCFunction function, const char *name,
+ *                                const char *description, SocketMeta *sockets,
+ *                                size_t numInputs, size_t numOutputs)
  * \brief Create a subroutine that calls a C function. Any sheets that are
- * loaded after this call can use this new subroutine.
+ * loaded after this call can use this new function.
  *
- * \param name The name of the subroutine.
- * \param function The C function to call when the node is activated.
- * \param inputs A `TYPE_NONE`-terminated array of the input data types. Note
- * that this array should not include a `TYPE_EXECUTION` type.
- * \param outputs A `TYPE_NONE`-terminated array of the output data types. Note
- * that this array should not include a `TYPE_EXECUTION` type.
+ * **NOTE:** The `sockets` array should not have any execution sockets in,
+ * these will automatically be added. Thus `numInputs` and `numOutputs` should
+ * not account for any execution nodes either.
+ *
+ * \param function The C function to call when this node is activated.
+ * \param name The name of the function.
+ * \param description The description of the function.
+ * \param sockets An array of socket metadata. This array should have at least
+ * `numInputs + numOutputs` elements in.
+ * \param numInputs The number of input sockets the function has.
+ * \param numOutputs The number of output sockets the function has.
  */
-void d_create_c_subroutine(const char *name, DecisionCFunction function,
-                           DType *inputs, DType *outputs) {
-    // For this function, we're just going to prepend TYPE_EXECUTION to each
-    // of the input and output arrays, and pass that onto d_create_c_function.
+void d_create_c_subroutine(DecisionCFunction function, const char *name,
+                           const char *description, SocketMeta *sockets,
+                           size_t numInputs, size_t numOutputs) {
+    // For this function, we're going to add a "before" and "after" socket to
+    // what the user has already given us, and pass that onto
+    // d_create_c_function.
 
-    size_t numInputs = 1, numOutputs = 1; // Including the TYPE_NONE!
-    DType *inputPtr, *outputPtr;
+    const size_t numSockets = numInputs + numOutputs;
 
-    for (inputPtr = inputs; *inputPtr != TYPE_NONE; inputPtr++) {
-        numInputs++;
-    }
+    const size_t newNumInputs  = numInputs + 1;
+    const size_t newNumOutputs = numOutputs + 1;
+    const size_t newNumSockets = newNumInputs + newNumOutputs;
 
-    for (outputPtr = outputs; *outputPtr != TYPE_NONE; outputPtr++) {
-        numOutputs++;
-    }
+    SocketMeta *newSockets =
+        (SocketMeta *)d_malloc(newNumSockets * sizeof(SocketMeta));
 
-    DType *newInputs  = (DType *)d_malloc((numInputs + 1) * sizeof(DType));
-    DType *newOutputs = (DType *)d_malloc((numOutputs + 1) * sizeof(DType));
+    // Copy the array we've been given to the middle of this new array, such
+    // that there is a free spot either end.
+    memcpy(newSockets + 1, sockets, numSockets * sizeof(SocketMeta));
 
-    newInputs[0]  = TYPE_EXECUTION;
-    newOutputs[0] = TYPE_EXECUTION;
+    // Add the "before" node.
+    SocketMeta before = {"before",
+                         "The node will activate when this input is activated.",
+                         TYPE_EXECUTION, 0};
+    newSockets[0]     = before;
 
-    memcpy(newInputs + 1, inputs, numInputs * sizeof(DType));
-    memcpy(newOutputs + 1, outputs, numOutputs * sizeof(DType));
+    // Add the "after" node.
+    SocketMeta after = {
+        "after",
+        "This output will activate once the node has finished executing.",
+        TYPE_EXECUTION, 0};
+    newSockets[newNumSockets - 1] = after;
 
-    d_create_c_function(name, function, newInputs, newOutputs);
+    d_create_c_function(function, name, description, newSockets, newNumInputs,
+                        newNumOutputs);
 
-    free(newInputs);
-    free(newOutputs);
+    free(newSockets);
 }
 
 /**
@@ -164,19 +195,10 @@ const CFunction *d_get_c_functions() {
  */
 void d_free_c_functions() {
     for (size_t i = 0; i < numCFunctions; i++) {
-        CFunction func = cFunctionList[i];
+        CFunction func     = cFunctionList[i];
+        NodeDefinition def = func.definition;
 
-        if (func.name != NULL) {
-            free((char *)func.name);
-        }
-
-        if (func.inputs != NULL) {
-            free((DType *)func.inputs);
-        }
-
-        if (func.outputs != NULL) {
-            free((DType *)func.outputs);
-        }
+        d_definition_free(&def);
     }
 
     free(cFunctionList);
