@@ -38,17 +38,17 @@
     else                                                                    \
         array =                                                             \
             (arrayType *)d_realloc(array, newNumItems * sizeof(arrayType)); \
-    array[numCurrentItems++] = newItem;
+    memcpy(array + numCurrentItems++, &newItem, sizeof(arrayType));
 
 /**
- * \fn size_t d_node_num_inputs(NodeDefinition *nodeDef)
+ * \fn size_t d_node_num_inputs(const NodeDefinition *nodeDef)
  * \brief Get the number of input sockets a node has.
  *
  * \return The number of input sockets the node has.
  *
  * \param nodeDef The definition of the node.
  */
-size_t d_node_num_inputs(NodeDefinition *nodeDef) {
+size_t d_node_num_inputs(const NodeDefinition *nodeDef) {
     if (nodeDef == NULL) {
         return 0;
     }
@@ -57,14 +57,14 @@ size_t d_node_num_inputs(NodeDefinition *nodeDef) {
 }
 
 /**
- * \fn size_t d_node_num_outputs(NodeDefinition *nodeDef)
+ * \fn size_t d_node_num_outputs(const NodeDefinition *nodeDef)
  * \brief Get the number of output sockets a node has.
  *
  * \return The number of output sockets the node has.
  *
  * \param nodeDef The definition of the node.
  */
-size_t d_node_num_outputs(NodeDefinition *nodeDef) {
+size_t d_node_num_outputs(const NodeDefinition *nodeDef) {
     if (nodeDef == NULL) {
         return 0;
     }
@@ -73,7 +73,7 @@ size_t d_node_num_outputs(NodeDefinition *nodeDef) {
 }
 
 /**
- * \fn bool d_is_execution_node(NodeDefinition *nodeDef)
+ * \fn bool d_is_execution_node(const NodeDefinition *nodeDef)
  * \brief Is the node an execution node, i.e. does it have at least one
  * execution socket?
  *
@@ -81,7 +81,7 @@ size_t d_node_num_outputs(NodeDefinition *nodeDef) {
  *
  * \param nodeDef The definition of the node.
  */
-bool d_is_execution_node(NodeDefinition *nodeDef) {
+bool d_is_execution_node(const NodeDefinition *nodeDef) {
     if (nodeDef == NULL) {
         return false;
     }
@@ -115,7 +115,7 @@ bool d_is_node_index_valid(Sheet *sheet, size_t nodeIndex) {
 }
 
 /**
- * \def bool d_is_socket_index_valid(NodeDefinition *nodeDef,
+ * \def bool d_is_socket_index_valid(const NodeDefinition *nodeDef,
  *                                   size_t socketIndex)
  * \brief Given a node definition, does a given socket index exist within that
  * node?
@@ -125,7 +125,8 @@ bool d_is_node_index_valid(Sheet *sheet, size_t nodeIndex) {
  * \param nodeDef The node definition to query.
  * \param socketIndex The socket index to query.
  */
-bool d_is_socket_index_valid(NodeDefinition *nodeDef, size_t socketIndex) {
+bool d_is_socket_index_valid(const NodeDefinition *nodeDef,
+                             size_t socketIndex) {
     if (nodeDef == NULL) {
         return false;
     }
@@ -577,35 +578,115 @@ size_t d_sheet_add_node(Sheet *sheet, SheetNode node) {
 }
 
 /**
- * \fn void d_sheet_add_variable(Sheet *sheet, SocketMeta varMeta)
+ * \fn void d_sheet_add_variable(Sheet *sheet, const SocketMeta varMeta)
  * \brief Add a variable property to the sheet.
  *
  * \param sheet The sheet to add the variable onto.
  * \param varMeta The variable metadata to add.
  */
-void d_sheet_add_variable(Sheet *sheet, SocketMeta varMeta) {
-    SheetVariable variable;
-    variable.variableMeta = varMeta;
-    variable.sheet        = sheet;
+void d_sheet_add_variable(Sheet *sheet, const SocketMeta varMeta) {
+    // Define the getter node definition.
+
+    // Copy the name.
+    size_t nameSize  = strlen(varMeta.name) + 1;
+    char *nameGetter = (char *)d_malloc(nameSize);
+    memcpy(nameGetter, varMeta.name, nameSize);
+
+    // Create a new description for the getter, i.e.
+    // "Get the value of the variable <VARIABLE NAME>."
+    size_t descriptionSize  = 32 + strlen(varMeta.name);
+    char *descriptionGetter = (char *)d_malloc(descriptionSize);
+    sprintf(descriptionGetter, "Get the value of the variable %s.",
+            varMeta.name);
+
+    // Copy the variable metadata.
+    SocketMeta *getterMeta = (SocketMeta *)d_malloc(sizeof(SocketMeta));
+    *getterMeta            = varMeta;
+
+    const NodeDefinition getter = {(const char *)nameGetter,
+                                   (const char *)descriptionGetter,
+                                   (const SocketMeta *)getterMeta,
+                                   1,
+                                   0,
+                                   false};
+
+    SheetVariable variable = {varMeta, getter, sheet};
 
     LIST_PUSH(sheet->variables, SheetVariable, sheet->numVariables, variable)
 }
 
+/* The names and descriptions of Define and Return name sockets. */
+static const char *defineName        = "function/subroutine";
+static const char *defineDescription = "The function or subroutine to define.";
+
+static const char *returnName = "function/subroutine";
+static const char *returnDescription =
+    "The function or subroutine to return from.";
+
 /**
- * \fn void d_sheet_add_function(Sheet *sheet, NodeDefinition funcDef)
+ * \fn void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef)
  * \brief Add a function to a sheet.
  *
  * \param sheet The sheet to add the function to.
  * \param funcDef The function definition to add.
  */
-void d_sheet_add_function(Sheet *sheet, NodeDefinition funcDef) {
-    SheetFunction func;
-    func.functionDefinition = funcDef;
-    func.defineNode         = NULL;
-    func.numDefineNodes     = 0;
-    func.lastReturnNode     = NULL;
-    func.numReturnNodes     = 0;
-    func.sheet              = sheet;
+void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef) {
+    // Before we add the function to the sheet, we need to know what the Define
+    // and Return nodes for this function will look like.
+
+    char *nameDefine = (char *)d_malloc(7);
+    strcpy(nameDefine, "Define");
+
+    char *descriptionDefine = (char *)d_malloc(33);
+    strcpy(descriptionDefine, "Define a function or subroutine.");
+
+    const size_t numInputs        = d_node_num_inputs(&funcDef);
+    const size_t numSocketsDefine = 1 + numInputs;
+
+    SocketMeta *defineMeta =
+        (SocketMeta *)d_malloc(numSocketsDefine * sizeof(SocketMeta));
+
+    SocketMeta defineNameSocket = {defineName, defineDescription, TYPE_NAME,
+                                   funcDef.name};
+
+    *defineMeta = defineNameSocket;
+    memcpy(defineMeta + 1, funcDef.sockets, numInputs * sizeof(SocketMeta));
+
+    const NodeDefinition defineDef = {(const char *)nameDefine,
+                                      (const char *)descriptionDefine,
+                                      (const SocketMeta *)defineMeta,
+                                      numSocketsDefine,
+                                      1,
+                                      false};
+
+    char *nameReturn = (char *)d_malloc(7);
+    strcpy(nameReturn, "Return");
+
+    char *descriptionReturn = (char *)d_malloc(38);
+    strcpy(descriptionReturn, "Return from a function or subroutine.");
+
+    const size_t numOutputs       = d_node_num_outputs(&funcDef);
+    const size_t numSocketsReturn = 1 + numOutputs;
+
+    SocketMeta *returnMeta =
+        (SocketMeta *)d_malloc(numSocketsReturn * sizeof(SocketMeta));
+
+    SocketMeta returnNameSocket = {returnName, returnDescription, TYPE_NAME,
+                                   funcDef.name};
+
+    *returnMeta = returnNameSocket;
+    memcpy(returnMeta + 1, funcDef.sockets + funcDef.startOutputIndex,
+           numOutputs * sizeof(SocketMeta));
+
+    const NodeDefinition returnDef = {(const char *)nameReturn,
+                                      (const char *)descriptionReturn,
+                                      (const SocketMeta *)returnMeta,
+                                      numSocketsReturn,
+                                      numSocketsReturn,
+                                      false};
+
+    SheetFunction func = {funcDef, defineDef, returnDef, NULL,
+                          0,       NULL,      0,         sheet};
 
     LIST_PUSH(sheet->functions, SheetFunction, sheet->numFunctions, func)
 }
@@ -790,16 +871,23 @@ void d_sheet_free(Sheet *sheet) {
             sheet->includePath = NULL;
         }
 
-        if (sheet->variables != NULL) {
-            free(sheet->variables);
-            sheet->variables    = NULL;
-            sheet->numVariables = 0;
-        }
-
         if (sheet->nodes != NULL) {
             free(sheet->nodes);
             sheet->nodes    = NULL;
             sheet->numNodes = 0;
+        }
+
+        if (sheet->variables != NULL) {
+            for (size_t i = 0; i < sheet->numVariables; i++) {
+                SheetVariable var = sheet->variables[i];
+
+                // Free the getter definition.
+                d_definition_free((NodeDefinition *)(&(var.getterDefinition)));
+            }
+
+            free(sheet->variables);
+            sheet->variables    = NULL;
+            sheet->numVariables = 0;
         }
 
         if (sheet->functions != NULL) {
@@ -807,7 +895,8 @@ void d_sheet_free(Sheet *sheet) {
                 SheetFunction func = sheet->functions[i];
 
                 // Free the definition.
-                d_definition_free(&(func.functionDefinition));
+                d_definition_free(
+                    (NodeDefinition *)(&(func.functionDefinition)));
             }
 
             free(sheet->functions);

@@ -130,46 +130,20 @@ d_semantic_select_name_definition(const char *name,
                                   NameDefinition *selection);
 
 /**
- * \fn void d_semantic_free_name_definitions(AllNameDefinitions definitions)
+ * \fn void d_semantic_free_name_definitions(AllNameDefinitions *definitions)
  * \brief Free an `AllNameDefinitions` struct. It should not be used after it
  * has been freed.
  *
  * \param definitions The structure to free.
  */
 DECISION_API void
-d_semantic_free_name_definitions(AllNameDefinitions definitions);
+d_semantic_free_name_definitions(AllNameDefinitions *definitions);
 
 /**
- * \fn NodeTrueProperties d_semantic_get_node_properties(
- *     Sheet *sheet,
- *     const char *name,
- *     size_t lineNum,
- *     const char *funcName,
- *     NameDefinition *definition)
- * \brief Get a node's true properties (e.g. input and output types) by it's
- * name.
- *
- * \return A NodeTrueProperties object with malloc'd elements.
- *
- * \param sheet The sheet the node is a part of.
- * \param name The name of the node.
- * \param lineNum In case we error, say where we errored from.
- * \param funcName If the name is Return, we need the function name so we can
- * get the correct return values.
- * \param definition A convenience reference that is set to the name definition
- * of the name or funcName given. This can be used to set the definition of a
- * node. Should not be used if the NodeTrueProperties struct has isDefined set
- * to false.
- */
-DECISION_API NodeTrueProperties d_semantic_get_node_properties(
-    struct _sheet *sheet, const char *name, size_t lineNum,
-    const char *funcName, NameDefinition *definition);
-
-/**
- * \fn NodeDefinition *d_semantic_get_node_definition(Sheet *sheet,
- *                                                    const char *name,
- *                                                    size_t lineNum,
- *                                                    const char *funcName)
+ * \fn const NodeDefinition *d_semantic_get_definition(Sheet *sheet,
+ *                                                     const char *name,
+ *                                                     size_t lineNum,
+ *                                                     const char *funcName)
  * \brief Get a node's definition from it's name.
  *
  * \return The node's definition.
@@ -180,9 +154,9 @@ DECISION_API NodeTrueProperties d_semantic_get_node_properties(
  * \param funcName If the name is Define or Return, we need the function name
  * so we can get the correct sockets.
  */
-DECISION_API NodeDefinition *
-d_semantic_get_node_definition(Sheet *sheet, const char *name, size_t lineNum,
-                               const char *funcName);
+DECISION_API const NodeDefinition *
+d_semantic_get_definition(Sheet *sheet, const char *name, size_t lineNum,
+                          const char *funcName);
 
 /**
  * \fn void d_semantic_scan_properties(Sheet *sheet, SyntaxNode *root)

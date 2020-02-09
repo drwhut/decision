@@ -18,20 +18,12 @@
 
 #include "dsemantic.h"
 
-#include "dcfunc.h"
 #include "decision.h"
 #include "derror.h"
 #include "dmalloc.h"
-#include "dsheet.h"
-#include "dsyntax.h"
 
 #include <stdlib.h>
 #include <string.h>
-
-/*
-    Fair warning, this file is A MESS.
-    TODO: Introduce macros, split up code into more functions?
-*/
 
 /* A union for holding the different kinds of property argument data. */
 typedef union {
@@ -118,7 +110,7 @@ static void get_name_definitions_recursive(Sheet *sheet, const char *name,
     if (sheet->variables != NULL && sheet->numVariables > 0) {
         size_t hits = 0;
         for (size_t i = 0; i < sheet->numVariables; i++) {
-            if (strcmp(name, sheet->variables[i].name) == 0) {
+            if (strcmp(name, sheet->variables[i].variableMeta.name) == 0) {
                 hits++;
 
                 NameDefinition definition;
@@ -144,7 +136,8 @@ static void get_name_definitions_recursive(Sheet *sheet, const char *name,
     if (sheet->functions != NULL && sheet->numFunctions > 0) {
         size_t hits = 0;
         for (size_t i = 0; i < sheet->numFunctions; i++) {
-            if (strcmp(name, sheet->functions[i].name) == 0) {
+            if (strcmp(name, sheet->functions[i].functionDefinition.name) ==
+                0) {
                 hits++;
 
                 NameDefinition definition;
@@ -174,7 +167,7 @@ static void get_name_definitions_recursive(Sheet *sheet, const char *name,
 
         size_t hits = 0;
         for (size_t i = 0; i < numCFunctions; i++) {
-            if (strcmp(cFunctionList[i].name, name) == 0) {
+            if (strcmp(cFunctionList[i].definition.name, name) == 0) {
                 hits++;
 
                 NameDefinition definition;
@@ -264,63 +257,62 @@ bool d_semantic_select_name_definition(const char *name,
 }
 
 /**
- * \fn void d_semantic_free_name_definitions(AllNameDefinitions definitions)
+ * \fn void d_semantic_free_name_definitions(AllNameDefinitions *definitions)
  * \brief Free an `AllNameDefinitions` struct. It should not be used after it
  * has been freed.
  *
  * \param definitions The structure to free.
  */
-void d_semantic_free_name_definitions(AllNameDefinitions definitions) {
-    free(definitions.definitions);
+void d_semantic_free_name_definitions(AllNameDefinitions *definitions) {
+    if (definitions->definitions != NULL) {
+        free(definitions->definitions);
+        definitions->definitions = NULL;
+    }
+
+    definitions->numDefinitions = 0;
 }
 
+/* The definition of the Start node. */
+static const SocketMeta startSocket = {
+    "start", "This output gets activated when the program starts.",
+    TYPE_EXECUTION, 0};
+
+static const NodeDefinition startDefinition = {
+    "Start",
+    "The node that gets activated first when the program starts.",
+    &startSocket,
+    1,
+    0,
+    false};
+
 /**
- * \fn NodeTrueProperties d_semantic_get_node_properties(
- *     Sheet *sheet,
- *     const char *name,
- *     size_t lineNum,
- *     const char *funcName,
- *     NameDefinition *definition)
- * \brief Get a node's true properties (e.g. input and output types) by it's
- * name.
+ * \fn const NodeDefinition *d_semantic_get_definition(Sheet *sheet,
+ *                                                     const char *name,
+ *                                                     size_t lineNum,
+ *                                                     const char *funcName)
+ * \brief Get a node's definition from it's name.
  *
- * \return A NodeTrueProperties object with malloc'd elements.
+ * \return The node's definition.
  *
  * \param sheet The sheet the node is a part of.
  * \param name The name of the node.
  * \param lineNum In case we error, say where we errored from.
- * \param funcName If the name is Return, we need the function name so we can
- * get the correct return values.
- * \param definition A convenience reference that is set to the name definition
- * of the name or funcName given. This can be used to set the definition of a
- * node. Should not be used if the NodeTrueProperties struct has isDefined set
- * to false.
+ * \param funcName If the name is Define or Return, we need the function name
+ * so we can get the correct sockets.
  */
-NodeTrueProperties d_semantic_get_node_properties(struct _sheet *sheet,
-                                                  const char *name,
-                                                  size_t lineNum,
-                                                  const char *funcName,
-                                                  NameDefinition *definition) {
-    VERBOSE(5, "Getting node properties of node %s on line %zu in %s...\n",
-            name, lineNum, sheet->filePath)
+const NodeDefinition *d_semantic_get_definition(Sheet *sheet, const char *name,
+                                                size_t lineNum,
+                                                const char *funcName) {
+    VERBOSE(5, "Getting node definitions of node %s on line %zu in %s...\n",
+            name, lineNum, sheet->filePath);
 
-    NodeTrueProperties out =
-        (NodeTrueProperties){false, false, true, NULL, 0, NULL, 0};
-
-    // Most cases use this to build up the output types.
-    DType *outputTypes = NULL;
+    NameDefinition nameDefinition;
 
     // First, let's check if it's a special function like Start.
     // We do this now so we don't need to search all of our includes
     // for this function.
     if (strcmp(name, "Start") == 0) {
-        out.isDefined  = true;
-        out.numOutputs = 1;
-
-        outputTypes    = (DType *)d_malloc(sizeof(DType));
-        outputTypes[0] = TYPE_EXECUTION;
-
-        out.outputTypes = (const DType *)outputTypes;
+        return &startDefinition;
     } else if (strcmp(name, "Return") == 0) {
         // For return, we need to make sure funcName is the name
         // of a function that is defined in the same sheet!
@@ -328,35 +320,11 @@ NodeTrueProperties d_semantic_get_node_properties(struct _sheet *sheet,
             AllNameDefinitions funcDefinitions =
                 d_semantic_get_name_definitions(sheet, funcName);
             if (d_semantic_select_name_definition(funcName, funcDefinitions,
-                                                  definition)) {
-                out.isDefined = true;
-
-                if (definition->sheet == sheet) {
-                    SheetFunction *func = definition->function;
-
-                    bool addExec = func->isSubroutine;
-
-                    out.numInputs = (long)(1 + addExec + func->numReturns);
-
-                    DType *inputTypes = NULL;
-
-                    if (out.numInputs > 0)
-                        inputTypes =
-                            (DType *)d_malloc(out.numInputs * sizeof(DType));
-
-                    if (inputTypes != NULL)
-                        inputTypes[0] = TYPE_NAME; // The name of the function.
-
-                    if (addExec && inputTypes != NULL)
-                        inputTypes[1] = TYPE_EXECUTION;
-
-                    if (inputTypes != NULL)
-                        for (size_t j = 0; j < func->numReturns; j++) {
-                            inputTypes[j + 1 + addExec] =
-                                func->returns[j].dataType;
-                        }
-
-                    out.inputTypes = (const DType *)inputTypes;
+                                                  &nameDefinition)) {
+                if (nameDefinition.sheet == sheet) {
+                    SheetFunction *func = nameDefinition.function;
+                    d_semantic_free_name_definitions(&funcDefinitions);
+                    return &(func->returnDefinition);
                 } else {
                     ERROR_COMPILER(sheet->filePath, lineNum, true,
                                    "Return node for function %s that is not "
@@ -369,7 +337,7 @@ NodeTrueProperties d_semantic_get_node_properties(struct _sheet *sheet,
                                funcName);
             }
 
-            d_semantic_free_name_definitions(funcDefinitions);
+            d_semantic_free_name_definitions(&funcDefinitions);
         } else {
             d_error_compiler_push("Return call but function name not found",
                                   sheet->filePath, lineNum, true);
@@ -381,37 +349,11 @@ NodeTrueProperties d_semantic_get_node_properties(struct _sheet *sheet,
             AllNameDefinitions funcDefinitions =
                 d_semantic_get_name_definitions(sheet, funcName);
             if (d_semantic_select_name_definition(funcName, funcDefinitions,
-                                                  definition)) {
-                out.isDefined = true;
-
-                if (definition->sheet == sheet) {
-                    SheetFunction *func = definition->function;
-
-                    bool addExec = func->isSubroutine;
-
-                    out.numInputs  = 1;
-                    out.numOutputs = (long)(addExec + func->numArguments);
-
-                    DType *inputTypes = (DType *)d_malloc(sizeof(DType));
-
-                    if (out.numOutputs > 0)
-                        outputTypes =
-                            (DType *)d_malloc(out.numOutputs * sizeof(DType));
-
-                    if (inputTypes != NULL)
-                        inputTypes[0] = TYPE_NAME; // The name of the function.
-
-                    if (addExec && outputTypes != NULL)
-                        outputTypes[0] = TYPE_EXECUTION;
-
-                    if (outputTypes != NULL)
-                        for (size_t j = 0; j < func->numArguments; j++) {
-                            outputTypes[j + addExec] =
-                                func->arguments[j].dataType;
-                        }
-
-                    out.inputTypes  = (const DType *)inputTypes;
-                    out.outputTypes = (const DType *)outputTypes;
+                                                  &nameDefinition)) {
+                if (nameDefinition.sheet == sheet) {
+                    SheetFunction *func = nameDefinition.function;
+                    d_semantic_free_name_definitions(&funcDefinitions);
+                    return &(func->defineDefinition);
                 } else {
                     ERROR_COMPILER(sheet->filePath, lineNum, true,
                                    "Define node for function %s that is not "
@@ -424,7 +366,7 @@ NodeTrueProperties d_semantic_get_node_properties(struct _sheet *sheet,
                                funcName);
             }
 
-            d_semantic_free_name_definitions(funcDefinitions);
+            d_semantic_free_name_definitions(&funcDefinitions);
         } else {
             d_error_compiler_push("Define call but function name not found",
                                   sheet->filePath, lineNum, true);
@@ -434,102 +376,39 @@ NodeTrueProperties d_semantic_get_node_properties(struct _sheet *sheet,
         AllNameDefinitions nameDefinitions =
             d_semantic_get_name_definitions(sheet, name);
         if (d_semantic_select_name_definition(name, nameDefinitions,
-                                              definition)) {
-            out.isDefined = true;
-
-            switch (definition->type) {
+                                              &nameDefinition)) {
+            switch (nameDefinition.type) {
                 case NAME_CORE:;
 
                     // This bit's simple, all of the info we need is in dcore.h
-                    out._mallocd = false;
-                    out.numInputs =
-                        d_core_num_input_sockets(definition->coreFunc);
-                    out.numOutputs =
-                        d_core_num_output_sockets(definition->coreFunc);
-
-                    out.inputTypes =
-                        d_core_get_input_types(definition->coreFunc);
-                    out.outputTypes =
-                        d_core_get_output_types(definition->coreFunc);
-
-                    break;
+                    d_semantic_free_name_definitions(&nameDefinitions);
+                    return d_core_get_definition(nameDefinition.coreFunc);
 
                 // Specifically, the GETTER of a variable.
                 case NAME_VARIABLE:;
 
-                    // We just need to look up the variable's data type.
-                    SheetVariable *var = definition->variable;
-
-                    out.numOutputs = 1;
-
-                    outputTypes    = (DType *)d_malloc(sizeof(DType));
-                    outputTypes[0] = var->dataType;
-
-                    out.outputTypes = (const DType *)outputTypes;
-
-                    break;
+                    // The definition of the getter will be stored in the
+                    // variable structure itself.
+                    SheetVariable *var = nameDefinition.variable;
+                    d_semantic_free_name_definitions(&nameDefinitions);
+                    return &(var->getterDefinition);
 
                 // Specifically, the calling of a function.
                 case NAME_FUNCTION:;
 
-                    SheetFunction *func = definition->function;
-                    bool addExec        = func->isSubroutine;
-
-                    out.numInputs  = (long)(addExec + func->numArguments);
-                    out.numOutputs = (long)(addExec + func->numReturns);
-
-                    outputTypes       = NULL;
-                    DType *inputTypes = NULL;
-
-                    if (out.numInputs > 0)
-                        inputTypes =
-                            (DType *)d_malloc(out.numInputs * sizeof(DType));
-
-                    if (out.numOutputs > 0)
-                        outputTypes =
-                            (DType *)d_malloc(out.numOutputs * sizeof(DType));
-
-                    if (addExec) {
-                        if (inputTypes != NULL)
-                            inputTypes[0] = TYPE_EXECUTION;
-
-                        if (outputTypes != NULL)
-                            outputTypes[0] = TYPE_EXECUTION;
-                    }
-
-                    if (inputTypes != NULL)
-                        for (size_t j = 0; j < func->numArguments; j++) {
-                            inputTypes[j + addExec] =
-                                func->arguments[j].dataType;
-                        }
-
-                    if (outputTypes != NULL)
-                        for (size_t j = 0; j < func->numReturns; j++) {
-                            outputTypes[j + addExec] =
-                                func->returns[j].dataType;
-                        }
-
-                    out.inputTypes  = (const DType *)inputTypes;
-                    out.outputTypes = (const DType *)outputTypes;
-
-                    break;
+                    SheetFunction *func = nameDefinition.function;
+                    d_semantic_free_name_definitions(&nameDefinitions);
+                    return &(func->functionDefinition);
 
                 // Specifically, the calling of a C function.
                 case NAME_CFUNCTION:;
 
-                    const CFunction *cFunction = definition->cFunction;
+                    const CFunction *cFunction = nameDefinition.cFunction;
 
                     // This one is simple, all the info we need is in the
                     // CFunction struct.
-                    out._mallocd = false;
-
-                    out.inputTypes = cFunction->inputs;
-                    out.numInputs  = (long)cFunction->numInputs;
-
-                    out.outputTypes = cFunction->outputs;
-                    out.numOutputs  = (long)cFunction->numOutputs;
-
-                    break;
+                    d_semantic_free_name_definitions(&nameDefinitions);
+                    return &(cFunction->definition);
 
                 default:
                     d_error_compiler_push("Name definition is not that of a "
@@ -540,69 +419,10 @@ NodeTrueProperties d_semantic_get_node_properties(struct _sheet *sheet,
             }
         }
 
-        d_semantic_free_name_definitions(nameDefinitions);
+        d_semantic_free_name_definitions(&nameDefinitions);
     }
 
-    return out;
-}
-
-/**
- * \fn bool d_semantic_is_execution_node(NodeTrueProperties trueProperties)
- * \brief Given the properties of a node, decide if it's an execution node or
- * not.
- *
- * \return If this theoretical node is an execution node.
- *
- * \param trueProperties The properties to query.
- */
-bool d_semantic_is_execution_node(NodeTrueProperties trueProperties) {
-    // The way we determine if it's an execution node is if it has at least one
-    // execution socket.
-
-    if (trueProperties.numInputs == -1) {
-        if (trueProperties.inputTypes[0] == TYPE_EXECUTION)
-            return true;
-    } else {
-        for (long i = 0; i < trueProperties.numInputs; i++)
-            if (trueProperties.inputTypes[i] == TYPE_EXECUTION)
-                return true;
-    }
-
-    if (trueProperties.numOutputs == -1) {
-        if (trueProperties.outputTypes[0] == TYPE_EXECUTION)
-            return true;
-    } else {
-        for (long i = 0; i < trueProperties.numOutputs; i++)
-            if (trueProperties.outputTypes[i] == TYPE_EXECUTION)
-                return true;
-    }
-
-    return false;
-}
-
-/**
- * \fn void d_semantic_free_true_properties(NodeTrueProperties trueProperties)
- * \brief Free malloc'd elements of a NodeTrueProperties object.
- *
- * \param trueProperties The object to free elements of.
- */
-void d_semantic_free_true_properties(NodeTrueProperties trueProperties) {
-    if (trueProperties._mallocd) {
-        if (trueProperties.inputTypes != NULL && trueProperties.numInputs > 0) {
-            free((void *)trueProperties.inputTypes);
-        }
-
-        if (trueProperties.outputTypes != NULL &&
-            trueProperties.numOutputs > 0) {
-            free((void *)trueProperties.outputTypes);
-        }
-    }
-
-    trueProperties.inputTypes  = NULL;
-    trueProperties.outputTypes = NULL;
-
-    trueProperties.numInputs  = 0;
-    trueProperties.numOutputs = 0;
+    return NULL;
 }
 
 /*
@@ -617,33 +437,48 @@ void d_semantic_free_true_properties(NodeTrueProperties trueProperties) {
 static void add_property_Variable(Sheet *sheet, size_t lineNum,
                                   PropertyArgumentList argList) {
     bool defaultValue = true;
+    bool description  = true;
 
     if (argList.numArgs < 2) {
         d_error_compiler_push("Variable property needs at least 2 arguments.",
                               sheet->filePath, lineNum, true);
-    } else if (argList.numArgs > 3) {
-        d_error_compiler_push("Variable property needs at most 3 arguments.",
+    } else if (argList.numArgs > 4) {
+        d_error_compiler_push("Variable property needs at most 4 arguments.",
                               sheet->filePath, lineNum, true);
     } else {
-        if (argList.numArgs == 2) {
-            d_error_compiler_push(
-                "No default value specified in Variable property",
-                sheet->filePath, lineNum, false);
-            defaultValue = false;
+        if (argList.numArgs <= 3) {
+            description = false;
+
+            if (argList.numArgs == 2) {
+                d_error_compiler_push(
+                    "No default value specified in Variable property",
+                    sheet->filePath, lineNum, false);
+                defaultValue = false;
+            }
         }
 
         PropertyArgument variableNameArg = argList.args[0];
         PropertyArgument dataTypeArg     = argList.args[1];
         PropertyArgument defaultValueArg;
-        defaultValueArg.type      = 0;
-        defaultValueArg.data.name = NULL;
+        PropertyArgument descriptionArg;
+        defaultValueArg.type        = 0;
+        defaultValueArg.data.name   = NULL;
+        descriptionArg.type         = 0;
+        descriptionArg.data.literal = NULL;
 
-        if (defaultValue)
+        if (defaultValue) {
             defaultValueArg = argList.args[2];
+        }
 
-        SheetVariable newVariable;
-        newVariable.name     = NULL;
-        newVariable.dataType = TYPE_NONE;
+        if (description) {
+            descriptionArg = argList.args[3];
+        }
+
+        SocketMeta newVariable;
+        newVariable.name                      = NULL;
+        newVariable.description               = NULL;
+        newVariable.type                      = TYPE_NONE;
+        newVariable.defaultValue.integerValue = 0;
 
         if (PROPERTY_ARGUMENT_NAME_DEFINED(variableNameArg)) {
             const char *varName = variableNameArg.data.name;
@@ -652,7 +487,8 @@ static void add_property_Variable(Sheet *sheet, size_t lineNum,
             bool alreadyDefined = false;
 
             for (size_t i = 0; i < sheet->numVariables; i++) {
-                if (strcmp(varName, sheet->variables[i].name) == 0) {
+                if (strcmp(varName, sheet->variables[i].variableMeta.name) ==
+                    0) {
                     alreadyDefined = true;
                     break;
                 }
@@ -681,7 +517,7 @@ static void add_property_Variable(Sheet *sheet, size_t lineNum,
                     d_error_compiler_push("Variable data types cannot be vague",
                                           sheet->filePath, lineNum, true);
                 } else {
-                    newVariable.dataType = finalType;
+                    newVariable.type = finalType;
                 }
             } else {
                 d_error_compiler_push(
@@ -701,7 +537,7 @@ static void add_property_Variable(Sheet *sheet, size_t lineNum,
             if (PROPERTY_ARGUMENT_LITERAL_DEFINED(defaultValueArg)) {
                 LexToken *defaultValueToken = defaultValueArg.data.literal;
 
-                switch (newVariable.dataType) {
+                switch (newVariable.type) {
                     case TYPE_INT:
                         if (defaultValueToken->type == TK_INTEGERLITERAL) {
                             newVariable.defaultValue.integerValue =
@@ -765,7 +601,7 @@ static void add_property_Variable(Sheet *sheet, size_t lineNum,
                     sheet->filePath, lineNum, true);
             }
         } else {
-            switch (newVariable.dataType) {
+            switch (newVariable.type) {
                 case TYPE_INT:
                     newVariable.defaultValue.integerValue = 0;
                     break;
@@ -787,9 +623,26 @@ static void add_property_Variable(Sheet *sheet, size_t lineNum,
             }
         }
 
+        if (description) {
+            if (PROPERTY_ARGUMENT_LITERAL_DEFINED(descriptionArg)) {
+                LexToken *descriptionToken = descriptionArg.data.literal;
+
+                if (descriptionToken->type == TYPE_STRING) {
+                    newVariable.description =
+                        descriptionToken->data.stringValue;
+                } else {
+                    d_error_compiler_push("Description is not a literal string",
+                                          sheet->filePath, lineNum, true);
+                }
+            } else {
+                d_error_compiler_push("Description is not a literal string",
+                                      sheet->filePath, lineNum, true);
+            }
+        }
+
         // We've gotten the variable, now we add it to the sheet if everything
         // went ok.
-        if (newVariable.name != NULL && newVariable.dataType != TYPE_NONE) {
+        if (newVariable.name != NULL && newVariable.type != TYPE_NONE) {
             d_sheet_add_variable(sheet, newVariable);
         }
     }
@@ -843,13 +696,15 @@ static void add_property_Function(Sheet *sheet, size_t lineNum,
             for (size_t i = 0; i < sheet->numFunctions; i++) {
                 SheetFunction func = sheet->functions[i];
 
-                if (strcmp(func.name, name) == 0) {
+                if (strcmp(func.functionDefinition.name, name) == 0) {
                     ERROR_COMPILER(sheet->filePath, lineNum, true,
                                    "Function %s is already defined.", name);
                     return;
                 }
             }
 
+            // TODO: Build up NodeDefinition, then after we have scanned
+            // properties, add it to the sheet.
             d_sheet_create_function(sheet, name, false);
         } else {
             d_error_compiler_push("Function property argument is not a name",
@@ -873,13 +728,15 @@ static void add_property_Subroutine(Sheet *sheet, size_t lineNum,
             for (size_t i = 0; i < sheet->numFunctions; i++) {
                 SheetFunction func = sheet->functions[i];
 
-                if (strcmp(func.name, name) == 0) {
+                if (strcmp(func.functionDefinition.name, name) == 0) {
                     ERROR_COMPILER(sheet->filePath, lineNum, true,
                                    "Function %s is already defined.", name);
                     return;
                 }
             }
 
+            // TODO: Build up NodeDefinition, then after we have scanned
+            // properties, add it to the sheet.
             d_sheet_create_function(sheet, name, true);
         } else {
             d_error_compiler_push("Subroutine property argument is not a name",
@@ -911,105 +768,147 @@ static void add_property_FunctionInput(Sheet *sheet, size_t lineNum,
     defaultArg.type      = 0;
     defaultArg.data.name = NULL;
 
+    PropertyArgument descriptionArg;
+    descriptionArg.type         = 0;
+    descriptionArg.data.literal = NULL;
+
     const char *argName = NULL;
     LexData defaultValue;
     defaultValue.integerValue = 0;
 
-    if (argList.numArgs < 2) {
+    bool default     = true;
+    bool description = true;
+
+    if (argList.numArgs < 3) {
         d_error_compiler_push(
-            "FunctionInput property needs at least 2 arguments",
+            "FunctionInput property needs at least 3 arguments",
             sheet->filePath, lineNum, true);
-    } else if (argList.numArgs > 4) {
+    } else if (argList.numArgs > 5) {
         d_error_compiler_push(
-            "FunctionInput property needs at most 4 arguments", sheet->filePath,
+            "FunctionInput property needs at most 5 arguments", sheet->filePath,
             lineNum, true);
     } else {
-        funcArg = argList.args[0];
+        if (argList.numArgs <= 4) {
+            description = false;
 
-        if (argList.numArgs == 2) {
-            typeArg = argList.args[1];
-        } else {
-            nameArg = argList.args[1];
-            typeArg = argList.args[2];
-
-            if (argList.numArgs == 4) {
-                defaultArg = argList.args[3];
+            if (argList.numArgs == 3) {
+                d_error_compiler_push(
+                    "No default value specified in Variable property",
+                    sheet->filePath, lineNum, false);
+                default = false;
             }
         }
 
+        funcArg = argList.args[0];
+        nameArg = argList.args[1];
+        typeArg = argList.args[2];
+
+        if (default) {
+            defaultArg = argList.args[3];
+        }
+
+        if (description) {
+            descriptionArg = argList.args[4];
+        }
+
+        char *funcName = NULL;
+        SocketMeta newSocket;
+        newSocket.name                      = NULL;
+        newSocket.description               = NULL;
+        newSocket.type                      = TYPE_NONE;
+        newSocket.defaultValue.integerValue = 0;
+
         if (PROPERTY_ARGUMENT_NAME_DEFINED(funcArg)) {
-            const char *funcName = funcArg.data.name;
-
-            if (PROPERTY_ARGUMENT_TYPE_DEFINED(typeArg) &&
-                PROPERTY_ARGUMENT_TYPE_IS_VAR(typeArg)) {
-                DType argType = typeArg.data.dataType;
-
-                // TODO: Add support for vague data types in functions.
-                if (d_type_is_vague(argType)) {
-                    d_error_compiler_push("Vague data types in functions is "
-                                          "not currently supported",
-                                          sheet->filePath, lineNum, true);
-                }
-
-                if (PROPERTY_ARGUMENT_NAME_DEFINED(nameArg)) {
-                    argName = nameArg.data.name;
-                } else if (argList.numArgs >= 3) {
-                    ERROR_COMPILER(sheet->filePath, lineNum, false,
-                                   "FunctionInput name argument (argument "
-                                   "2/%zu) is not a name, ignoring",
-                                   argList.numArgs);
-                }
-
-                if (defaultArg.type == STX_literal) {
-                    LexToken *literal   = defaultArg.data.literal;
-                    DType typeOfLiteral = TYPE_FROM_LEX_LITERAL(literal->type);
-
-                    if ((typeOfLiteral & argType) != TYPE_NONE) {
-                        // The data types match, we can set the default value.
-                        defaultValue = literal->data;
-                    } else if (typeOfLiteral == TYPE_INT &&
-                               argType == TYPE_FLOAT) {
-                        // We can easily convert an integer into a float.
-                        literal->data.floatValue =
-                            (dfloat)literal->data.integerValue;
-                        defaultValue = literal->data;
-                    } else {
-                        ERROR_COMPILER(
-                            sheet->filePath, lineNum, false,
-                            "FunctionInput default value argument data type %s "
-                            "does not match input data type %s",
-                            d_type_name(typeOfLiteral), d_type_name(argType));
-                    }
-                } else if (argList.numArgs == 4) {
-                    d_error_compiler_push(
-                        "FunctionInput default value argument (argument 4/4) "
-                        "is not a literal, ignoring",
-                        sheet->filePath, lineNum, false);
-                }
-
-                // Now we've organised the arguments, we can add the argument!
-                d_sheet_function_add_argument(sheet, funcName, argName, argType,
-                                              defaultValue);
-            } else {
-                d_error_compiler_push(
-                    "FunctionInput data type argument is invalid",
-                    sheet->filePath, lineNum, true);
-                ERROR_COMPILER(sheet->filePath, lineNum, true,
-                               "FunctionInput data type argument (argument "
-                               "%d/%zu) is invalid",
-                               (argList.numArgs == 2) ? 2 : 3, argList.numArgs);
-            }
-
-            // Free this instance of the function name, since it *should* have
-            // already been malloc'd elsewhere, and that version will go into
-            // the SheetFunction struct.
-            free((char *)funcName);
+            funcName = funcArg.data.name;
         } else {
             ERROR_COMPILER(sheet->filePath, lineNum, true,
                            "FunctionInput function argument (argument 1/%zu) "
                            "is not a name",
                            argList.numArgs);
         }
+
+        if (PROPERTY_ARGUMENT_NAME_DEFINED(nameArg)) {
+            newSocket.name = nameArg.data.name;
+        } else {
+            ERROR_COMPILER(sheet->filePath, lineNum, false,
+                           "FunctionInput name argument (argument "
+                           "2/%zu) is not a name, ignoring",
+                           argList.numArgs);
+        }
+
+        if (PROPERTY_ARGUMENT_TYPE_DEFINED(typeArg) &&
+            PROPERTY_ARGUMENT_TYPE_IS_VAR(typeArg)) {
+            newSocket.type = typeArg.data.dataType;
+
+            // TODO: Add support for vague data types in functions.
+            if (d_type_is_vague(newSocket.type)) {
+                d_error_compiler_push("Vague data types in functions is "
+                                      "not currently supported",
+                                      sheet->filePath, lineNum, true);
+            }
+        } else {
+            ERROR_COMPILER(sheet->filePath, lineNum, true,
+                           "FunctionInput data type argument (argument "
+                           "3/%zu) is invalid",
+                           argList.numArgs);
+        }
+
+        if (default) {
+            if (PROPERTY_ARGUMENT_LITERAL_DEFINED(defaultArg)) {
+                LexToken *literal   = defaultArg.data.literal;
+                DType typeOfLiteral = TYPE_FROM_LEX_LITERAL(literal->type);
+
+                if ((typeOfLiteral & newSocket.type) != TYPE_NONE) {
+                    // The data types match, we can set the default
+                    // value.
+                    defaultValue = literal->data;
+                } else if (typeOfLiteral == TYPE_INT &&
+                           newSocket.type == TYPE_FLOAT) {
+                    // We can easily convert an integer into a float.
+                    literal->data.floatValue =
+                        (dfloat)literal->data.integerValue;
+                    defaultValue = literal->data;
+                } else {
+                    ERROR_COMPILER(sheet->filePath, lineNum, false,
+                                   "FunctionInput default value "
+                                   "argument data type %s "
+                                   "does not match input data type %s",
+                                   d_type_name(typeOfLiteral),
+                                   d_type_name(newSocket.type));
+                }
+            } else {
+                ERROR_COMPILER(sheet->filePath, lineNum, true,
+                               "FunctionInput default value argument "
+                               "(argument 4/%zu) is not a literal",
+                               argList.numArgs);
+            }
+        }
+
+        if (description) {
+            if (PROPERTY_ARGUMENT_LITERAL_DEFINED(descriptionArg)) {
+                LexToken *descriptionToken = descriptionArg.data.literal;
+
+                if (descriptionToken->type == TYPE_STRING) {
+                    newSocket.description =
+                        descriptionToken->data.stringValue;
+                } else {
+                    d_error_compiler_push("Description is not a literal string",
+                                          sheet->filePath, lineNum, true);
+                }
+            } else {
+                d_error_compiler_push("Description is not a literal string",
+                                      sheet->filePath, lineNum, true);
+            }
+        }
+
+        // Now we've organised the arguments, we can add the argument!
+        d_sheet_function_add_argument(sheet, funcName, argName, argType,
+                                      defaultValue);
+
+        // Free this instance of the function name, since it *should* have
+        // already been malloc'd elsewhere, and that version will go into
+        // the SheetFunction struct.
+        free((char *)funcName);
     }
 }
 

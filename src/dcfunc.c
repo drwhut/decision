@@ -89,17 +89,15 @@ void d_create_c_function(DecisionCFunction function, const char *name,
     definition.infiniteInputs = false;
 
     // Add the function to the global list.
-    CFunction newFunction;
-    newFunction.function   = function;
-    newFunction.definition = definition;
+    CFunction newFunction = {function, definition};
 
     if (numCFunctions == 0) {
         cFunctionList    = (CFunction *)d_malloc(sizeof(CFunction));
-        cFunctionList[0] = newFunction;
+        memcpy(cFunctionList, &newFunction, sizeof(CFunction));
     } else {
         cFunctionList = (CFunction *)d_realloc(
             cFunctionList, (numCFunctions + 1) * sizeof(CFunction));
-        cFunctionList[numCFunctions] = newFunction;
+        memcpy(cFunctionList + numCFunctions, &newFunction, sizeof(CFunction));
     }
 
     numCFunctions++;

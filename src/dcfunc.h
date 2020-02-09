@@ -51,7 +51,7 @@ typedef void (*DecisionCFunction)(struct _DVM *vm);
  */
 typedef struct _cFunction {
     DecisionCFunction function;
-    NodeDefinition definition;
+    const NodeDefinition definition;
 } CFunction;
 
 /*

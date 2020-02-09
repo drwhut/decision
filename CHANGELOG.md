@@ -5,8 +5,8 @@ versions of the compiler.
 * Removed multi-line comments.
 * Added single-line comments: Anything after and including the `>` symbol on
 the same line will be ignored by the compiler.
-* All nodes and sockets now have both names and descriptions which are
-accessible via the C API.
+* All nodes, sockets, variables, functions and subroutines now have both names
+and descriptions which are accessible via the C API.
 * Nodes now reference their definitions, which reduces data redundancy.
 * Changed how sheets store wires in memory.
 * Reimplemented `Length` to use the C function `strlen`.
