@@ -25,36 +25,19 @@
 #define DSEMANTIC_H
 
 #include "dcfg.h"
+#include "dcfunc.h"
 #include "dcore.h"
 #include "dlex.h"
+#include "dsheet.h"
 #include "dsyntax.h"
 #include "dtype.h"
 #include <stdbool.h>
-
 
 #include <stddef.h>
 
 /*
 === HEADER DEFINITIONS ====================================
 */
-
-/* Forward declaration of the Sheet struct from dsheet.h */
-struct _sheet;
-
-/* Forward declaration of the SheetNode struct from dsheet.h */
-struct _sheetNode;
-
-/* Forward declaration of the SheetSocket struct from dsheet.h */
-struct _sheetSocket;
-
-/* Forward declaration of the SheetVariable struct from dsheet.h */
-struct _sheetVariable;
-
-/* Forward declaration of the SheetFunction struct from dsheet.h */
-struct _sheetFunction;
-
-/* Forward declaration of the CFunction struct from dcfunc.h */
-struct _cFunction;
 
 /**
  * \struct _lineSocketPair
@@ -64,7 +47,7 @@ struct _cFunction;
  */
 typedef struct _lineSocketPair {
     dint identifier;
-    struct _sheetSocket *socket;
+    NodeSocket socket;
 } LineSocketPair;
 
 /**
@@ -87,12 +70,12 @@ typedef enum _nameType {
  * \typedef struct _nameDefinition NameDefinition
  */
 typedef struct _nameDefinition {
-    struct _sheet *sheet;
+    Sheet *sheet;
     NameType type;
     CoreFunction coreFunc;
-    struct _sheetVariable *variable;
-    struct _sheetFunction *function;
-    struct _cFunction *cFunction;
+    SheetVariable *variable;
+    SheetFunction *function;
+    CFunction *cFunction;
 } NameDefinition;
 
 /**
@@ -105,24 +88,6 @@ typedef struct _allNameDefinitions {
     NameDefinition *definitions;
     size_t numDefinitions;
 } AllNameDefinitions;
-
-/**
- * \struct _nodeTrueProperties
- * \brief A struct to describe a node's *true* properties.
- *
- * \typedef struct _nodeTrueProperties NodeTrueProperties
- */
-typedef struct _nodeTrueProperties {
-    bool isDefined;
-    bool needFuncName;
-    bool _mallocd;
-
-    const DType *inputTypes;
-    long numInputs;
-
-    const DType *outputTypes;
-    long numOutputs;
-} NodeTrueProperties;
 
 /*
 === FUNCTIONS =============================================
@@ -142,7 +107,7 @@ typedef struct _nodeTrueProperties {
  * \param name The name to query.
  */
 DECISION_API AllNameDefinitions
-d_semantic_get_name_definitions(struct _sheet *sheet, const char *name);
+d_semantic_get_name_definitions(Sheet *sheet, const char *name);
 
 /**
  * \fn bool d_semantic_select_name_definition(const char *name,
@@ -201,25 +166,23 @@ DECISION_API NodeTrueProperties d_semantic_get_node_properties(
     const char *funcName, NameDefinition *definition);
 
 /**
- * \fn bool d_semantic_is_execution_node(NodeTrueProperties trueProperties)
- * \brief Given the properties of a node, decide if it's an execution node or
- * not.
+ * \fn NodeDefinition *d_semantic_get_node_definition(Sheet *sheet,
+ *                                                    const char *name,
+ *                                                    size_t lineNum,
+ *                                                    const char *funcName)
+ * \brief Get a node's definition from it's name.
  *
- * \return If this theoretical node is an execution node.
+ * \return The node's definition.
  *
- * \param trueProperties The properties to query.
+ * \param sheet The sheet the node is a part of.
+ * \param name The name of the node.
+ * \param lineNum In case we error, say where we errored from.
+ * \param funcName If the name is Define or Return, we need the function name
+ * so we can get the correct sockets.
  */
-DECISION_API bool
-d_semantic_is_execution_node(NodeTrueProperties trueProperties);
-
-/**
- * \fn void d_semantic_free_true_properties(NodeTrueProperties trueProperties)
- * \brief Free malloc'd elements of a NodeTrueProperties object.
- *
- * \param trueProperties The object to free elements of.
- */
-DECISION_API void
-d_semantic_free_true_properties(NodeTrueProperties trueProperties);
+DECISION_API NodeDefinition *
+d_semantic_get_node_definition(Sheet *sheet, const char *name, size_t lineNum,
+                               const char *funcName);
 
 /**
  * \fn void d_semantic_scan_properties(Sheet *sheet, SyntaxNode *root)
@@ -228,8 +191,7 @@ d_semantic_free_true_properties(NodeTrueProperties trueProperties);
  * \param sheet A pointer to the sheet where we want to set the properties.
  * \param root The root node of the syntax tree.
  */
-DECISION_API void d_semantic_scan_properties(struct _sheet *sheet,
-                                             struct _syntaxNode *root);
+DECISION_API void d_semantic_scan_properties(Sheet *sheet, SyntaxNode *root);
 
 /**
  * \fn void d_semantic_scan_nodes(Sheet *sheet, SyntaxNode *root)
@@ -240,8 +202,7 @@ DECISION_API void d_semantic_scan_properties(struct _sheet *sheet,
  * \param sheet A pointer to the sheet where we want to set the properties.
  * \param root The root node of the syntax tree.
  */
-DECISION_API void d_semantic_scan_nodes(struct _sheet *sheet,
-                                        struct _syntaxNode *root);
+DECISION_API void d_semantic_scan_nodes(Sheet *sheet, SyntaxNode *root);
 
 /**
  * \fn void d_semantic_reduce_types(Sheet *sheet)
@@ -253,7 +214,7 @@ DECISION_API void d_semantic_scan_nodes(struct _sheet *sheet,
  *
  * \param sheet The sheet to reduce the types on.
  */
-DECISION_API void d_semantic_reduce_types(struct _sheet *sheet);
+DECISION_API void d_semantic_reduce_types(Sheet *sheet);
 
 /**
  * \fn void d_semantic_detect_loops(Sheet *sheet)
@@ -269,7 +230,7 @@ DECISION_API void d_semantic_reduce_types(struct _sheet *sheet);
  *
  * \param sheet The connected sheet to check for loops.
  */
-DECISION_API void d_semantic_detect_loops(struct _sheet *sheet);
+DECISION_API void d_semantic_detect_loops(Sheet *sheet);
 
 /**
  * \fn void d_semantic_scan(Sheet *sheet, SyntaxNode *root)
@@ -278,7 +239,6 @@ DECISION_API void d_semantic_detect_loops(struct _sheet *sheet);
  * \param sheet The sheet to put everything into.
  * \param root The *valid* syntax tree to scan everything from.
  */
-DECISION_API void d_semantic_scan(struct _sheet *sheet,
-                                  struct _syntaxNode *root);
+DECISION_API void d_semantic_scan(Sheet *sheet, SyntaxNode *root);
 
 #endif // DSEMANTIC_H
