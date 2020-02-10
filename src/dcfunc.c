@@ -196,7 +196,7 @@ void d_free_c_functions() {
         CFunction func     = cFunctionList[i];
         NodeDefinition def = func.definition;
 
-        d_definition_free(&def);
+        d_definition_free(def);
     }
 
     free(cFunctionList);

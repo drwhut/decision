@@ -680,18 +680,22 @@ const char *d_asm_generate_object(Sheet *sheet, size_t *size) {
     size_t cLen = 0;
 
     // We only need to put C functions that we use in this list.
+    /*
     for (size_t metaIndex = 0; metaIndex < sheet->_link.size; metaIndex++) {
         LinkMeta meta = sheet->_link.list[metaIndex];
 
         if (meta.type == LINK_CFUNCTION) {
             CFunction *cFunc = (CFunction *)meta.meta;
+            const NodeDefinition cDef = cFunc->definition;
 
             // The name of the C function, along with it's inputs and outputs,
             // which are TYPE_NONE terminated.
+            cLen += strlen(cDef.name) + 
             cLen += strlen(cFunc->name) + 1 +
                     (cFunc->numInputs + cFunc->numOutputs + 2) * sizeof(DType);
         }
     }
+    */
 
     len += cLen;
 
@@ -921,6 +925,7 @@ const char *d_asm_generate_object(Sheet *sheet, size_t *size) {
     ptr += sizeof(duint);
 
     // .c section.
+    /*
     for (size_t metaIndex = 0; metaIndex < sheet->_link.size; metaIndex++) {
         LinkMeta meta = sheet->_link.list[metaIndex];
 
@@ -951,6 +956,7 @@ const char *d_asm_generate_object(Sheet *sheet, size_t *size) {
             ptr += sizeof(DType);
         }
     }
+    */
 
     // '.'
     *ptr = '.';
@@ -1245,7 +1251,7 @@ Sheet *d_asm_load_object(const char *obj, size_t size, const char *filePath) {
             ptr += sizeof(duint);
 
             char *startOfData = ptr;
-
+            /*
             while ((size_t)(ptr - startOfData) < sizeOfSection) {
                 // The name of the function.
                 char *funcName = ptr;
@@ -1351,6 +1357,7 @@ Sheet *d_asm_load_object(const char *obj, size_t size, const char *filePath) {
                                    funcName);
                 }
             }
+            */
         } else if (strncmp(ptr, ".\0", 2) == 0) {
             // We've reached the end, stop parsing.
             break;

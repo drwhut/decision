@@ -293,7 +293,7 @@ bool d_run_function(DVM *vm, Sheet *sheet, const char *funcName) {
                            sheet->filePath, funcName);
                 }
 
-                d_semantic_free_name_definitions(nameDefs);
+                d_semantic_free_name_definitions(&nameDefs);
             } else {
                 // We know where it lives, so we can run it!
                 return d_vm_run(vm, funcPtr);

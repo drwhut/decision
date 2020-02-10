@@ -27,6 +27,7 @@
 
 #include "dcfg.h"
 #include "dlink.h"
+#include "dsheet.h"
 #include "dvm.h"
 #include <stdbool.h>
 
@@ -35,24 +36,6 @@
 /*
 === HEADER DEFINITIONS ====================================
 */
-
-/* Forward declaration of the Sheet struct from dsheet.h */
-struct _sheet;
-
-/* Forward declaration of the SheetNode struct from dsheet.h */
-struct _sheetNode;
-
-/* Forward declaration of the SheetSocket struct from dsheet.h */
-struct _sheetSocket;
-
-/* Forward declaration of the SheetVariable struct from dsheet.h */
-struct _sheetVariable;
-
-/* Forward declaration of the SheetFunction struct from dsheet.h */
-struct _sheetFunction;
-
-/* Forward declaration of the InstructionToLink struct from dsheet.h */
-struct _insToLink;
 
 /**
  * \struct _bcode
@@ -77,6 +60,8 @@ typedef struct _bcode {
  * \typedef struct _buildContext BuildContext
  */
 typedef struct _buildContext {
+    Sheet *sheet; ///< The sheet we're building for.
+
     int stackTop; ///< Where the stack pointer is relative to the base pointer.
 
     LinkMetaList linkMetaList; ///< A list of link metadata.
@@ -255,7 +240,7 @@ DECISION_API size_t d_allocate_string_literal_in_data(BuildContext *context,
                                                       char *stringLiteral);
 
 /**
- * \fn void d_allocate_variable(BuildContext *context, SheetVariable *variable,
+ * \fn void d_allocate_variable(BuildContext *context, SheetVariable variable,
  *                              size_t size, size_t indexInLinkMeta)
  * \brief Allocate memory from the data section to store a variable.
  *
@@ -266,57 +251,56 @@ DECISION_API size_t d_allocate_string_literal_in_data(BuildContext *context,
  * build context.
  */
 DECISION_API void d_allocate_variable(BuildContext *context,
-                                      struct _sheetVariable *variable,
-                                      size_t size, size_t indexInLinkMeta);
+                                      SheetVariable variable, size_t size,
+                                      size_t indexInLinkMeta);
 
 /*
 === GENERATOR FUNCTIONS ===================================
 */
 
 /**
- * \fn BCode d_push_literal(SheetSocket *socket, BuildContext *context,
+ * \fn BCode d_push_literal(BuildContext *context, NodeSocket socket
  *                          bool cvtFloat)
  * \brief Generate bytecode to push a literal onto the stack.
  *
  * \return Bytecode to push the socket's literal onto the stack.
  *
- * \param socket The socket of the literal to push onto the stack.
  * \param context The context needed to build the bytecode.
+ * \param socket The socket of the literal to push onto the stack.
  * \param cvtFloat Converts the literal to a float if possible.
  */
-DECISION_API BCode d_push_literal(struct _sheetSocket *socket,
-                                  BuildContext *context, bool cvtFloat);
+DECISION_API BCode d_push_literal(BuildContext *context, NodeSocket socket,
+                                  bool cvtFloat);
 
 /**
- * \fn BCode d_push_variable(SheetNode *node, BuildContext *context)
+ * \fn BCode d_push_variable(BuildContext *context, size_t nodeIndex)
  * \brief Given a node that is the getter of a variable, generate bytecode to
  * push the value of the variable onto the stack.
  *
  * \return Bytecode to push the variable's value onto the stack.
  *
- * \param node The node that is the getter of a variable.
  * \param context The context needed to build the bytecode.
+ * \param nodeIndex The index of the node that is the getter of a variable.
  */
-DECISION_API BCode d_push_variable(struct _sheetNode *node,
-                                   BuildContext *context);
+DECISION_API BCode d_push_variable(BuildContext *context, size_t nodeIndex);
 
 /**
- * \fn BCode d_push_input(SheetSocket *socket, BuildContext *context,
+ * \fn BCode d_push_input(BuildContext *context, NodeSocket socket,
  *                        bool forceFloat)
  * \brief Given an input socket, generate bytecode to push the value of the
  * input to the top of the stack.
  *
  * \return Bytecode to push the input's value onto the stack.
  *
- * \param socket The input socket to get the value for.
  * \param context The context needed to build the bytecode.
+ * \param socket The input socket to get the value for.
  * \param forceFloat Force integers to be converted to floats.
  */
-DECISION_API BCode d_push_input(struct _sheetSocket *socket,
-                                BuildContext *context, bool forceFloat);
+DECISION_API BCode d_push_input(BuildContext *context, NodeSocket socket,
+                                bool forceFloat);
 
 /**
- * \fn BCode d_push_node_inputs(SheetNode *node, BuildContext *context,
+ * \fn BCode d_push_node_inputs(BuildContext *context, size_t nodeIndex,
  *                              bool order, bool ignoreLiterals,
  *                              bool forceFloat)
  * \brief Given a node, generate bytecode to push the values of the
@@ -324,149 +308,146 @@ DECISION_API BCode d_push_input(struct _sheetSocket *socket,
  *
  * \return Bytecode to push all input's values onto the stack.
  *
- * \param node The node whose input sockets to generate bytecode for.
  * \param context The context needed to generate the bytecode.
+ * \param nodeIndex The index of the node whose input sockets to generate
+ * bytecode for.
  * \param order If true, the inputs are pushed in order, such that the last
  * input is at the top. If false, the inputs are pushed in reverse order, such
  * that the first input is at the top.
  * \param ignoreLiterals Do not generate bytecode for non-float literal inputs.
  * \param forceFloat Force integers to be converted to floats.
  */
-DECISION_API BCode d_push_node_inputs(struct _sheetNode *node,
-                                      BuildContext *context, bool order,
-                                      bool ignoreLiterals, bool forceFloat);
+DECISION_API BCode d_push_node_inputs(BuildContext *context, size_t nodeIndex,
+                                      bool order, bool ignoreLiterals,
+                                      bool forceFloat);
 
 /**
- * \fn BCode d_generate_operator(SheetNode *node, BuildContext *context,
+ * \fn BCode d_generate_operator(BuildContext *context, size_t nodeIndex,
  *                               DIns opcode, DIns fopcode, DIns fiopcode,
  *                               bool forceFloat)
  * \brief Given an operator node, generate the bytecode for it.
  *
  * \return Bytecode to get the output of an operator.
  *
- * \param node The operator node to get the result for.
  * \param context The context needed to generate the bytecode.
+ * \param nodeIndex The index of the operator node to get the result for.
  * \param opcode The operator instruction.
  * \param fopcode The float variant of the instruction.
  * \param fiopcode The full immediate variant of the instruction.
  * \param forceFloat Should the output always be a float?
  */
-DECISION_API BCode d_generate_operator(struct _sheetNode *node,
-                                       BuildContext *context, DIns opcode,
-                                       DIns fopcode, DIns fiopcode,
+DECISION_API BCode d_generate_operator(BuildContext *context, size_t nodeIndex,
+                                       DIns opcode, DIns fopcode, DIns fiopcode,
                                        bool forceFloat);
 
 /**
- * \fn BCode d_generate_comparator(SheetNode *node, BuildContext *context,
+ * \fn BCode d_generate_comparator(BuildContext *context, size_t nodeIndex,
  *                                 DIns opcode, DIns fopcode,
  *                                 fimmediate_t strCmpArg, bool notAfter)
  * \brief Given a comparator node, generate the bytecode for it.
  *
  * \return Bytecode to get the output of a comparator.
  *
- * \param node The comparator node to get the result for.
  * \param context The context needed to generate the bytecode.
+ * \param nodeIndex The index of the comparator node to get the result for.
  * \param opcode The comparator instruction.
  * \param fopcode The float variant of the instruction.
  * \param strCmpArg The SYS_STRCMP argument to use to compare strings.
  * \param notAfter Do we invert the answer at the end?
  */
-DECISION_API BCode d_generate_comparator(struct _sheetNode *node,
-                                         BuildContext *context, DIns opcode,
+DECISION_API BCode d_generate_comparator(BuildContext *context,
+                                         size_t nodeIndex, DIns opcode,
                                          DIns fopcode, fimmediate_t strCmpArg,
                                          bool notAfter);
 
 /**
- * \fn BCode d_generate_call(SheetNode *node, BuildContext *context)
+ * \fn BCode d_generate_call(BuildContext *context, size_t nodeIndex)
  * \brief Given a node that calls a function or subroutine, generate the
  * bytecode to call it.
  *
  * \return Bytecode to call the function or subroutine.
  *
- * \param node The node to generate the bytecode for.
  * \param context The context needed to generate the bytecode.
+ * \param nodeIndex The index of the node to generate the bytecode for.
  */
-DECISION_API BCode d_generate_call(struct _sheetNode *node,
-                                   BuildContext *context);
+DECISION_API BCode d_generate_call(BuildContext *context, size_t nodeIndex);
 
 /**
- * \fn BCode d_push_argument(SheetSocket *socket, BuildContext *context)
+ * \fn BCode d_push_argument(BuildContext *context, NodeSocket socket)
  * \brief Given an output socket that is a function/subroutine argument,
  * generate bytecode to push the value of the argument to the top of the stack.
  *
  * \return Bytecode to push the argument.
  *
- * \param socket The output socket representing the function argument.
  * \param context The context needed to generate the bytecode.
+ * \param socket The output socket representing the function argument.
  */
-DECISION_API BCode d_push_argument(struct _sheetSocket *socket,
-                                   BuildContext *context);
+DECISION_API BCode d_push_argument(BuildContext *context, NodeSocket socket);
 
 /**
- * \fn BCode d_generate_return(SheetNode *returnNode, BuildContext *context)
+ * \fn BCode d_generate_return(BuildContext *context, SheetNode *returnNode)
  * \brief Given a Return node, generate the bytecode to return from the
  * function/subroutine with the return values.
  *
  * \return Bytecode to return from the function/subroutine.
  *
- * \param returnNode The Return node to return with.
  * \param context The context needed to generate the bytecode.
+ * \param returnNode The Return node to return with.
  */
-DECISION_API BCode d_generate_return(struct _sheetNode *returnNode,
-                                     BuildContext *context);
+DECISION_API BCode d_generate_return(BuildContext *context,
+                                     size_t returnNodeIndex);
 
 /**
- * \fn BCode d_generate_nonexecution_node(SheetNode *node,
- *                                        BuildContext *context)
+ * \fn BCode d_generate_nonexecution_node(BuildContext *context,
+ *                                        size_t nodeIndex)
  * \brief Given a non-execution node, generate the bytecode to get the output.
  *
  * \return Bytecode to run the nonexecution node's function.
  *
- * \param node The non-execution node.
  * \param context The context needed to generate the bytecode.
+ * \param nodeIndex The index of the non-execution node.
  */
-DECISION_API BCode d_generate_nonexecution_node(struct _sheetNode *node,
-                                                BuildContext *context);
+DECISION_API BCode d_generate_nonexecution_node(BuildContext *context,
+                                                size_t nodeIndex);
 
 /**
- * \fn BCode d_generate_execution_node(SheetNode *node, BuildContext* context,
+ * \fn BCode d_generate_execution_node(BuildContext* context, size_t nodeIndex,
  *                                     bool retAtEnd)
  * \brief Given an execution node, generate the bytecode to get the output.
  *
  * \return Bytecode to run the execution node's subroutine.
  *
- * \param node The execution node.
  * \param context The context needed to generate the bytecode.
+ * \param nodeIndex The execution node.
  * \param retAtEnd Should the bytecode return at the end?
  */
-DECISION_API BCode d_generate_execution_node(struct _sheetNode *node,
-                                             BuildContext *context,
-                                             bool retAtEnd);
+DECISION_API BCode d_generate_execution_node(BuildContext *context,
+                                             size_t nodeIndex, bool retAtEnd);
 
 /**
- * \fn BCode d_generate_start(SheetNode *startNode, BuildContext *context)
+ * \fn BCode d_generate_start(BuildContext *context, SheetNode *startNode)
  * \brief Given a Start node, generate the bytecode for the sequence starting
  * from this node.
  *
  * \return The bytecode generated for the Start function.
  *
- * \param startNode A pointer to the Start node.
  * \param context The context needed to generate the bytecode.
+ * \param startNode A pointer to the Start node.
  */
-DECISION_API BCode d_generate_start(struct _sheetNode *startNode,
-                                    BuildContext *context);
+DECISION_API BCode d_generate_start(BuildContext *context,
+                                    size_t startNodeIndex);
 
 /**
- * \fn BCode d_generate_function(SheetFunction *func, BuildContext *context)
+ * \fn BCode d_generate_function(BuildContext *context, SheetFunction *func)
  * \brief Given a function, generate the bytecode for it.
  *
  * \return The bytecode generated for the function.
  *
- * \param func The function to generate the bytecode for.
  * \param context The context needed to generate the bytecode.
+ * \param func The function to generate the bytecode for.
  */
-DECISION_API BCode d_generate_function(struct _sheetFunction *func,
-                                       BuildContext *context);
+DECISION_API BCode d_generate_function(BuildContext *context,
+                                       SheetFunction func);
 
 /**
  * \fn void d_codegen_compile(Sheet *sheet)
@@ -475,6 +456,6 @@ DECISION_API BCode d_generate_function(struct _sheetFunction *func,
  *
  * \param sheet The sheet to generate the bytecode for.
  */
-DECISION_API void d_codegen_compile(struct _sheet *sheet);
+DECISION_API void d_codegen_compile(Sheet *sheet);
 
 #endif // DCODEGEN_H
