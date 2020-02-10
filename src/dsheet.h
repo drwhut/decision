@@ -205,8 +205,9 @@ typedef struct _sheet {
                       ///< so binary search can be performed on it.
     size_t numWires;
 
-    size_t startNodeIndex;
+    int startNodeIndex; ///< If this value is `-1`, then no Start node exists.
     size_t numStarts;
+
     size_t _main; ///< Points to the index of the first instruction of Start,
                   ///< *not* the `RET` instruction one before.
 

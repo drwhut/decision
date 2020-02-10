@@ -240,7 +240,7 @@ DECISION_API size_t d_allocate_string_literal_in_data(BuildContext *context,
                                                       char *stringLiteral);
 
 /**
- * \fn void d_allocate_variable(BuildContext *context, SheetVariable variable,
+ * \fn void d_allocate_variable(BuildContext *context, SheetVariable *variable,
  *                              size_t size, size_t indexInLinkMeta)
  * \brief Allocate memory from the data section to store a variable.
  *
@@ -251,7 +251,7 @@ DECISION_API size_t d_allocate_string_literal_in_data(BuildContext *context,
  * build context.
  */
 DECISION_API void d_allocate_variable(BuildContext *context,
-                                      SheetVariable variable, size_t size,
+                                      SheetVariable *variable, size_t size,
                                       size_t indexInLinkMeta);
 
 /*
@@ -447,7 +447,7 @@ DECISION_API BCode d_generate_start(BuildContext *context,
  * \param func The function to generate the bytecode for.
  */
 DECISION_API BCode d_generate_function(BuildContext *context,
-                                       SheetFunction func);
+                                       SheetFunction *func);
 
 /**
  * \fn void d_codegen_compile(Sheet *sheet)

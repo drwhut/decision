@@ -903,7 +903,7 @@ Sheet *d_sheet_create(const char *filePath) {
     sheet->numNodes         = 0;
     sheet->wires            = NULL;
     sheet->numWires         = 0;
-    sheet->startNodeIndex   = 0;
+    sheet->startNodeIndex   = -1;
     sheet->numStarts        = 0;
     sheet->_main            = 0;
     sheet->_text            = NULL;

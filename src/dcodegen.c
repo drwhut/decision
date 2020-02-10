@@ -26,7 +26,6 @@
 #include "dlink.h"
 #include "dmalloc.h"
 #include "dsemantic.h"
-#include "dsheet.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -504,19 +503,21 @@ size_t d_allocate_string_literal_in_data(BuildContext *context, BCode *linkCode,
  */
 void d_allocate_variable(BuildContext *context, SheetVariable *variable,
                          size_t size, size_t indexInLinkMeta) {
-    VERBOSE(5, "Allocating variable %s to data...\n", variable->name);
+    const SocketMeta varMeta = variable->variableMeta;
+
+    VERBOSE(5, "Allocating variable %s to data...\n", varMeta.name);
     size_t dataIndex;
 
     char *dataPtr = d_allocate_from_data_section(context, size, &dataIndex);
 
     // We need to initialize the value we've just allocated with the
     // default value of the variable.
-    switch (variable->dataType) {
+    switch (varMeta.type) {
         case TYPE_INT:;
-            memcpy(dataPtr, &(variable->defaultValue.integerValue), size);
+            memcpy(dataPtr, &(varMeta.defaultValue.integerValue), size);
             break;
         case TYPE_FLOAT:;
-            memcpy(dataPtr, &(variable->defaultValue.floatValue), size);
+            memcpy(dataPtr, &(varMeta.defaultValue.floatValue), size);
             break;
 
         // Store the default value of the string as a string literal in the
@@ -527,7 +528,7 @@ void d_allocate_variable(BuildContext *context, SheetVariable *variable,
             // We just need to add a custom InstructionToLink to tell the
             // string variable where the default value is in the data.
             LinkMeta strDefaultValueLink = d_link_new_meta(
-                LINK_VARIABLE_STRING_DEFAULT_VALUE, variable->name, variable);
+                LINK_VARIABLE_STRING_DEFAULT_VALUE, varMeta.name, variable);
 
             size_t defValMetaIndex;
             bool metaDuplicate;
@@ -540,7 +541,7 @@ void d_allocate_variable(BuildContext *context, SheetVariable *variable,
             if (!metaDuplicate) {
                 // Add the string literal to the data section, and link it.
                 size_t dataStart = d_allocate_string_literal_in_data(
-                    context, NULL, 0, variable->defaultValue.stringValue);
+                    context, NULL, 0, varMeta.defaultValue.stringValue);
 
                 context->linkMetaList.list[defValMetaIndex]._ptr =
                     (char *)dataStart;
@@ -548,7 +549,7 @@ void d_allocate_variable(BuildContext *context, SheetVariable *variable,
             break;
 
         case TYPE_BOOL:;
-            *dataPtr = variable->defaultValue.booleanValue;
+            *dataPtr = varMeta.defaultValue.booleanValue;
             break;
         default:
             break;
@@ -2216,6 +2217,7 @@ void d_codegen_compile(Sheet *sheet) {
 
     // Create a context object for the build.
     BuildContext context;
+    context.sheet    = sheet;
     context.stackTop = -1;
 
     context.linkMetaList = d_link_new_meta_list();
@@ -2225,15 +2227,16 @@ void d_codegen_compile(Sheet *sheet) {
 
     // Start off by allocating space for the variables defined in the sheet.
     for (size_t i = 0; i < sheet->numVariables; i++) {
-        SheetVariable *var = sheet->variables + i;
+        SheetVariable *var       = sheet->variables + i;
+        const SocketMeta varMeta = var->variableMeta;
 
         // Copy the name so d_link_free_list doesn't go balistic.
-        size_t nameLengthPlusNull = strlen(var->name) + 1;
+        size_t nameLengthPlusNull = strlen(varMeta.name) + 1;
         char *varName             = (char *)d_malloc(nameLengthPlusNull);
-        memcpy(varName, var->name, nameLengthPlusNull);
+        memcpy(varName, varMeta.name, nameLengthPlusNull);
 
         // Create a LinkMeta entry so we know it exists.
-        LinkMeta linkMeta = d_link_new_meta((var->dataType == TYPE_STRING)
+        LinkMeta linkMeta = d_link_new_meta((varMeta.type == TYPE_STRING)
                                                 ? LINK_VARIABLE_POINTER
                                                 : LINK_VARIABLE,
                                             varName, var);
@@ -2242,13 +2245,14 @@ void d_codegen_compile(Sheet *sheet) {
 
         // Allocate space in the data section for the variable to fit in.
         d_allocate_variable(&context, var,
-                            (var->dataType == TYPE_BOOL) ? 1 : sizeof(dint),
+                            (varMeta.type == TYPE_BOOL) ? 1 : sizeof(dint),
                             context.linkMetaList.size - 1);
     }
 
     // Next, generate bytecode for the custom functions!
     for (size_t i = 0; i < sheet->numFunctions; i++) {
-        SheetFunction *func = sheet->functions + i;
+        SheetFunction *func          = sheet->functions + i;
+        const NodeDefinition funcDef = func->functionDefinition;
 
         BCode code = d_generate_function(func, &context);
 
@@ -2257,7 +2261,7 @@ void d_codegen_compile(Sheet *sheet) {
         // when other functions call this one.
 
         // Check that the metadata doesn't already exist.
-        LinkMeta meta = d_link_new_meta(LINK_FUNCTION, func->name, func);
+        LinkMeta meta = d_link_new_meta(LINK_FUNCTION, funcDef.name, func);
 
         LinkMeta *metaInList = NULL;
 
@@ -2288,8 +2292,8 @@ void d_codegen_compile(Sheet *sheet) {
     }
 
     // And end with the Start function.
-    if (sheet->startNode != NULL) {
-        BCode start = d_generate_start(sheet->startNode, &context);
+    if (sheet->startNodeIndex >= 0) {
+        BCode start = d_generate_start(&context, sheet->startNodeIndex);
 
         // We need to set the .main value of the sheet to the index of the
         // first instruction (not the RET before!), but if there is only one
