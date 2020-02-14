@@ -102,15 +102,9 @@
 #define DECISION_API extern
 #endif // DECISION_BUILD_DLL
 
-/**
- * \def DECISION_SAFE_FUNCTIONS
- * \brief Defined if Decision should use the "safe" versions of memory
- * manipulation functions.
- *
- * It is automatically defined if building on a Windows system.
- */
+/* Stop warnings relating to not using "safe" functions. */
 #ifdef _WIN32
-#define DECISION_SAFE_FUNCTIONS
+#define _CRT_SECURE_NO_DEPRECATE
 #endif // _WIN32
 
 #endif // DCFG_H

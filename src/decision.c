@@ -108,21 +108,11 @@ static const char *load_string_from_file(const char *filePath, size_t *size,
                                          bool binary) {
     FILE *f;
 
-#ifdef DECISION_SAFE_FUNCTIONS
-    if (fopen_s(&f, filePath, (binary) ? "rb" : "r") != 0) {
-        printf("Can't open the file!\n");
-        return NULL;
-    }
-    if (f == NULL) {
-        return NULL;
-    }
-#else
     f = fopen(filePath, (binary) ? "rb" : "r");
     if (f == NULL) {
         printf("Can't open the file!\n");
         return NULL;
     }
-#endif // DECISION_SAFE_FUNCTIONS
 
     fseek(f, 0, SEEK_END);
     size_t fSize = ftell(f);
@@ -168,22 +158,12 @@ static const char *load_string_from_file(const char *filePath, size_t *size,
 static void save_object_to_file(const char *filePath, const char *content,
                                 size_t len) {
     FILE *f;
-
-#ifdef DECISION_SAFE_FUNCTIONS
-    if (fopen_s(&f, filePath, "wb") != 0) {
-        printf("Can't open the file!\n");
-        return;
-    }
-    if (f == NULL) {
-        return;
-    }
-#else
+    
     f = fopen(filePath, "wb");
     if (f == NULL) {
         printf("Can't open the file!\n");
         return;
     }
-#endif // DECISION_SAFE_FUNCTIONS
 
     fwrite(content, sizeof(char), len, f);
 

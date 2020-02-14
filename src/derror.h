@@ -47,21 +47,12 @@
  * If you don't need the error to be formatted, it is more efficient to
  * directly use `d_error_compiler_push`.
  */
-#ifdef DECISION_SAFE_FUNCTIONS
-#define ERROR_COMPILER(filePath, lineNum, isError, ...)                  \
-    {                                                                    \
-        char errMsg[MAX_ERROR_SIZE];                                     \
-        sprintf_s(errMsg, MAX_ERROR_SIZE, __VA_ARGS__);                  \
-        d_error_compiler_push(errMsg, (filePath), (lineNum), (isError)); \
-    }
-#else
 #define ERROR_COMPILER(filePath, lineNum, isError, ...)                  \
     {                                                                    \
         char errMsg[MAX_ERROR_SIZE];                                     \
         sprintf(errMsg, __VA_ARGS__);                                    \
         d_error_compiler_push(errMsg, (filePath), (lineNum), (isError)); \
     }
-#endif // DECISION_SAFE_FUNCTIONS
 
 /*
 === FUNCTIONS =============================================
