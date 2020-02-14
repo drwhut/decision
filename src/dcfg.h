@@ -102,9 +102,4 @@
 #define DECISION_API extern
 #endif // DECISION_BUILD_DLL
 
-/* Stop warnings relating to not using "safe" functions. */
-#ifdef _WIN32
-#define _CRT_SECURE_NO_DEPRECATE
-#endif // _WIN32
-
 #endif // DCFG_H
