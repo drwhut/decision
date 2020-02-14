@@ -46,7 +46,7 @@
  * \var extern char VERBOSE_LEVEL
  * \brief A variable stating the verbose level being used.
  */
-extern char VERBOSE_LEVEL;
+DECISION_API char VERBOSE_LEVEL;
 
 /**
  * \def VERBOSE(level, ...)

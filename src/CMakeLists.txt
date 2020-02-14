@@ -60,16 +60,18 @@ configure_file(decision.in.h ${PROJECT_SOURCE_DIR}/src/decision.h)
 # Do we want to compile in 32-bit mode?
 option(COMPILER_32 "Set the compiler to store data in 32-bit formats?" OFF)
 
-# Do we want to compile into a DLL?
-option(COMPILER_DLL "Build a DLL rather than an executable?" OFF)
+# Do we want to compile a shared library rather than a static one?
+option(COMPILER_SHARED "Build a shared library rather than a static one?" OFF)
 
 if(COMPILER_32)
     add_definitions(-DDECISION_32)
 endif(COMPILER_32)
 
-if(COMPILER_DLL)
-    add_definitions(-DDECISION_BUILD_DLL)
-endif(COMPILER_DLL)
+if(COMPILER_SHARED)
+    if (MSVC)
+        add_definitions(-DDECISION_BUILD_DLL)
+    endif(MSVC)
+endif(COMPILER_SHARED)
 
 # Disable warnings about not using "safe" functions in MSVC.
 if(MSVC)
@@ -77,42 +79,44 @@ if(MSVC)
 endif(MSVC)
 
 # The executable.
-add_executable(decision ${SRCS})
+add_executable(decision dmain.c)
 install(TARGETS decision DESTINATION bin)
 
 # Set where the header files should be installed.
 install(FILES ${HDRS} DESTINATION include/decision)
 
-# Add the libraries, but only one if on Windows.
-if(MSVC)
-    if(COMPILER_DLL)
-        add_library(decisionLibShared SHARED ${SRCS})
-    else(COMPILER_DLL)
-        add_library(decisionLibStatic STATIC ${SRCS})
-    endif(COMPILER_DLL)
-else(MSVC)
-    add_library(decisionLibStatic STATIC ${SRCS})
+# The library.
+if(COMPILER_SHARED)
     add_library(decisionLibShared SHARED ${SRCS})
-endif(MSVC)
 
-# Change the output names of the libraries to be the same name as the executable,
-# and make the library dependent on the executable, so that it is always built
-# AFTER the executable.
-# We also want to pass a macro definition to the libraries so the pre-processor
-# knows we are building libraries.
-# We also want to set the install destination.
-if(TARGET decisionLibShared)
-    set_target_properties(decisionLibShared PROPERTIES OUTPUT_NAME decision)
-    set_target_properties(decisionLibShared PROPERTIES COMPILE_DEFINITIONS DECISION_LIBRARY)
-    add_dependencies(decisionLibShared decision)
+    # Link the executable with the library.
+    target_link_libraries(decision PUBLIC decisionLibShared)
+
+    # Set the install target.
     install(TARGETS decisionLibShared DESTINATION lib)
-endif(TARGET decisionLibShared)
-if(TARGET decisionLibStatic)
-    set_target_properties(decisionLibStatic PROPERTIES OUTPUT_NAME decision)
-    set_target_properties(decisionLibStatic PROPERTIES COMPILE_DEFINITIONS DECISION_LIBRARY)
-    add_dependencies(decisionLibStatic decision)
+
+    # Set the name of the library.
+    if(MSVC)
+        set_target_properties(decisionLibShared PROPERTIES OUTPUT_NAME libdecision)
+    else(MSVC)
+        set_target_properties(decisionLibShared PROPERTIES OUTPUT_NAME decision)
+    endif(MSVC)
+else(COMPILER_SHARED)
+    add_library(decisionLibStatic STATIC ${SRCS})
+
+    # Link the executable with the library.
+    target_link_libraries(decision PUBLIC decisionLibStatic)
+
+    # Set the install target.
     install(TARGETS decisionLibStatic DESTINATION lib)
-endif(TARGET decisionLibStatic)
+
+    # Set the name of the library.
+    if(MSVC)
+        set_target_properties(decisionLibStatic PROPERTIES OUTPUT_NAME libdecision)
+    else(MSVC)
+        set_target_properties(decisionLibStatic PROPERTIES OUTPUT_NAME decision)
+    endif(MSVC)
+endif(COMPILER_SHARED)
 
 # Export symbols for debugging on Linux.
 # target_compile_options(decision PRIVATE "-g")
