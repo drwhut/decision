@@ -97,17 +97,11 @@ Installation
 
    By default, this step will create a Visual Studio solution for 32-bit
    Windows (x86). If you want to create a Visual Studio solution for 64-bit
-   Windows (x64), you need to tell CMake to use a different "generator":
+   Windows (x64), you need to specify this:
 
    .. code-block::
 
-      cmake -DCOMPILER_32=OFF -G "Visual Studio 15 2017 Win64" ..
-    
-   For example, this is the 64-bit version of Visual Studio 2017. If you are
-   using a different version of Visual Studio, you can find out what needs to
-   go inbetween the quotes by running the first command, and CMake should say
-   what generator it is using. Then it is just a case of adding "Win64" to the
-   end.
+      cmake -DCOMPILER_32=OFF -A x64 ..
 
 4. Build the appropiate executable with one of the following commands:
 

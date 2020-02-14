@@ -841,11 +841,7 @@ Sheet *d_sheet_add_include_from_path(Sheet *sheet, const char *includePath) {
             (size_t)lastSeperator + 1 + strlen(includePath);
         dir = (char *)d_realloc(dir, newPathLength + 1);
 
-#ifdef DECISION_SAFE_FUNCTIONS
-        strcat_s(dir, newPathLength + 1, includePath);
-#else
         strcat(dir, includePath);
-#endif // DECISION_SAFE_FUNCTIONS
 
         includeSheet = d_load_file((const char *)dir);
     }
