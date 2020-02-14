@@ -37,6 +37,11 @@ if(COMPILER_32)
     add_definitions(-DDECISION_32)
 endif(COMPILER_32)
 
+# Disable warnings about not using "safe" functions here as well.
+if(MSVC)
+    add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
+endif(MSVC)
+
 # Add the include directory for the header files.
 include_directories(${PROJECT_SOURCE_DIR}/src)
 
