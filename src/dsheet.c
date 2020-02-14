@@ -75,12 +75,7 @@ void d_socket_add_connection(SheetSocket *socket, SheetSocket *connection,
         size_t connLineNum = conn->node->lineNum;
 
         if (i > 0) {
-#ifdef DECISION_SAFE_FUNCTIONS
-            sprintf_s(connLineNums + lineNumIndex,
-                      MAX_ERROR_SIZE - lineNumIndex, ", ");
-#else
             sprintf(connLineNums + lineNumIndex, ", ");
-#endif // DECISION_SAFE_FUNCTIONS
             lineNumIndex += 2;
 
             if (lineNumIndex >= MAX_ERROR_SIZE) {
@@ -88,12 +83,7 @@ void d_socket_add_connection(SheetSocket *socket, SheetSocket *connection,
             }
         }
 
-#ifdef DECISION_SAFE_FUNCTIONS
-        sprintf_s(connLineNums + lineNumIndex, MAX_ERROR_SIZE - lineNumIndex,
-                  "%zu", connLineNum);
-#else
         sprintf(connLineNums + lineNumIndex, "%zu", connLineNum);
-#endif // DECISION_SAFE_FUNCTIONS
 
         while (connLineNums[lineNumIndex] != 0 &&
                lineNumIndex < MAX_ERROR_SIZE) {
@@ -520,11 +510,7 @@ Sheet *d_sheet_add_include_from_path(Sheet *sheet, const char *includePath) {
             (size_t)lastSeperator + 1 + strlen(includePath);
         dir = (char *)d_realloc(dir, newPathLength + 1);
 
-#ifdef DECISION_SAFE_FUNCTIONS
-        strcat_s(dir, newPathLength + 1, includePath);
-#else
         strcat(dir, includePath);
-#endif // DECISION_SAFE_FUNCTIONS
 
         includeSheet = d_load_file((const char *)dir);
     }

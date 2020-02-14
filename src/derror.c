@@ -89,12 +89,8 @@ static void add_message_to_error_list(const char *message,
         ptr++;
     }
 
-// Now copy our message onto there.
-#ifdef DECISION_SAFE_FUNCTIONS
-    strcpy_s(ptr, lenMessage + 1, message);
-#else
+    // Now copy our message onto there.
     strcpy(ptr, message);
-#endif // DECISION_SAFE_FUNCTIONS
 }
 
 /**
@@ -115,14 +111,9 @@ void d_error_compiler_push(const char *message, const char *filePath,
 
     char errorMessage[MAX_ERROR_SIZE];
 
-// Create the error message with sprintf.
-#ifdef DECISION_SAFE_FUNCTIONS
-    sprintf_s(errorMessage, MAX_ERROR_SIZE, "%s: (%s:%zd) %s",
-              (isError) ? "Fatal" : "Warning", filePath, lineNum, message);
-#else
+    // Create the error message with sprintf.
     sprintf(errorMessage, "%s: (%s:%zd) %s", (isError) ? "Fatal" : "Warning",
             filePath, lineNum, message);
-#endif // DECISION_SAFE_FUNCTIONS
 
     // Add the error to the error list.
     add_message_to_error_list(errorMessage, '\n');

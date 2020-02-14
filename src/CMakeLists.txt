@@ -71,6 +71,11 @@ if(COMPILER_DLL)
     add_definitions(-DDECISION_BUILD_DLL)
 endif(COMPILER_DLL)
 
+# Disable warnings about not using "safe" functions in MSVC.
+if(MSVC)
+    add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
+endif(MSVC)
+
 # The executable.
 add_executable(decision ${SRCS})
 install(TARGETS decision DESTINATION bin)

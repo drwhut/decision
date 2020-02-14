@@ -571,21 +571,12 @@ DECISION_API void d_vm_runtime_error(DVM *vm, const char *error);
  * This is to `d_vm_runtime_error` what `ERROR_COMPILER` is to
  * `d_error_compiler_push`.
  */
-#ifdef DECISION_SAFE_FUNCTIONS
-#define ERROR_RUNTIME(vm, ...)                          \
-    {                                                   \
-        char errMsg[MAX_ERROR_SIZE];                    \
-        sprintf_s(errMsg, MAX_ERROR_SIZE, __VA_ARGS__); \
-        d_vm_runtime_error((vm), errMsg);               \
-    }
-#else
 #define ERROR_RUNTIME(vm, ...)            \
     {                                     \
         char errMsg[MAX_ERROR_SIZE];      \
         sprintf(errMsg, __VA_ARGS__);     \
         d_vm_runtime_error((vm), errMsg); \
     }
-#endif // DECISION_SAFE_FUNCTIONS
 
 /**
  * \fn void d_vm_parse_ins_at_pc(DVM *vm)
