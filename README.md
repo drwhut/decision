@@ -49,14 +49,12 @@ Right-click on the *decision* project in the solution explorer, and click
 ```bash
 mkdir build
 cd build
-cmake -DCOMPILER_32=OFF -G "Visual Studio 15 2017 Win64" ..
+cmake -DCOMPILER_32=OFF -A x64 ..
 cmake --build . --config Debug
 cmake --build . --config Release
 ```
 By default, CMake will not generate a x64 version. Because of this, you need to
-provide an extra argument, which you can get by reading the output of
-`cmake ..`, and adding "Win64" to the end. For example, if it says "-- Building
-for: Visual Studio 15 2017", provide the argument as above.
+provide an extra argument to specify you want to build for the x64 architecture.
 
 Same as above, if you choose to run Decision from Visual Studio, you should
 set the *decision* project to be the start-up project as well. Right-click on
