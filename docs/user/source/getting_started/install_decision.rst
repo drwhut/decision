@@ -227,17 +227,15 @@ argument when creating the CMake project:
    option on 64-bit machines will not work since it will not be able to store
    full 64-bit pointers.
 
-Build a DLL
-^^^^^^^^^^^
+Shared Library
+^^^^^^^^^^^^^^
 
-On Linux, both the static library (.a) and the shared library (.so) are built.
-On Windows however, only the static library (.lib) is built by default.
-If you want to create a DLL instead of a static library on Windows, add
-this argument when creating the CMake project:
+By default, a static library for the compiler is generated (.lib/.a). If you
+want to generate a shared library instead (.dll/.so), add this argument:
 
 .. code-block::
 
-   cmake -DCOMPILER_DLL=ON ..
+   cmake -DCOMPILER_SHARED=ON ..
 
 Enable C API Tests
 ^^^^^^^^^^^^^^^^^^
