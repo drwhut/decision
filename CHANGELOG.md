@@ -6,6 +6,10 @@ versions of the compiler.
 * Added single-line comments: Anything after and including the `>` symbol on
 the same line will be ignored by the compiler.
 * Reimplemented `Length` to use the C function `strlen`.
+* Removed all calls to "safe" Visual C++ functions.
+* Changed the build system such that most of the code compiles to a singular
+library (which is either static or shared, static by default), and link the
+executable to that library.
 
 # Decision v0.2.0 - 16th January 2020
 
