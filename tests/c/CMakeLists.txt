@@ -21,15 +21,11 @@
 # We should use the dynamic library where possible, as there will be a lot
 # of executables made here.
 function(link_with_decision testTarget)
-    if(MSVC)
-        if(COMPILER_SHARED)
-            target_link_libraries(${testTarget} decisionLibShared)
-        else(COMPILER_SHARED)
-            target_link_libraries(${testTarget} decisionLibStatic)
-        endif(COMPILER_SHARED)
-    else(MSVC)
+    if(COMPILER_SHARED)
         target_link_libraries(${testTarget} decisionLibShared)
-    endif(MSVC)
+    else(COMPILER_SHARED)
+        target_link_libraries(${testTarget} decisionLibStatic)
+    endif(COMPILER_SHARED)
 endfunction(link_with_decision)
 
 # If the compiler is storing data in 32 bits, we need to here as well.
