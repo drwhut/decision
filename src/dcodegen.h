@@ -438,7 +438,7 @@ DECISION_API BCode d_generate_start(BuildContext *context,
                                     size_t startNodeIndex);
 
 /**
- * \fn BCode d_generate_function(BuildContext *context, SheetFunction *func)
+ * \fn BCode d_generate_function(BuildContext *context, SheetFunction func)
  * \brief Given a function, generate the bytecode for it.
  *
  * \return The bytecode generated for the function.
@@ -447,7 +447,7 @@ DECISION_API BCode d_generate_start(BuildContext *context,
  * \param func The function to generate the bytecode for.
  */
 DECISION_API BCode d_generate_function(BuildContext *context,
-                                       SheetFunction *func);
+                                       SheetFunction func);
 
 /**
  * \fn void d_codegen_compile(Sheet *sheet)

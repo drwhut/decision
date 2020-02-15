@@ -676,6 +676,8 @@ BCode d_push_input(BuildContext *context, NodeSocket socket, bool forceFloat) {
     if (d_is_input_socket(context->sheet, socket) &&
         meta.type != TYPE_EXECUTION) {
 
+        // We could use d_socket_num_connections here, but if there is a
+        // connection we will need the wire index.
         int wireIndex = d_wire_find_first(context->sheet, socket);
 
         if (wireIndex < 0) {
@@ -809,8 +811,8 @@ BCode d_push_node_inputs(BuildContext *context, size_t nodeIndex, bool order,
         SocketMeta meta   = d_get_socket_meta(context->sheet, socket);
 
         if ((meta.type & TYPE_VAR_ANY) != 0) {
-            int wireIndex = d_wire_find_first(context->sheet, socket);
-            if (wireIndex >= 0 || meta.type == TYPE_FLOAT || !ignoreLiterals) {
+            size_t numCons = d_socket_num_connections(context->sheet, socket);
+            if (numCons >= 1 || meta.type == TYPE_FLOAT || !ignoreLiterals) {
                 BCode input = d_push_input(context, socket, forceFloat);
                 d_concat_bytecode(&out, &input);
                 d_free_bytecode(&input);
@@ -844,8 +846,8 @@ BCode d_push_node_inputs(BuildContext *context, size_t nodeIndex, bool order,
         SocketMeta meta   = d_get_socket_meta(context->sheet, socket);
 
         if ((meta.type & TYPE_VAR_ANY) != 0) {
-            int wireIndex = d_wire_find_first(context->sheet, socket);
-            if (wireIndex >= 0 || meta.type == TYPE_FLOAT || !ignoreLiterals) {
+            size_t numCons = d_socket_num_connections(context->sheet, socket);
+            if (numCons >= 1 || meta.type == TYPE_FLOAT || !ignoreLiterals) {
                 // Is this input the correct amount from the top?
                 if (STACK_INDEX_TOP(context, socket->_stackIndex) !=
                     -numCheckedInputs) {
@@ -879,8 +881,9 @@ BCode d_push_node_inputs(BuildContext *context, size_t nodeIndex, bool order,
             SocketMeta meta   = d_get_socket_meta(context->sheet, socket);
 
             if ((meta.type & TYPE_VAR_ANY) != 0) {
-                int wireIndex = d_wire_find_first(context->sheet, socket);
-                if (wireIndex >= 0 || meta.type == TYPE_FLOAT ||
+                size_t numCons =
+                    d_socket_num_connections(context->sheet, socket);
+                if (numCons >= 1 || meta.type == TYPE_FLOAT ||
                     !ignoreLiterals) {
 
                     BCode get = d_bytecode_ins(OP_GETFI);
@@ -909,23 +912,26 @@ BCode d_push_node_inputs(BuildContext *context, size_t nodeIndex, bool order,
 }
 
 /**
- * \fn BCode d_generate_operator(SheetNode *node, BuildContext *context,
+ * \fn BCode d_generate_operator(BuildContext *context, size_t nodeIndex,
  *                               DIns opcode, DIns fopcode, DIns fiopcode,
  *                               bool forceFloat)
  * \brief Given an operator node, generate the bytecode for it.
  *
  * \return Bytecode to get the output of an operator.
  *
- * \param node The operator node to get the result for.
  * \param context The context needed to generate the bytecode.
+ * \param nodeIndex The index of the operator node to get the result for.
  * \param opcode The operator instruction.
  * \param fopcode The float variant of the instruction.
  * \param fiopcode The full immediate variant of the instruction.
  * \param forceFloat Should the output always be a float?
  */
-BCode d_generate_operator(SheetNode *node, BuildContext *context, DIns opcode,
+BCode d_generate_operator(BuildContext *context, size_t nodeIndex, DIns opcode,
                           DIns fopcode, DIns fiopcode, bool forceFloat) {
-    VERBOSE(5, "Generate bytecode for operator %s...\n", node->name);
+    const NodeDefinition *nodeDef =
+        d_get_node_definition(context->sheet, nodeIndex);
+
+    VERBOSE(5, "Generate bytecode for operator %s...\n", nodeDef->name);
 
     BCode out       = {NULL, 0};
     BCode subaction = {NULL, 0};
@@ -933,13 +939,16 @@ BCode d_generate_operator(SheetNode *node, BuildContext *context, DIns opcode,
     // Do we need to convert integer inputs to floats?
     bool convertFloat = forceFloat;
 
+    const size_t numInputs = d_node_num_inputs(context->sheet, nodeIndex);
+
     // If we're not forcing it, we may still need to if any of the inputs are
     // floats.
     if (!convertFloat) {
-        for (size_t j = 0; j < node->numSockets - 1; j++) {
-            SheetSocket *inputSocket = node->sockets[j];
+        for (size_t j = 0; j < numInputs; j++) {
+            NodeSocket socket = {nodeIndex, j};
+            SocketMeta meta   = d_get_socket_meta(context->sheet, socket);
 
-            if (inputSocket->type == TYPE_FLOAT) {
+            if (meta.type == TYPE_FLOAT) {
                 convertFloat = true;
                 break;
             }
@@ -948,16 +957,18 @@ BCode d_generate_operator(SheetNode *node, BuildContext *context, DIns opcode,
 
     int initStackTop = context->stackTop;
 
-    SheetSocket *socket = node->sockets[0];
+    NodeSocket socket = {nodeIndex, 0};
+    size_t numCons    = d_socket_num_connections(context->sheet, socket);
 
     // Generate the bytecode for the inputs without literals - but we want to
     // start working from the first input, even if it is a literal.
     // NOTE: If we need to convert inputs to floats, we need to generate all
     // of the inputs, including literals, as we always generate the first
     // input.
-    out = d_push_node_inputs(node, context, false, !convertFloat, convertFloat);
-    if (!convertFloat && socket->numConnections == 0) {
-        subaction = d_push_literal(socket, context, convertFloat);
+    out = d_push_node_inputs(context, nodeIndex, false, !convertFloat,
+                             convertFloat);
+    if (!convertFloat && numCons == 0) {
+        subaction = d_push_literal(context, socket, convertFloat);
         d_concat_bytecode(&out, &subaction);
         d_free_bytecode(&subaction);
     }
@@ -966,17 +977,19 @@ BCode d_generate_operator(SheetNode *node, BuildContext *context, DIns opcode,
 
     size_t i = 0;
 
-    while (socket->isInput && i < node->numSockets) {
-        socket = node->sockets[++i];
+    while (socket.socketIndex < numInputs) {
+        socket.socketIndex++;
 
-        if (socket->isInput) {
-            if (!convertFloat && socket->type != TYPE_FLOAT &&
-                socket->numConnections == 0) {
+        if (d_is_input_socket(context->sheet, socket)) {
+            SocketMeta meta = d_get_socket_meta(context->sheet, socket);
+
+            numCons = d_socket_num_connections(context->sheet, socket);
+
+            if (!convertFloat && meta.type != TYPE_FLOAT && numCons == 0) {
                 // This input is a literal, so we can use the immediate opcode.
                 subaction = d_bytecode_ins(fiopcode);
                 d_bytecode_set_fimmediate(
-                    subaction, 1,
-                    (fimmediate_t)socket->defaultValue.integerValue);
+                    subaction, 1, (fimmediate_t)meta.defaultValue.integerValue);
             } else {
                 // The two inputs are both on the top of the stack, so just
                 // use the non-immediate opcode.
@@ -1002,44 +1015,48 @@ BCode d_generate_operator(SheetNode *node, BuildContext *context, DIns opcode,
 }
 
 /**
- * \fn BCode d_generate_comparator(SheetNode *node, BuildContext *context,
+ * \fn BCode d_generate_comparator(BuildContext *context, size_t nodeIndex,
  *                                 DIns opcode, DIns fopcode,
  *                                 fimmediate_t strCmpArg, bool notAfter)
  * \brief Given a comparator node, generate the bytecode for it.
  *
  * \return Bytecode to get the output of a comparator.
  *
- * \param node The comparator node to get the result for.
  * \param context The context needed to generate the bytecode.
+ * \param nodeIndex The index of the comparator node to get the result for.
  * \param opcode The comparator instruction.
  * \param fopcode The float variant of the instruction.
  * \param strCmpArg The SYS_STRCMP argument to use to compare strings.
  * \param notAfter Do we invert the answer at the end?
  */
-BCode d_generate_comparator(SheetNode *node, BuildContext *context, DIns opcode,
-                            DIns fopcode, fimmediate_t strCmpArg,
+BCode d_generate_comparator(BuildContext *context, size_t nodeIndex,
+                            DIns opcode, DIns fopcode, fimmediate_t strCmpArg,
                             bool notAfter) {
-    VERBOSE(5, "Generating bytecode for comparator %s...\n", node->name);
+    const NodeDefinition *nodeDef =
+        d_get_node_definition(context->sheet, nodeIndex);
+
+    VERBOSE(5, "Generating bytecode for comparator %s...\n", nodeDef->name);
 
     // First, we need to check what types our inputs are.
     bool isString = false;
     bool isFloat  = false;
 
-    for (size_t i = 0; i < node->numSockets; i++) {
-        SheetSocket *socket = node->sockets[i];
+    const size_t numInputs = d_node_num_inputs(context->sheet, nodeIndex);
 
-        if (socket->isInput) {
-            if (socket->type == TYPE_STRING) {
-                isString = true;
-                break;
-            } else if (socket->type == TYPE_FLOAT) {
-                isFloat = true;
-                break;
-            }
+    for (size_t i = 0; i < numInputs; i++) {
+        NodeSocket socket = {nodeIndex, i};
+        SocketMeta meta   = d_get_socket_meta(context->sheet, socket);
+
+        if (meta.type == TYPE_STRING) {
+            isString = true;
+            break;
+        } else if (meta.type == TYPE_FLOAT) {
+            isFloat = true;
+            break;
         }
     }
 
-    BCode out = d_push_node_inputs(node, context, false, false, isFloat);
+    BCode out = d_push_node_inputs(context, nodeIndex, false, false, isFloat);
 
     if (isString) {
         // The SYS_STRCMP syscall will be used here.
@@ -1075,49 +1092,56 @@ BCode d_generate_comparator(SheetNode *node, BuildContext *context, DIns opcode,
 }
 
 /**
- * \fn BCode d_generate_call(SheetNode *node, BuildContext *context)
+ * \fn BCode d_generate_call(BuildContext *context, size_t nodeIndex)
  * \brief Given a node that calls a function or subroutine, generate the
  * bytecode to call it.
  *
  * \return Bytecode to call the function or subroutine.
  *
- * \param node The node to generate the bytecode for.
  * \param context The context needed to generate the bytecode.
+ * \param nodeIndex The index of the node to generate the bytecode for.
  */
-BCode d_generate_call(SheetNode *node, BuildContext *context) {
-    VERBOSE(5, "Generating bytecode for call %s...\n", node->name);
+BCode d_generate_call(BuildContext *context, size_t nodeIndex) {
+    SheetNode node                = context->sheet->nodes[nodeIndex];
+    const NodeDefinition *nodeDef = node.definition;
+    NameDefinition nameDef        = node.nameDefinition;
+
+    VERBOSE(5, "Generating bytecode for call %s...\n", nodeDef->name);
 
     // Get information about the call from the node's definition.
     size_t numArgs    = 0;
     size_t numRets    = 0;
     DIns opcode       = OP_CALLCI;
     LinkType linkType = LINK_CFUNCTION;
-    void *metaData    = (void *)node->definition.cFunction;
+    void *metaData    = (void *)nameDef.cFunction;
+    bool isSubroutine = false;
 
-    if (node->definition.type == NAME_FUNCTION) {
-        numArgs  = node->definition.function->numArguments;
-        numRets  = node->definition.function->numReturns;
-        opcode   = OP_CALLI;
-        linkType = LINK_FUNCTION;
-        metaData = (void *)node->definition.function;
-    } else if (node->definition.type == NAME_CFUNCTION) {
-        CFunction *cFunc = node->definition.cFunction;
-        numArgs          = cFunc->numInputs;
-        numRets          = cFunc->numOutputs;
+    if (nameDef.type == NAME_FUNCTION) {
+        const NodeDefinition funcDef = nameDef.function->functionDefinition;
 
-        // The C function could be a subroutine!
-        if (numArgs > 0 && numRets > 0) {
-            if (cFunc->inputs[0] == TYPE_EXECUTION &&
-                cFunc->outputs[0] == TYPE_EXECUTION) {
-                numArgs--;
-                numRets--;
-            }
-        }
+        numArgs      = d_definition_num_inputs(&funcDef);
+        numRets      = d_definition_num_outputs(&funcDef);
+        opcode       = OP_CALLI;
+        linkType     = LINK_FUNCTION;
+        metaData     = (void *)nameDef.function;
+        isSubroutine = d_is_execution_definition(&funcDef);
+    } else if (nameDef.type == NAME_CFUNCTION) {
+        const NodeDefinition funcDef = nameDef.cFunction->definition;
+
+        numArgs      = d_definition_num_inputs(&funcDef);
+        numRets      = d_definition_num_outputs(&funcDef);
+        isSubroutine = d_is_execution_definition(&funcDef);
+    }
+
+    // If it is a subroutine, we don't want to count the execution sockets.
+    if (isSubroutine) {
+        numArgs--;
+        numRets--;
     }
 
     // Push the arguments in order, such that the first argument gets pushed
     // first, then the second, etc.
-    BCode out = d_push_node_inputs(node, context, true, false, false);
+    BCode out = d_push_node_inputs(context, nodeIndex, true, false, false);
 
     // Call the function/subroutine, and link to it later.
     BCode call = d_bytecode_ins(opcode);
@@ -1129,7 +1153,7 @@ BCode d_generate_call(SheetNode *node, BuildContext *context) {
     size_t _dummyMeta;
     bool _dummyBool;
 
-    LinkMeta meta = d_link_new_meta(linkType, node->name, metaData);
+    LinkMeta meta = d_link_new_meta(linkType, nodeDef->name, metaData);
     d_add_link_to_ins(context, &call, 0, meta, &_dummyMeta, &_dummyBool);
 
     d_concat_bytecode(&out, &call);
@@ -1152,43 +1176,31 @@ BCode d_generate_call(SheetNode *node, BuildContext *context) {
 }
 
 /**
- * \fn BCode d_push_argument(SheetSocket *socket, BuildContext *context)
+ * \fn BCode d_push_argument(BuildContext *context, NodeSocket socket)
  * \brief Given an output socket that is a function/subroutine argument,
  * generate bytecode to push the value of the argument to the top of the stack.
  *
  * \return Bytecode to push the argument.
  *
- * \param socket The output socket representing the function argument.
  * \param context The context needed to generate the bytecode.
+ * \param socket The output socket representing the function argument.
  */
-BCode d_push_argument(SheetSocket *socket, BuildContext *context) {
-    VERBOSE(5, "Generating bytecode for argument socket %p...\n", socket);
+BCode d_push_argument(BuildContext *context, NodeSocket socket) {
+    VERBOSE(5, "Generating bytecode for argument socket #d in node #d...\n",
+            socket.socketIndex, socket.nodeIndex);
 
     BCode out = {NULL, 0};
 
-    SheetNode *node = socket->node;
-
-    if (!socket->isInput) {
+    if (!d_is_input_socket(context->sheet, socket)) {
 
         // Due to the calling convention, the argument should already be on the
         // stack, but relative to the frame pointer. We just need to figure out
         // which index.
-        fimmediate_t index      = 0;
-        fimmediate_t numOutputs = 0;
+        fimmediate_t index = socket.socketIndex;
 
-        for (size_t i = 0; i < node->numSockets; i++) {
-            SheetSocket *testSocket = node->sockets[i];
-
-            if (!testSocket->isInput &&
-                (testSocket->type & TYPE_VAR_ANY) != 0) {
-                // Sockets are separately malloc'd.
-                if (socket == testSocket) {
-                    index = numOutputs;
-                    break;
-                }
-
-                numOutputs++;
-            }
+        // Ignore the execution socket if it exists.
+        if (d_is_execution_node(context->sheet, socket.nodeIndex)) {
+            index--;
         }
 
         out = d_bytecode_ins(OP_GETFI);
@@ -1204,29 +1216,33 @@ BCode d_push_argument(SheetSocket *socket, BuildContext *context) {
 }
 
 /**
- * \fn BCode d_generate_return(SheetNode *returnNode, BuildContext *context)
+ * \fn BCode d_generate_return(BuildContext *context, SheetNode *returnNode)
  * \brief Given a Return node, generate the bytecode to return from the
  * function/subroutine with the return values.
  *
  * \return Bytecode to return from the function/subroutine.
  *
- * \param returnNode The Return node to return with.
  * \param context The context needed to generate the bytecode.
+ * \param returnNode The Return node to return with.
  */
-BCode d_generate_return(SheetNode *returnNode, BuildContext *context) {
-    SheetFunction *function = returnNode->definition.function;
+BCode d_generate_return(BuildContext *context, size_t returnNodeIndex) {
+    SheetNode node               = context->sheet->nodes[returnNodeIndex];
+    SheetFunction *function      = node.nameDefinition.function;
+    const NodeDefinition funcDef = function->functionDefinition;
 
-    VERBOSE(5, "Generating bytecode to return from %s...\n", function->name);
+    VERBOSE(5, "Generating bytecode to return from %s...\n", funcDef.name);
 
     BCode out = {NULL, 0};
 
-    if (function->numReturns == 0) {
+    const size_t numReturns = d_definition_num_outputs(&funcDef);
+
+    if (numReturns == 0) {
         out = d_bytecode_ins(OP_RET);
     } else {
-        out = d_push_node_inputs(returnNode, context, false, false, false);
+        out = d_push_node_inputs(context, returnNodeIndex, false, false, false);
 
         BCode ret = d_bytecode_ins(OP_RETN);
-        d_bytecode_set_byte(ret, 1, (char)function->numReturns);
+        d_bytecode_set_byte(ret, 1, (char)numReturns);
         d_concat_bytecode(&out, &ret);
         d_free_bytecode(&ret);
     }
@@ -2115,16 +2131,16 @@ BCode d_generate_execution_node(SheetNode *node, BuildContext *context,
 }
 
 /**
- * \fn BCode d_generate_start(SheetNode *startNode, BuildContext *context)
+ * \fn BCode d_generate_start(BuildContext *context, SheetNode *startNode)
  * \brief Given a Start node, generate the bytecode for the sequence starting
  * from this node.
  *
  * \return The bytecode generated for the Start function.
  *
- * \param startNode A pointer to the Start node.
  * \param context The context needed to generate the bytecode.
+ * \param startNode A pointer to the Start node.
  */
-BCode d_generate_start(SheetNode *startNode, BuildContext *context) {
+BCode d_generate_start(BuildContext *context, size_t startNodeIndex) {
     // As the first instruction, place a RET, which acts as a safety barrier
     // for any function that is defined before this one (this ensures the
     // previous function doesn't "leak" into this one).
@@ -2134,15 +2150,18 @@ BCode d_generate_start(SheetNode *startNode, BuildContext *context) {
     // We just need to call the bytecode generation functions starting from the
     // first node after Start.
 
-    if (startNode->numSockets == 1) {
-        SheetSocket *socket = startNode->sockets[0];
+    if (d_node_num_outputs(context->sheet, startNodeIndex) == 1) {
+        NodeSocket socket = {startNodeIndex, 0};
 
-        if (socket->numConnections == 1) {
+        int wireIndex = d_wire_find_first(context->sheet, socket);
+
+        if (wireIndex >= 0) {
             VERBOSE(5, "-- Generating bytecode for Start function...\n");
 
-            socket = socket->connections[0];
+            socket = context->sheet->wires[wireIndex].socketTo;
 
-            BCode exe = d_generate_execution_node(socket->node, context, true);
+            BCode exe =
+                d_generate_execution_node(context, socket.nodeIndex, true);
 
             d_concat_bytecode(&out, &exe);
             d_free_bytecode(&exe);
@@ -2153,15 +2172,15 @@ BCode d_generate_start(SheetNode *startNode, BuildContext *context) {
 }
 
 /**
- * \fn BCode d_generate_function(SheetFunction *func, BuildContext *context)
+ * \fn BCode d_generate_function(BuildContext *context, SheetFunction func)
  * \brief Given a function, generate the bytecode for it.
  *
  * \return The bytecode generated for the function.
  *
- * \param func The function to generate the bytecode for.
  * \param context The context needed to generate the bytecode.
+ * \param func The function to generate the bytecode for.
  */
-BCode d_generate_function(SheetFunction *func, BuildContext *context) {
+BCode d_generate_function(BuildContext *context, SheetFunction func) {
     // As the first instruction, place a RET, which allows linkers to link to
     // this instruction, since the program counter of the virtual machine will
     // ALWAYS increment, it will increment to the actual first instruction of
@@ -2173,40 +2192,43 @@ BCode d_generate_function(SheetFunction *func, BuildContext *context) {
     // pushed in before the function runs.
     context->stackTop = func->numArguments - 1;
 
-    if (func->isSubroutine) {
-        if (func->defineNode != NULL) {
+    if (d_is_subroutine(func)) {
+        if (func.defineNodeIndex >= 0) {
             VERBOSE(5, "-- Generating bytecode for subroutine %s...\n",
-                    func->name);
+                    func.functionDefinition.name);
 
             // If it's a subroutine, we can just recursively go through the
             // sequence to the Return.
             // NOTE: The first argument should be the name of the function.
-            SheetSocket *socket = func->defineNode->sockets[1];
+            NodeSocket socket = {func.defineNodeIndex, 1};
 
-            if (socket->numConnections == 1 && socket->type == TYPE_EXECUTION) {
-                socket = socket->connections[0];
+            int wireIndex = d_wire_find_first(context->sheet, socket);
+
+            if (wireIndex >= 0) {
+                socket = context->sheet->wires[wireIndex].socketTo;
 
                 BCode exe =
-                    d_generate_execution_node(socket->node, context, true);
+                    d_generate_execution_node(context, socket.nodeIndex, true);
 
                 d_concat_bytecode(&out, &exe);
                 d_free_bytecode(&exe);
             }
         }
     } else {
-        VERBOSE(5, "-- Generating bytecode for function %s...\n", func->name);
+        VERBOSE(5, "-- Generating bytecode for function %s...\n",
+                func.functionDefinition.name);
 
         // Otherwise it's a function. In which case we need to find the
         // Return node for it and recurse backwards through the inputs.
         // NOTE: Functions (unlike subroutines) should only have one Return
         // node.
-        SheetNode *returnNode = func->lastReturnNode;
+        size_t returnNode = func.lastReturnNodeIndex;
 
-        if (returnNode != NULL) {
+        if (returnNode >= 0) {
             // Now we recursively generate the bytecode for the inputs
             // of the Return node, so the final Return values are
             // calculated.
-            BCode funcCode = d_generate_return(returnNode, context);
+            BCode funcCode = d_generate_return(context, returnNode);
 
             d_concat_bytecode(&out, &funcCode);
             d_free_bytecode(&funcCode);
