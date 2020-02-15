@@ -29,7 +29,6 @@
 #include "dcfg.h"
 #include <stdbool.h>
 
-
 #include <stdio.h>
 
 /*
@@ -37,10 +36,29 @@
 */
 
 /**
+ * \def DECISION_VERSION_MAJOR
+ * \brief The major verion number.
+ */
+#define DECISION_VERSION_MAJOR "@Decision_VERSION_MAJOR@"
+
+/**
+ * \def DECISION_VERSION_MINOR
+ * \brief The minor verion number.
+ */
+#define DECISION_VERSION_MINOR "@Decision_VERSION_MINOR@"
+
+/**
+ * \def DECISION_VERSION_PATCH
+ * \brief The patch verion number.
+ */
+#define DECISION_VERSION_PATCH "@Decision_VERSION_PATCH@"
+
+/**
  * \def DECISION_VERSION
  * \brief The current version of Decision.
  */
-#define DECISION_VERSION "@Decision_VERSION@"
+#define DECISION_VERSION \
+    DECISION_VERSION_MAJOR "." DECISION_VERSION_MINOR "." DECISION_VERSION_PATCH
 
 /**
  * \var extern char VERBOSE_LEVEL
