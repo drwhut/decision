@@ -35,30 +35,39 @@
 === HEADER DEFINITIONS ====================================
 */
 
+// clang-format off
+
 /**
  * \def DECISION_VERSION_MAJOR
  * \brief The major verion number.
  */
-#define DECISION_VERSION_MAJOR "@Decision_VERSION_MAJOR@"
+#define DECISION_VERSION_MAJOR @Decision_VERSION_MAJOR@
 
 /**
  * \def DECISION_VERSION_MINOR
  * \brief The minor verion number.
  */
-#define DECISION_VERSION_MINOR "@Decision_VERSION_MINOR@"
+#define DECISION_VERSION_MINOR @Decision_VERSION_MINOR@
 
 /**
  * \def DECISION_VERSION_PATCH
  * \brief The patch verion number.
  */
-#define DECISION_VERSION_PATCH "@Decision_VERSION_PATCH@"
+#define DECISION_VERSION_PATCH @Decision_VERSION_PATCH@
+
+#define _STR(x)         #x
+#define _VERSION_STR(x) _STR(x)
 
 /**
  * \def DECISION_VERSION
  * \brief The current version of Decision.
  */
 #define DECISION_VERSION \
-    DECISION_VERSION_MAJOR "." DECISION_VERSION_MINOR "." DECISION_VERSION_PATCH
+    _VERSION_STR(DECISION_VERSION_MAJOR) "." \
+    _VERSION_STR(DECISION_VERSION_MINOR) "." \
+    _VERSION_STR(DECISION_VERSION_PATCH)
+
+// clang-format on
 
 /**
  * \var extern char VERBOSE_LEVEL
