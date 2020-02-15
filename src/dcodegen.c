@@ -565,37 +565,38 @@ void d_allocate_variable(BuildContext *context, SheetVariable *variable,
 */
 
 /**
- * \fn BCode d_push_literal(SheetSocket *socket, BuildContext *context,
+ * \fn BCode d_push_literal(BuildContext *context, NodeSocket socket
  *                          bool cvtFloat)
  * \brief Generate bytecode to push a literal onto the stack.
  *
  * \return Bytecode to push the socket's literal onto the stack.
  *
- * \param socket The socket of the literal to push onto the stack.
  * \param context The context needed to build the bytecode.
+ * \param socket The socket of the literal to push onto the stack.
  * \param cvtFloat Converts the literal to a float if possible.
  */
-BCode d_push_literal(SheetSocket *socket, BuildContext *context,
-                     bool cvtFloat) {
+BCode d_push_literal(BuildContext *context, NodeSocket socket, bool cvtFloat) {
+    SocketMeta meta = d_get_socket_meta(context->sheet, socket);
+
     VERBOSE(
         5,
-        "Generating bytecode to get literal value of type %u from node %s...\n",
-        socket->type, socket->node->name);
+        "Generating bytecode to get literal value of type %s from node %s...\n",
+        d_type_name(meta.type), meta.name);
 
     // Even for floats, we want the integer representation of them.
-    dint intLiteral = socket->defaultValue.integerValue;
+    dint intLiteral = meta.defaultValue.integerValue;
 
     BCode out = d_bytecode_ins(OP_PUSHF);
     d_bytecode_set_fimmediate(out, 1, (fimmediate_t)intLiteral);
 
-    if (socket->type == TYPE_INT && cvtFloat) {
+    if (meta.type == TYPE_INT && cvtFloat) {
         BCode cvtf = d_bytecode_ins(OP_CVTF);
         d_concat_bytecode(&out, &cvtf);
         d_free_bytecode(&cvtf);
-    } else if (socket->type == TYPE_STRING) {
+    } else if (meta.type == TYPE_STRING) {
         // The literal string needs to go into the data section.
         d_allocate_string_literal_in_data(context, &out, 0,
-                                          socket->defaultValue.stringValue);
+                                          meta.defaultValue.stringValue);
     }
 
     // Set the socket's stack index so we know where the value lives.
@@ -605,24 +606,27 @@ BCode d_push_literal(SheetSocket *socket, BuildContext *context,
 }
 
 /**
- * \fn BCode d_push_variable(SheetNode *node, BuildContext *context)
+ * \fn BCode d_push_variable(BuildContext *context, size_t nodeIndex)
  * \brief Given a node that is the getter of a variable, generate bytecode to
  * push the value of the variable onto the stack.
  *
  * \return Bytecode to push the variable's value onto the stack.
  *
- * \param node The node that is the getter of a variable.
  * \param context The context needed to build the bytecode.
+ * \param nodeIndex The index of the node that is the getter of a variable.
  */
-BCode d_push_variable(SheetNode *node, BuildContext *context) {
-    VERBOSE(5, "Generating bytecode to get the value of variable %s...\n",
-            node->name);
+BCode d_push_variable(BuildContext *context, size_t nodeIndex) {
+    SheetNode node                = context->sheet->nodes[nodeIndex];
+    const NodeDefinition *nodeDef = node.definition;
+    SheetVariable *variable       = node.nameDefinition.variable;
+    const SocketMeta variableMeta = variable->variableMeta;
 
-    SheetVariable *variable = node->definition.variable;
+    VERBOSE(5, "Generating bytecode to get the value of variable %s...\n",
+            variableMeta.name);
 
     // If the variable is a boolean, the variable is 1 byte instead of
     // sizeof(dint).
-    DIns opcode = (variable->dataType == TYPE_BOOL) ? OP_DEREFBI : OP_DEREFI;
+    DIns opcode = (variableMeta.type == TYPE_BOOL) ? OP_DEREFBI : OP_DEREFI;
 
     BCode out = d_bytecode_ins(opcode);
     d_bytecode_set_fimmediate(out, 1, 0); // The address will be linked later.
@@ -630,12 +634,12 @@ BCode d_push_variable(SheetNode *node, BuildContext *context) {
     // Set the socket's stack index so we know where the value lives.
     node->sockets[0]->_stackIndex = ++context->stackTop;
 
-    LinkType linkType = (variable->dataType == TYPE_STRING)
+    LinkType linkType = (variableMeta.type == TYPE_STRING)
                             ? LINK_VARIABLE_POINTER
                             : LINK_VARIABLE;
 
     // We need this code to remember to link to the variable.
-    LinkMeta meta = d_link_new_meta(linkType, node->name, variable);
+    LinkMeta meta = d_link_new_meta(linkType, variableMeta.name, variable);
 
     // Now we add the link metadata to the list in the context, but we
     // want to look out for duplicate variables that may have already been
@@ -648,44 +652,44 @@ BCode d_push_variable(SheetNode *node, BuildContext *context) {
 }
 
 /**
- * \fn BCode d_push_input(SheetSocket *socket, BuildContext *context,
+ * \fn BCode d_push_input(BuildContext *context, NodeSocket socket,
  *                        bool forceFloat)
  * \brief Given an input socket, generate bytecode to push the value of the
  * input to the top of the stack.
  *
  * \return Bytecode to push the input's value onto the stack.
  *
- * \param socket The input socket to get the value for.
  * \param context The context needed to build the bytecode.
+ * \param socket The input socket to get the value for.
  * \param forceFloat Force integers to be converted to floats.
  */
-BCode d_push_input(SheetSocket *socket, BuildContext *context,
-                   bool forceFloat) {
-    VERBOSE(5, "Generating bytecode to get the value of input socket %p...\n",
-            socket);
+BCode d_push_input(BuildContext *context, NodeSocket socket, bool forceFloat) {
+    SocketMeta meta = d_get_socket_meta(context->sheet, socket);
+
+    VERBOSE(5,
+            "Generating bytecode to get the value of input socket %d of node "
+            "%d...\n",
+            socket.socketIndex, socket.nodeIndex);
 
     BCode out = {NULL, 0};
 
-    if (socket->isInput && socket->type != TYPE_EXECUTION) {
-        if (socket->numConnections == 0) {
+    if (d_is_input_socket(context->sheet, socket) &&
+        meta.type != TYPE_EXECUTION) {
+
+        int wireIndex = d_wire_find_first(context->sheet, socket);
+
+        if (wireIndex < 0) {
             // The socket input is a literal.
-            out = d_push_literal(socket, context, forceFloat);
+            out = d_push_literal(context, socket, forceFloat);
         } else {
             // The socket has a connected socket.
-            SheetSocket *connSocket = socket->connections[0];
-            SheetNode *connNode     = connSocket->node;
+            NodeSocket connSocket = context->sheet->wires[wireIndex].socketTo;
+            SheetNode connNode    = context->sheet->nodes[connSocket.nodeIndex];
+
+            const NodeDefinition *connDef = connNode.definition;
 
             // Determine if the node is an execution node.
-            bool isExecutionNode = false;
-
-            for (size_t i = 0; i < connNode->numSockets; i++) {
-                SheetSocket *testSocket = connNode->sockets[i];
-
-                if (testSocket->type == TYPE_EXECUTION) {
-                    isExecutionNode = true;
-                    break;
-                }
-            }
+            bool isExecutionNode = d_is_execution_definition(connDef);
 
             // Set to false if you can determine socket->_stackIndex.
             bool checkIfOnTop = true;
@@ -700,15 +704,16 @@ BCode d_push_input(SheetSocket *socket, BuildContext *context,
                 connSocket->_stackIndex > context->stackTop) {
 
                 // If this is the Define node, we need to push the argument.
-                if (strcmp(connNode->name, "Define") == 0) {
-                    out = d_push_argument(connSocket, context);
+                if (strcmp(connDef->name, "Define") == 0) {
+                    out = d_push_argument(context, connSocket);
 
                     // Since we're copying the argument, set the socket's
                     // stack index now.
                     socket->_stackIndex = context->stackTop;
                     checkIfOnTop        = false;
                 } else if (!isExecutionNode) {
-                    out = d_generate_nonexecution_node(connNode, context);
+                    out = d_generate_nonexecution_node(context,
+                                                       connSocket.nodeIndex);
                 }
             } else if (isExecutionNode) {
                 // Semantic Analysis should have confirmed that there
@@ -717,11 +722,11 @@ BCode d_push_input(SheetSocket *socket, BuildContext *context,
                 // We just need to get it and push it to the top of the
                 // stack like an argument.
                 forceOnTop = true;
-            } else if (connNode->definition.type == NAME_VARIABLE) {
+            } else if (connNode.nameDefinition.type == NAME_VARIABLE) {
                 // This getter of a variable has already been used, and the
                 // variable's value is somewhere in the stack. But what if
                 // the value of the variable has changed?
-                out = d_push_variable(connNode, context);
+                out = d_push_variable(context, connSocket.nodeIndex);
             }
 
             if (checkIfOnTop || forceOnTop) {
@@ -752,7 +757,7 @@ BCode d_push_input(SheetSocket *socket, BuildContext *context,
 }
 
 /**
- * \fn BCode d_push_node_inputs(SheetNode *node, BuildContext *context,
+ * \fn BCode d_push_node_inputs(BuildContext *context, size_t nodeIndex,
  *                              bool order, bool ignoreLiterals,
  *                              bool forceFloat)
  * \brief Given a node, generate bytecode to push the values of the
@@ -760,28 +765,34 @@ BCode d_push_input(SheetSocket *socket, BuildContext *context,
  *
  * \return Bytecode to push all input's values onto the stack.
  *
- * \param node The node whose input sockets to generate bytecode for.
  * \param context The context needed to generate the bytecode.
+ * \param nodeIndex The index of the node whose input sockets to generate
+ * bytecode for.
  * \param order If true, the inputs are pushed in order, such that the last
  * input is at the top. If false, the inputs are pushed in reverse order, such
  * that the first input is at the top.
  * \param ignoreLiterals Do not generate bytecode for non-float literal inputs.
  * \param forceFloat Force integers to be converted to floats.
  */
-BCode d_push_node_inputs(SheetNode *node, BuildContext *context, bool order,
+BCode d_push_node_inputs(BuildContext *context, size_t nodeIndex, bool order,
                          bool ignoreLiterals, bool forceFloat) {
+    const NodeDefinition *nodeDef =
+        d_get_node_definition(context->sheet, nodeIndex);
+
     VERBOSE(5, "Generating bytecode to get the inputs for node %s...\n",
-            node->name);
+            nodeDef->name);
+
+    const size_t numInputs = d_node_num_inputs(context->sheet, nodeIndex);
 
     BCode out = {NULL, 0};
 
-    int start = node->numSockets - 1;
+    int start = numInputs - 1;
     int end   = 0;
     int step  = -1;
 
     if (order) {
         start = 0;
-        end   = node->numSockets - 1;
+        end   = numInputs - 1;
         step  = 1;
     }
 
@@ -794,13 +805,13 @@ BCode d_push_node_inputs(SheetNode *node, BuildContext *context, bool order,
     }
 
     while (inLoop) {
-        SheetSocket *socket = node->sockets[i];
+        NodeSocket socket = {nodeIndex, i};
+        SocketMeta meta   = d_get_socket_meta(context->sheet, socket);
 
-        if (socket->isInput && (socket->type & TYPE_VAR_ANY) != 0) {
-            if (socket->numConnections > 0 || socket->type == TYPE_FLOAT ||
-                !ignoreLiterals) {
-
-                BCode input = d_push_input(socket, context, forceFloat);
+        if ((meta.type & TYPE_VAR_ANY) != 0) {
+            int wireIndex = d_wire_find_first(context->sheet, socket);
+            if (wireIndex >= 0 || meta.type == TYPE_FLOAT || !ignoreLiterals) {
+                BCode input = d_push_input(context, socket, forceFloat);
                 d_concat_bytecode(&out, &input);
                 d_free_bytecode(&input);
             }
@@ -818,8 +829,7 @@ BCode d_push_node_inputs(SheetNode *node, BuildContext *context, bool order,
     // Now the bytecode for the inputs has been generated, we need to verify
     // that the inputs are in order from the top of the stack. If not, we need
     // to get them there.
-    // int verifyIndex       = context->stackTop;
-    int numInputs         = 0;
+    int numCheckedInputs  = 0;
     bool positionsCorrect = true;
 
     i = end;
@@ -830,19 +840,19 @@ BCode d_push_node_inputs(SheetNode *node, BuildContext *context, bool order,
     }
 
     while (inLoop) {
-        SheetSocket *socket = node->sockets[i];
+        NodeSocket socket = {nodeIndex, i};
+        SocketMeta meta   = d_get_socket_meta(context->sheet, socket);
 
-        if (socket->isInput && (socket->type & TYPE_VAR_ANY) != 0) {
-            if (socket->numConnections > 0 || socket->type == TYPE_FLOAT ||
-                !ignoreLiterals) {
-
+        if ((meta.type & TYPE_VAR_ANY) != 0) {
+            int wireIndex = d_wire_find_first(context->sheet, socket);
+            if (wireIndex >= 0 || meta.type == TYPE_FLOAT || !ignoreLiterals) {
                 // Is this input the correct amount from the top?
                 if (STACK_INDEX_TOP(context, socket->_stackIndex) !=
-                    -numInputs) {
+                    -numCheckedInputs) {
                     positionsCorrect = false;
                     break;
                 }
-                numInputs++;
+                numCheckedInputs++;
             }
         }
 
@@ -865,10 +875,12 @@ BCode d_push_node_inputs(SheetNode *node, BuildContext *context, bool order,
         }
 
         while (inLoop) {
-            SheetSocket *socket = node->sockets[i];
+            NodeSocket socket = {nodeIndex, i};
+            SocketMeta meta   = d_get_socket_meta(context->sheet, socket);
 
-            if (socket->isInput && (socket->type & TYPE_VAR_ANY) != 0) {
-                if (socket->numConnections > 0 || socket->type == TYPE_FLOAT ||
+            if ((meta.type & TYPE_VAR_ANY) != 0) {
+                int wireIndex = d_wire_find_first(context->sheet, socket);
+                if (wireIndex >= 0 || meta.type == TYPE_FLOAT ||
                     !ignoreLiterals) {
 
                     BCode get = d_bytecode_ins(OP_GETFI);
