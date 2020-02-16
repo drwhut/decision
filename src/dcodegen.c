@@ -1251,24 +1251,28 @@ BCode d_generate_return(BuildContext *context, size_t returnNodeIndex) {
 }
 
 /**
- * \fn BCode d_generate_nonexecution_node(SheetNode *node,
- *                                        BuildContext *context)
+ * \fn BCode d_generate_nonexecution_node(BuildContext *context,
+ *                                        size_t nodeIndex)
  * \brief Given a non-execution node, generate the bytecode to get the output.
  *
  * \return Bytecode to run the nonexecution node's function.
  *
- * \param node The non-execution node.
  * \param context The context needed to generate the bytecode.
+ * \param nodeIndex The index of the non-execution node.
  */
-BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
+BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
+    SheetNode node                = context->sheet->nodes[nodeIndex];
+    const NodeDefinition *nodeDef = node.definition;
+    NameDefinition nameDef        = node.nameDefinition;
+
     VERBOSE(5, "- Generating bytecode for non-execution node %s...\n",
-            node->name);
+            nodeDef->name);
 
     BCode out = {NULL, 0};
 
     // Firstly, we need to check if the node is a particular function -
     // spoiler alert, one of them is not like the others...
-    const CoreFunction coreFunc = d_core_find_name(node->name);
+    const CoreFunction coreFunc = nameDef.coreFunc;
 
     if (coreFunc == CORE_TERNARY) {
         // Hi. This is the story of why this if statement exists.
@@ -1283,15 +1287,17 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
         //     - drwhut
 
         // Firstly, generate the bytecode for the boolean input.
-        SheetSocket *boolSocket = node->sockets[0];
+        NodeSocket boolSocket = {nodeIndex, 0};
+        SocketMeta boolMeta   = d_get_socket_meta(context->sheet, boolSocket);
 
         // If the boolean input is a literal, we only need to generate bytecode
         // for the input that is active, since that is all that is ever gonna
         // be picked!
-        bool boolIsLiteral    = (boolSocket->numConnections == 0);
-        bool boolLiteralValue = boolSocket->defaultValue.booleanValue;
+        bool boolIsLiteral =
+            (d_socket_num_connections(context->sheet, boolSocket) == 0);
+        bool boolLiteralValue = boolMeta.defaultValue.booleanValue;
 
-        BCode boolCode = d_push_input(boolSocket, context, false);
+        BCode boolCode = d_push_input(context, boolSocket, false);
 
         // The problem with this node is that either the true bytecode or false
         // bytecode will get run, which means the top of the stack can be in
@@ -1302,11 +1308,11 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
         int stackTopBefore = context->stackTop;
 
         // Next, get the bytecode for the true input.
-        SheetSocket *trueSocket = node->sockets[1];
-        BCode trueCode          = {NULL, 0};
+        NodeSocket trueSocket = {nodeIndex, 1};
+        BCode trueCode        = {NULL, 0};
 
         if (!boolIsLiteral || boolLiteralValue) {
-            trueCode = d_push_input(trueSocket, context, false);
+            trueCode = d_push_input(context, trueSocket, false);
         }
 
         int stackTopTrue = context->stackTop;
@@ -1315,11 +1321,11 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
         context->stackTop = stackTopBefore;
 
         // Finally, get the bytecode for the false input.
-        SheetSocket *falseSocket = node->sockets[2];
-        BCode falseCode          = {NULL, 0};
+        NodeSocket falseSocket = {nodeIndex, 2};
+        BCode falseCode        = {NULL, 0};
 
         if (!boolIsLiteral || !boolLiteralValue) {
-            falseCode = d_push_input(falseSocket, context, false);
+            falseCode = d_push_input(context, falseSocket, false);
         }
 
         int stackTopFalse = context->stackTop;
@@ -1357,7 +1363,7 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
 
         context->stackTop = finalStackTop;
 
-        SheetSocket *outputSocket = node->sockets[3];
+        NodeSocket outputSocket   = {nodeIndex, 3};
         outputSocket->_stackIndex = finalStackTop;
 
         // If the boolean input is a literal, then it's easy! We just output
@@ -1369,7 +1375,7 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
             d_free_bytecode(append);
 
             // Setting the output socket stack index.
-            SheetSocket *inputSocket =
+            NodeSocket inputSocket =
                 (boolLiteralValue) ? trueSocket : falseSocket;
             outputSocket->_stackIndex = inputSocket->_stackIndex;
 
@@ -1383,7 +1389,7 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
             // Since the boolean is going to get poped off by the JRCONFI
             // instruction, copy it on the stack in case other nodes still need
             // its value.
-            if (node->sockets[0]->connections[0]->numConnections > 1) {
+            if (d_socket_num_connections(context->sheet, boolSocket) > 1) {
                 BCode copyBool = d_bytecode_ins(OP_GETFI);
                 d_bytecode_set_fimmediate(copyBool, 1, 0);
                 d_concat_bytecode(&out, &copyBool);
@@ -1424,22 +1430,30 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
             // Remember that it's only non-execution functions we care about.
             switch (coreFunc) {
                 case CORE_ADD:;
-                    action = d_generate_operator(node, context, OP_ADD, OP_ADDF,
-                                                 OP_ADDFI, false);
+                    action = d_generate_operator(context, nodeIndex, OP_ADD,
+                                                 OP_ADDF, OP_ADDFI, false);
                     break;
                 case CORE_AND:;
-                    action = d_generate_operator(node, context, OP_AND, 0,
+                    action = d_generate_operator(context, nodeIndex, OP_AND, 0,
                                                  OP_ANDFI, false);
                     break;
                 case CORE_DIV:
                 case CORE_DIVIDE:;
                     action =
-                        d_generate_operator(node, context, OP_DIV, OP_DIVF,
+                        d_generate_operator(context, nodeIndex, OP_DIV, OP_DIVF,
                                             OP_DIVFI, coreFunc == CORE_DIVIDE);
 
                     if (coreFunc == CORE_DIV) {
-                        if (node->sockets[0]->type == TYPE_FLOAT ||
-                            node->sockets[1]->type == TYPE_FLOAT) {
+                        NodeSocket socket1 = {nodeIndex, 0};
+                        NodeSocket socket2 = {nodeIndex, 1};
+
+                        SocketMeta meta1 =
+                            d_get_socket_meta(context->sheet, socket1);
+                        SocketMeta meta2 =
+                            d_get_socket_meta(context->sheet, socket2);
+
+                        if (meta1.type == TYPE_FLOAT ||
+                            meta2.type == TYPE_FLOAT) {
                             // If this is Div, and either of the inputs are
                             // floats, we need to turn the answer back into
                             // an integer.
@@ -1450,15 +1464,16 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
                     }
                     break;
                 case CORE_EQUAL:;
-                    action = d_generate_comparator(node, context, OP_CEQ,
+                    action = d_generate_comparator(context, nodeIndex, OP_CEQ,
                                                    OP_CEQF, 0, false);
                     break;
                 case CORE_MULTIPLY:;
-                    action = d_generate_operator(node, context, OP_MUL, OP_MULF,
-                                                 OP_MULFI, false);
+                    action = d_generate_operator(context, nodeIndex, OP_MUL,
+                                                 OP_MULF, OP_MULFI, false);
                     break;
                 case CORE_LENGTH:;
-                    action = d_push_input(node->sockets[0], context, false);
+                    NodeSocket socket = {nodeIndex, 0};
+                    action            = d_push_input(context, socket, false);
 
                     // Here we will use the SYS_STRLEN syscall.
                     BCode pushArgs = d_bytecode_ins(OP_PUSHNF);
@@ -1474,40 +1489,40 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
                     node->sockets[1]->_stackIndex = context->stackTop;
                     break;
                 case CORE_LESS_THAN:;
-                    action = d_generate_comparator(node, context, OP_CLT,
+                    action = d_generate_comparator(context, nodeIndex, OP_CLT,
                                                    OP_CLTF, 2, false);
                     break;
                 case CORE_LESS_THAN_OR_EQUAL:;
-                    action = d_generate_comparator(node, context, OP_CLEQ,
+                    action = d_generate_comparator(context, nodeIndex, OP_CLEQ,
                                                    OP_CLEQF, 1, false);
                     break;
                 case CORE_MOD:;
-                    action = d_generate_operator(node, context, OP_MOD, 0,
+                    action = d_generate_operator(context, nodeIndex, OP_MOD, 0,
                                                  OP_MODFI, false);
                     break;
                 case CORE_MORE_THAN:;
-                    action = d_generate_comparator(node, context, OP_CMT,
+                    action = d_generate_comparator(context, nodeIndex, OP_CMT,
                                                    OP_CMTF, 4, false);
                     break;
                 case CORE_MORE_THAN_OR_EQUAL:;
-                    action = d_generate_comparator(node, context, OP_CMEQ,
+                    action = d_generate_comparator(context, nodeIndex, OP_CMEQ,
                                                    OP_CMEQF, 3, false);
                     break;
                 case CORE_NOT:;
-                    action =
-                        d_generate_operator(node, context, OP_NOT, 0, 0, false);
+                    action = d_generate_operator(context, nodeIndex, OP_NOT, 0,
+                                                 0, false);
                     break;
                 case CORE_NOT_EQUAL:;
-                    action = d_generate_comparator(node, context, OP_CEQ,
+                    action = d_generate_comparator(context, nodeIndex, OP_CEQ,
                                                    OP_CEQF, 0, true);
                     break;
                 case CORE_OR:;
-                    action = d_generate_operator(node, context, OP_OR, 0,
+                    action = d_generate_operator(context, nodeIndex, OP_OR, 0,
                                                  OP_ORFI, false);
                     break;
                 case CORE_SUBTRACT:;
-                    action = d_generate_operator(node, context, OP_SUB, OP_SUBF,
-                                                 OP_SUBFI, false);
+                    action = d_generate_operator(context, nodeIndex, OP_SUB,
+                                                 OP_SUBF, OP_SUBFI, false);
                     break;
                 case CORE_TERNARY:;
                     // Ternary is a special snowflake when it comes to
@@ -1515,7 +1530,7 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
                     // See above.
                     break;
                 case CORE_XOR:;
-                    action = d_generate_operator(node, context, OP_XOR, 0,
+                    action = d_generate_operator(context, nodeIndex, OP_XOR, 0,
                                                  OP_XORFI, false);
                     break;
                 default:
@@ -1531,12 +1546,12 @@ BCode d_generate_nonexecution_node(SheetNode *node, BuildContext *context) {
             // We can tell where it came from and what it is, since semantic
             // analysis put the information in the nodes "definition" property.
             // TODO: Error if things below are not defined.
-            if (node->definition.type == NAME_VARIABLE) {
-                action = d_push_variable(node, context);
-            } else if (node->definition.type == NAME_FUNCTION) {
-                action = d_generate_call(node, context);
-            } else if (node->definition.type == NAME_CFUNCTION) {
-                action = d_generate_call(node, context);
+            if (nameDef.type == NAME_VARIABLE) {
+                action = d_push_variable(context, nodeIndex);
+            } else if (nameDef.type == NAME_FUNCTION) {
+                action = d_generate_call(context, nodeIndex);
+            } else if (nameDef.type == NAME_CFUNCTION) {
+                action = d_generate_call(context, nodeIndex);
             }
         }
 
