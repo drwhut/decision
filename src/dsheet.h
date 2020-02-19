@@ -67,8 +67,8 @@ typedef struct _socketMeta {
     const char *name;
     const char *description;
 
-    DType type;
-    LexData defaultValue; ///< If there is no input wire, use this value.
+    const DType type;
+    const LexData defaultValue; ///< If there is no input wire, use this value.
 } SocketMeta;
 
 /**
@@ -82,10 +82,11 @@ typedef struct _nodeDefinition {
     const char *description;
 
     const SocketMeta *sockets;
-    size_t numSockets;
-    size_t startOutputIndex; ///< Any socket before this index is an input
-                             ///< socket, the rest are output sockets.
-    bool infiniteInputs;
+    const size_t numSockets;
+    const size_t startOutputIndex; ///< Any socket before this index is an
+                                   ///< input socket, the rest are output
+                                   ///< sockets.
+    const bool infiniteInputs;
 } NodeDefinition;
 
 /**
@@ -119,24 +120,29 @@ typedef struct _sheetWire {
  */
 typedef struct _sheetNode {
     const NodeDefinition *definition;
-    size_t lineNum;
+    const size_t lineNum;
 
-    DType *reducedTypes;     ///< Needs to be malloc'd, and have as many
-                             ///< elements as sockets.
-    LexData *literalValues;  ///< Needs to be malloc'd, and have
-                             ///< `startOutputIndex` elements.
-    size_t startOutputIndex; ///< This will by default be the same value as in
-                             ///< the definition, but in the event that the
-                             ///< definition allows for infinite inputs, this
-                             ///< value will change to signify where the start
-                             ///< of the outputs actually is.
+    const DType *reducedTypes;     ///< Needs to be malloc'd, and have as many
+                                   ///< elements as sockets. Can be NULL if the
+                                   ///< types are the same as in *definition.
+    const LexData *literalValues;  ///< Needs to be malloc'd, and have
+                                   ///< `startOutputIndex` elements. Can be
+                                   ///< NULL if the default values are the same
+                                   ///< as in *definition.
+    const size_t startOutputIndex; ///< This will by default be the same value
+                                   ///< as in the definition, but in the event
+                                   ///< that the definition allows for infinite
+                                   ///< inputs, this value will change to
+                                   ///< signify where the start of the outputs
+                                   ///< actually is.
 
-    NameDefinition nameDefinition; ///< If the node is the getter or setter of
-                                   ///< a variable, then this points to the
-                                   ///< variable. If the node is a Define or
-                                   ///< return node, this points to the
-                                   ///< function. Otherwise, it points to the
-                                   ///< name definition of the node.
+    const NameDefinition nameDefinition; ///< If the node is the getter or
+                                         ///< setter of a variable, then this
+                                         ///< points to the variable. If the
+                                         ///< node is a Define or return node,
+                                         ///< this points to the function.
+                                         ///< Otherwise, it points to the name
+                                         ///< definition of the node.
 } SheetNode;
 
 /**
@@ -354,7 +360,7 @@ DECISION_API bool d_is_node_socket_valid(Sheet *sheet, NodeSocket nodeSocket);
 DECISION_API bool d_is_input_socket(Sheet *sheet, NodeSocket socket);
 
 /**
- * \fn SocketMeta d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket)
+ * \fn const SocketMeta d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket)
  * \brief Get the metadata of a node's socket.
  *
  * \return The socket's metadata.
@@ -362,7 +368,8 @@ DECISION_API bool d_is_input_socket(Sheet *sheet, NodeSocket socket);
  * \param sheet The sheet the socket belongs to.
  * \param nodeSocket The socket to get the metadata for.
  */
-DECISION_API SocketMeta d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket);
+DECISION_API const SocketMeta d_get_socket_meta(Sheet *sheet,
+                                                NodeSocket nodeSocket);
 
 /**
  * \fn short d_wire_cmp(SheetWire wire1, SheetWire wire2)

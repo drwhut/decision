@@ -273,7 +273,7 @@ bool d_is_input_socket(Sheet *sheet, NodeSocket socket) {
 }
 
 /**
- * \fn SocketMeta d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket)
+ * \fn const SocketMeta d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket)
  * \brief Get the metadata of a node's socket.
  *
  * \return The socket's metadata.
@@ -281,13 +281,9 @@ bool d_is_input_socket(Sheet *sheet, NodeSocket socket) {
  * \param sheet The sheet the socket belongs to.
  * \param nodeSocket The socket to get the metadata for.
  */
-SocketMeta d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket) {
+const SocketMeta d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket) {
     if (!d_is_node_socket_valid(sheet, nodeSocket)) {
-        SocketMeta meta;
-        meta.name                      = NULL;
-        meta.description               = NULL;
-        meta.type                      = TYPE_NONE;
-        meta.defaultValue.integerValue = 0;
+        const SocketMeta meta = {NULL, NULL, TYPE_NONE, 0};
         return meta;
     }
 
@@ -311,16 +307,25 @@ SocketMeta d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket) {
         }
     }
 
-    SocketMeta meta = nodeDef->sockets[socketIndex];
+    const SocketMeta original = nodeDef->sockets[socketIndex];
 
     // Replace some of the elements with what is stored in the node.
-    meta.type = node.reducedTypes[nodeSocket.socketIndex];
+    DType type     = original.type;
+    LexData defVal = original.defaultValue;
 
-    if (nodeSocket.socketIndex < node.startOutputIndex) {
-        meta.defaultValue = node.literalValues[nodeSocket.socketIndex];
+    if (node.reducedTypes != NULL) {
+        type = node.reducedTypes[nodeSocket.socketIndex];
     }
 
-    return meta;
+    if (node.literalValues != NULL) {
+        if (nodeSocket.socketIndex < node.startOutputIndex) {
+            defVal = node.literalValues[nodeSocket.socketIndex];
+        }
+    }
+
+    const SocketMeta out = {original.name, original.description, type, defVal};
+
+    return out;
 }
 
 /**
@@ -682,7 +687,7 @@ void d_sheet_add_variable(Sheet *sheet, const SocketMeta varMeta) {
 
     // Copy the variable metadata.
     SocketMeta *getterMeta = (SocketMeta *)d_malloc(sizeof(SocketMeta));
-    *getterMeta            = varMeta;
+    memcpy(getterMeta, &varMeta, sizeof(SocketMeta));
 
     const NodeDefinition getter = {(const char *)nameGetter,
                                    (const char *)descriptionGetter,
@@ -730,7 +735,7 @@ void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef) {
     SocketMeta defineNameSocket = {defineName, defineDescription, TYPE_NAME,
                                    funcDef.name};
 
-    *defineMeta = defineNameSocket;
+    memcpy(defineMeta, &defineNameSocket, sizeof(SocketMeta));
     memcpy(defineMeta + 1, funcDef.sockets, numInputs * sizeof(SocketMeta));
 
     const NodeDefinition defineDef = {(const char *)nameDefine,
@@ -755,7 +760,7 @@ void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef) {
     SocketMeta returnNameSocket = {returnName, returnDescription, TYPE_NAME,
                                    funcDef.name};
 
-    *returnMeta = returnNameSocket;
+    memcpy(returnMeta, &returnNameSocket, sizeof(SocketMeta));
     memcpy(returnMeta + 1, funcDef.sockets + funcDef.startOutputIndex,
            numOutputs * sizeof(SocketMeta));
 
