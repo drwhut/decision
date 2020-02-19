@@ -122,28 +122,26 @@ typedef struct _sheetNode {
     const NodeDefinition *definition;
     const size_t lineNum;
 
-    const DType *reducedTypes;     ///< Needs to be malloc'd, and have as many
-                                   ///< elements as sockets. Can be NULL if the
-                                   ///< types are the same as in *definition.
-    const LexData *literalValues;  ///< Needs to be malloc'd, and have
-                                   ///< `startOutputIndex` elements. Can be
-                                   ///< NULL if the default values are the same
-                                   ///< as in *definition.
-    const size_t startOutputIndex; ///< This will by default be the same value
-                                   ///< as in the definition, but in the event
-                                   ///< that the definition allows for infinite
-                                   ///< inputs, this value will change to
-                                   ///< signify where the start of the outputs
-                                   ///< actually is.
+    DType *reducedTypes;     ///< Needs to be malloc'd, and have as many
+                             ///< elements as sockets. Can be NULL if the types
+                             ///< are the same as in *definition.
+    LexData *literalValues;  ///< Needs to be malloc'd, and have
+                             ///< `startOutputIndex` elements. Can be NULL if
+                             ///< the default values are the same as in
+                             ///< *definition.
+    size_t startOutputIndex; ///< This will by default be the same value as in
+                             ///< the definition, but in the event that the
+                             ///< definition allows for infinite inputs, this
+                             ///< value will change to signify where the start
+                             ///< of the outputs actually is.
 
-    const NameDefinition nameDefinition; ///< If the node is the getter or
-                                         ///< setter of a variable, then this
-                                         ///< points to the variable. If the
-                                         ///< node is a Define or return node,
-                                         ///< this points to the function.
-                                         ///< Otherwise, it points to the name
-                                         ///< definition of the node.
-    
+    NameDefinition nameDefinition; ///< If the node is the getter or setter of
+                                   ///< a variable, then this points to the
+                                   ///< variable. If the node is a Define or
+                                   ///< Return node, this points to the
+                                   ///< function. Otherwise, it points to the
+                                   ///< name definition of the node.
+
     int *_stackPositions; ///< Used by Code Generation.
 } SheetNode;
 

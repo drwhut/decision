@@ -484,14 +484,13 @@ static void add_property_Variable(Sheet *sheet, size_t lineNum,
             descriptionArg = argList.args[3];
         }
 
-        SocketMeta newVariable;
-        newVariable.name                      = NULL;
-        newVariable.description               = NULL;
-        newVariable.type                      = TYPE_NONE;
-        newVariable.defaultValue.integerValue = 0;
+        char *varName        = NULL;
+        char *varDescription = NULL;
+        DType varType        = TYPE_NONE;
+        LexData varDefault   = {0};
 
         if (PROPERTY_ARGUMENT_NAME_DEFINED(variableNameArg)) {
-            const char *varName = variableNameArg.data.name;
+            varName = variableNameArg.data.name;
 
             // We need to check if the variable name is already defined.
             bool alreadyDefined = false;
@@ -504,11 +503,10 @@ static void add_property_Variable(Sheet *sheet, size_t lineNum,
                 }
             }
 
-            if (!alreadyDefined)
-                newVariable.name = varName;
-            else
+            if (alreadyDefined) {
                 ERROR_COMPILER(sheet->filePath, lineNum, true,
                                "Variable %s already defined", varName);
+            }
         } else {
             ERROR_COMPILER(
                 sheet->filePath, lineNum, true,
@@ -527,7 +525,7 @@ static void add_property_Variable(Sheet *sheet, size_t lineNum,
                     d_error_compiler_push("Variable data types cannot be vague",
                                           sheet->filePath, lineNum, true);
                 } else {
-                    newVariable.type = finalType;
+                    varType = finalType;
                 }
             } else {
                 d_error_compiler_push(
@@ -547,10 +545,10 @@ static void add_property_Variable(Sheet *sheet, size_t lineNum,
             if (PROPERTY_ARGUMENT_LITERAL_DEFINED(defaultValueArg)) {
                 LexToken *defaultValueToken = defaultValueArg.data.literal;
 
-                switch (newVariable.type) {
+                switch (varType) {
                     case TYPE_INT:
                         if (defaultValueToken->type == TK_INTEGERLITERAL) {
-                            newVariable.defaultValue.integerValue =
+                            varDefault.integerValue =
                                 defaultValueToken->data.integerValue;
                         } else {
                             d_error_compiler_push(
@@ -562,13 +560,13 @@ static void add_property_Variable(Sheet *sheet, size_t lineNum,
 
                     case TYPE_FLOAT:
                         if (defaultValueToken->type == TK_FLOATLITERAL) {
-                            newVariable.defaultValue.floatValue =
+                            varDefault.floatValue =
                                 defaultValueToken->data.floatValue;
                         } else if (defaultValueToken->type ==
                                    TK_INTEGERLITERAL) {
                             // If we've been given an integer, that's fine,
                             // we can easily convert it.
-                            newVariable.defaultValue.floatValue =
+                            varDefault.floatValue =
                                 (dfloat)defaultValueToken->data.integerValue;
                         } else {
                             d_error_compiler_push("Set variable to Float, got "
@@ -580,7 +578,7 @@ static void add_property_Variable(Sheet *sheet, size_t lineNum,
 
                     case TYPE_STRING:
                         if (defaultValueToken->type == TK_STRINGLITERAL) {
-                            newVariable.defaultValue.stringValue =
+                            varDefault.stringValue =
                                 defaultValueToken->data.stringValue;
                         } else {
                             d_error_compiler_push("Set variable to String, got "
@@ -592,7 +590,7 @@ static void add_property_Variable(Sheet *sheet, size_t lineNum,
 
                     case TYPE_BOOL:
                         if (defaultValueToken->type == TK_BOOLEANLITERAL) {
-                            newVariable.defaultValue.booleanValue =
+                            varDefault.booleanValue =
                                 defaultValueToken->data.booleanValue;
                         } else {
                             d_error_compiler_push(
@@ -611,21 +609,21 @@ static void add_property_Variable(Sheet *sheet, size_t lineNum,
                     sheet->filePath, lineNum, true);
             }
         } else {
-            switch (newVariable.type) {
+            switch (varType) {
                 case TYPE_INT:
-                    newVariable.defaultValue.integerValue = 0;
+                    varDefault.integerValue = 0;
                     break;
 
                 case TYPE_FLOAT:
-                    newVariable.defaultValue.floatValue = 0.0;
+                    varDefault.floatValue = 0.0;
                     break;
 
                 case TYPE_STRING:
-                    newVariable.defaultValue.stringValue = "";
+                    varDefault.stringValue = "";
                     break;
 
                 case TYPE_BOOL:
-                    newVariable.defaultValue.booleanValue = false;
+                    varDefault.booleanValue = false;
                     break;
 
                 default:
@@ -638,8 +636,7 @@ static void add_property_Variable(Sheet *sheet, size_t lineNum,
                 LexToken *descriptionToken = descriptionArg.data.literal;
 
                 if (descriptionToken->type == TYPE_STRING) {
-                    newVariable.description =
-                        descriptionToken->data.stringValue;
+                    varDescription = descriptionToken->data.stringValue;
                 } else {
                     d_error_compiler_push("Description is not a literal string",
                                           sheet->filePath, lineNum, true);
@@ -652,8 +649,9 @@ static void add_property_Variable(Sheet *sheet, size_t lineNum,
 
         // We've gotten the variable, now we add it to the sheet if everything
         // went ok.
-        if (newVariable.name != NULL && newVariable.type != TYPE_NONE) {
-            d_sheet_add_variable(sheet, newVariable);
+        if (varName != NULL && varType != TYPE_NONE) {
+            SocketMeta varMeta = {varName, varDescription, varType, varDefault};
+            d_sheet_add_variable(sheet, varMeta);
         }
     }
 }
@@ -822,11 +820,11 @@ static void add_property_FunctionInput(Sheet *sheet, size_t lineNum,
         }
 
         char *funcName = NULL;
-        SocketMeta newSocket;
-        newSocket.name                      = NULL;
-        newSocket.description               = NULL;
-        newSocket.type                      = TYPE_NONE;
-        newSocket.defaultValue.integerValue = 0;
+
+        char *socketName        = NULL;
+        char *socketDescription = NULL;
+        DType socketType        = TYPE_NONE;
+        LexData socketDefault   = {0};
 
         if (PROPERTY_ARGUMENT_NAME_DEFINED(funcArg)) {
             funcName = funcArg.data.name;
@@ -838,7 +836,7 @@ static void add_property_FunctionInput(Sheet *sheet, size_t lineNum,
         }
 
         if (PROPERTY_ARGUMENT_NAME_DEFINED(nameArg)) {
-            newSocket.name = nameArg.data.name;
+            socketName = nameArg.data.name;
         } else {
             ERROR_COMPILER(sheet->filePath, lineNum, false,
                            "FunctionInput name argument (argument "
@@ -848,10 +846,10 @@ static void add_property_FunctionInput(Sheet *sheet, size_t lineNum,
 
         if (PROPERTY_ARGUMENT_TYPE_DEFINED(typeArg) &&
             PROPERTY_ARGUMENT_TYPE_IS_VAR(typeArg)) {
-            newSocket.type = typeArg.data.dataType;
+            socketType = typeArg.data.dataType;
 
             // TODO: Add support for vague data types in functions.
-            if (d_type_is_vague(newSocket.type)) {
+            if (d_type_is_vague(socketType)) {
                 d_error_compiler_push("Vague data types in functions is "
                                       "not currently supported",
                                       sheet->filePath, lineNum, true);
@@ -868,12 +866,12 @@ static void add_property_FunctionInput(Sheet *sheet, size_t lineNum,
                 LexToken *literal   = defaultArg.data.literal;
                 DType typeOfLiteral = TYPE_FROM_LEX_LITERAL(literal->type);
 
-                if ((typeOfLiteral & newSocket.type) != TYPE_NONE) {
+                if ((typeOfLiteral & socketType) != TYPE_NONE) {
                     // The data types match, we can set the default
                     // value.
                     defaultValue = literal->data;
                 } else if (typeOfLiteral == TYPE_INT &&
-                           newSocket.type == TYPE_FLOAT) {
+                           socketType == TYPE_FLOAT) {
                     // We can easily convert an integer into a float.
                     literal->data.floatValue =
                         (dfloat)literal->data.integerValue;
@@ -884,7 +882,7 @@ static void add_property_FunctionInput(Sheet *sheet, size_t lineNum,
                                    "argument data type %s "
                                    "does not match input data type %s",
                                    d_type_name(typeOfLiteral),
-                                   d_type_name(newSocket.type));
+                                   d_type_name(socketType));
                 }
             } else {
                 ERROR_COMPILER(sheet->filePath, lineNum, true,
@@ -899,7 +897,7 @@ static void add_property_FunctionInput(Sheet *sheet, size_t lineNum,
                 LexToken *descriptionToken = descriptionArg.data.literal;
 
                 if (descriptionToken->type == TYPE_STRING) {
-                    newSocket.description = descriptionToken->data.stringValue;
+                    socketDescription = descriptionToken->data.stringValue;
                 } else {
                     d_error_compiler_push("Description is not a literal string",
                                           sheet->filePath, lineNum, true);
@@ -967,11 +965,11 @@ static void add_property_FunctionOutput(Sheet *sheet, size_t lineNum,
         }
 
         char *funcName = NULL;
-        SocketMeta newSocket;
-        newSocket.name                      = NULL;
-        newSocket.description               = NULL;
-        newSocket.type                      = TYPE_NONE;
-        newSocket.defaultValue.integerValue = 0;
+
+        char *socketName        = NULL;
+        char *socketDescription = NULL;
+        DType socketType        = TYPE_NONE;
+        LexData socketDefault   = {0};
 
         if (PROPERTY_ARGUMENT_NAME_DEFINED(funcArg)) {
             funcName = funcArg.data.name;
@@ -983,7 +981,7 @@ static void add_property_FunctionOutput(Sheet *sheet, size_t lineNum,
         }
 
         if (PROPERTY_ARGUMENT_NAME_DEFINED(nameArg)) {
-            newSocket.name = nameArg.data.name;
+            socketName = nameArg.data.name;
         } else {
             ERROR_COMPILER(sheet->filePath, lineNum, false,
                            "FunctionOutput name argument (argument "
@@ -993,10 +991,10 @@ static void add_property_FunctionOutput(Sheet *sheet, size_t lineNum,
 
         if (PROPERTY_ARGUMENT_TYPE_DEFINED(typeArg) &&
             PROPERTY_ARGUMENT_TYPE_IS_VAR(typeArg)) {
-            newSocket.type = typeArg.data.dataType;
+            socketType = typeArg.data.dataType;
 
             // TODO: Add support for vague data types in functions.
-            if (d_type_is_vague(newSocket.type)) {
+            if (d_type_is_vague(socketType)) {
                 d_error_compiler_push("Vague data types in functions is "
                                       "not currently supported",
                                       sheet->filePath, lineNum, true);
@@ -1013,7 +1011,7 @@ static void add_property_FunctionOutput(Sheet *sheet, size_t lineNum,
                 LexToken *descriptionToken = descriptionArg.data.literal;
 
                 if (descriptionToken->type == TYPE_STRING) {
-                    newSocket.description = descriptionToken->data.stringValue;
+                    socketDescription = descriptionToken->data.stringValue;
                 } else {
                     d_error_compiler_push("Description is not a literal string",
                                           sheet->filePath, lineNum, true);
@@ -1241,14 +1239,7 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
         literals[i].integerValue = 0;
     }
 
-    // Create a SheetNode.
-    SheetNode sheetNode;
-    sheetNode.definition       = nodeDef;
-    sheetNode.lineNum          = lineNum;
-    sheetNode.reducedTypes     = types;
-    sheetNode.literalValues    = literals;
-    sheetNode.startOutputIndex = nodeDef->startOutputIndex;
-    sheetNode.nameDefinition   = nameDefinition;
+    size_t startOutputIndex = nodeDef->startOutputIndex;
 
     // What will the index of the node be when it's stored in
     // the sheet?
@@ -1303,22 +1294,21 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
         // we expected, resize the type and literal arrays in
         // the node.
         if (inputArgs.numOccurances > numInputs) {
-            sheetNode.reducedTypes = (DType *)d_realloc(
-                sheetNode.reducedTypes,
-                (inputArgs.numOccurances + d_definition_num_outputs(nodeDef)) *
-                    sizeof(DType));
+            types =
+                (DType *)d_realloc(types, (inputArgs.numOccurances +
+                                           d_definition_num_outputs(nodeDef)) *
+                                              sizeof(DType));
 
-            sheetNode.literalValues =
-                (LexData *)d_realloc(sheetNode.literalValues,
-                                     inputArgs.numOccurances * sizeof(LexData));
+            literals = (LexData *)d_realloc(literals, inputArgs.numOccurances *
+                                                          sizeof(LexData));
 
             for (size_t i = numInputs; i < inputArgs.numOccurances; i++) {
-                sheetNode.literalValues[i].integerValue = 0;
+                literals[i].integerValue = 0;
             }
 
             numInputs = inputArgs.numOccurances;
 
-            sheetNode.startOutputIndex = numInputs;
+            startOutputIndex = numInputs;
         }
 
         for (size_t inputIndex = 0; inputIndex < inputArgs.numOccurances;
@@ -1339,7 +1329,7 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
             // The data type the socket should be.
             DType socketType = nodeDef->sockets[typeIndex].type;
 
-            sheetNode.reducedTypes[inputIndex] = socketType;
+            types[inputIndex] = socketType;
 
             SyntaxNode *inputSyntaxNode = inputArgs.occurances[inputIndex];
 
@@ -1364,10 +1354,9 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
                         if ((typeOfLiteral & socketType) != TYPE_NONE) {
                             // Just set the LexData instead of
                             // testing for each data type.
-                            sheetNode.literalValues[inputIndex] =
-                                literalToken->data;
+                            literals[inputIndex] = literalToken->data;
 
-                            sheetNode.reducedTypes[inputIndex] = typeOfLiteral;
+                            types[inputIndex] = typeOfLiteral;
                         } else if (typeOfLiteral == TYPE_INT &&
                                    socketType == TYPE_FLOAT) {
                             // If the compiler expected a float,
@@ -1376,10 +1365,9 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
                             literalToken->data.floatValue =
                                 (dfloat)literalToken->data.integerValue;
 
-                            sheetNode.literalValues[inputIndex] =
-                                literalToken->data;
+                            literals[inputIndex] = literalToken->data;
 
-                            sheetNode.reducedTypes[inputIndex] = TYPE_FLOAT;
+                            types[inputIndex] = TYPE_FLOAT;
                         } else {
                             ERROR_COMPILER(sheet->filePath, lineNum, true,
                                            "Literal argument type (%s) "
@@ -1443,8 +1431,7 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
                             if (nameDefinitions.numDefinitions > 0) {
                                 // Set the input socket's string
                                 // value.
-                                sheetNode.literalValues[inputIndex] =
-                                    token->data;
+                                literals[inputIndex] = token->data;
 
                                 // NOTE: For Set nodes, the
                                 // definition of the node points
@@ -1456,8 +1443,7 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
                                     if (d_semantic_select_name_definition(
                                             name, nameDefinitions,
                                             &varDefinition)) {
-                                        sheetNode.nameDefinition =
-                                            varDefinition;
+                                        nameDefinition = varDefinition;
                                     }
                                 }
                             } else {
@@ -1570,7 +1556,9 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
     }
 
     // FINALLY, add the node to the sheet.
-    d_sheet_add_node(sheet, sheetNode);
+    SheetNode newNode = {nodeDef,  lineNum,          types,
+                         literals, startOutputIndex, nameDefinition};
+    d_sheet_add_node(sheet, newNode);
 }
 
 /**
@@ -2388,6 +2376,10 @@ void d_semantic_scan(Sheet *sheet, SyntaxNode *root) {
 
     VERBOSE(1, "-- Reducing data types...\n")
     d_semantic_reduce_types(sheet);
+
+    // TODO: Optimise to see if we can get away with setting the types or
+    // literals array in the sheet nodes to NULL if they are identical to their
+    // definitions.
 
     VERBOSE(1, "-- Detecting loops...\n")
     d_semantic_detect_loops(sheet);
