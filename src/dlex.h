@@ -121,10 +121,10 @@ typedef enum _lexType {
  * \typedef union _lexData LexData
  */
 typedef union _lexData {
-    char *stringValue;
     dint integerValue;
     dfloat floatValue;
     bool booleanValue;
+    char *stringValue;
 } LexData;
 
 /**

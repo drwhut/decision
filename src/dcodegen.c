@@ -662,7 +662,9 @@ BCode d_push_variable(BuildContext *context, size_t nodeIndex) {
     d_bytecode_set_fimmediate(out, 1, 0); // The address will be linked later.
 
     // Set the socket's stack index so we know where the value lives.
-    NodeSocket outSocket = {nodeIndex, 0};
+    NodeSocket outSocket;
+    outSocket.nodeIndex = nodeIndex;
+    outSocket.socketIndex = 0;
     set_stack_index(context, outSocket, ++context->stackTop);
 
     LinkType linkType = (variableMeta.type == TYPE_STRING)
@@ -819,6 +821,9 @@ BCode d_push_node_inputs(BuildContext *context, size_t nodeIndex, bool order,
 
     const size_t numInputs = d_node_num_inputs(context->sheet, nodeIndex);
 
+    NodeSocket socket;
+    socket.nodeIndex = nodeIndex;
+
     BCode out = {NULL, 0};
 
     int start = numInputs - 1;
@@ -840,7 +845,7 @@ BCode d_push_node_inputs(BuildContext *context, size_t nodeIndex, bool order,
     }
 
     while (inLoop) {
-        NodeSocket socket = {nodeIndex, i};
+        socket.socketIndex = i;
         SocketMeta meta   = d_get_socket_meta(context->sheet, socket);
 
         if ((meta.type & TYPE_VAR_ANY) != 0) {
@@ -875,7 +880,7 @@ BCode d_push_node_inputs(BuildContext *context, size_t nodeIndex, bool order,
     }
 
     while (inLoop) {
-        NodeSocket socket = {nodeIndex, i};
+        socket.socketIndex = i;
         SocketMeta meta   = d_get_socket_meta(context->sheet, socket);
 
         if ((meta.type & TYPE_VAR_ANY) != 0) {
@@ -911,7 +916,7 @@ BCode d_push_node_inputs(BuildContext *context, size_t nodeIndex, bool order,
         }
 
         while (inLoop) {
-            NodeSocket socket = {nodeIndex, i};
+            socket.socketIndex = i;
             SocketMeta meta   = d_get_socket_meta(context->sheet, socket);
 
             if ((meta.type & TYPE_VAR_ANY) != 0) {
@@ -971,6 +976,9 @@ BCode d_generate_operator(BuildContext *context, size_t nodeIndex, DIns opcode,
     BCode out       = {NULL, 0};
     BCode subaction = {NULL, 0};
 
+    NodeSocket socket;
+    socket.nodeIndex = nodeIndex;
+
     // Do we need to convert integer inputs to floats?
     bool convertFloat = forceFloat;
 
@@ -980,7 +988,7 @@ BCode d_generate_operator(BuildContext *context, size_t nodeIndex, DIns opcode,
     // floats.
     if (!convertFloat) {
         for (size_t j = 0; j < numInputs; j++) {
-            NodeSocket socket = {nodeIndex, j};
+            socket.socketIndex = j;
             SocketMeta meta   = d_get_socket_meta(context->sheet, socket);
 
             if (meta.type == TYPE_FLOAT) {
@@ -992,7 +1000,7 @@ BCode d_generate_operator(BuildContext *context, size_t nodeIndex, DIns opcode,
 
     int initStackTop = context->stackTop;
 
-    NodeSocket socket = {nodeIndex, 0};
+    socket.socketIndex = 0;
     size_t numCons    = d_socket_num_connections(context->sheet, socket);
 
     // Generate the bytecode for the inputs without literals - but we want to
@@ -1074,10 +1082,13 @@ BCode d_generate_comparator(BuildContext *context, size_t nodeIndex,
     bool isString = false;
     bool isFloat  = false;
 
+    NodeSocket socket;
+    socket.nodeIndex = nodeIndex;
+
     const size_t numInputs = d_node_num_inputs(context->sheet, nodeIndex);
 
     for (size_t i = 0; i < numInputs; i++) {
-        NodeSocket socket = {nodeIndex, i};
+        socket.socketIndex = i;
         SocketMeta meta   = d_get_socket_meta(context->sheet, socket);
 
         if (meta.type == TYPE_STRING) {
@@ -1118,8 +1129,8 @@ BCode d_generate_comparator(BuildContext *context, size_t nodeIndex,
         d_free_bytecode(&not);
     }
 
-    NodeSocket outSocket = {nodeIndex, 2};
-    set_stack_index(context, outSocket, --context->stackTop);
+    socket.socketIndex = 2;
+    set_stack_index(context, socket, --context->stackTop);
 
     return out;
 }
@@ -1193,6 +1204,9 @@ BCode d_generate_call(BuildContext *context, size_t nodeIndex) {
     d_concat_bytecode(&out, &call);
     d_free_bytecode(&call);
 
+    NodeSocket socket;
+    socket.nodeIndex = nodeIndex;
+
     // Assign the stack indicies to the return sockets - the return values
     // should be at the top of the stack such that the first return value is
     // at the top.
@@ -1200,11 +1214,11 @@ BCode d_generate_call(BuildContext *context, size_t nodeIndex) {
     int stackTop = context->stackTop;
 
     for (size_t i = numArgs; i < numArgs + numRets; i++) {
-        NodeSocket outSocket = {nodeIndex, i};
-        SocketMeta outMeta   = d_get_socket_meta(context->sheet, outSocket);
+        socket.socketIndex = i;
+        SocketMeta outMeta   = d_get_socket_meta(context->sheet, socket);
 
         if (outMeta.type != TYPE_EXECUTION) {
-            set_stack_index(context, outSocket, stackTop--);
+            set_stack_index(context, socket, stackTop--);
         }
     }
 
@@ -1306,6 +1320,9 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
 
     BCode out = {NULL, 0};
 
+    NodeSocket socket;
+    socket.nodeIndex = nodeIndex;
+
     // Firstly, we need to check if the node is a particular function -
     // spoiler alert, one of them is not like the others...
     const CoreFunction coreFunc = nameDef.definition.coreFunc;
@@ -1323,17 +1340,17 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
         //     - drwhut
 
         // Firstly, generate the bytecode for the boolean input.
-        NodeSocket boolSocket = {nodeIndex, 0};
-        SocketMeta boolMeta   = d_get_socket_meta(context->sheet, boolSocket);
+        socket.socketIndex = 0;
+        SocketMeta boolMeta   = d_get_socket_meta(context->sheet, socket);
 
         // If the boolean input is a literal, we only need to generate bytecode
         // for the input that is active, since that is all that is ever gonna
         // be picked!
         bool boolIsLiteral =
-            (d_socket_num_connections(context->sheet, boolSocket) == 0);
+            (d_socket_num_connections(context->sheet, socket) == 0);
         bool boolLiteralValue = boolMeta.defaultValue.booleanValue;
 
-        BCode boolCode = d_push_input(context, boolSocket, false);
+        BCode boolCode = d_push_input(context, socket, false);
 
         // The problem with this node is that either the true bytecode or false
         // bytecode will get run, which means the top of the stack can be in
@@ -1344,7 +1361,8 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
         int stackTopBefore = context->stackTop;
 
         // Next, get the bytecode for the true input.
-        NodeSocket trueSocket = {nodeIndex, 1};
+        NodeSocket trueSocket = socket;
+        trueSocket.socketIndex = 1;
         BCode trueCode        = {NULL, 0};
 
         if (!boolIsLiteral || boolLiteralValue) {
@@ -1357,7 +1375,8 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
         context->stackTop = stackTopBefore;
 
         // Finally, get the bytecode for the false input.
-        NodeSocket falseSocket = {nodeIndex, 2};
+        NodeSocket falseSocket = socket;
+        socket.socketIndex = 2;
         BCode falseCode        = {NULL, 0};
 
         if (!boolIsLiteral || !boolLiteralValue) {
@@ -1399,8 +1418,8 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
 
         context->stackTop = finalStackTop;
 
-        NodeSocket outputSocket = {nodeIndex, 3};
-        set_stack_index(context, outputSocket, finalStackTop);
+        socket.socketIndex = 3;
+        set_stack_index(context, socket, finalStackTop);
 
         // If the boolean input is a literal, then it's easy! We just output
         // the bytecode that gives us the output corresponding to if the
@@ -1415,7 +1434,7 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
                 (boolLiteralValue) ? trueSocket : falseSocket;
 
             int inputIndex = get_stack_index(context, inputSocket);
-            set_stack_index(context, outputSocket, inputIndex);
+            set_stack_index(context, socket, inputIndex);
 
         } else {
             // Wise guy, eh? So we need to include the bytecode for both the
@@ -1427,7 +1446,7 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
             // Since the boolean is going to get poped off by the JRCONFI
             // instruction, copy it on the stack in case other nodes still need
             // its value.
-            if (d_socket_num_connections(context->sheet, boolSocket) > 1) {
+            if (d_socket_num_connections(context->sheet, socket) > 1) {
                 BCode copyBool = d_bytecode_ins(OP_GETFI);
                 d_bytecode_set_fimmediate(copyBool, 1, 0);
                 d_concat_bytecode(&out, &copyBool);
@@ -1482,8 +1501,12 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
                                             OP_DIVFI, coreFunc == CORE_DIVIDE);
 
                     if (coreFunc == CORE_DIV) {
-                        NodeSocket socket1 = {nodeIndex, 0};
-                        NodeSocket socket2 = {nodeIndex, 1};
+                        NodeSocket socket1;
+                        socket1.nodeIndex = nodeIndex;
+                        socket1.socketIndex = 0;
+
+                        NodeSocket socket2 = socket1;
+                        socket2.socketIndex = 1;
 
                         SocketMeta meta1 =
                             d_get_socket_meta(context->sheet, socket1);
@@ -1510,7 +1533,7 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
                                                  OP_MULF, OP_MULFI, false);
                     break;
                 case CORE_LENGTH:;
-                    NodeSocket socket = {nodeIndex, 0};
+                    socket.socketIndex = 0;
                     action            = d_push_input(context, socket, false);
 
                     // Here we will use the SYS_STRLEN syscall.
@@ -1524,8 +1547,8 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
                     d_concat_bytecode(&action, &syscall);
                     d_free_bytecode(&syscall);
 
-                    NodeSocket outSocket = {nodeIndex, 1};
-                    set_stack_index(context, outSocket, context->stackTop);
+                    socket.socketIndex = 1;
+                    set_stack_index(context, socket, context->stackTop);
                     break;
                 case CORE_LESS_THAN:;
                     action = d_generate_comparator(context, nodeIndex, OP_CLT,
@@ -1623,12 +1646,16 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
 
     const CoreFunction coreFunc = nameDef.definition.coreFunc;
 
+    NodeSocket socket;
+    socket.nodeIndex = nodeIndex;
+    socket.socketIndex = 0;
+
     bool forceFloats = false;
 
     if (coreFunc == CORE_FOR) {
         // If the output is going to be a float, we need the inputs to be
         // floats.
-        NodeSocket socket = {nodeIndex, 5};
+        socket.socketIndex = 5;
         SocketMeta meta   = d_get_socket_meta(context->sheet, socket);
 
         if (meta.type == TYPE_FLOAT) {
@@ -1650,7 +1677,6 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
     if ((int)coreFunc >= 0) {
         // Generate bytecode depending on the core function.
         // Remember that it's only execution functions we care about.
-        NodeSocket socket;
         size_t firstNodeIndex;
         int wireIndex;
 
@@ -1665,13 +1691,15 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
         switch (coreFunc) {
             case CORE_FOR:;
                 // We will be using the "start" input as the index.
-                NodeSocket indexSocket = {nodeIndex, 5};
+                NodeSocket indexSocket = socket;
+                indexSocket.socketIndex = 5;
                 set_stack_index(context, indexSocket, context->stackTop);
 
                 // If the step input is an immediate, we can determine here what
                 // instruction to use to compare the index with the stop value.
                 // If not, we need to insert bytecode to decide.
-                NodeSocket stepSocket = {nodeIndex, 3};
+                NodeSocket stepSocket = socket;
+                stepSocket.socketIndex = 3;
                 SocketMeta stepMeta =
                     d_get_socket_meta(context->sheet, stepSocket);
 
@@ -1777,7 +1805,8 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
 
                 // Get the bytecode for the loop.
                 int stackTopBeforeLoop = context->stackTop;
-                NodeSocket loopSocket  = {nodeIndex, 4};
+                NodeSocket loopSocket  = socket;
+                loopSocket.socketIndex = 4;
 
                 BCode loopAfterJump = {NULL, 0};
 
@@ -2196,11 +2225,12 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
 
     const size_t numInputs = d_node_num_inputs(context->sheet, nodeIndex);
 
-    NodeSocket lastExecSocket = {nodeIndex, 0};
+    NodeSocket lastExecSocket = socket;
+    lastExecSocket.socketIndex = 0;
     bool lastExecFound        = false;
     for (size_t i = 0; i < d_node_num_outputs(context->sheet, nodeIndex); i++) {
 
-        NodeSocket socket = {nodeIndex, numInputs + i};
+        socket.socketIndex = numInputs + i;
         SocketMeta meta   = d_get_socket_meta(context->sheet, socket);
 
         // We only care about the LAST execution socket.
@@ -2259,7 +2289,9 @@ BCode d_generate_start(BuildContext *context, size_t startNodeIndex) {
     // first node after Start.
 
     if (d_node_num_outputs(context->sheet, startNodeIndex) == 1) {
-        NodeSocket socket = {startNodeIndex, 0};
+        NodeSocket socket;
+        socket.nodeIndex = startNodeIndex;
+        socket.socketIndex = 0;
 
         int wireIndex = d_wire_find_first(context->sheet, socket);
 
@@ -2308,7 +2340,9 @@ BCode d_generate_function(BuildContext *context, SheetFunction func) {
             // If it's a subroutine, we can just recursively go through the
             // sequence to the Return.
             // NOTE: The first argument should be the name of the function.
-            NodeSocket socket = {func.defineNodeIndex, 1};
+            NodeSocket socket;
+            socket.nodeIndex = func.defineNodeIndex;
+            socket.socketIndex = 1;
 
             int wireIndex = d_wire_find_first(context->sheet, socket);
 

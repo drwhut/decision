@@ -271,7 +271,11 @@ static void add_property_Variable(Sheet *sheet, size_t lineNum,
         // We've gotten the variable, now we add it to the sheet if everything
         // went ok.
         if (varName != NULL && varType != TYPE_NONE) {
-            SocketMeta varMeta = {varName, varDescription, varType, varDefault};
+            SocketMeta varMeta;
+            varMeta.name = varName;
+            varMeta.description = varDescription;
+            varMeta.type = varType;
+            varMeta.defaultValue = varDefault;
             d_sheet_add_variable(sheet, varMeta);
         }
     }
@@ -873,6 +877,9 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
     // the sheet?
     const size_t nodeIndex = sheet->numNodes;
 
+    NodeSocket socket;
+    socket.nodeIndex = nodeIndex;
+
     // Is it the "Start" node? There's a special pointer in the
     // sheet for this node.
     if (strcmp(nodeDef->name, "Start") == 0) {
@@ -952,7 +959,7 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
             }
 
             // Create the socket index.
-            NodeSocket socket = {nodeIndex, inputIndex};
+            socket.socketIndex = inputIndex;
 
             // The data type the socket should be.
             DType socketType = nodeDef->sockets[typeIndex].type;
@@ -1150,7 +1157,7 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
 
             // Create the socket index.
             size_t socketIndex = nodeDef->startOutputIndex + numOutputs;
-            NodeSocket socket  = {nodeIndex, socketIndex};
+            socket.socketIndex = socketIndex;
 
             numOutputs++;
 
@@ -1183,8 +1190,13 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
     }
 
     // FINALLY, add the node to the sheet.
-    SheetNode newNode = {nodeDef,  lineNum,          types,
-                         literals, startOutputIndex, nameDefinition};
+    SheetNode newNode;
+    newNode.definition = nodeDef;
+    newNode.lineNum = lineNum;
+    newNode.reducedTypes = types;
+    newNode.literalValues = literals;
+    newNode.startOutputIndex = startOutputIndex;
+    newNode.nameDefinition = nameDefinition;
     d_sheet_add_node(sheet, newNode);
 }
 
@@ -1350,7 +1362,9 @@ void d_semantic_scan_nodes(Sheet *sheet, SyntaxNode *root) {
                 foundMatch = true;
 
                 // Create a wire and add it to the sheet.
-                SheetWire wire = {knownLine.socket, unknownLine.socket};
+                SheetWire wire;
+                wire.socketFrom = knownLine.socket;
+                wire.socketTo = unknownLine.socket;
                 d_sheet_add_wire(sheet, wire);
             }
         }
@@ -1383,6 +1397,10 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
                              bool *nodeReduced) {
     bool reducedAllInputs = true;
 
+    NodeSocket socket;
+    socket.nodeIndex = nodeIndex;
+    socket.socketIndex = 0;
+
     switch (coreFunc) {
         // Arithmetic core operations return a Float if any one of their inputs
         // is a Float, otherwise an Integer, except for CORE_DIVIDE, which
@@ -1396,11 +1414,11 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
         case CORE_DIVIDE:
         case CORE_FOR:;
             bool hasFloatInput      = false;
-            NodeSocket outputSocket = {nodeIndex, 0};
+            NodeSocket outputSocket = socket;
 
             for (size_t socketIndex = 0; socketIndex < numSockets;
                  socketIndex++) {
-                NodeSocket socket = {nodeIndex, socketIndex};
+                socket.socketIndex = socketIndex;
                 SocketMeta meta   = d_get_socket_meta(sheet, socket);
 
                 if (meta.type != TYPE_EXECUTION) {
@@ -1470,7 +1488,7 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
             const char *inputName = NULL;
             for (size_t socketIndex = 0; socketIndex < numSockets;
                  socketIndex++) {
-                NodeSocket socket = {nodeIndex, socketIndex};
+                socket.socketIndex = socketIndex;
                 SocketMeta meta   = d_get_socket_meta(sheet, socket);
 
                 if (d_is_input_socket(sheet, socket)) {
@@ -1546,7 +1564,7 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
             bool allSame = true;
             for (size_t socketIndex = 0; socketIndex < numSockets;
                  socketIndex++) {
-                NodeSocket socket = {nodeIndex, socketIndex};
+                socket.socketIndex = socketIndex;
 
                 if (d_is_input_socket(sheet, socket)) {
                     SocketMeta meta = d_get_socket_meta(sheet, socket);
@@ -1633,7 +1651,7 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
 
             for (size_t socketIndex = 0; socketIndex < numSockets;
                  socketIndex++) {
-                NodeSocket socket = {nodeIndex, socketIndex};
+                socket.socketIndex = socketIndex;
                 SocketMeta meta   = d_get_socket_meta(sheet, socket);
 
                 if (meta.type != TYPE_EXECUTION) {
@@ -1711,7 +1729,7 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
 
             for (size_t socketIndex = 1; socketIndex < numSockets;
                  socketIndex++) {
-                NodeSocket socket = {nodeIndex, socketIndex};
+                socket.socketIndex = socketIndex;
                 SocketMeta meta   = d_get_socket_meta(sheet, socket);
 
                 if (d_is_input_socket(sheet, socket)) {
@@ -1913,7 +1931,9 @@ static void check_loop(Sheet *sheet, size_t start, size_t *pathArray,
 
     // Start from the first output socket.
     for (size_t i = numInputs; i < numInputs + numOutputs; i++) {
-        NodeSocket socket = {start, i};
+        NodeSocket socket;
+        socket.nodeIndex = start;
+        socket.socketIndex = i;
 
         int wireIndex = d_wire_find_first(sheet, socket);
 

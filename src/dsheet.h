@@ -119,7 +119,7 @@ typedef struct _sheetWire {
  */
 typedef struct _sheetNode {
     const NodeDefinition *definition;
-    const size_t lineNum;
+    size_t lineNum;
 
     DType *reducedTypes;     ///< Needs to be malloc'd, and have as many
                              ///< elements as sockets. Can be NULL if the types

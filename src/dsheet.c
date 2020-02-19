@@ -308,23 +308,19 @@ const SocketMeta d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket) {
         }
     }
 
-    const SocketMeta original = nodeDef->sockets[socketIndex];
+    SocketMeta out = nodeDef->sockets[socketIndex];
 
     // Replace some of the elements with what is stored in the node.
-    DType type     = original.type;
-    LexData defVal = original.defaultValue;
 
     if (node.reducedTypes != NULL) {
-        type = node.reducedTypes[nodeSocket.socketIndex];
+        out.type = node.reducedTypes[nodeSocket.socketIndex];
     }
 
     if (node.literalValues != NULL) {
         if (nodeSocket.socketIndex < node.startOutputIndex) {
-            defVal = node.literalValues[nodeSocket.socketIndex];
+            out.defaultValue = node.literalValues[nodeSocket.socketIndex];
         }
     }
-
-    const SocketMeta out = {original.name, original.description, type, defVal};
 
     return out;
 }
@@ -691,14 +687,18 @@ void d_sheet_add_variable(Sheet *sheet, const SocketMeta varMeta) {
     SocketMeta *getterMeta = (SocketMeta *)d_malloc(sizeof(SocketMeta));
     memcpy(getterMeta, &varMeta, sizeof(SocketMeta));
 
-    const NodeDefinition getter = {(const char *)nameGetter,
-                                   (const char *)descriptionGetter,
-                                   (const SocketMeta *)getterMeta,
-                                   1,
-                                   0,
-                                   false};
+    NodeDefinition getter;
+    getter.name = nameGetter;
+    getter.description = descriptionGetter;
+    getter.sockets = getterMeta;
+    getter.numSockets = 1;
+    getter.startOutputIndex = 0;
+    getter.infiniteInputs = false;
 
-    SheetVariable variable = {varMeta, getter, sheet};
+    SheetVariable variable;
+    *(SocketMeta *)&(variable.variableMeta) = varMeta;
+    *(NodeDefinition *)&(variable.getterDefinition) = getter;
+    variable.sheet = sheet;
 
     LIST_PUSH(sheet->variables, SheetVariable, sheet->numVariables, variable)
 }
@@ -734,18 +734,22 @@ void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef) {
     SocketMeta *defineMeta =
         (SocketMeta *)d_malloc(numSocketsDefine * sizeof(SocketMeta));
 
-    SocketMeta defineNameSocket = {nameDefine, descriptionDefine, TYPE_NAME,
-                                   (char *)funcDef.name};
+    SocketMeta defineNameSocket;
+    defineNameSocket.name = nameDefine;
+    defineNameSocket.description = descriptionDefine;
+    defineNameSocket.type = TYPE_NAME;
+    defineNameSocket.defaultValue.stringValue = (char *)funcDef.name;
 
     memcpy(defineMeta, &defineNameSocket, sizeof(SocketMeta));
     memcpy(defineMeta + 1, funcDef.sockets, numInputs * sizeof(SocketMeta));
 
-    const NodeDefinition defineDef = {(const char *)nameDefine,
-                                      (const char *)descriptionDefine,
-                                      (const SocketMeta *)defineMeta,
-                                      numSocketsDefine,
-                                      1,
-                                      false};
+    NodeDefinition defineDef;
+    defineDef.name = nameDefine;
+    defineDef.description = descriptionDefine;
+    defineDef.sockets = defineMeta;
+    defineDef.numSockets = numSocketsDefine;
+    defineDef.startOutputIndex = 1;
+    defineDef.infiniteInputs = false;
 
     char *nameReturn = (char *)d_malloc(7);
     strcpy(nameReturn, "Return");
@@ -759,22 +763,33 @@ void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef) {
     SocketMeta *returnMeta =
         (SocketMeta *)d_malloc(numSocketsReturn * sizeof(SocketMeta));
 
-    SocketMeta returnNameSocket = {returnName, returnDescription, TYPE_NAME,
-                                   (char *)funcDef.name};
+    SocketMeta returnNameSocket;
+    returnNameSocket.name = returnName;
+    returnNameSocket.description = returnDescription;
+    returnNameSocket.type = TYPE_NAME;
+    returnNameSocket.defaultValue.stringValue = (char *)funcDef.name;
 
     memcpy(returnMeta, &returnNameSocket, sizeof(SocketMeta));
     memcpy(returnMeta + 1, funcDef.sockets + funcDef.startOutputIndex,
            numOutputs * sizeof(SocketMeta));
 
-    const NodeDefinition returnDef = {(const char *)nameReturn,
-                                      (const char *)descriptionReturn,
-                                      (const SocketMeta *)returnMeta,
-                                      numSocketsReturn,
-                                      numSocketsReturn,
-                                      false};
+    NodeDefinition returnDef;
+    returnDef.name = nameReturn;
+    returnDef.description = descriptionReturn;
+    returnDef.sockets = returnMeta;
+    returnDef.numSockets = numSocketsDefine;
+    returnDef.startOutputIndex = numSocketsReturn;
+    returnDef.infiniteInputs = false;
 
-    SheetFunction func = {funcDef, defineDef, returnDef, 0,
-                          0,       0,      0,         sheet};
+    SheetFunction func;
+    *(NodeDefinition *)&(func.functionDefinition) = funcDef;
+    *(NodeDefinition *)&(func.defineDefinition) = defineDef;
+    *(NodeDefinition *)&(func.returnDefinition) = returnDef;
+    func.defineNodeIndex = 0;
+    func.numDefineNodes = 0;
+    func.lastReturnNodeIndex = 0;
+    func.numReturnNodes = 0;
+    func.sheet = sheet;
 
     LIST_PUSH(sheet->functions, SheetFunction, sheet->numFunctions, func)
 }

@@ -74,7 +74,7 @@ static const SocketMeta CORE_FUNC_SOCKETS[NUM_CORE_FUNCTIONS][7] = {
         {"after", "This output will activate after the condition has been checked.", TYPE_EXECUTION, 0}
     },
     { // CORE_LENGTH
-        {"string", "The string to get the length of.", TYPE_STRING, NULL},
+        {"string", "The string to get the length of.", TYPE_STRING, 0},
         {"length", "The length of the input string.", TYPE_INT, 0}
     },
     { // CORE_LESS_THAN
