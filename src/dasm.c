@@ -289,7 +289,7 @@ void d_asm_lmeta_dump(LinkMetaList meta) {
     for (size_t i = 0; i < meta.size; i++) {
         LinkMeta lm = meta.list[i];
 
-        printf("%08zu: Type: %d Name: %s Pointer: %p\n", i, lm.type, lm.name,
+        printf("%08zu: Type: %zd Name: %s Pointer: %p\n", i, lm.type, lm.name,
                lm._ptr);
     }
 }

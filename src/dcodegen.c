@@ -352,7 +352,7 @@ void d_insert_bytecode(BCode *base, BCode *insertCode, size_t insertIndex) {
 void d_add_link_to_ins(BuildContext *context, BCode *bcode, size_t insIndex,
                        LinkMeta linkMeta, size_t *indexInList,
                        bool *wasDuplicate) {
-    VERBOSE(5, "Linking instruction %zu to link of type %d and name %s...\n",
+    VERBOSE(5, "Linking instruction %zu to link of type %zd and name %s...\n",
             insIndex, linkMeta.type, linkMeta.name);
 
     // Firstly, does the link already exist in the list? We don't want
@@ -700,8 +700,8 @@ BCode d_push_input(BuildContext *context, NodeSocket socket, bool forceFloat) {
     SocketMeta meta = d_get_socket_meta(context->sheet, socket);
 
     VERBOSE(5,
-            "Generating bytecode to get the value of input socket %d of node "
-            "%d...\n",
+            "Generating bytecode to get the value of input socket %zd of node "
+            "%zd...\n",
             socket.socketIndex, socket.nodeIndex);
 
     BCode out = {NULL, 0};
@@ -1236,7 +1236,7 @@ BCode d_generate_call(BuildContext *context, size_t nodeIndex) {
  * \param socket The output socket representing the function argument.
  */
 BCode d_push_argument(BuildContext *context, NodeSocket socket) {
-    VERBOSE(5, "Generating bytecode for argument socket #%d in node #%d...\n",
+    VERBOSE(5, "Generating bytecode for argument socket #%zd in node #%zd...\n",
             socket.socketIndex, socket.nodeIndex);
 
     BCode out = {NULL, 0};

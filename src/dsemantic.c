@@ -107,8 +107,8 @@ static void add_property_Variable(Sheet *sheet, size_t lineNum,
 
         const char *varName        = NULL;
         const char *varDescription = NULL;
-        DType varType        = TYPE_NONE;
-        LexData varDefault   = {0};
+        DType varType              = TYPE_NONE;
+        LexData varDefault         = {0};
 
         if (PROPERTY_ARGUMENT_NAME_DEFINED(variableNameArg)) {
             varName = variableNameArg.data.name;
@@ -256,7 +256,8 @@ static void add_property_Variable(Sheet *sheet, size_t lineNum,
             if (PROPERTY_ARGUMENT_LITERAL_DEFINED(descriptionArg)) {
                 LexToken *descriptionToken = descriptionArg.data.literal;
 
-                if (descriptionToken->type == TYPE_STRING) {
+                if (TYPE_FROM_LEX_LITERAL(descriptionToken->type) ==
+                    TYPE_STRING) {
                     varDescription = descriptionToken->data.stringValue;
                 } else {
                     d_error_compiler_push("Description is not a literal string",
@@ -272,9 +273,9 @@ static void add_property_Variable(Sheet *sheet, size_t lineNum,
         // went ok.
         if (varName != NULL && varType != TYPE_NONE) {
             SocketMeta varMeta;
-            varMeta.name = varName;
-            varMeta.description = varDescription;
-            varMeta.type = varType;
+            varMeta.name         = varName;
+            varMeta.description  = varDescription;
+            varMeta.type         = varType;
             varMeta.defaultValue = varDefault;
             d_sheet_add_variable(sheet, varMeta);
         }
@@ -447,7 +448,7 @@ static void add_property_FunctionInput(Sheet *sheet, size_t lineNum,
 
         const char *socketName        = NULL;
         const char *socketDescription = NULL;
-        DType socketType        = TYPE_NONE;
+        DType socketType              = TYPE_NONE;
 
         if (PROPERTY_ARGUMENT_NAME_DEFINED(funcArg)) {
             funcName = funcArg.data.name;
@@ -519,7 +520,8 @@ static void add_property_FunctionInput(Sheet *sheet, size_t lineNum,
             if (PROPERTY_ARGUMENT_LITERAL_DEFINED(descriptionArg)) {
                 LexToken *descriptionToken = descriptionArg.data.literal;
 
-                if (descriptionToken->type == TYPE_STRING) {
+                if (TYPE_FROM_LEX_LITERAL(descriptionToken->type) ==
+                    TYPE_STRING) {
                     socketDescription = descriptionToken->data.stringValue;
                 } else {
                     d_error_compiler_push("Description is not a literal string",
@@ -534,6 +536,8 @@ static void add_property_FunctionInput(Sheet *sheet, size_t lineNum,
         // Now we've organised the arguments, we can add the argument!
         // d_sheet_function_add_argument(sheet, funcName, argName, argType,
         //                               defaultValue);
+        printf("%s%s%d%d%s", funcName, socketName, socketType,
+               defaultValue.integerValue, socketDescription);
 
         // Free this instance of the function name, since it *should* have
         // already been malloc'd elsewhere, and that version will go into
@@ -590,7 +594,7 @@ static void add_property_FunctionOutput(Sheet *sheet, size_t lineNum,
 
         const char *socketName        = NULL;
         const char *socketDescription = NULL;
-        DType socketType        = TYPE_NONE;
+        DType socketType              = TYPE_NONE;
 
         if (PROPERTY_ARGUMENT_NAME_DEFINED(funcArg)) {
             funcName = funcArg.data.name;
@@ -631,7 +635,8 @@ static void add_property_FunctionOutput(Sheet *sheet, size_t lineNum,
             if (PROPERTY_ARGUMENT_LITERAL_DEFINED(descriptionArg)) {
                 LexToken *descriptionToken = descriptionArg.data.literal;
 
-                if (descriptionToken->type == TYPE_STRING) {
+                if (TYPE_FROM_LEX_LITERAL(descriptionToken->type) ==
+                    TYPE_STRING) {
                     socketDescription = descriptionToken->data.stringValue;
                 } else {
                     d_error_compiler_push("Description is not a literal string",
@@ -646,6 +651,8 @@ static void add_property_FunctionOutput(Sheet *sheet, size_t lineNum,
         // Now we've organised the arguments, we can add the argument!
         // d_sheet_function_add_argument(sheet, funcName, retName, retType,
         //                               defaultValue);
+        printf("%s%s%d%d", funcName, socketName, socketType,
+               defaultValue.integerValue);
 
         // Free this instance of the function name, since it *should* have
         // already been malloc'd elsewhere, and that version will go into
@@ -1033,8 +1040,8 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
                             }
 
                             LineSocketPair unknownLine;
-                            unknownLine.identifier              = identifier;
-                            unknownLine.socket                  = socket;
+                            unknownLine.identifier                = identifier;
+                            unknownLine.socket                    = socket;
                             (*unknownLines)[(*numUnknownLines)++] = unknownLine;
                         }
                     }
@@ -1179,8 +1186,8 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
                     }
 
                     LineSocketPair knownLine;
-                    knownLine.identifier            = identifier;
-                    knownLine.socket                = socket;
+                    knownLine.identifier              = identifier;
+                    knownLine.socket                  = socket;
                     (*knownLines)[(*numKnownLines)++] = knownLine;
                 }
             }
@@ -1191,12 +1198,12 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
 
     // FINALLY, add the node to the sheet.
     SheetNode newNode;
-    newNode.definition = nodeDef;
-    newNode.lineNum = lineNum;
-    newNode.reducedTypes = types;
-    newNode.literalValues = literals;
+    newNode.definition       = nodeDef;
+    newNode.lineNum          = lineNum;
+    newNode.reducedTypes     = types;
+    newNode.literalValues    = literals;
     newNode.startOutputIndex = startOutputIndex;
-    newNode.nameDefinition = nameDefinition;
+    newNode.nameDefinition   = nameDefinition;
     d_sheet_add_node(sheet, newNode);
 }
 
@@ -1210,9 +1217,6 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
  * \param root The root node of the syntax tree.
  */
 void d_semantic_scan_nodes(Sheet *sheet, SyntaxNode *root) {
-    LexData defaultLexData;
-    defaultLexData.integerValue = 0;
-
     // Firstly, get all Statements from the syntax tree.
     SyntaxSearchResult statementSearchResults =
         d_syntax_get_all_nodes_with(root, STX_statement, false);
@@ -1364,7 +1368,7 @@ void d_semantic_scan_nodes(Sheet *sheet, SyntaxNode *root) {
                 // Create a wire and add it to the sheet.
                 SheetWire wire;
                 wire.socketFrom = knownLine.socket;
-                wire.socketTo = unknownLine.socket;
+                wire.socketTo   = unknownLine.socket;
                 d_sheet_add_wire(sheet, wire);
             }
         }
@@ -1398,7 +1402,7 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
     bool reducedAllInputs = true;
 
     NodeSocket socket;
-    socket.nodeIndex = nodeIndex;
+    socket.nodeIndex   = nodeIndex;
     socket.socketIndex = 0;
 
     switch (coreFunc) {
@@ -1419,7 +1423,7 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
             for (size_t socketIndex = 0; socketIndex < numSockets;
                  socketIndex++) {
                 socket.socketIndex = socketIndex;
-                SocketMeta meta   = d_get_socket_meta(sheet, socket);
+                SocketMeta meta    = d_get_socket_meta(sheet, socket);
 
                 if (meta.type != TYPE_EXECUTION) {
                     // Is the socket an input?
@@ -1489,7 +1493,7 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
             for (size_t socketIndex = 0; socketIndex < numSockets;
                  socketIndex++) {
                 socket.socketIndex = socketIndex;
-                SocketMeta meta   = d_get_socket_meta(sheet, socket);
+                SocketMeta meta    = d_get_socket_meta(sheet, socket);
 
                 if (d_is_input_socket(sheet, socket)) {
                     if (meta.type == TYPE_NAME) {
@@ -1652,7 +1656,7 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
             for (size_t socketIndex = 0; socketIndex < numSockets;
                  socketIndex++) {
                 socket.socketIndex = socketIndex;
-                SocketMeta meta   = d_get_socket_meta(sheet, socket);
+                SocketMeta meta    = d_get_socket_meta(sheet, socket);
 
                 if (meta.type != TYPE_EXECUTION) {
                     if (d_is_input_socket(sheet, socket)) {
@@ -1730,7 +1734,7 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
             for (size_t socketIndex = 1; socketIndex < numSockets;
                  socketIndex++) {
                 socket.socketIndex = socketIndex;
-                SocketMeta meta   = d_get_socket_meta(sheet, socket);
+                SocketMeta meta    = d_get_socket_meta(sheet, socket);
 
                 if (d_is_input_socket(sheet, socket)) {
 
@@ -1932,7 +1936,7 @@ static void check_loop(Sheet *sheet, size_t start, size_t *pathArray,
     // Start from the first output socket.
     for (size_t i = numInputs; i < numInputs + numOutputs; i++) {
         NodeSocket socket;
-        socket.nodeIndex = start;
+        socket.nodeIndex   = start;
         socket.socketIndex = i;
 
         int wireIndex = d_wire_find_first(sheet, socket);

@@ -284,7 +284,7 @@ bool d_is_input_socket(Sheet *sheet, NodeSocket socket) {
  */
 const SocketMeta d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket) {
     if (!d_is_node_socket_valid(sheet, nodeSocket)) {
-        const SocketMeta meta = {NULL, NULL, TYPE_NONE, 0};
+        const SocketMeta meta = {NULL, NULL, TYPE_NONE, {0}};
         return meta;
     }
 
@@ -744,8 +744,8 @@ void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef) {
     memcpy(defineMeta + 1, funcDef.sockets, numInputs * sizeof(SocketMeta));
 
     NodeDefinition defineDef;
-    defineDef.name = nameDefine;
-    defineDef.description = descriptionDefine;
+    defineDef.name = defineName;
+    defineDef.description = defineDescription;
     defineDef.sockets = defineMeta;
     defineDef.numSockets = numSocketsDefine;
     defineDef.startOutputIndex = 1;
@@ -774,8 +774,8 @@ void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef) {
            numOutputs * sizeof(SocketMeta));
 
     NodeDefinition returnDef;
-    returnDef.name = nameReturn;
-    returnDef.description = descriptionReturn;
+    returnDef.name = returnName;
+    returnDef.description = returnDescription;
     returnDef.sockets = returnMeta;
     returnDef.numSockets = numSocketsDefine;
     returnDef.startOutputIndex = numSocketsReturn;
