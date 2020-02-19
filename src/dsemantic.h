@@ -39,127 +39,16 @@
 === HEADER DEFINITIONS ====================================
 */
 
-/**
- * \struct _lineSocketPair
- * \brief A struct associating a line identifier with a socket.
- *
- * \typedef struct _lineSocketPair LineSocketPair
- */
-typedef struct _lineSocketPair {
-    dint identifier;
-    NodeSocket socket;
-} LineSocketPair;
-
-/**
- * \enum _nameType
- * \brief An enum for saying what a name corresponds to.
- *
- * \typedef enum _nameType NameType
- */
-typedef enum _nameType {
-    NAME_CORE,      // = 0
-    NAME_VARIABLE,  // = 1
-    NAME_FUNCTION,  // = 2
-    NAME_CFUNCTION, // = 3
-} NameType;
-
-/**
- * \struct _nameDefinition
- * \brief A struct saying where a name is defined.
- *
- * \typedef struct _nameDefinition NameDefinition
- */
-typedef struct _nameDefinition {
-    Sheet *sheet;
-    NameType type;
-    CoreFunction coreFunc;
-    SheetVariable *variable;
-    SheetFunction *function;
-    CFunction *cFunction;
-} NameDefinition;
-
-/**
- * \struct _allNameDefinitions
- * \brief A list of all of a name's definitions.
- *
- * \typedef struct _allNameDefinitions AllNameDefinitions
- */
-typedef struct _allNameDefinitions {
-    NameDefinition *definitions;
-    size_t numDefinitions;
-} AllNameDefinitions;
+/*
+    Trust me, there was stuff here once...
+    But then I made a circular dependency that the compiler didn't want.
+    So I created dname.c and dname.h,
+    And it saved the compiler and me from so much pain.
+*/
 
 /*
 === FUNCTIONS =============================================
 */
-
-/**
- * \fn AllNameDefinitions d_semantic_get_name_definitions(Sheet *sheet,
- *                                                        const char *name)
- * \brief Get all of the places where a name is defined, and what the name's
- * type is.
- *
- * We will also check recursively up the includes of sheets.
- *
- * \return An array of NameDefinition.
- *
- * \param sheet The sheet to start looking from.
- * \param name The name to query.
- */
-DECISION_API AllNameDefinitions
-d_semantic_get_name_definitions(Sheet *sheet, const char *name);
-
-/**
- * \fn bool d_semantic_select_name_definition(const char *name,
- *                                            AllNameDefinitions allDefinitions,
- *                                            NameDefinition *selection)
- * \brief Given a set of definitions, select the one the user intended, give
- * the name of the node.
- *
- * \return If a definition was selected.
- *
- * \param name The name that decides the definition to use.
- * \param allDefinitions The set of definitions to choose from.
- * \param selection A pointer whose value is set to the definition if it was
- * selected, i.e. if we return `true`. If `false` is returned, do not trust
- * this value.
- */
-DECISION_API bool
-d_semantic_select_name_definition(const char *name,
-                                  AllNameDefinitions allDefinitions,
-                                  NameDefinition *selection);
-
-/**
- * \fn void d_semantic_free_name_definitions(AllNameDefinitions *definitions)
- * \brief Free an `AllNameDefinitions` struct. It should not be used after it
- * has been freed.
- *
- * \param definitions The structure to free.
- */
-DECISION_API void
-d_semantic_free_name_definitions(AllNameDefinitions *definitions);
-
-/**
- * \fn const NodeDefinition *d_semantic_get_definition(Sheet *sheet,
- *                                                     const char *name,
- *                                                     size_t lineNum,
- *                                                     const char *funcName,
- *                                                     NameDefinition *nameDef)
- * \brief Get a node's definition from it's name.
- *
- * \return The node's definition.
- *
- * \param sheet The sheet the node is a part of.
- * \param name The name of the node.
- * \param lineNum In case we error, say where we errored from.
- * \param funcName If the name is Define or Return, we need the function name
- * so we can get the correct sockets.
- * \param nameDef A pointer that is set to the node's name definition. If the
- * node definition returns NULL, do not trust this value.
- */
-DECISION_API const NodeDefinition *
-d_semantic_get_definition(Sheet *sheet, const char *name, size_t lineNum,
-                          const char *funcName, NameDefinition *nameDef);
 
 /**
  * \fn void d_semantic_scan_properties(Sheet *sheet, SyntaxNode *root)

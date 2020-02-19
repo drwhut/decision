@@ -18,6 +18,8 @@
 
 #include "dcore.h"
 
+#include "dsheet.h"
+
 #include <string.h>
 
 // clang-format off

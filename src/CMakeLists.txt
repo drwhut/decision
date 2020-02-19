@@ -26,6 +26,7 @@ derror.c
 dlex.c
 dlink.c
 dmalloc.c
+dname.c
 doptimize.c
 dsemantic.c
 dsheet.c
@@ -45,6 +46,7 @@ derror.h
 dlex.h
 dlink.h
 dmalloc.h
+dname.h
 doptimize.h
 dsemantic.h
 dsheet.h

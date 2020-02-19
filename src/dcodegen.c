@@ -649,7 +649,7 @@ BCode d_push_literal(BuildContext *context, NodeSocket socket, bool cvtFloat) {
 BCode d_push_variable(BuildContext *context, size_t nodeIndex) {
     SheetNode node                = context->sheet->nodes[nodeIndex];
     const NodeDefinition *nodeDef = node.definition;
-    SheetVariable *variable       = node.nameDefinition.variable;
+    SheetVariable *variable       = node.nameDefinition.definition.variable;
     const SocketMeta variableMeta = variable->variableMeta;
 
     VERBOSE(5, "Generating bytecode to get the value of variable %s...\n",
@@ -1149,20 +1149,21 @@ BCode d_generate_call(BuildContext *context, size_t nodeIndex) {
     size_t numRets    = 0;
     DIns opcode       = OP_CALLCI;
     LinkType linkType = LINK_CFUNCTION;
-    void *metaData    = (void *)nameDef.cFunction;
+    void *metaData    = (void *)nameDef.definition.cFunction;
     bool isSubroutine = false;
 
     if (nameDef.type == NAME_FUNCTION) {
-        const NodeDefinition funcDef = nameDef.function->functionDefinition;
+        const NodeDefinition funcDef =
+            nameDef.definition.function->functionDefinition;
 
         numArgs      = d_definition_num_inputs(&funcDef);
         numRets      = d_definition_num_outputs(&funcDef);
         opcode       = OP_CALLI;
         linkType     = LINK_FUNCTION;
-        metaData     = (void *)nameDef.function;
+        metaData     = (void *)nameDef.definition.function;
         isSubroutine = d_is_execution_definition(&funcDef);
     } else if (nameDef.type == NAME_CFUNCTION) {
-        const NodeDefinition funcDef = nameDef.cFunction->definition;
+        const NodeDefinition funcDef = nameDef.definition.cFunction->definition;
 
         numArgs      = d_definition_num_inputs(&funcDef);
         numRets      = d_definition_num_outputs(&funcDef);
@@ -1265,7 +1266,7 @@ BCode d_push_argument(BuildContext *context, NodeSocket socket) {
  */
 BCode d_generate_return(BuildContext *context, size_t returnNodeIndex) {
     SheetNode node               = context->sheet->nodes[returnNodeIndex];
-    SheetFunction *function      = node.nameDefinition.function;
+    SheetFunction *function      = node.nameDefinition.definition.function;
     const NodeDefinition funcDef = function->functionDefinition;
 
     VERBOSE(5, "Generating bytecode to return from %s...\n", funcDef.name);
@@ -1310,7 +1311,7 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
 
     // Firstly, we need to check if the node is a particular function -
     // spoiler alert, one of them is not like the others...
-    const CoreFunction coreFunc = nameDef.coreFunc;
+    const CoreFunction coreFunc = nameDef.definition.coreFunc;
 
     if (coreFunc == CORE_TERNARY) {
         // Hi. This is the story of why this if statement exists.
@@ -1623,7 +1624,7 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
     VERBOSE(5, "- Generating bytecode for execution node %s...\n",
             nodeDef->name);
 
-    const CoreFunction coreFunc = nameDef.coreFunc;
+    const CoreFunction coreFunc = nameDef.definition.coreFunc;
 
     bool forceFloats = false;
 
@@ -2036,7 +2037,7 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
                 // We need the variable's metadata!
                 // NOTE: The definition set in the node for Set nodes is the
                 // definition of the variable!
-                SheetVariable *var = nameDef.variable;
+                SheetVariable *var = nameDef.definition.variable;
 
                 const SocketMeta varMeta = var->variableMeta;
 
@@ -2080,7 +2081,8 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
                 socket.nodeIndex   = nodeIndex;
                 socket.socketIndex = 1;
 
-                SocketMeta meta = d_get_socket_meta(context->sheet, socket);
+                const SocketMeta boolMeta =
+                    d_get_socket_meta(context->sheet, socket);
 
                 // Check to see if it is a false literal. If it is, then this
                 // execution node is useless.

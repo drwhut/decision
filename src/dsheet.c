@@ -202,7 +202,8 @@ bool d_is_socket_index_valid(const NodeDefinition *nodeDef,
 }
 
 /**
- * \fn NodeDefinition *d_get_node_definition(Sheet *sheet, size_t nodeIndex)
+ * \fn const NodeDefinition *d_get_node_definition(Sheet *sheet,
+ *                                                 size_t *nodeIndex)
  * \brief Given the index of a node, get the definition of the node.
  *
  * \return The definition of the node, or NULL if the index does not exist.
@@ -210,7 +211,7 @@ bool d_is_socket_index_valid(const NodeDefinition *nodeDef,
  * \param sheet The sheet the node belongs to.
  * \param nodeIndex The node to get the definition of.
  */
-NodeDefinition *d_get_node_definition(Sheet *sheet, size_t nodeIndex) {
+const NodeDefinition *d_get_node_definition(Sheet *sheet, size_t nodeIndex) {
     if (!d_is_node_index_valid(sheet, nodeIndex)) {
         return NULL;
     }

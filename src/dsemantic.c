@@ -21,6 +21,7 @@
 #include "decision.h"
 #include "derror.h"
 #include "dmalloc.h"
+#include "dname.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -54,386 +55,6 @@ typedef struct {
 
 #define PROPERTY_ARGUMENT_TYPE_IS_VAR(arg) \
     (((arg).data.dataType | TYPE_VAR_ANY) == TYPE_VAR_ANY)
-
-/*
-    void add_name_definition(AllNameDefinitions* all, NameDefinition definition)
-    Add a name definition to the array of all name definitions.
-    Similar to the LIST_PUSH macro in dsheet.c
-
-    AllNameDefinitions* all: The list of name definitions to add onto.
-    NameDefinition definition: The name definition to add on.
-*/
-static void add_name_definition(AllNameDefinitions *all,
-                                NameDefinition definition) {
-    size_t newNumDefinitions = all->numDefinitions + 1;
-    if (newNumDefinitions == 1)
-        all->definitions = (NameDefinition *)d_malloc(sizeof(NameDefinition));
-    else
-        all->definitions = (NameDefinition *)d_realloc(
-            all->definitions, newNumDefinitions * sizeof(NameDefinition));
-    all->definitions[all->numDefinitions++] = definition;
-}
-
-/*
-    void get_name_definitions_recursive(struct _sheet* sheet, const char* name,
-   AllNameDefinitions* state) Recursively find a definition of a name.
-
-    Sheet* sheet: The sheet to start looking from.
-    const char* name: The name to query.
-    AllNameDefinitions* state: The state of the recursion. This is added onto
-   when we find a name definition.
-*/
-static void get_name_definitions_recursive(Sheet *sheet, const char *name,
-                                           AllNameDefinitions *state) {
-    VERBOSE(5, "Checking sheet %s for name %s...\n", sheet->filePath, name)
-
-    // First, check to see if it is a core function.
-    CoreFunction coreFunc = d_core_find_name(name);
-
-    if ((int)coreFunc > -1) {
-        NameDefinition definition;
-        definition.sheet     = sheet;
-        definition.type      = NAME_CORE;
-        definition.coreFunc  = coreFunc;
-        definition.variable  = NULL;
-        definition.function  = NULL;
-        definition.cFunction = NULL;
-
-        add_name_definition(state, definition);
-
-        VERBOSE(5, "Core function: YES\n")
-    } else {
-        VERBOSE(5, "Core function: NO\n")
-    }
-
-    // Maybe it's a variable name?
-    if (sheet->variables != NULL && sheet->numVariables > 0) {
-        size_t hits = 0;
-        for (size_t i = 0; i < sheet->numVariables; i++) {
-            if (strcmp(name, sheet->variables[i].variableMeta.name) == 0) {
-                hits++;
-
-                NameDefinition definition;
-                definition.sheet     = sheet;
-                definition.type      = NAME_VARIABLE;
-                definition.coreFunc  = -1;
-                definition.variable  = &(sheet->variables[i]);
-                definition.function  = NULL;
-                definition.cFunction = NULL;
-
-                add_name_definition(state, definition);
-            }
-        }
-
-        VERBOSE(5, "Variable: %zu\n", hits)
-    } else {
-        VERBOSE(
-            5,
-            "Not checking if a variable, no variables defined in this sheet.\n")
-    }
-
-    // Maybe, just maybe... it's a function name?
-    if (sheet->functions != NULL && sheet->numFunctions > 0) {
-        size_t hits = 0;
-        for (size_t i = 0; i < sheet->numFunctions; i++) {
-            if (strcmp(name, sheet->functions[i].functionDefinition.name) ==
-                0) {
-                hits++;
-
-                NameDefinition definition;
-                definition.sheet     = sheet;
-                definition.type      = NAME_FUNCTION;
-                definition.coreFunc  = -1;
-                definition.variable  = NULL;
-                definition.function  = &(sheet->functions[i]);
-                definition.cFunction = NULL;
-
-                add_name_definition(state, definition);
-            }
-        }
-
-        VERBOSE(5, "Function: %zu\n", hits)
-    } else {
-        VERBOSE(
-            5,
-            "Not checking if a function, no functions defined in this sheet.\n")
-    }
-
-    // It could also be a C function.
-    size_t numCFunctions = d_get_num_c_functions();
-
-    if (numCFunctions > 0) {
-        const CFunction *cFunctionList = d_get_c_functions();
-
-        size_t hits = 0;
-        for (size_t i = 0; i < numCFunctions; i++) {
-            if (strcmp(cFunctionList[i].definition.name, name) == 0) {
-                hits++;
-
-                NameDefinition definition;
-                definition.sheet     = sheet;
-                definition.type      = NAME_CFUNCTION;
-                definition.coreFunc  = -1;
-                definition.variable  = NULL;
-                definition.function  = NULL;
-                definition.cFunction = (CFunction *)cFunctionList + i;
-
-                add_name_definition(state, definition);
-            }
-        }
-
-        VERBOSE(5, "C Function: %zu\n", hits);
-    } else {
-        VERBOSE(5,
-                "Not checking if a C function, no C function are defined.\n");
-    }
-
-    // Please sir... may I have some more names? (If it isn't a core function)
-    if (sheet->includes != NULL && sheet->numIncludes > 0 &&
-        (int)coreFunc == -1) {
-        for (size_t i = 0; i < sheet->numIncludes; i++) {
-            get_name_definitions_recursive(sheet->includes[i], name, state);
-        }
-    }
-}
-
-/**
- * \fn AllNameDefinitions d_semantic_get_name_definitions(Sheet *sheet,
- *                                                        const char *name)
- * \brief Get all of the places where a name is defined, and what the name's
- * type is.
- *
- * We will also check recursively up the includes of sheets.
- *
- * \return An array of NameDefinition.
- *
- * \param sheet The sheet to start looking from.
- * \param name The name to query.
- */
-AllNameDefinitions d_semantic_get_name_definitions(struct _sheet *sheet,
-                                                   const char *name) {
-    VERBOSE(5, "Finding definitions for name %s...\n", name)
-
-    AllNameDefinitions allDefinitions = (AllNameDefinitions){NULL, 0};
-    get_name_definitions_recursive(sheet, name, &allDefinitions);
-
-    VERBOSE(5, "Found %zu results for name %s.\n",
-            allDefinitions.numDefinitions, name)
-
-    return allDefinitions;
-}
-
-/**
- * \fn bool d_semantic_select_name_definition(const char *name,
- *                                            AllNameDefinitions allDefinitions,
- *                                            NameDefinition *selection)
- * \brief Given a set of definitions, select the one the user intended, give
- * the name of the node.
- *
- * \return If a definition was selected.
- *
- * \param name The name that decides the definition to use.
- * \param allDefinitions The set of definitions to choose from.
- * \param selection A pointer whose value is set to the definition if it was
- * selected, i.e. if we return `true`. If `false` is returned, do not trust
- * this value.
- */
-bool d_semantic_select_name_definition(const char *name,
-                                       AllNameDefinitions allDefinitions,
-                                       NameDefinition *selection) {
-    // TODO: Once you get around to linking other sheets, use name components
-    // to decide properly. For now, we're just picking the first one from the
-    // list.
-
-    if (allDefinitions.numDefinitions > 0) {
-        NameDefinition definition = allDefinitions.definitions[0];
-
-        *selection = definition;
-
-        return true;
-    }
-
-    return false;
-}
-
-/**
- * \fn void d_semantic_free_name_definitions(AllNameDefinitions *definitions)
- * \brief Free an `AllNameDefinitions` struct. It should not be used after it
- * has been freed.
- *
- * \param definitions The structure to free.
- */
-void d_semantic_free_name_definitions(AllNameDefinitions *definitions) {
-    if (definitions->definitions != NULL) {
-        free(definitions->definitions);
-        definitions->definitions = NULL;
-    }
-
-    definitions->numDefinitions = 0;
-}
-
-/* The definition of the Start node. */
-static const SocketMeta startSocket = {
-    "start", "This output gets activated when the program starts.",
-    TYPE_EXECUTION, 0};
-
-static const NodeDefinition startDefinition = {
-    "Start",
-    "The node that gets activated first when the program starts.",
-    &startSocket,
-    1,
-    0,
-    false};
-
-/**
- * \fn const NodeDefinition *d_semantic_get_definition(Sheet *sheet,
- *                                                     const char *name,
- *                                                     size_t lineNum,
- *                                                     const char *funcName,
- *                                                     NameDefinition *nameDef)
- * \brief Get a node's definition from it's name.
- *
- * \return The node's definition.
- *
- * \param sheet The sheet the node is a part of.
- * \param name The name of the node.
- * \param lineNum In case we error, say where we errored from.
- * \param funcName If the name is Define or Return, we need the function name
- * so we can get the correct sockets.
- * \param nameDef A pointer that is set to the node's name definition. If the
- * node definition returns NULL, do not trust this value.
- */
-const NodeDefinition *d_semantic_get_definition(Sheet *sheet, const char *name,
-                                                size_t lineNum,
-                                                const char *funcName,
-                                                NameDefinition *nameDef) {
-    VERBOSE(5, "Getting node definitions of node %s on line %zu in %s...\n",
-            name, lineNum, sheet->filePath);
-
-    NameDefinition nameDefinition;
-
-    // First, let's check if it's a special function like Start.
-    // We do this now so we don't need to search all of our includes
-    // for this function.
-    if (strcmp(name, "Start") == 0) {
-        return &startDefinition;
-    } else if (strcmp(name, "Return") == 0) {
-        // For return, we need to make sure funcName is the name
-        // of a function that is defined in the same sheet!
-        if (funcName != NULL) {
-            AllNameDefinitions funcDefinitions =
-                d_semantic_get_name_definitions(sheet, funcName);
-            if (d_semantic_select_name_definition(funcName, funcDefinitions,
-                                                  &nameDefinition)) {
-                if (nameDefinition.sheet == sheet) {
-                    SheetFunction *func = nameDefinition.function;
-                    d_semantic_free_name_definitions(&funcDefinitions);
-                    *nameDef = nameDefinition;
-                    return &(func->returnDefinition);
-                } else {
-                    ERROR_COMPILER(sheet->filePath, lineNum, true,
-                                   "Return node for function %s that is not "
-                                   "defined on the same sheet",
-                                   funcName);
-                }
-            } else {
-                ERROR_COMPILER(sheet->filePath, lineNum, true,
-                               "Return call for undefined function %s",
-                               funcName);
-            }
-
-            d_semantic_free_name_definitions(&funcDefinitions);
-        } else {
-            d_error_compiler_push("Return call but function name not found",
-                                  sheet->filePath, lineNum, true);
-        }
-    } else if (strcmp(name, "Define") == 0) {
-        // For define, we need to make sure funcName is the name
-        // of a function that is defined in the same sheet!
-        if (funcName != NULL) {
-            AllNameDefinitions funcDefinitions =
-                d_semantic_get_name_definitions(sheet, funcName);
-            if (d_semantic_select_name_definition(funcName, funcDefinitions,
-                                                  &nameDefinition)) {
-                if (nameDefinition.sheet == sheet) {
-                    SheetFunction *func = nameDefinition.function;
-                    d_semantic_free_name_definitions(&funcDefinitions);
-                    *nameDef = nameDefinition;
-                    return &(func->defineDefinition);
-                } else {
-                    ERROR_COMPILER(sheet->filePath, lineNum, true,
-                                   "Define node for function %s that is not "
-                                   "defined on the same sheet",
-                                   funcName);
-                }
-            } else {
-                ERROR_COMPILER(sheet->filePath, lineNum, true,
-                               "Define call for undefined function %s",
-                               funcName);
-            }
-
-            d_semantic_free_name_definitions(&funcDefinitions);
-        } else {
-            d_error_compiler_push("Define call but function name not found",
-                                  sheet->filePath, lineNum, true);
-        }
-    } else {
-        // Let's find out if the name we're looking for exists, first.
-        AllNameDefinitions nameDefinitions =
-            d_semantic_get_name_definitions(sheet, name);
-        if (d_semantic_select_name_definition(name, nameDefinitions,
-                                              &nameDefinition)) {
-            switch (nameDefinition.type) {
-                case NAME_CORE:;
-
-                    // This bit's simple, all of the info we need is in dcore.h
-                    d_semantic_free_name_definitions(&nameDefinitions);
-                    *nameDef = nameDefinition;
-                    return d_core_get_definition(nameDefinition.coreFunc);
-
-                // Specifically, the GETTER of a variable.
-                case NAME_VARIABLE:;
-
-                    // The definition of the getter will be stored in the
-                    // variable structure itself.
-                    SheetVariable *var = nameDefinition.variable;
-                    d_semantic_free_name_definitions(&nameDefinitions);
-                    *nameDef = nameDefinition;
-                    return &(var->getterDefinition);
-
-                // Specifically, the calling of a function.
-                case NAME_FUNCTION:;
-
-                    SheetFunction *func = nameDefinition.function;
-                    d_semantic_free_name_definitions(&nameDefinitions);
-                    *nameDef = nameDefinition;
-                    return &(func->functionDefinition);
-
-                // Specifically, the calling of a C function.
-                case NAME_CFUNCTION:;
-
-                    const CFunction *cFunction = nameDefinition.cFunction;
-
-                    // This one is simple, all the info we need is in the
-                    // CFunction struct.
-                    d_semantic_free_name_definitions(&nameDefinitions);
-                    *nameDef = nameDefinition;
-                    return &(cFunction->definition);
-
-                default:
-                    d_error_compiler_push("Name definition is not that of a "
-                                          "core function, variable, function "
-                                          "or C function",
-                                          sheet->filePath, lineNum, true);
-                    break;
-            }
-        }
-
-        d_semantic_free_name_definitions(&nameDefinitions);
-    }
-
-    return NULL;
-}
 
 /*
     The following functions are all about adding properties to a sheet,
@@ -713,7 +334,7 @@ static void add_property_Function(Sheet *sheet, size_t lineNum,
 
             // TODO: Build up NodeDefinition, then after we have scanned
             // properties, add it to the sheet.
-            d_sheet_create_function(sheet, name, false);
+            // d_sheet_create_function(sheet, name, false);
         } else {
             d_error_compiler_push("Function property argument is not a name",
                                   sheet->filePath, lineNum, true);
@@ -745,7 +366,7 @@ static void add_property_Subroutine(Sheet *sheet, size_t lineNum,
 
             // TODO: Build up NodeDefinition, then after we have scanned
             // properties, add it to the sheet.
-            d_sheet_create_function(sheet, name, true);
+            // d_sheet_create_function(sheet, name, true);
         } else {
             d_error_compiler_push("Subroutine property argument is not a name",
                                   sheet->filePath, lineNum, true);
@@ -784,8 +405,8 @@ static void add_property_FunctionInput(Sheet *sheet, size_t lineNum,
     LexData defaultValue;
     defaultValue.integerValue = 0;
 
-    bool default     = true;
-    bool description = true;
+    bool hasDefault     = true;
+    bool hasDescription = true;
 
     if (argList.numArgs < 3) {
         d_error_compiler_push(
@@ -797,13 +418,13 @@ static void add_property_FunctionInput(Sheet *sheet, size_t lineNum,
             lineNum, true);
     } else {
         if (argList.numArgs <= 4) {
-            description = false;
+            hasDescription = false;
 
             if (argList.numArgs == 3) {
                 d_error_compiler_push(
                     "No default value specified in Variable property",
                     sheet->filePath, lineNum, false);
-                default = false;
+                hasDefault = false;
             }
         }
 
@@ -811,11 +432,11 @@ static void add_property_FunctionInput(Sheet *sheet, size_t lineNum,
         nameArg = argList.args[1];
         typeArg = argList.args[2];
 
-        if (default) {
+        if (hasDefault) {
             defaultArg = argList.args[3];
         }
 
-        if (description) {
+        if (hasDescription) {
             descriptionArg = argList.args[4];
         }
 
@@ -861,7 +482,7 @@ static void add_property_FunctionInput(Sheet *sheet, size_t lineNum,
                            argList.numArgs);
         }
 
-        if (default) {
+        if (hasDefault) {
             if (PROPERTY_ARGUMENT_LITERAL_DEFINED(defaultArg)) {
                 LexToken *literal   = defaultArg.data.literal;
                 DType typeOfLiteral = TYPE_FROM_LEX_LITERAL(literal->type);
@@ -892,7 +513,7 @@ static void add_property_FunctionInput(Sheet *sheet, size_t lineNum,
             }
         }
 
-        if (description) {
+        if (hasDescription) {
             if (PROPERTY_ARGUMENT_LITERAL_DEFINED(descriptionArg)) {
                 LexToken *descriptionToken = descriptionArg.data.literal;
 
@@ -1215,6 +836,17 @@ static const char *get_first_arg_name(SyntaxNode *callNode) {
     return NULL;
 }
 
+/**
+ * \struct _lineSocketPair
+ * \brief A struct associating a line identifier with a socket.
+ *
+ * \typedef struct _lineSocketPair LineSocketPair
+ */
+typedef struct _lineSocketPair {
+    dint identifier;
+    NodeSocket socket;
+} LineSocketPair;
+
 /* A helper function for d_semantic_scan_nodes */
 static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
                       NameDefinition nameDefinition, SyntaxNode *expr,
@@ -1258,22 +890,22 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
     // Or is it a "Define" node? Functions have a pointer to
     // the node that defines their functionality.
     else if (strcmp(nodeDef->name, "Define") == 0) {
-        if (nameDefinition.function != NULL) {
-            nameDefinition.function->defineNodeIndex = nodeIndex;
+        if (nameDefinition.definition.function != NULL) {
+            nameDefinition.definition.function->defineNodeIndex = nodeIndex;
 
             // There can only be 1 define node for each
             // function.
-            nameDefinition.function->numDefineNodes++;
+            nameDefinition.definition.function->numDefineNodes++;
         }
     }
 
     // Or is it a "Return" node? Functions (unlike subroutines)
     // must have 1 return node.
     else if (strcmp(nodeDef->name, "Return") == 0) {
-        if (nameDefinition.function != NULL) {
-            nameDefinition.function->lastReturnNodeIndex = nodeIndex;
+        if (nameDefinition.definition.function != NULL) {
+            nameDefinition.definition.function->lastReturnNodeIndex = nodeIndex;
 
-            nameDefinition.function->numReturnNodes++;
+            nameDefinition.definition.function->numReturnNodes++;
         }
     }
 
@@ -1437,7 +1069,8 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
                                 // definition of the node points
                                 // to the variable, not the Set
                                 // core function.
-                                if (nameDefinition.coreFunc == CORE_SET) {
+                                if (nameDefinition.definition.coreFunc ==
+                                    CORE_SET) {
                                     NameDefinition varDefinition;
 
                                     if (d_semantic_select_name_definition(
@@ -1894,7 +1527,8 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
                     SheetNode node = sheet->nodes[nodeIndex];
 
                     // We need to check the variable type matches!
-                    SheetVariable *var = node.nameDefinition.variable;
+                    SheetVariable *var =
+                        node.nameDefinition.definition.variable;
 
                     // Does the reduced type not match the variable type?
                     if (reducedTo != var->variableMeta.type) {

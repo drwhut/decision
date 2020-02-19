@@ -25,12 +25,14 @@
 #define DCORE_H
 
 #include "dcfg.h"
-#include "dsheet.h"
 #include "dtype.h"
 
 /*
 === HEADER DEFINITIONS ====================================
 */
+
+/* Forward declaration of the NodeDefinition struct from dsheet.h */
+struct _nodeDefinition;
 
 /*
     An enum of the core functions.
@@ -90,7 +92,7 @@ typedef enum _coreFunction {
  *
  * \param core The core function to get the definition of.
  */
-DECISION_API const NodeDefinition *
+DECISION_API const struct _nodeDefinition *
 d_core_get_definition(const CoreFunction core);
 
 /**

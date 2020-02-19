@@ -23,6 +23,7 @@
 #include "dlink.h"
 #include "dmalloc.h"
 #include "dsheet.h"
+#include "dtype.h"
 #include "dvm.h"
 
 #include <stdio.h>
@@ -396,7 +397,7 @@ static size_t get_socket_meta_length(SocketMeta meta) {
  * \param ptr The pointer being used to write to the string.
  * \param meta The socket metadata to write to the string.
  */
-static void write_socket_meta(char **ptr, SocketMeta meta) {
+static void write_socket_meta(char **ptr, const SocketMeta meta) {
     char *str = *ptr;
 
     size_t nameSize = strlen(meta.name) + 1;
@@ -435,24 +436,18 @@ static void write_socket_meta(char **ptr, SocketMeta meta) {
  *
  * \param ptr The pointer being used to read the string.
  */
-static SocketMeta read_socket_meta(char **ptr) {
+static const SocketMeta read_socket_meta(char **ptr) {
     char *str = *ptr;
-
-    SocketMeta meta;
 
     size_t nameSize = strlen(str) + 1;
     char *name      = (char *)d_malloc(nameSize);
     memcpy(name, str, nameSize);
     str += nameSize;
 
-    meta.name = (const char *)name;
-
     size_t desciptionSize = strlen(str) + 1;
     char *description     = (char *)d_malloc(desciptionSize);
     memcpy(description, str, desciptionSize);
     str += desciptionSize;
-
-    meta.description = (const char *)description;
 
     DType type = *str;
     str++;
@@ -461,18 +456,18 @@ static SocketMeta read_socket_meta(char **ptr) {
 
     if (type == TYPE_STRING) {
         size_t defaultSize = strlen(str) + 1;
-        char *default      = (char *)d_malloc(defaultSize);
-        memcpy(default, str, defaultSize);
+        char *defaultStr   = (char *)d_malloc(defaultSize);
+        memcpy(defaultStr, str, defaultSize);
         str += defaultSize;
 
-        defaultValue.stringValue = default;
+        defaultValue.stringValue = defaultStr;
     } else {
         defaultValue.integerValue = *((dint *)str);
     }
 
-    meta.defaultValue = defaultValue;
-
     *ptr = str;
+
+    const SocketMeta meta = {name, description, type, defaultValue};
 
     return meta;
 }
@@ -485,7 +480,7 @@ static SocketMeta read_socket_meta(char **ptr) {
  *
  * \param definition The node definition to query.
  */
-static size_t get_node_definition_length(NodeDefinition *definition) {
+static size_t get_node_definition_length(const NodeDefinition *definition) {
     // 3 =  2 \0s.
     size_t size = strlen(definition->name) + strlen(definition->description) +
                   2 * sizeof(duint) + 2;
@@ -505,7 +500,8 @@ static size_t get_node_definition_length(NodeDefinition *definition) {
  * \param ptr The pointer being used to write the string.
  * \param definition The node definition to write into the string.
  */
-static void write_node_definition(char **ptr, NodeDefinition *definition) {
+static void write_node_definition(char **ptr,
+                                  const NodeDefinition *definition) {
     char *str = *ptr;
 
     size_t nameSize = strlen(definition->name) + 1;
@@ -538,43 +534,36 @@ static void write_node_definition(char **ptr, NodeDefinition *definition) {
  *
  * \param ptr The pointer being used to read the string.
  */
-static NodeDefinition read_node_definition(char **ptr) {
+static const NodeDefinition read_node_definition(char **ptr) {
     char *str = *ptr;
-
-    NodeDefinition definition;
-    definition.infiniteInputs = false;
 
     size_t nameSize = strlen(str) + 1;
     char *name      = (char *)d_malloc(nameSize);
     memcpy(name, str, nameSize);
     str += nameSize;
 
-    definition.name = (const char *)name;
-
     size_t desciptionSize = strlen(str) + 1;
     char *description     = (char *)d_malloc(desciptionSize);
     memcpy(description, str, desciptionSize);
     str += desciptionSize;
 
-    definition.description = (const char *)description;
-
-    definition.startOutputIndex = *((duint *)str);
+    size_t startOutputIndex = *((duint *)str);
     str += sizeof(duint);
 
-    definition.numSockets = *((duint *)str);
+    size_t numSockets = *((duint *)str);
     str += sizeof(duint);
 
-    SocketMeta *list =
-        (SocketMeta *)d_malloc(definition.numSockets * sizeof(SocketMeta));
+    SocketMeta *list = (SocketMeta *)d_malloc(numSockets * sizeof(SocketMeta));
 
-    for (size_t i = 0; i < definition.numSockets; i++) {
+    for (size_t i = 0; i < numSockets; i++) {
         SocketMeta meta = read_socket_meta(&str);
-        *(list + i) = meta;
+        memcpy(list + i, &meta, sizeof(SocketMeta));
     }
 
-    definition.sockets = list;
-
     *ptr = str;
+
+    const NodeDefinition definition = {name,       description,      list,
+                                       numSockets, startOutputIndex, false};
 
     return definition;
 }
@@ -690,7 +679,7 @@ const char *d_asm_generate_object(Sheet *sheet, size_t *size) {
 
             // The name of the C function, along with it's inputs and outputs,
             // which are TYPE_NONE terminated.
-            cLen += strlen(cDef.name) + 
+            cLen += strlen(cDef.name) +
             cLen += strlen(cFunc->name) + 1 +
                     (cFunc->numInputs + cFunc->numOutputs + 2) * sizeof(DType);
         }

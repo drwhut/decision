@@ -27,9 +27,8 @@
 #include "dcfg.h"
 #include "dlex.h"
 #include "dlink.h"
-#include "dsemantic.h"
+#include "dname.h"
 #include "dtype.h"
-#include "dvm.h"
 #include <stdbool.h>
 
 #include <stddef.h>
