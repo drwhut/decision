@@ -30,6 +30,37 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Functions to set the stack index of a socket at a given time. */
+
+static int get_stack_index(BuildContext *context, NodeSocket socket) {
+    SheetNode node = context->sheet->nodes[socket.nodeIndex];
+
+    if (node._stackPositions == NULL) {
+        return -1;
+    }
+
+    return node._stackPositions[socket.socketIndex];
+}
+
+static void set_stack_index(BuildContext *context, NodeSocket socket,
+                            int index) {
+    SheetNode *node = context->sheet->nodes + socket.nodeIndex;
+
+    if (node->_stackPositions == NULL) {
+        size_t numSockets =
+            d_node_num_inputs(context->sheet, socket.nodeIndex) +
+            d_node_num_outputs(context->sheet, socket.nodeIndex);
+
+        node->_stackPositions = d_malloc(numSockets * sizeof(int));
+
+        for (size_t i = 0; i < numSockets; i++) {
+            node->_stackPositions[i] = -1;
+        }
+    }
+
+    node->_stackPositions[socket.socketIndex] = index;
+}
+
 /*
 === STRUCTURE FUNCTIONS ===================================
 */
@@ -600,7 +631,7 @@ BCode d_push_literal(BuildContext *context, NodeSocket socket, bool cvtFloat) {
     }
 
     // Set the socket's stack index so we know where the value lives.
-    socket->_stackIndex = ++context->stackTop;
+    set_stack_index(context, socket, ++context->stackTop);
 
     return out;
 }
@@ -632,7 +663,8 @@ BCode d_push_variable(BuildContext *context, size_t nodeIndex) {
     d_bytecode_set_fimmediate(out, 1, 0); // The address will be linked later.
 
     // Set the socket's stack index so we know where the value lives.
-    node->sockets[0]->_stackIndex = ++context->stackTop;
+    NodeSocket outSocket = {nodeIndex, 0};
+    set_stack_index(context, outSocket, ++context->stackTop);
 
     LinkType linkType = (variableMeta.type == TYPE_STRING)
                             ? LINK_VARIABLE_POINTER
@@ -702,8 +734,9 @@ BCode d_push_input(BuildContext *context, NodeSocket socket, bool forceFloat) {
 
             // Has this output not already been generated, or has it been poped
             // off?
-            if (connSocket->_stackIndex < 0 ||
-                connSocket->_stackIndex > context->stackTop) {
+            int connIndex = get_stack_index(context, connSocket);
+
+            if (connIndex < 0 || connIndex > context->stackTop) {
 
                 // If this is the Define node, we need to push the argument.
                 if (strcmp(connDef->name, "Define") == 0) {
@@ -711,8 +744,8 @@ BCode d_push_input(BuildContext *context, NodeSocket socket, bool forceFloat) {
 
                     // Since we're copying the argument, set the socket's
                     // stack index now.
-                    socket->_stackIndex = context->stackTop;
-                    checkIfOnTop        = false;
+                    set_stack_index(context, socket, context->stackTop);
+                    checkIfOnTop = false;
                 } else if (!isExecutionNode) {
                     out = d_generate_nonexecution_node(context,
                                                        connSocket.nodeIndex);
@@ -733,7 +766,7 @@ BCode d_push_input(BuildContext *context, NodeSocket socket, bool forceFloat) {
 
             if (checkIfOnTop || forceOnTop) {
                 // If the value is not at the top of the stack, make sure it is.
-                int inputIndex = connSocket->_stackIndex;
+                int inputIndex = get_stack_index(context, connSocket);
 
                 if (!IS_INDEX_TOP(context, inputIndex) || forceOnTop) {
                     BCode get = d_bytecode_ins(OP_GETFI);
@@ -744,13 +777,14 @@ BCode d_push_input(BuildContext *context, NodeSocket socket, bool forceFloat) {
                     d_free_bytecode(&get);
 
                     if (!forceOnTop) {
-                        connSocket->_stackIndex = context->stackTop;
+                        inputIndex = context->stackTop;
+                        set_stack_index(context, connSocket, inputIndex);
                     }
 
                     context->stackTop++;
                 }
 
-                socket->_stackIndex = connSocket->_stackIndex;
+                set_stack_index(context, socket, inputIndex);
             }
         }
     }
@@ -848,8 +882,9 @@ BCode d_push_node_inputs(BuildContext *context, size_t nodeIndex, bool order,
         if ((meta.type & TYPE_VAR_ANY) != 0) {
             size_t numCons = d_socket_num_connections(context->sheet, socket);
             if (numCons >= 1 || meta.type == TYPE_FLOAT || !ignoreLiterals) {
+                int socketIndex = get_stack_index(context, socket);
                 // Is this input the correct amount from the top?
-                if (STACK_INDEX_TOP(context, socket->_stackIndex) !=
+                if (STACK_INDEX_TOP(context, socketIndex) !=
                     -numCheckedInputs) {
                     positionsCorrect = false;
                     break;
@@ -886,15 +921,16 @@ BCode d_push_node_inputs(BuildContext *context, size_t nodeIndex, bool order,
                 if (numCons >= 1 || meta.type == TYPE_FLOAT ||
                     !ignoreLiterals) {
 
+                    int socketIndex = get_stack_index(context, socket);
+
                     BCode get = d_bytecode_ins(OP_GETFI);
                     d_bytecode_set_fimmediate(
                         get, 1,
-                        (fimmediate_t)STACK_INDEX_TOP(context,
-                                                      socket->_stackIndex));
+                        (fimmediate_t)STACK_INDEX_TOP(context, socketIndex));
                     d_concat_bytecode(&out, &get);
                     d_free_bytecode(&get);
 
-                    socket->_stackIndex = context->stackTop;
+                    set_stack_index(context, socket, context->stackTop);
                 }
             }
 
@@ -1006,8 +1042,8 @@ BCode d_generate_operator(BuildContext *context, size_t nodeIndex, DIns opcode,
             }
 
             // Set the socket's stack index.
-            context->stackTop   = initStackTop + 1;
-            socket->_stackIndex = context->stackTop;
+            context->stackTop = initStackTop + 1;
+            set_stack_index(context, socket, context->stackTop);
         }
     }
 
@@ -1085,8 +1121,8 @@ BCode d_generate_comparator(BuildContext *context, size_t nodeIndex,
         d_free_bytecode(&not);
     }
 
-    SheetSocket *outputSocket = node->sockets[2];
-    outputSocket->_stackIndex = --context->stackTop;
+    NodeSocket outSocket = {nodeIndex, 2};
+    set_stack_index(context, outSocket, --context->stackTop);
 
     return out;
 }
@@ -1164,11 +1200,13 @@ BCode d_generate_call(BuildContext *context, size_t nodeIndex) {
     // at the top.
     // TODO: Think about if we need to copy the values when they are used...
     int stackTop = context->stackTop;
-    for (size_t i = 0; i < node->numSockets; i++) {
-        SheetSocket *socket = node->sockets[i];
 
-        if (!(socket->isInput || socket->type == TYPE_EXECUTION)) {
-            socket->_stackIndex = stackTop--;
+    for (size_t i = numArgs; i < numArgs + numRets; i++) {
+        NodeSocket outSocket = {nodeIndex, i};
+        SocketMeta outMeta   = d_get_socket_meta(context->sheet, outSocket);
+
+        if (outMeta.type != TYPE_EXECUTION) {
+            set_stack_index(context, outSocket, stackTop--);
         }
     }
 
@@ -1363,8 +1401,8 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
 
         context->stackTop = finalStackTop;
 
-        NodeSocket outputSocket   = {nodeIndex, 3};
-        outputSocket->_stackIndex = finalStackTop;
+        NodeSocket outputSocket = {nodeIndex, 3};
+        set_stack_index(context, outputSocket, finalStackTop);
 
         // If the boolean input is a literal, then it's easy! We just output
         // the bytecode that gives us the output corresponding to if the
@@ -1377,7 +1415,9 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
             // Setting the output socket stack index.
             NodeSocket inputSocket =
                 (boolLiteralValue) ? trueSocket : falseSocket;
-            outputSocket->_stackIndex = inputSocket->_stackIndex;
+
+            int inputIndex = get_stack_index(context, inputSocket);
+            set_stack_index(context, outputSocket, inputIndex);
 
         } else {
             // Wise guy, eh? So we need to include the bytecode for both the
@@ -1486,7 +1526,8 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
                     d_concat_bytecode(&action, &syscall);
                     d_free_bytecode(&syscall);
 
-                    node->sockets[1]->_stackIndex = context->stackTop;
+                    NodeSocket outSocket = {nodeIndex, 1};
+                    set_stack_index(context, outSocket, context->stackTop);
                     break;
                 case CORE_LESS_THAN:;
                     action = d_generate_comparator(context, nodeIndex, OP_CLT,
@@ -1626,8 +1667,8 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
         switch (coreFunc) {
             case CORE_FOR:;
                 // We will be using the "start" input as the index.
-                NodeSocket indexSocket   = {nodeIndex, 5};
-                indexSocket->_stackIndex = context->stackTop;
+                NodeSocket indexSocket = {nodeIndex, 5};
+                set_stack_index(context, indexSocket, context->stackTop);
 
                 // If the step input is an immediate, we can determine here what
                 // instruction to use to compare the index with the stop value.
@@ -2257,7 +2298,7 @@ BCode d_generate_function(BuildContext *context, SheetFunction func) {
 
     // Set the top of the stack to be accurate, i.e. there will be arguments
     // pushed in before the function runs.
-    context->stackTop = func->numArguments - 1;
+    context->stackTop = d_definition_num_inputs(&(func.functionDefinition));
 
     if (d_is_subroutine(func)) {
         if (func.defineNodeIndex >= 0) {
@@ -2355,7 +2396,7 @@ void d_codegen_compile(Sheet *sheet) {
         SheetFunction *func          = sheet->functions + i;
         const NodeDefinition funcDef = func->functionDefinition;
 
-        BCode code = d_generate_function(func, &context);
+        BCode code = d_generate_function(&context, *func);
 
         // Before we concatenate the bytecode, we need to take a note of where
         // it will go in the text section, so the linker knows where to call to
