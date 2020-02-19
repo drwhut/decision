@@ -467,7 +467,11 @@ static const SocketMeta read_socket_meta(char **ptr) {
 
     *ptr = str;
 
-    const SocketMeta meta = {name, description, type, defaultValue};
+    const SocketMeta meta = { NULL, NULL, TYPE_NONE, 0 };
+    *(char **)&(meta.name) = name;
+    *(char **)&(meta.description) = description;
+    *(DType *)&(meta.type) = type;
+    *(LexData *)&(meta.defaultValue) = defaultValue;
 
     return meta;
 }
@@ -562,8 +566,12 @@ static const NodeDefinition read_node_definition(char **ptr) {
 
     *ptr = str;
 
-    const NodeDefinition definition = {name,       description,      list,
-                                       numSockets, startOutputIndex, false};
+    const NodeDefinition definition = { NULL, NULL, NULL, 0, 0, false };
+    *(char **)&(definition.name) = name;
+    *(char **)&(definition.description) = description;
+    *(SocketMeta **)&(definition.sockets) = list;
+    *(size_t *)&(definition.numSockets) = numSockets;
+    *(size_t *)&(definition.startOutputIndex) = startOutputIndex;
 
     return definition;
 }

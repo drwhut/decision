@@ -28,6 +28,7 @@
 #include "dcfg.h"
 #include "dcore.h"
 
+#include <stdbool.h>
 #include <stddef.h>
 
 /*

@@ -76,11 +76,18 @@ void d_create_c_function(DecisionCFunction function, const char *name,
         memcpy(newSockets, sockets, numSockets * sizeof(SocketMeta));
     }
 
-    const NodeDefinition definition = {newName,    description, newSockets,
-                                       numSockets, numInputs,   false};
+    NodeDefinition definition = {NULL,    NULL, NULL,
+                                       0, 0,   false};
+    *(char **)&(definition.name) = newName;
+    *(char **)&(definition.description) = newDescription;
+    *(SocketMeta **)&(definition.sockets) = newSockets;
+    *(size_t *)&(definition.numSockets) = numSockets;
+    *(size_t *)&(definition.startOutputIndex) = numInputs;
 
     // Add the function to the global list.
-    CFunction newFunction = {function, definition};
+    CFunction newFunction;
+    newFunction.function = function;
+    memcpy((NodeDefinition *)&(newFunction.definition), &definition, sizeof(NodeDefinition));
 
     if (numCFunctions == 0) {
         cFunctionList = (CFunction *)d_malloc(sizeof(CFunction));

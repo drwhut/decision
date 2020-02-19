@@ -22,7 +22,11 @@
 #include "dcore.h"
 #include "decision.h"
 #include "derror.h"
+#include "dmalloc.h"
 #include "dsheet.h"
+
+#include <stdlib.h>
+#include <string.h>
 
 /*
     void add_name_definition(AllNameDefinitions* all, NameDefinition definition)

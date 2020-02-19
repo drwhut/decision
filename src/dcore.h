@@ -25,7 +25,6 @@
 #define DCORE_H
 
 #include "dcfg.h"
-#include "dtype.h"
 
 /*
 === HEADER DEFINITIONS ====================================

@@ -648,7 +648,6 @@ BCode d_push_literal(BuildContext *context, NodeSocket socket, bool cvtFloat) {
  */
 BCode d_push_variable(BuildContext *context, size_t nodeIndex) {
     SheetNode node                = context->sheet->nodes[nodeIndex];
-    const NodeDefinition *nodeDef = node.definition;
     SheetVariable *variable       = node.nameDefinition.definition.variable;
     const SocketMeta variableMeta = variable->variableMeta;
 
@@ -1011,8 +1010,6 @@ BCode d_generate_operator(BuildContext *context, size_t nodeIndex, DIns opcode,
 
     DIns nonImmediateOpcode = (convertFloat) ? fopcode : opcode;
 
-    size_t i = 0;
-
     while (socket.socketIndex < numInputs) {
         socket.socketIndex++;
 
@@ -1034,7 +1031,7 @@ BCode d_generate_operator(BuildContext *context, size_t nodeIndex, DIns opcode,
             d_concat_bytecode(&out, &subaction);
             d_free_bytecode(&subaction);
         } else {
-            if (i == 1) {
+            if (socket.socketIndex == 1) {
                 // The node only has one input, so apply the opcode to it.
                 subaction = d_bytecode_ins(nonImmediateOpcode);
                 d_concat_bytecode(&out, &subaction);
@@ -1225,7 +1222,7 @@ BCode d_generate_call(BuildContext *context, size_t nodeIndex) {
  * \param socket The output socket representing the function argument.
  */
 BCode d_push_argument(BuildContext *context, NodeSocket socket) {
-    VERBOSE(5, "Generating bytecode for argument socket #d in node #d...\n",
+    VERBOSE(5, "Generating bytecode for argument socket #%d in node #%d...\n",
             socket.socketIndex, socket.nodeIndex);
 
     BCode out = {NULL, 0};
@@ -2087,7 +2084,7 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
                 // Check to see if it is a false literal. If it is, then this
                 // execution node is useless.
                 if (d_socket_num_connections(context->sheet, socket) == 0 &&
-                    meta.defaultValue.booleanValue == false) {
+                    boolMeta.defaultValue.booleanValue == false) {
                     break;
                 }
 
@@ -2096,20 +2093,21 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
                 socket.socketIndex = 2;
 
                 // TODO: What if there isn't a connecting node?
-                int wireIndex = d_wire_find_first(context->sheet, socket);
+                wireIndex = d_wire_find_first(context->sheet, socket);
+
+                BCode trueCode = { NULL, 0 };
 
                 if (IS_WIRE_FROM(context->sheet, wireIndex, socket)) {
                     NodeSocket connectedTo =
                         context->sheet->wires[wireIndex].socketTo;
                     firstNodeIndex = connectedTo.nodeIndex;
+
+                    // We need to simulate the boolean getting poped from the stack
+                    // by JRCONFI.
+                    context->stackTop--;
+                    trueCode =
+                        d_generate_execution_node(context, firstNodeIndex, false);
                 }
-
-                // We need to simulate the boolean getting poped from the stack
-                // by JRCONFI.
-                context->stackTop--;
-
-                BCode trueCode =
-                    d_generate_execution_node(context, firstNodeIndex, false);
 
                 // After the loop has executed, we want to pop from the stack
                 // to the point before the boolean variable got calculated,

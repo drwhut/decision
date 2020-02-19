@@ -234,7 +234,7 @@ bool d_is_node_socket_valid(Sheet *sheet, NodeSocket nodeSocket) {
         return false;
     }
 
-    NodeDefinition *nodeDef = d_get_node_definition(sheet, nodeIndex);
+    const NodeDefinition *nodeDef = d_get_node_definition(sheet, nodeIndex);
     if (nodeDef == NULL) {
         return false;
     }
@@ -262,7 +262,7 @@ bool d_is_input_socket(Sheet *sheet, NodeSocket socket) {
     }
 
     SheetNode node          = sheet->nodes[socket.nodeIndex];
-    NodeDefinition *nodeDef = node.definition;
+    const NodeDefinition *nodeDef = node.definition;
 
     size_t startOutput = nodeDef->startOutputIndex;
 
@@ -290,7 +290,7 @@ const SocketMeta d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket) {
 
     size_t nodeIndex        = nodeSocket.nodeIndex;
     SheetNode node          = sheet->nodes[nodeIndex];
-    NodeDefinition *nodeDef = node.definition;
+    const NodeDefinition *nodeDef = node.definition;
 
     size_t socketIndex = nodeSocket.socketIndex;
 
@@ -382,7 +382,7 @@ short d_wire_cmp(SheetWire wire1, SheetWire wire2) {
 int d_wire_find_first(Sheet *sheet, NodeSocket socket) {
     int left  = 0;
     int right = sheet->numWires - 1;
-    int middle;
+    int middle = (left + right) / 2;
 
     bool found = false;
 
@@ -634,8 +634,8 @@ bool d_sheet_add_wire(Sheet *sheet, SheetWire wire) {
         SheetNode fromNode = sheet->nodes[from.nodeIndex];
         SheetNode toNode   = sheet->nodes[to.nodeIndex];
 
-        NodeDefinition *fromDef = fromNode.definition;
-        NodeDefinition *toDef   = toNode.definition;
+        const NodeDefinition *fromDef = fromNode.definition;
+        const NodeDefinition *toDef   = toNode.definition;
 
         ERROR_COMPILER(sheet->filePath, toNode.lineNum, true,
                        "Wire data type mismatch between socket of type %s "
@@ -734,8 +734,8 @@ void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef) {
     SocketMeta *defineMeta =
         (SocketMeta *)d_malloc(numSocketsDefine * sizeof(SocketMeta));
 
-    SocketMeta defineNameSocket = {defineName, defineDescription, TYPE_NAME,
-                                   funcDef.name};
+    SocketMeta defineNameSocket = {nameDefine, descriptionDefine, TYPE_NAME,
+                                   (char *)funcDef.name};
 
     memcpy(defineMeta, &defineNameSocket, sizeof(SocketMeta));
     memcpy(defineMeta + 1, funcDef.sockets, numInputs * sizeof(SocketMeta));
@@ -760,7 +760,7 @@ void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef) {
         (SocketMeta *)d_malloc(numSocketsReturn * sizeof(SocketMeta));
 
     SocketMeta returnNameSocket = {returnName, returnDescription, TYPE_NAME,
-                                   funcDef.name};
+                                   (char *)funcDef.name};
 
     memcpy(returnMeta, &returnNameSocket, sizeof(SocketMeta));
     memcpy(returnMeta + 1, funcDef.sockets + funcDef.startOutputIndex,
@@ -773,8 +773,8 @@ void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef) {
                                       numSocketsReturn,
                                       false};
 
-    SheetFunction func = {funcDef, defineDef, returnDef, NULL,
-                          0,       NULL,      0,         sheet};
+    SheetFunction func = {funcDef, defineDef, returnDef, 0,
+                          0,       0,      0,         sheet};
 
     LIST_PUSH(sheet->functions, SheetFunction, sheet->numFunctions, func)
 }
@@ -928,15 +928,15 @@ Sheet *d_sheet_create(const char *filePath) {
  */
 void d_definition_free(const NodeDefinition nodeDef) {
     if (nodeDef.name != NULL) {
-        free(nodeDef.name);
+        free((char *)nodeDef.name);
     }
 
     if (nodeDef.description != NULL) {
-        free(nodeDef.description);
+        free((char *)nodeDef.description);
     }
 
     if (nodeDef.sockets != NULL) {
-        free(nodeDef.sockets);
+        free((SocketMeta *)nodeDef.sockets);
     }
 }
 
@@ -1129,7 +1129,7 @@ void d_functions_dump(SheetFunction *functions, size_t numFunctions) {
     if (functions != NULL && numFunctions > 0) {
         for (size_t i = 0; i < numFunctions; i++) {
             SheetFunction function  = functions[i];
-            NodeDefinition *funcDef = &(function.functionDefinition);
+            const NodeDefinition *funcDef = &(function.functionDefinition);
 
             size_t numInputs  = d_definition_num_inputs(funcDef);
             size_t numOutputs = d_definition_num_outputs(funcDef);
@@ -1211,7 +1211,7 @@ void d_sheet_dump(Sheet *sheet) {
     if (sheet->nodes != NULL && sheet->numNodes > 0) {
         for (size_t i = 0; i < sheet->numNodes; i++) {
             SheetNode node      = sheet->nodes[i];
-            NodeDefinition *def = node.definition;
+            const NodeDefinition *def = node.definition;
 
             printf("[%zu] %s (Line %zu)\n", i, def->name, node.lineNum);
 

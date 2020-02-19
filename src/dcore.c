@@ -19,6 +19,7 @@
 #include "dcore.h"
 
 #include "dsheet.h"
+#include "dtype.h"
 
 #include <string.h>
 
@@ -168,12 +169,15 @@ static const NodeDefinition CORE_FUNC_DEFINITIONS[NUM_CORE_FUNCTIONS] = {
     {"LessThan", "Check if one value is less than another.", CORE_FUNC_SOCKETS[CORE_LESS_THAN], 3, 2, false},
     {"LessThanOrEqual", "Check if one value is less than or equal to another.", CORE_FUNC_SOCKETS[CORE_LESS_THAN_OR_EQUAL], 3, 2, false},
     {"Mod", "Calculate the remainder after division of two integers.", CORE_FUNC_SOCKETS[CORE_MOD], 3, 2, false},
+    {"MoreThan", "Check if one value is more than another.", CORE_FUNC_SOCKETS[CORE_MORE_THAN], 3, 2, false},
+    {"MoreThanOrEqual", "Check if one value is more than or equal to another.", CORE_FUNC_SOCKETS[CORE_MORE_THAN_OR_EQUAL], 3, 2, false},
     {"Multiply", "Calculate the multiplication of two or more numbers.", CORE_FUNC_SOCKETS[CORE_MULTIPLY], 3, 2, true},
     {"Not", "Calculate the bitwise NOT of an integer or boolean.", CORE_FUNC_SOCKETS[CORE_NOT], 2, 1, false},
     {"NotEqual", "Check if two values are not equal.", CORE_FUNC_SOCKETS[CORE_NOT_EQUAL], 3, 2, false},
     {"Or", "Calculate the bitwise OR of two integers or booleans.", CORE_FUNC_SOCKETS[CORE_OR], 3, 2, false},
     {"Print", "Print a value to the standard output.", CORE_FUNC_SOCKETS[CORE_PRINT], 3, 2, false},
     {"Set", "Set the value of a variable.", CORE_FUNC_SOCKETS[CORE_SET], 4, 3, false},
+    {"Subtract", "Calculate the subtraction of two numbers.", CORE_FUNC_SOCKETS[CORE_SUBTRACT], 3, 2, false},
     {"Ternary", "Output one input or another, depending on a condition.", CORE_FUNC_SOCKETS[CORE_TERNARY], 4, 3, false},
     {"While", "Keep activating an execution path while a condition is true.", CORE_FUNC_SOCKETS[CORE_WHILE], 4, 2, false},
     {"Xor", "Calculate the bitwise XOR of two integers or booleans.", CORE_FUNC_SOCKETS[CORE_XOR], 3, 2, false}
@@ -217,9 +221,9 @@ const CoreFunction d_core_find_name(const char *name) {
     while (left <= right) {
         middle = (left + right) / 2;
 
-        NodeDefinition *def = d_core_get_definition(middle);
+        const NodeDefinition *def = d_core_get_definition(middle);
 
-        short cmp = strcmp(name, def->name);
+        int cmp = strcmp(name, def->name);
 
         if (cmp < 0) {
             right = middle - 1;

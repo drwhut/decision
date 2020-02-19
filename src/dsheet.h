@@ -66,8 +66,8 @@ typedef struct _socketMeta {
     const char *name;
     const char *description;
 
-    const DType type;
-    const LexData defaultValue; ///< If there is no input wire, use this value.
+    DType type;
+    LexData defaultValue; ///< If there is no input wire, use this value.
 } SocketMeta;
 
 /**
@@ -81,11 +81,11 @@ typedef struct _nodeDefinition {
     const char *description;
 
     const SocketMeta *sockets;
-    const size_t numSockets;
-    const size_t startOutputIndex; ///< Any socket before this index is an
+    size_t numSockets;
+    size_t startOutputIndex; ///< Any socket before this index is an
                                    ///< input socket, the rest are output
                                    ///< sockets.
-    const bool infiniteInputs;
+    bool infiniteInputs;
 } NodeDefinition;
 
 /**
@@ -399,7 +399,7 @@ DECISION_API int d_wire_find_first(Sheet *sheet, NodeSocket socket);
  * \brief Check if a wire starts from a given socket.
  */
 #define IS_WIRE_FROM(sheet, wireIndex, socket)                                 \
-    ((wireIndex) >= 0 && (wireIndex) < (sheet)->numWires &&                    \
+    ((wireIndex) >= 0 && (wireIndex) < (int)((sheet)->numWires) &&             \
      (socket).nodeIndex == (sheet)->wires[(wireIndex)].socketFrom.nodeIndex && \
      (socket).socketIndex ==                                                   \
          (sheet)->wires[(wireIndex)].socketFrom.socketIndex)

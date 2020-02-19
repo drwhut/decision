@@ -105,8 +105,8 @@ static void add_property_Variable(Sheet *sheet, size_t lineNum,
             descriptionArg = argList.args[3];
         }
 
-        char *varName        = NULL;
-        char *varDescription = NULL;
+        const char *varName        = NULL;
+        const char *varDescription = NULL;
         DType varType        = TYPE_NONE;
         LexData varDefault   = {0};
 
@@ -401,7 +401,6 @@ static void add_property_FunctionInput(Sheet *sheet, size_t lineNum,
     descriptionArg.type         = 0;
     descriptionArg.data.literal = NULL;
 
-    const char *argName = NULL;
     LexData defaultValue;
     defaultValue.integerValue = 0;
 
@@ -440,12 +439,11 @@ static void add_property_FunctionInput(Sheet *sheet, size_t lineNum,
             descriptionArg = argList.args[4];
         }
 
-        char *funcName = NULL;
+        const char *funcName = NULL;
 
-        char *socketName        = NULL;
-        char *socketDescription = NULL;
+        const char *socketName        = NULL;
+        const char *socketDescription = NULL;
         DType socketType        = TYPE_NONE;
-        LexData socketDefault   = {0};
 
         if (PROPERTY_ARGUMENT_NAME_DEFINED(funcArg)) {
             funcName = funcArg.data.name;
@@ -558,7 +556,6 @@ static void add_property_FunctionOutput(Sheet *sheet, size_t lineNum,
     descriptionArg.type         = 0;
     descriptionArg.data.literal = NULL;
 
-    const char *argName = NULL;
     LexData defaultValue;
     defaultValue.integerValue = 0;
 
@@ -585,12 +582,11 @@ static void add_property_FunctionOutput(Sheet *sheet, size_t lineNum,
             descriptionArg = argList.args[3];
         }
 
-        char *funcName = NULL;
+        const char *funcName = NULL;
 
-        char *socketName        = NULL;
-        char *socketDescription = NULL;
+        const char *socketName        = NULL;
+        const char *socketDescription = NULL;
         DType socketType        = TYPE_NONE;
-        LexData socketDefault   = {0};
 
         if (PROPERTY_ARGUMENT_NAME_DEFINED(funcArg)) {
             funcName = funcArg.data.name;
@@ -854,15 +850,15 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
                       LineSocketPair **knownLines, size_t *knownLinesCapacity,
                       size_t *numKnownLines, LineSocketPair **unknownLines,
                       size_t *unknownLinesCapacity, size_t *numUnknownLines) {
-    bool isExecNode = d_is_execution_definition(nodeDef);
-
-    size_t numInputs = d_definition_num_inputs(nodeDef);
+    size_t numInputs   = d_definition_num_inputs(nodeDef);
+    size_t _numOutputs = d_definition_num_outputs(nodeDef);
 
     // Malloc the array of types.
     DType *types = (DType *)d_malloc(nodeDef->numSockets * sizeof(DType));
 
-    // The types array will be filled in as we parse the
-    // arguments.
+    for (size_t i = 0; i < numInputs + _numOutputs; i++) {
+        types[i] = nodeDef->sockets[i].type;
+    }
 
     // Malloc the array of literal inputs.
     LexData *literals = (LexData *)d_malloc(numInputs * sizeof(LexData));
@@ -961,8 +957,6 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
             // The data type the socket should be.
             DType socketType = nodeDef->sockets[typeIndex].type;
 
-            types[inputIndex] = socketType;
-
             SyntaxNode *inputSyntaxNode = inputArgs.occurances[inputIndex];
 
             // STX_literal, or STX_lineIdentifier.
@@ -1034,7 +1028,7 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
                             LineSocketPair unknownLine;
                             unknownLine.identifier              = identifier;
                             unknownLine.socket                  = socket;
-                            *unknownLines[(*numUnknownLines)++] = unknownLine;
+                            (*unknownLines)[(*numUnknownLines)++] = unknownLine;
                         }
                     }
 
@@ -1180,7 +1174,7 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
                     LineSocketPair knownLine;
                     knownLine.identifier            = identifier;
                     knownLine.socket                = socket;
-                    *knownLines[(*numKnownLines)++] = knownLine;
+                    (*knownLines)[(*numKnownLines)++] = knownLine;
                 }
             }
 
@@ -1405,7 +1399,7 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
             NodeSocket outputSocket = {nodeIndex, 0};
 
             for (size_t socketIndex = 0; socketIndex < numSockets;
-                 nodeIndex++) {
+                 socketIndex++) {
                 NodeSocket socket = {nodeIndex, socketIndex};
                 SocketMeta meta   = d_get_socket_meta(sheet, socket);
 
@@ -1472,7 +1466,6 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
         // variable we're setting.
         case CORE_PRINT:
         case CORE_SET:;
-            bool reduced          = true;
             DType reducedTo       = TYPE_NONE;
             const char *inputName = NULL;
             for (size_t socketIndex = 0; socketIndex < numSockets;
@@ -1512,15 +1505,13 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
                                     .reducedTypes[socketIndex] = otherMeta.type;
 
                                 reducedTo = otherMeta.type;
-                            } else {
-                                reduced = false;
                             }
                         }
                     }
                 }
             }
 
-            if (reduced) {
+            if (reducedTo != TYPE_NONE) {
                 nodeReduced[nodeIndex] = true;
 
                 if (coreFunc == CORE_SET && inputName != NULL) {
