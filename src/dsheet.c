@@ -659,6 +659,7 @@ bool d_sheet_add_wire(Sheet *sheet, SheetWire wire) {
  * \param node The node to add.
  */
 size_t d_sheet_add_node(Sheet *sheet, SheetNode node) {
+    node._stackPositions = NULL;
     LIST_PUSH(sheet->nodes, SheetNode, sheet->numNodes, node)
     return sheet->numNodes - 1;
 }
@@ -967,6 +968,10 @@ void d_sheet_free(Sheet *sheet) {
 
                 if (node.literalValues != NULL) {
                     free(node.literalValues);
+                }
+
+                if (node._stackPositions != NULL) {
+                    free(node._stackPositions);
                 }
             }
 

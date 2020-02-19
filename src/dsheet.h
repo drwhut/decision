@@ -143,6 +143,8 @@ typedef struct _sheetNode {
                                          ///< this points to the function.
                                          ///< Otherwise, it points to the name
                                          ///< definition of the node.
+    
+    int *_stackPositions; ///< Used by Code Generation.
 } SheetNode;
 
 /**
