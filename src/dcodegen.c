@@ -352,7 +352,7 @@ void d_insert_bytecode(BCode *base, BCode *insertCode, size_t insertIndex) {
 void d_add_link_to_ins(BuildContext *context, BCode *bcode, size_t insIndex,
                        LinkMeta linkMeta, size_t *indexInList,
                        bool *wasDuplicate) {
-    VERBOSE(5, "Linking instruction %zu to link of type %zd and name %s...\n",
+    VERBOSE(5, "Linking instruction %zu to link of type %u and name %s...\n",
             insIndex, linkMeta.type, linkMeta.name);
 
     // Firstly, does the link already exist in the list? We don't want

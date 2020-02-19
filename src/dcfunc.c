@@ -141,16 +141,19 @@ void d_create_c_subroutine(DecisionCFunction function, const char *name,
     memcpy(newSockets + 1, sockets, numSockets * sizeof(SocketMeta));
 
     // Add the "before" node.
-    SocketMeta before = {"before",
-                         "The node will activate when this input is activated.",
-                         TYPE_EXECUTION, 0};
+    SocketMeta before;
+    before.name = "before";
+    before.description = "The node will activate when this input is activated.";
+    before.type = TYPE_EXECUTION;
+    before.defaultValue.integerValue = 0;
     memcpy(newSockets, &before, sizeof(SocketMeta));
 
     // Add the "after" node.
-    SocketMeta after = {
-        "after",
-        "This output will activate once the node has finished executing.",
-        TYPE_EXECUTION, 0};
+    SocketMeta after;
+    after.name = "after";
+    after.description = "This output will activate once the node has finished executing.";
+    after.type = TYPE_EXECUTION;
+    after.defaultValue.integerValue = 0;
     memcpy(newSockets + newNumSockets - 1, &after, sizeof(SocketMeta));
 
     d_create_c_function(function, name, description, newSockets, newNumInputs,

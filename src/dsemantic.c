@@ -651,8 +651,8 @@ static void add_property_FunctionOutput(Sheet *sheet, size_t lineNum,
         // Now we've organised the arguments, we can add the argument!
         // d_sheet_function_add_argument(sheet, funcName, retName, retType,
         //                               defaultValue);
-        printf("%s%s%d%d", funcName, socketName, socketType,
-               defaultValue.integerValue);
+        printf("%s%s%d%d%s", funcName, socketName, socketType,
+               defaultValue.integerValue, socketDescription);
 
         // Free this instance of the function name, since it *should* have
         // already been malloc'd elsewhere, and that version will go into

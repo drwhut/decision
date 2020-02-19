@@ -289,7 +289,7 @@ void d_asm_lmeta_dump(LinkMetaList meta) {
     for (size_t i = 0; i < meta.size; i++) {
         LinkMeta lm = meta.list[i];
 
-        printf("%08zu: Type: %zd Name: %s Pointer: %p\n", i, lm.type, lm.name,
+        printf("%08zu: Type: %u Name: %s Pointer: %p\n", i, lm.type, lm.name,
                lm._ptr);
     }
 }
@@ -467,11 +467,11 @@ static const SocketMeta read_socket_meta(char **ptr) {
 
     *ptr = str;
 
-    const SocketMeta meta = { NULL, NULL, TYPE_NONE, 0 };
-    *(char **)&(meta.name) = name;
-    *(char **)&(meta.description) = description;
-    *(DType *)&(meta.type) = type;
-    *(LexData *)&(meta.defaultValue) = defaultValue;
+    SocketMeta meta;
+    meta.name = name;
+    meta.description = description;
+    meta.type = type;
+    meta.defaultValue = defaultValue;
 
     return meta;
 }
