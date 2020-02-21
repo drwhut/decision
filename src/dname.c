@@ -236,8 +236,10 @@ void d_semantic_free_name_definitions(AllNameDefinitions *definitions) {
 
 /* The definition of the Start node. */
 static const SocketMeta startSocket = {
-    "start", "This output gets activated when the program starts.",
-    TYPE_EXECUTION, {0}};
+    "start",
+    "This output gets activated when the program starts.",
+    TYPE_EXECUTION,
+    {0}};
 
 static const NodeDefinition startDefinition = {
     "Start",

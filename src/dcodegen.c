@@ -1056,7 +1056,7 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
 
     // Firstly, we need to check if the node is a particular function -
     // spoiler alert, one of them is not like the others...
-    const CoreFunction coreFunc = nameDef.definition.coreFunc;
+    const CoreFunction coreFunc = d_core_find_name(nodeDef->name);
 
     if (coreFunc == CORE_TERNARY) {
         // Hi. This is the story of why this if statement exists.
@@ -1375,7 +1375,7 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
     VERBOSE(5, "- Generating bytecode for execution node %s...\n",
             nodeDef->name);
 
-    const CoreFunction coreFunc = nameDef.definition.coreFunc;
+    const CoreFunction coreFunc = d_core_find_name(nodeDef->name);
 
     NodeSocket socket;
     socket.nodeIndex   = nodeIndex;
