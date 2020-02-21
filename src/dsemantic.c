@@ -401,17 +401,30 @@ static void create_func(const char *name, const char *desc, bool sub) {
     // If it's a subroutine, add execution sockets.
     // TODO: Make these consistent with the ones in dcfunc.c!
     if (sub) {
+        char *beforeSocketName = d_malloc(7);
+        strcpy(beforeSocketName, "before");
+
+        char *beforeSocketDescription = d_malloc(53);
+        strcpy(beforeSocketDescription,
+               "The node will activate when this input is activated.");
+
         SocketMeta beforeSocket;
-        beforeSocket.name = "before";
-        beforeSocket.description =
-            "The node will activate when this input is activated.";
+        beforeSocket.name                      = beforeSocketName;
+        beforeSocket.description               = beforeSocketDescription;
         beforeSocket.type                      = TYPE_EXECUTION;
         beforeSocket.defaultValue.integerValue = 0;
 
+        char *afterSocketName = d_malloc(6);
+        strcpy(afterSocketName, "after");
+
+        char *afterSocketDescription = d_malloc(64);
+        strcpy(
+            afterSocketDescription,
+            "This output will activate once the node has finished executing.");
+
         SocketMeta afterSocket;
-        afterSocket.name = "after";
-        afterSocket.description =
-            "This output will activate once the node has finished executing.";
+        afterSocket.name                      = afterSocketName;
+        afterSocket.description               = afterSocketDescription;
         afterSocket.type                      = TYPE_EXECUTION;
         afterSocket.defaultValue.integerValue = 0;
 
@@ -1130,7 +1143,9 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
 
         // If there are no sockets in the definition, stop now!
         if (inputArgs.numOccurances > 0 && (nodeDef->numSockets == 0)) {
-            ERROR_COMPILER(sheet->filePath, lineNum, true, "Node %s is defined to have no sockets", nodeDef->name);
+            ERROR_COMPILER(sheet->filePath, lineNum, true,
+                           "Node %s is defined to have no sockets",
+                           nodeDef->name);
             return;
         }
 
@@ -1333,7 +1348,9 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
         // STX_listOfLineIdentifier
         while (node != NULL) {
             if (inputArgs.numOccurances > 0 && (nodeDef->numSockets == 0)) {
-                ERROR_COMPILER(sheet->filePath, lineNum, true, "Node %s is defined to have no sockets", nodeDef->name);
+                ERROR_COMPILER(sheet->filePath, lineNum, true,
+                               "Node %s is defined to have no sockets",
+                               nodeDef->name);
                 return;
             }
 
