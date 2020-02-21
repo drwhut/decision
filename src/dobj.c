@@ -18,6 +18,7 @@
 
 #include "dobj.h"
 
+#include "dcfunc.h"
 #include "derror.h"
 #include "dmalloc.h"
 #include "dsheet.h"
@@ -27,6 +28,119 @@
 #include <string.h>
 
 /**
+ * \struct _objReader
+ * \brief A struct used to read the contents of an object file.
+ *
+ * \typedef struct _objReader ObjectReader
+ */
+typedef struct _objReader {
+
+} ObjectReader;
+
+/**
+ * \struct _objWriter
+ * \brief A struct used to write the contents of an object file.
+ *
+ * \typedef struct _objWriter ObjectWriter
+ */
+typedef struct _objWriter {
+    char *obj;  ///< The object file contents.
+    size_t len; ///< The length of the object string in bytes.
+} ObjectWriter;
+
+/*
+=== READER FUNCTIONS ======================================
+*/
+
+/*
+=== WRITER FUNCTIONS ======================================
+*/
+
+/**
+ * \fn static void writer_alloc_end(ObjectWriter *writer, size_t numBytes)
+ * \brief Add allocated space to the end of a writer.
+ *
+ * \param writer The writer to allocate space for.
+ * \param numBytes The number of bytes to add to the end of the writer.
+ */
+static void writer_alloc_end(ObjectWriter *writer, size_t numBytes) {
+    size_t newLen = writer->len + numBytes;
+
+    if (writer->obj == NULL) {
+        writer->obj = d_malloc(newLen);
+    } else {
+        writer->obj = d_realloc(writer->obj, newLen);
+    }
+
+    writer->len = newLen;
+}
+
+/**
+ * \fn static void write_byte(ObjectWriter *writer, char byte)
+ * \brief Write a byte onto the end of an object writer.
+ *
+ * \param writer The writer to write the byte to.
+ * \param byte The byte to write.
+ */
+static void write_byte(ObjectWriter *writer, char byte) {
+    size_t start = writer->len;
+    writer_alloc_end(writer, 1);
+    *(writer->obj + start) = byte;
+}
+
+/**
+ * \fn static void write_string_n(ObjectWriter *writer, const char *str,
+ *                                size_t n)
+ * \brief Write a length-n string onto the end of an object writer.
+ *
+ * \param writer The writer to write the string to.
+ * \param str The string to write. If it is NULL, nothing is written.
+ * \param n The number of characters to write from the string.
+ */
+static void write_string_n(ObjectWriter *writer, const char *str, size_t n) {
+    if (str == NULL) {
+        return;
+    }
+
+    size_t start = writer->len;
+    writer_alloc_end(writer, n);
+    memcpy(writer->obj + start, str, n);
+}
+
+/**
+ * \fn static void write_string(ObjectWriter *writer, const char *str)
+ * \brief Write a string onto the end of an object writer.
+ *
+ * **NOTE:** It includes the \0 character at the end!
+ *
+ * \param writer The writer to write the string to.
+ * \param str The string to write. If it is NULL, a `\0` is written.
+ */
+static void write_string(ObjectWriter *writer, const char *str) {
+    size_t lenStr = 1;
+    if (str != NULL) {
+        lenStr += strlen(str);
+    } else {
+        str = "";
+    }
+
+    write_string_n(writer, str, lenStr);
+}
+
+/**
+ * \fn static void write_uinteger(ObjectWriter *writer, duint uinteger)
+ * \brief Write an unsigned integer onto the end of an object writer.
+ *
+ * \param writer The writer to write the integer to.
+ * \param uinteger The integer to write.
+ */
+static void write_uinteger(ObjectWriter *writer, duint uinteger) {
+    size_t start = writer->len;
+    writer_alloc_end(writer, sizeof(duint));
+    *(duint *)(writer->obj + start) = uinteger;
+}
+
+/**
  * \fn static size_t get_socket_meta_length(SocketMeta meta)
  * \brief Get the amount of space required to store a SocketMeta.
  *
@@ -34,6 +148,7 @@
  *
  * \param meta The socket metadata to query.
  */
+/*
 static size_t get_socket_meta_length(SocketMeta meta) {
     // 3 = Type + 2 \0s.
     size_t size = 3;
@@ -59,6 +174,7 @@ static size_t get_socket_meta_length(SocketMeta meta) {
 
     return size;
 }
+*/
 
 /**
  * \fn static void write_socket_meta(char **ptr, SocketMeta meta)
@@ -67,6 +183,7 @@ static size_t get_socket_meta_length(SocketMeta meta) {
  * \param ptr The pointer being used to write to the string.
  * \param meta The socket metadata to write to the string.
  */
+/*
 static void write_socket_meta(char **ptr, const SocketMeta meta) {
     char *str = *ptr;
 
@@ -109,6 +226,7 @@ static void write_socket_meta(char **ptr, const SocketMeta meta) {
 
     *ptr = str;
 }
+*/
 
 /**
  * \fn static SocketMeta read_socket_meta(char **ptr)
@@ -118,6 +236,7 @@ static void write_socket_meta(char **ptr, const SocketMeta meta) {
  *
  * \param ptr The pointer being used to read the string.
  */
+/*
 static const SocketMeta read_socket_meta(char **ptr) {
     char *str = *ptr;
 
@@ -157,6 +276,7 @@ static const SocketMeta read_socket_meta(char **ptr) {
 
     return meta;
 }
+*/
 
 /**
  * \fn static size_t get_node_definition_length(NodeDefinition *definition)
@@ -166,6 +286,7 @@ static const SocketMeta read_socket_meta(char **ptr) {
  *
  * \param definition The node definition to query.
  */
+/*
 static size_t get_node_definition_length(const NodeDefinition *definition) {
     // 2 = 2 \0s.
     size_t size = 2 * sizeof(duint) + 2;
@@ -185,6 +306,7 @@ static size_t get_node_definition_length(const NodeDefinition *definition) {
 
     return size;
 }
+*/
 
 /**
  * \fn static void write_node_definition(char **ptr, NodeDefinition *definition)
@@ -193,6 +315,7 @@ static size_t get_node_definition_length(const NodeDefinition *definition) {
  * \param ptr The pointer being used to write the string.
  * \param definition The node definition to write into the string.
  */
+/*
 static void write_node_definition(char **ptr,
                                   const NodeDefinition *definition) {
     char *str = *ptr;
@@ -230,6 +353,7 @@ static void write_node_definition(char **ptr,
 
     *ptr = str;
 }
+*/
 
 /**
  * \fn static NodeDefinition read_node_definition(char **ptr)
@@ -239,6 +363,7 @@ static void write_node_definition(char **ptr,
  *
  * \param ptr The pointer being used to read the string.
  */
+/*
 static const NodeDefinition read_node_definition(char **ptr) {
     char *str = *ptr;
 
@@ -276,6 +401,11 @@ static const NodeDefinition read_node_definition(char **ptr) {
 
     return definition;
 }
+*/
+
+/*
+=== GLOBAL FUNCTIONS ======================================
+*/
 
 /**
  * \fn const char *d_obj_generate(Sheet *sheet, size_t *size)
@@ -291,379 +421,165 @@ static const NodeDefinition read_node_definition(char **ptr) {
  * generated string.
  */
 const char *d_obj_generate(Sheet *sheet, size_t *size) {
-    // Firstly, we need to figure out the size of the string.
+    // Create the ObjectWriter struct.
+    ObjectWriter writer = {NULL, 0};
 
-    size_t lenLinkMeta = 0;
-    for (size_t i = 0; i < sheet->_link.size; i++) {
-        LinkMeta lm = sheet->_link.list[i];
-
-        // 1 byte for the type, variable for the name + NULL, and the pointer.
-        lenLinkMeta += 1 + strlen(lm.name) + 1 + sizeof(dint);
-    }
-
-    size_t len = 3 +                // Either D32 or D64, depending on if
-                                    // DECISION_32 is defined.
-                 5 +                // ".text"
-                 sizeof(duint) +    // Unsigned integer to state the size of
-                                    // the next section.
-                 sheet->_textSize + // To store the .text section.
-                 5 +                // ".main"
-                 sizeof(duint) +    // To store the .main section.
-                 5 +                // ".data"
-                 sizeof(duint) +    // Unsigned integer to state the size of
-                                    // the next section.
-                 sheet->_dataSize + // To store the .data section.
-                 6 +                // ".lmeta"
-                 sizeof(duint) +    // Unsigned integer to state the size of
-                                    // the next section.
-                 lenLinkMeta +      // To store the .lmeta section.
-                 5 +                // ".link"
-                 sizeof(duint) +    // Unsigned integer to state the size of
-                                    // the next section.
-                 sheet->_insLinkListSize * 2 * // To store the .link section.
-                     sizeof(duint) +           //
-                 5 +                           // ".func"
-                 sizeof(duint) + // Unsigned integer to state the size of
-                                 // the next section.
-                 4 +             // ".var"
-                 sizeof(duint) + // Unsigned integer to state the size of
-                                 // the next section.
-                 5 +             // ".incl"
-                 sizeof(duint) + // Unsigned integer to state the size of
-                                 // the next section.
-                 2 +             // ".c"
-                 sizeof(duint) + // Unsigned integer to state the size of
-                                 // the next section.
-                 2;              // '.' and \0 at the end of the string.
-
-    // The .func section size can highly vary, so it gets it own special spot
-    // right here.
-    size_t funcLen = 0;
-
-    for (size_t funcIndex = 0; funcIndex < sheet->numFunctions; funcIndex++) {
-        SheetFunction *func = sheet->functions + funcIndex;
-        funcLen += get_node_definition_length(&(func->functionDefinition));
-    }
-
-    len += funcLen;
-
-    // The .var section can highly vary as well.
-    size_t varLen = 0;
-
-    for (size_t varIndex = 0; varIndex < sheet->numVariables; varIndex++) {
-        SheetVariable *var = sheet->variables + varIndex;
-        varLen += get_socket_meta_length(var->variableMeta);
-    }
-
-    len += varLen;
-
-    // The .incl section can highly vary as well.
-    size_t inclLen = 0;
-
-    Sheet **includePtr = sheet->includes;
-
-    for (size_t inclIndex = 0; inclIndex < sheet->numIncludes; inclIndex++) {
-        const char *includePath = (*includePtr)->filePath;
-        if ((*includePtr)->includePath != NULL)
-            includePath = (*includePtr)->includePath;
-
-        inclLen += strlen(includePath) + 1;
-
-        includePtr++;
-    }
-
-    len += inclLen;
-
-    // The .c section can vary as well.
-    size_t cLen = 0;
-
-    // We only need to put C functions that we use in this list.
-    /*
-    for (size_t metaIndex = 0; metaIndex < sheet->_link.size; metaIndex++) {
-        LinkMeta meta = sheet->_link.list[metaIndex];
-
-        if (meta.type == LINK_CFUNCTION) {
-            CFunction *cFunc = (CFunction *)meta.meta;
-            const NodeDefinition cDef = cFunc->definition;
-
-            // The name of the C function, along with it's inputs and outputs,
-            // which are TYPE_NONE terminated.
-            cLen += strlen(cDef.name) +
-            cLen += strlen(cFunc->name) + 1 +
-                    (cFunc->numInputs + cFunc->numOutputs + 2) * sizeof(DType);
-        }
-    }
-    */
-
-    len += cLen;
-
-    *size = len;
-
-    // Allocate memory to the string.
-    char *out = (char *)d_malloc(len);
-
-    // A pointer to where we want to put content in the string.
-    char *ptr = out;
-
-// D32 or D64
 #ifdef DECISION_32
-    memcpy(ptr, "D32", 3);
+    write_string_n(&writer, "D32", 3);
 #else
-    memcpy(ptr, "D64", 3);
+    write_string_n(&writer, "D64", 3);
 #endif // DECISION_32
-    ptr += 3;
 
-    // END OF METADATA
-    // ".text"
-    memcpy(ptr, ".text", 5);
-    ptr += 5;
-
-    // sizeof(.text)
-    duint sizeOfSection = (duint)(sheet->_textSize);
-    memcpy(ptr, &sizeOfSection, sizeof(duint));
-    ptr += sizeof(duint);
-
-    // .text section.
-    memcpy(ptr, sheet->_text, sizeOfSection);
-    ptr += sizeOfSection;
-
-    // ".main"
-    memcpy(ptr, ".main", 5);
-    ptr += 5;
-
-    // .main section.
-    memcpy(ptr, &(sheet->_main), sizeof(duint));
-    ptr += sizeof(duint);
-
-    // ".data"
-    memcpy(ptr, ".data", 5);
-    ptr += 5;
-
-    // sizeof(.data)
-    sizeOfSection = (duint)(sheet->_dataSize);
-    memcpy(ptr, &sizeOfSection, sizeof(duint));
-    ptr += sizeof(duint);
-
-    // .data section.
-    memcpy(ptr, sheet->_data, sizeOfSection);
-    ptr += sizeOfSection;
-
-    // ".lmeta"
-    memcpy(ptr, ".lmeta", 6);
-    ptr += 6;
-
-    // sizeof(.lmeta)
-    sizeOfSection = lenLinkMeta;
-    memcpy(ptr, &sizeOfSection, sizeof(duint));
-    ptr += sizeof(duint);
-
-    // .lmeta section.
-    for (size_t i = 0; i < sheet->_link.size; i++) {
-        LinkMeta lm = sheet->_link.list[i];
-
-        *ptr = lm.type;
-        ptr++;
-
-        size_t sizeOfNamePlusNull = strlen(lm.name) + 1;
-        memcpy(ptr, lm.name, sizeOfNamePlusNull);
-        ptr += sizeOfNamePlusNull;
-
-        // If the object is in another sheet, we can't store the pointer as it
-        // is now! We will need to re-calculate it when we run the object after
-        // it is built.
-        char *newPtr = lm._ptr;
-
-        if (lm.type == LINK_VARIABLE || lm.type == LINK_VARIABLE_POINTER) {
-            SheetVariable *extVar = (SheetVariable *)lm.meta;
-            Sheet *extSheet       = extVar->sheet;
-
-            if (sheet != extSheet) {
-                newPtr = (char *)-1;
-            }
-        } else if (lm.type == LINK_FUNCTION) {
-            SheetFunction *extFunc = (SheetFunction *)lm.meta;
-            Sheet *extSheet        = extFunc->sheet;
-
-            if (sheet != extSheet) {
-                newPtr = (char *)-1;
-            }
-        }
-
-        memcpy(ptr, &newPtr, sizeof(dint));
-        ptr += sizeof(dint);
+    // .text
+    // If no bytecode has been compiled, don't bother putting anything here.
+    if (sheet->_textSize > 0) {
+        write_string_n(&writer, ".text", 5);
+        write_uinteger(&writer, sheet->_textSize);
+        write_string_n(&writer, sheet->_text, sheet->_textSize);
     }
 
-    // ".link"
-    memcpy(ptr, ".link", 5);
-    ptr += 5;
-
-    // sizeof(.link)
-    sizeOfSection = sheet->_insLinkListSize * 2 * sizeof(duint);
-    memcpy(ptr, &sizeOfSection, sizeof(duint));
-    ptr += sizeof(duint);
-
-    // .link section.
-    for (size_t i = 0; i < sheet->_insLinkListSize; i++) {
-        InstructionToLink itl = sheet->_insLinkList[i];
-
-        memcpy(ptr, &itl.ins, sizeof(duint));
-        ptr += sizeof(duint);
-
-        memcpy(ptr, &itl.link, sizeof(duint));
-        ptr += sizeof(duint);
+    // .main
+    // If there is no Start function, don't bother putting anything here.
+    if (sheet->_main > 0) {
+        write_string_n(&writer, ".main", 5);
+        write_uinteger(&writer, sheet->_main);
     }
 
-    // ".func"
-    memcpy(ptr, ".func", 5);
-    ptr += 5;
+    // .data
+    // If there is nothing in the data section, don't bother putting anything
+    // here.
+    if (sheet->_dataSize > 0) {
+        write_string_n(&writer, ".data", 5);
+        write_uinteger(&writer, sheet->_dataSize);
+        write_string_n(&writer, sheet->_data, sheet->_dataSize);
+    }
 
-    // sizeof(.func)
-    memcpy(ptr, &funcLen, sizeof(duint));
-    ptr += sizeof(duint);
+    // .lmeta
+    // If there is nothing linkable, don't bother putting anything here.
+    if (sheet->_link.size > 0) {
+        write_string_n(&writer, ".lmeta", 6);
+        write_uinteger(&writer, sheet->_link.size);
 
-    // .func section.
-    for (size_t funcIndex = 0; funcIndex < sheet->numFunctions; funcIndex++) {
-        // TODO: Error if it's somehow not in the meta list?
-        SheetFunction *func = sheet->functions + funcIndex;
+        for (size_t i = 0; i < sheet->_link.size; i++) {
+            LinkMeta lm = sheet->_link.list[i];
 
-        // Find the function's index in the link meta list.
-        duint funcMetaIndex = 0;
+            write_byte(&writer, lm.type);
+            write_string(&writer, lm.name);
 
-        for (; funcMetaIndex < sheet->_link.size; funcMetaIndex++) {
-            LinkMeta linkMeta = sheet->_link.list[funcMetaIndex];
+            // If the object is in another sheet, we can't store the pointer as
+            // it is now! We will need to re-calculate it when we run the object
+            // after it is built.
+            char *newPtr = lm._ptr;
 
-            if (linkMeta.type == LINK_FUNCTION) {
-                // In order to identify our function, we check the names are
-                // the same.
-                if (strcmp(func->functionDefinition.name, linkMeta.name) == 0) {
-                    break;
+            if (lm.type == LINK_VARIABLE || lm.type == LINK_VARIABLE_POINTER) {
+                SheetVariable *extVar = (SheetVariable *)lm.meta;
+                Sheet *extSheet       = extVar->sheet;
+
+                if (sheet != extSheet) {
+                    newPtr = (char *)-1;
+                }
+            } else if (lm.type == LINK_FUNCTION) {
+                SheetFunction *extFunc = (SheetFunction *)lm.meta;
+                Sheet *extSheet        = extFunc->sheet;
+
+                if (sheet != extSheet) {
+                    newPtr = (char *)-1;
                 }
             }
+
+            write_uinteger(&writer, (duint)newPtr);
         }
-
-        memcpy(ptr, &funcMetaIndex, sizeof(duint));
-        ptr += sizeof(duint);
-
-        // TODO: The name of the function will be written again with this call.
-        // Add a way to stop writing the name, as it's already in the link meta
-        // list?
-        write_node_definition(&ptr, &(func->functionDefinition));
-
-        func++;
     }
 
-    // ".var"
-    memcpy(ptr, ".var", 4);
-    ptr += 4;
+    // .link
+    // If there are no instructions that need to be linked, don't bother putting
+    // anything here.
+    if (sheet->_insLinkListSize > 0) {
+        write_string_n(&writer, ".link", 5);
+        write_uinteger(&writer, sheet->_insLinkListSize);
 
-    // sizeof(.var)
-    memcpy(ptr, &varLen, sizeof(duint));
-    ptr += sizeof(duint);
+        for (size_t i = 0; i < sheet->_insLinkListSize; i++) {
+            InstructionToLink itl = sheet->_insLinkList[i];
 
-    // .var section.
-    for (size_t varIndex = 0; varIndex < sheet->numVariables; varIndex++) {
-        // Find the variable's entry in the LinkMeta array.
-        // TODO: Error if it cannot be found.
-        SheetVariable *var = sheet->variables + varIndex;
-        size_t metaIndex   = 0;
+            write_uinteger(&writer, itl.ins);
+            write_uinteger(&writer, itl.link);
+        }
+    }
 
-        for (; metaIndex < sheet->_link.size; metaIndex++) {
-            LinkMeta lm = sheet->_link.list[metaIndex];
+    // .func
+    // If there are no functions, don't bother putting anything here.
+    if (sheet->numFunctions > 0) {
+        write_string_n(&writer, ".func", 5);
+        write_uinteger(&writer, sheet->numFunctions);
 
-            if ((lm.type == LINK_VARIABLE ||
-                 lm.type == LINK_VARIABLE_POINTER) &&
-                strcmp(var->variableMeta.name, lm.name) == 0) {
-                break;
+        for (size_t i = 0; i < sheet->numFunctions; i++) {
+            const NodeDefinition funcDef =
+                sheet->functions[i].functionDefinition;
+            write_definition(&writer, funcDef);
+        }
+    }
+
+    // .var
+    // If there are no variables, don't bother putting anything here.
+    if (sheet->numVariables > 0) {
+        write_string_n(&writer, ".var", 4);
+        write_uinteger(&writer, sheet->numVariables);
+
+        for (size_t i = 0; i < sheet->numVariables; i++) {
+            const SocketMeta varMeta = sheet->variables[i].variableMeta;
+            write_socket(&writer, varMeta);
+        }
+    }
+
+    // .incl
+    // If there are no included sheets, don't bother putting anything here.
+    if (sheet->numIncludes > 0) {
+        write_string_n(&writer, ".incl", 5);
+        write_uinteger(&writer, sheet->numIncludes);
+
+        for (size_t i = 0; i < sheet->numIncludes; i++) {
+            Sheet *include   = sheet->includes[i];
+            const char *path = include->filePath;
+
+            if (include->includePath != NULL) {
+                path = include->includePath;
             }
+
+            write_string(&writer, path);
         }
-
-        memcpy(ptr, &metaIndex, sizeof(duint));
-        ptr += sizeof(duint);
-
-        // TODO: The name of the variable will be written again with this call.
-        // Add a way to stop writing the name, as it's already in the link meta
-        // list?
-        write_socket_meta(&ptr, var->variableMeta);
-
-        var++;
     }
 
-    // ".incl"
-    memcpy(ptr, ".incl", 5);
-    ptr += 5;
+    // .c
+    // If the sheet doesn't use any C functions, don't bother putting anything
+    // here.
+    size_t numCFunctionsUsed = 0;
 
-    // sizeof(.incl)
-    memcpy(ptr, &inclLen, sizeof(duint));
-    ptr += sizeof(duint);
-
-    // .incl section.
-
-    includePtr = sheet->includes;
-
-    for (size_t inclIndex = 0; inclIndex < sheet->numIncludes; inclIndex++) {
-        Sheet *include          = *includePtr;
-        const char *includePath = include->filePath;
-
-        if (include->includePath != NULL)
-            includePath = include->includePath;
-
-        size_t strLenPlusNull = strlen(includePath) + 1;
-        memcpy(ptr, includePath, strLenPlusNull);
-        ptr += strLenPlusNull;
-
-        includePtr++;
-    }
-
-    // ".c"
-    //memcpy(ptr, ".c", 2);
-    //ptr += 2;
-
-    // sizeof(.c)
-    //memcpy(ptr, &cLen, sizeof(duint));
-    //ptr += sizeof(duint);
-
-    // .c section.
-    /*
-    for (size_t metaIndex = 0; metaIndex < sheet->_link.size; metaIndex++) {
-        LinkMeta meta = sheet->_link.list[metaIndex];
+    for (size_t i = 0; i < sheet->_link.size; i++) {
+        LinkMeta meta = sheet->_link.list[i];
 
         if (meta.type == LINK_CFUNCTION) {
-            CFunction *cFunc = (CFunction *)meta.meta;
-
-            size_t nameLenPlusNull = strlen(cFunc->name) + 1;
-            memcpy(ptr, cFunc->name, nameLenPlusNull);
-            ptr += nameLenPlusNull;
-
-            DType none = TYPE_NONE;
-
-            // Since we are writing the arrays like they exist in the CFunction,
-            // TYPE_NONE terminated, we might as well copy the arrays directly,
-            // and then add the TYPE_NONEs afterward.
-            size_t inputLen = cFunc->numInputs * sizeof(DType);
-            memcpy(ptr, cFunc->inputs, inputLen);
-            ptr += inputLen;
-
-            memcpy(ptr, &none, sizeof(DType));
-            ptr += sizeof(DType);
-
-            size_t outputLen = cFunc->numOutputs * sizeof(DType);
-            memcpy(ptr, cFunc->outputs, outputLen);
-            ptr += outputLen;
-
-            memcpy(ptr, &none, sizeof(DType));
-            ptr += sizeof(DType);
+            numCFunctionsUsed++;
         }
     }
-    */
 
-    // '.'
-    *ptr = '.';
-    ptr++;
+    if (numCFunctionsUsed > 0) {
+        write_string_n(&writer, ".c", 2);
+        write_uinteger(&writer, numCFunctionsUsed);
 
-    // \0
-    *ptr = 0;
+        for (size_t i = 0; i < sheet->_link.size; i++) {
+            LinkMeta meta = sheet->_link.list[i];
 
-    return (const char *)out;
+            if (meta.type == LINK_CFUNCTION) {
+                CFunction *cFunc = (CFunction *)meta.meta;
+                const NodeDefinition cDef = cFunc->definition;
+
+                write_definition(&writer, cDef);
+            }
+        }
+    }
+
+    *size = writer.len;
+    return (const char *)writer.obj;
 }
 
 /**
