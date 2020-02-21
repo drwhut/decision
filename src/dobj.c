@@ -36,7 +36,15 @@
  */
 static size_t get_socket_meta_length(SocketMeta meta) {
     // 3 = Type + 2 \0s.
-    size_t size = strlen(meta.name) + strlen(meta.description) + 3;
+    size_t size = 3;
+
+    if (meta.name != NULL) {
+        size += strlen(meta.name);
+    }
+
+    if (meta.description != NULL) {
+        size += strlen(meta.description);
+    }
 
     // The size could still vary depending on the default value.
     if (meta.type == TYPE_STRING) {
@@ -62,13 +70,25 @@ static size_t get_socket_meta_length(SocketMeta meta) {
 static void write_socket_meta(char **ptr, const SocketMeta meta) {
     char *str = *ptr;
 
-    size_t nameSize = strlen(meta.name) + 1;
-    memcpy(str, meta.name, nameSize);
-    str += nameSize;
+    if (meta.name != NULL) {
+        size_t nameSize = strlen(meta.name) + 1;
+        memcpy(str, meta.name, nameSize);
+        str += nameSize;
+    }
+    else {
+        *str = 0;
+        str++;
+    }
 
-    size_t descriptionSize = strlen(meta.description) + 1;
-    memcpy(str, meta.description, descriptionSize);
-    str += descriptionSize;
+    if (meta.description != NULL) {
+        size_t descriptionSize = strlen(meta.description) + 1;
+        memcpy(str, meta.description, descriptionSize);
+        str += descriptionSize;
+    }
+    else {
+        *str = 0;
+        str++;
+    }
 
     *str = meta.type;
     str++;
@@ -76,15 +96,15 @@ static void write_socket_meta(char **ptr, const SocketMeta meta) {
     if (meta.type == TYPE_STRING) {
         if (meta.defaultValue.stringValue != NULL) {
             size_t defaultSize = strlen(meta.defaultValue.stringValue) + 1;
-            memcpy(ptr, meta.defaultValue.stringValue, defaultSize);
-            ptr += defaultSize;
+            memcpy(str, meta.defaultValue.stringValue, defaultSize);
+            str += defaultSize;
         } else {
-            *ptr = 0;
-            ptr++;
+            *str = 0;
+            str++;
         }
     } else {
-        memcpy(ptr, &(meta.defaultValue.integerValue), sizeof(dint));
-        ptr += sizeof(dint);
+        memcpy(str, &(meta.defaultValue.integerValue), sizeof(dint));
+        str += sizeof(dint);
     }
 
     *ptr = str;
@@ -147,9 +167,16 @@ static const SocketMeta read_socket_meta(char **ptr) {
  * \param definition The node definition to query.
  */
 static size_t get_node_definition_length(const NodeDefinition *definition) {
-    // 3 =  2 \0s.
-    size_t size = strlen(definition->name) + strlen(definition->description) +
-                  2 * sizeof(duint) + 2;
+    // 2 = 2 \0s.
+    size_t size = 2 * sizeof(duint) + 2;
+
+    if (definition->name != NULL) {
+        size += strlen(definition->name);
+    }
+
+    if (definition->description != NULL) {
+        size += strlen(definition->description);
+    }
 
     for (size_t i = 0; i < definition->numSockets; i++) {
         SocketMeta meta = definition->sockets[i];
@@ -170,19 +197,31 @@ static void write_node_definition(char **ptr,
                                   const NodeDefinition *definition) {
     char *str = *ptr;
 
-    size_t nameSize = strlen(definition->name) + 1;
-    memcpy(str, definition->name, nameSize);
-    str += nameSize;
+    if (definition->name != NULL) {
+        size_t nameSize = strlen(definition->name) + 1;
+        memcpy(str, definition->name, nameSize);
+        str += nameSize;
+    }
+    else {
+        *str = 0;
+        str++;
+    }
 
-    size_t descriptionSize = strlen(definition->description) + 1;
-    memcpy(str, definition->description, descriptionSize);
-    str += descriptionSize;
+    if (definition->description != NULL) {
+        size_t descriptionSize = strlen(definition->description) + 1;
+        memcpy(str, definition->description, descriptionSize);
+        str += descriptionSize;
+    }
+    else {
+        *str = 0;
+        str++;
+    }
 
-    memcpy(ptr, &(definition->startOutputIndex), sizeof(duint));
-    ptr += sizeof(duint);
+    memcpy(str, &(definition->startOutputIndex), sizeof(duint));
+    str += sizeof(duint);
 
-    memcpy(ptr, &(definition->numSockets), sizeof(duint));
-    ptr += sizeof(duint);
+    memcpy(str, &(definition->numSockets), sizeof(duint));
+    str += sizeof(duint);
 
     for (size_t i = 0; i < definition->numSockets; i++) {
         SocketMeta meta = definition->sockets[i];
