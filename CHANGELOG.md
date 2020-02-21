@@ -16,12 +16,12 @@ and descriptions which are accessible via the C API.
 * Nodes now reference their definitions, which reduces data redundancy.
 * Changed how sheets store wires in memory.
 * Reimplemented `Length` to use the C function `strlen`.
-* Split large source files into smaller ones to improve code readability.`
+* Split large source files into smaller ones to improve code readability.
   * The graph components of sheets (i.e. the nodes and wires) have their own
   set of files, `dgraph.c` and `dgraph.h`.
   * Finding the definitions of names has been moved to `dname.c` and `dname.h`.
   * Decision object files now have their own set of source files, `dobj.c` and
-  `dobj.h`.
+  `dobj.h`, and the code has been revamped to be less error-prone.
 
 # Decision v0.2.0 - 16th January 2020
 
