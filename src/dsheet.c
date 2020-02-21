@@ -41,627 +41,6 @@
     memcpy(array + numCurrentItems++, &newItem, sizeof(arrayType));
 
 /**
- * \fn size_t d_definition_num_inputs(const NodeDefinition *nodeDef)
- * \brief Get the number of input sockets a definition has.
- *
- * \return The number of input sockets the definition has.
- *
- * \param nodeDef The definition of the node.
- */
-size_t d_definition_num_inputs(const NodeDefinition *nodeDef) {
-    if (nodeDef == NULL) {
-        return 0;
-    }
-
-    return nodeDef->startOutputIndex;
-}
-
-/**
- * \fn size_t d_definition_num_outputs(const NodeDefinition *nodeDef)
- * \brief Get the number of output sockets a definition has.
- *
- * \return The number of output sockets the definition has.
- *
- * \param nodeDef The definition of the node.
- */
-size_t d_definition_num_outputs(const NodeDefinition *nodeDef) {
-    if (nodeDef == NULL) {
-        return 0;
-    }
-
-    return nodeDef->numSockets - nodeDef->startOutputIndex;
-}
-
-/**
- * \fn bool d_is_execution_definition(const NodeDefinition *nodeDef)
- * \brief Is the definition an execution definition, i.e. does it have at least
- * one execution socket?
- *
- * \return If the definition is an execution definition.
- *
- * \param nodeDef The definition of the node.
- */
-bool d_is_execution_definition(const NodeDefinition *nodeDef) {
-    if (nodeDef == NULL) {
-        return false;
-    }
-
-    for (size_t i = 0; i < nodeDef->numSockets; i++) {
-        SocketMeta socket = nodeDef->sockets[i];
-
-        if (socket.type == TYPE_EXECUTION) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-/**
- * \def bool d_is_node_index_valid(Sheet *sheet, size_t nodeIndex)
- * \brief Given a sheet, does a given node index exist within that sheet?
- *
- * \returns If the node index exists in the sheet.
- *
- * \param sheet The sheet to query.
- * \param nodeIndex The node index to query.
- */
-bool d_is_node_index_valid(Sheet *sheet, size_t nodeIndex) {
-    if (sheet == NULL) {
-        return false;
-    }
-
-    return nodeIndex < sheet->numNodes;
-}
-
-/**
- * \fn size_t d_node_num_inputs(Sheet *sheet, size_t nodeIndex)
- * \brief Get the number of input sockets a node has.
- *
- * \return The number of input sockets the node has, 0 if the index is not
- * valid.
- *
- * \param sheet The sheet to query.
- * \param nodeIndex The node index to query.
- */
-size_t d_node_num_inputs(Sheet *sheet, size_t nodeIndex) {
-    if (!d_is_node_index_valid(sheet, nodeIndex)) {
-        return 0;
-    }
-
-    SheetNode node                = sheet->nodes[nodeIndex];
-    const NodeDefinition *nodeDef = node.definition;
-
-    if (nodeDef->infiniteInputs) {
-        return d_definition_num_inputs(nodeDef);
-    } else {
-        return node.startOutputIndex;
-    }
-}
-
-/**
- * \fn size_t d_node_num_outputs(Sheet *sheet, size_t nodeIndex)
- * \brief Get the number of output sockets a node has.
- *
- * \return The number of output sockets the node has, 0 if the index is not
- * valid.
- *
- * \param sheet The sheet to query.
- * \param nodeIndex The node index to query.
- */
-size_t d_node_num_outputs(Sheet *sheet, size_t nodeIndex) {
-    if (!d_is_node_index_valid(sheet, nodeIndex)) {
-        return 0;
-    }
-
-    SheetNode node                = sheet->nodes[nodeIndex];
-    const NodeDefinition *nodeDef = node.definition;
-
-    return d_definition_num_outputs(nodeDef);
-}
-
-/**
- * \fn size_t d_is_execution_node(Sheet *sheet, size_t nodeIndex)
- * \brief Is the node an execution node, i.e. does it have at least one
- * execution socket?
- *
- * \return If the node is an execution node.
- *
- * \param sheet The sheet to query.
- * \param nodeIndex The node index to query.
- */
-bool d_is_execution_node(Sheet *sheet, size_t nodeIndex) {
-    if (!d_is_node_index_valid(sheet, nodeIndex)) {
-        return 0;
-    }
-
-    SheetNode node                = sheet->nodes[nodeIndex];
-    const NodeDefinition *nodeDef = node.definition;
-
-    return d_is_execution_definition(nodeDef);
-}
-
-/**
- * \def bool d_is_socket_index_valid(const NodeDefinition *nodeDef,
- *                                   size_t socketIndex)
- * \brief Given a node definition, does a given socket index exist within that
- * node?
- *
- * \return If the socket index exists in the node.
- *
- * \param nodeDef The node definition to query.
- * \param socketIndex The socket index to query.
- */
-bool d_is_socket_index_valid(const NodeDefinition *nodeDef,
-                             size_t socketIndex) {
-    if (nodeDef == NULL) {
-        return false;
-    }
-
-    return socketIndex < nodeDef->numSockets;
-}
-
-/**
- * \fn const NodeDefinition *d_get_node_definition(Sheet *sheet,
- *                                                 size_t *nodeIndex)
- * \brief Given the index of a node, get the definition of the node.
- *
- * \return The definition of the node, or NULL if the index does not exist.
- *
- * \param sheet The sheet the node belongs to.
- * \param nodeIndex The node to get the definition of.
- */
-const NodeDefinition *d_get_node_definition(Sheet *sheet, size_t nodeIndex) {
-    if (!d_is_node_index_valid(sheet, nodeIndex)) {
-        return NULL;
-    }
-
-    return sheet->nodes[nodeIndex].definition;
-}
-
-/**
- * \fn bool d_is_node_socket_valid(Sheet *sheet, NodeSocket nodeSocket)
- * \brief Given a NodeSocket, does it exist in the sheet?
- *
- * \return If the node socket index exists in the given sheet.
- *
- * \param sheet The sheet to query.
- * \param nodeSocket The node socket index to query.
- */
-bool d_is_node_socket_valid(Sheet *sheet, NodeSocket nodeSocket) {
-    size_t nodeIndex = nodeSocket.nodeIndex;
-    if (!d_is_node_index_valid(sheet, nodeSocket.nodeIndex)) {
-        return false;
-    }
-
-    const NodeDefinition *nodeDef = d_get_node_definition(sheet, nodeIndex);
-    if (nodeDef == NULL) {
-        return false;
-    }
-
-    size_t socketIndex = nodeSocket.socketIndex;
-    if (!d_is_socket_index_valid(nodeDef, socketIndex)) {
-        return false;
-    }
-
-    return true;
-}
-
-/**
- * \fn bool d_is_input_socket(Sheet *sheet, NodeSocket socket)
- * \brief Is the given socket an input socket?
- *
- * \return If the socket is an input socket.
- *
- * \param sheet The sheet the socket belongs to.
- * \param socket The socket to query.
- */
-bool d_is_input_socket(Sheet *sheet, NodeSocket socket) {
-    if (!d_is_node_socket_valid(sheet, socket)) {
-        return false;
-    }
-
-    SheetNode node          = sheet->nodes[socket.nodeIndex];
-    const NodeDefinition *nodeDef = node.definition;
-
-    size_t startOutput = nodeDef->startOutputIndex;
-
-    if (nodeDef->infiniteInputs) {
-        startOutput = node.startOutputIndex;
-    }
-
-    return (socket.socketIndex < startOutput);
-}
-
-/**
- * \fn const SocketMeta d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket)
- * \brief Get the metadata of a node's socket.
- *
- * \return The socket's metadata.
- *
- * \param sheet The sheet the socket belongs to.
- * \param nodeSocket The socket to get the metadata for.
- */
-const SocketMeta d_get_socket_meta(Sheet *sheet, NodeSocket nodeSocket) {
-    if (!d_is_node_socket_valid(sheet, nodeSocket)) {
-        const SocketMeta meta = {NULL, NULL, TYPE_NONE, {0}};
-        return meta;
-    }
-
-    size_t nodeIndex        = nodeSocket.nodeIndex;
-    SheetNode node          = sheet->nodes[nodeIndex];
-    const NodeDefinition *nodeDef = node.definition;
-
-    size_t socketIndex = nodeSocket.socketIndex;
-
-    if (nodeDef->infiniteInputs) {
-        // If we have more inputs to deal with than we expected, convert the
-        // socket index we've been given to one that the node definition
-        // expects.
-
-        if (socketIndex >= node.startOutputIndex) {
-            // This is an output after all of the inputs.
-            socketIndex -= (node.startOutputIndex - nodeDef->startOutputIndex);
-        } else if (socketIndex >= nodeDef->startOutputIndex) {
-            // This is one of the extra inputs.
-            socketIndex = nodeDef->startOutputIndex - 1;
-        }
-    }
-
-    SocketMeta out = nodeDef->sockets[socketIndex];
-
-    // Replace some of the elements with what is stored in the node.
-
-    if (node.reducedTypes != NULL) {
-        out.type = node.reducedTypes[nodeSocket.socketIndex];
-    }
-
-    if (node.literalValues != NULL) {
-        if (nodeSocket.socketIndex < node.startOutputIndex) {
-            out.defaultValue = node.literalValues[nodeSocket.socketIndex];
-        }
-    }
-
-    return out;
-}
-
-/**
- * \fn short d_wire_cmp(SheetWire wire1, SheetWire wire2)
- * \brief Since wires are stored in lexicographical order, return an integer
- * value stating the equality, or inequality of the wires.
- *
- * \return 0 if wire1 == wire2, > 0 if wire1 > wire2, and < 0 if wire1 < wire2.
- *
- * \param wire1 The first wire.
- * \param wire2 The second wire.
- */
-short d_wire_cmp(SheetWire wire1, SheetWire wire2) {
-    if (wire1.socketFrom.nodeIndex < wire2.socketFrom.nodeIndex) {
-        return -1;
-    } else if (wire1.socketFrom.nodeIndex > wire2.socketFrom.nodeIndex) {
-        return 1;
-    } else {
-        if (wire1.socketFrom.socketIndex < wire2.socketFrom.socketIndex) {
-            return -1;
-        } else if (wire1.socketFrom.socketIndex >
-                   wire2.socketFrom.socketIndex) {
-            return 1;
-        } else {
-            if (wire1.socketTo.nodeIndex < wire2.socketTo.nodeIndex) {
-                return -1;
-            } else if (wire1.socketTo.nodeIndex < wire2.socketTo.nodeIndex) {
-                return 1;
-            } else {
-                if (wire1.socketTo.socketIndex < wire2.socketTo.socketIndex) {
-                    return -1;
-                } else if (wire1.socketTo.socketIndex >
-                           wire2.socketTo.socketIndex) {
-                    return 1;
-                }
-            }
-        }
-    }
-
-    return 0;
-}
-
-/**
- * \fn int d_wire_find_first(Sheet *sheet, NodeSocket socket)
- * \brief Given a socket, find the first wire in a sheet that originates from
- * the given socket.
- *
- * \returns The index of the wire, or -1 if it is not found.
- *
- * \param sheet The sheet to search for the wire.
- * \param socket The "from" socket to search for.
- */
-int d_wire_find_first(Sheet *sheet, NodeSocket socket) {
-    int left  = 0;
-    int right = sheet->numWires - 1;
-    int middle = (left + right) / 2;
-
-    bool found = false;
-
-    while (left <= right) {
-        middle = (left + right) / 2;
-
-        short cmp      = 0;
-        SheetWire wire = sheet->wires[middle];
-
-        if (socket.nodeIndex < wire.socketFrom.nodeIndex) {
-            cmp = -1;
-        } else if (socket.nodeIndex > wire.socketFrom.nodeIndex) {
-            cmp = 1;
-        } else {
-            if (socket.socketIndex < wire.socketFrom.socketIndex) {
-                cmp = -1;
-            } else if (socket.socketIndex > wire.socketFrom.socketIndex) {
-                cmp = 1;
-            }
-        }
-
-        if (cmp > 0) {
-            left = middle + 1;
-        } else if (cmp < 0) {
-            right = middle - 1;
-        } else {
-            found = true;
-            break;
-        }
-    }
-
-    if (!found) {
-        return -1;
-    }
-
-    // We found *a* wire with the correct from socket, so we just need to go
-    // backwards until we find the *first*.
-    SheetWire wire = sheet->wires[middle];
-
-    while (socket.nodeIndex == wire.socketFrom.nodeIndex &&
-           socket.socketIndex == wire.socketFrom.socketIndex) {
-        middle--;
-
-        wire = sheet->wires[middle];
-    }
-
-    return middle + 1;
-}
-
-/**
- * \fn size_t d_socket_num_connections(Sheet *sheet, NodeSocket socket)
- * \brief Get the number of connections via wires a socket has.
- *
- * \return The number of connected wires to a socket.
- *
- * \param sheet The sheet the socket belongs to.
- * \param socket The socket to query.
- */
-size_t d_socket_num_connections(Sheet *sheet, NodeSocket socket) {
-    int first = d_wire_find_first(sheet, socket);
-
-    if (first < 0) {
-        return 0;
-    }
-
-    int index = first;
-
-    while (IS_WIRE_FROM(sheet, index, socket)) {
-        index++;
-    }
-
-    return (size_t)(index - first);
-}
-
-/**
- * \fn static void add_edge(Sheet *sheet, SheetWire wire)
- * \brief Add an edge to a sheet. Detect "too many connections" errors in the
- * process.
- *
- * \param sheet The sheet to add the edge to.
- * \param wire The edge to add.
- */
-static void add_edge(Sheet *sheet, SheetWire wire) {
-    if (sheet == NULL) {
-        return;
-    }
-
-    // We can't just add the wire to the end of the list here. The list is
-    // being stored in lexicographical order, so we need to insert it into the
-    // correct position.
-    if (sheet->wires == NULL) {
-        sheet->numWires = 1;
-        sheet->wires    = (SheetWire *)d_malloc(sizeof(SheetWire));
-        *(sheet->wires) = wire;
-    } else {
-        // Use binary insertion, since the list should be sorted!
-        size_t left   = 0;
-        size_t right  = sheet->numWires - 1;
-        size_t middle = (left + right) / 2;
-
-        while (left <= right) {
-            middle = (left + right) / 2;
-
-            short cmp = d_wire_cmp(wire, sheet->wires[middle]);
-
-            if (cmp > 0) {
-                left = middle + 1;
-            } else if (cmp < 0) {
-                right = middle - 1;
-            } else {
-                break;
-            }
-        }
-
-        if (d_wire_cmp(wire, sheet->wires[middle]) > 0) {
-            middle++;
-        }
-
-        sheet->numWires++;
-        sheet->wires = (SheetWire *)d_realloc(
-            sheet->wires, sheet->numWires * sizeof(SheetWire));
-
-        if (middle < sheet->numWires - 1) {
-            memmove(sheet->wires + middle + 1, sheet->wires + middle,
-                    (sheet->numWires - middle - 1) * sizeof(SheetWire));
-        }
-
-        sheet->wires[middle] = wire;
-    }
-
-    const char *filePath = NULL;
-    size_t lineNum       = 0;
-
-    size_t fromNodeIndex = wire.socketFrom.nodeIndex;
-
-    if (sheet != NULL && d_is_node_index_valid(sheet, fromNodeIndex)) {
-        filePath = sheet->filePath;
-        lineNum  = sheet->nodes[fromNodeIndex].lineNum;
-    }
-
-    // Build up a string of the connection's line numbers, in case we error.
-    char connLineNums[MAX_ERROR_SIZE];
-    size_t lineNumIndex = 0;
-
-    int wireStart = d_wire_find_first(sheet, wire.socketFrom);
-    int wireIndex = wireStart;
-
-    while (IS_WIRE_FROM(sheet, wireIndex, wire.socketFrom)) {
-        size_t connNodeIndex = sheet->wires[wireIndex].socketTo.nodeIndex;
-
-        if (d_is_node_index_valid(sheet, connNodeIndex)) {
-            size_t connLineNum = sheet->nodes[connNodeIndex].lineNum;
-
-            if (wireIndex > wireStart) {
-#ifdef DECISION_SAFE_FUNCTIONS
-                sprintf_s(connLineNums + lineNumIndex,
-                          MAX_ERROR_SIZE - lineNumIndex, ", ");
-#else
-                sprintf(connLineNums + lineNumIndex, ", ");
-#endif // DECISION_SAFE_FUNCTIONS
-                lineNumIndex += 2;
-
-                if (lineNumIndex >= MAX_ERROR_SIZE) {
-                    break;
-                }
-            }
-
-#ifdef DECISION_SAFE_FUNCTIONS
-            sprintf_s(connLineNums + lineNumIndex,
-                      MAX_ERROR_SIZE - lineNumIndex, "%zu", connLineNum);
-#else
-            sprintf(connLineNums + lineNumIndex, "%zu", connLineNum);
-#endif // DECISION_SAFE_FUNCTIONS
-
-            while (connLineNums[lineNumIndex] != 0 &&
-                   lineNumIndex < MAX_ERROR_SIZE) {
-                lineNumIndex++;
-            }
-
-            if (lineNumIndex >= MAX_ERROR_SIZE) {
-                break;
-            }
-        }
-
-        wireIndex++;
-    }
-
-    size_t numConnections = d_socket_num_connections(sheet, wire.socketFrom);
-    SocketMeta meta       = d_get_socket_meta(sheet, wire.socketFrom);
-    bool isInputSocket    = d_is_input_socket(sheet, wire.socketFrom);
-    DType socketType      = meta.type;
-
-    // If the socket is non-execution, an input socket, and we have more than
-    // one connection...
-    if (numConnections > 1 && socketType != TYPE_EXECUTION && isInputSocket) {
-        ERROR_COMPILER(filePath, lineNum, true,
-                       "Input non-execution socket (#%zu) has more than one "
-                       "connection (has %zu, on lines %s)",
-                       wire.socketFrom.socketIndex, numConnections,
-                       connLineNums);
-    }
-
-    // If the socket is execution, an output socket, and we have more than one
-    // connection...
-    else if (numConnections > 1 && socketType == TYPE_EXECUTION &&
-             !isInputSocket) {
-        ERROR_COMPILER(
-            filePath, lineNum, true,
-            "Output execution socket (#%zu) has more than one connection "
-            "(has %zu, on lines %s)",
-            wire.socketFrom.socketIndex, numConnections, connLineNums);
-    }
-}
-
-/**
- * \fn bool d_sheet_add_wire(Sheet *sheet, SheetWire wire)
- * \brief Add a wire to a sheet, connecting two sockets.
- *
- * \return If the operation was successful.
- *
- * \param sheet The sheet to add the wire to. Both nodes have to belong to this
- * node.
- * \param wire The wire to add to the sheet.
- */
-bool d_sheet_add_wire(Sheet *sheet, SheetWire wire) {
-    NodeSocket from = wire.socketFrom;
-    NodeSocket to   = wire.socketTo;
-
-    if (!d_is_node_socket_valid(sheet, from)) {
-        return false;
-    }
-
-    if (!d_is_node_socket_valid(sheet, to)) {
-        return false;
-    }
-
-    SheetWire oppositeDir;
-    oppositeDir.socketFrom = to;
-    oppositeDir.socketTo   = from;
-
-    add_edge(sheet, wire);
-    add_edge(sheet, oppositeDir);
-
-    // We need to check that the data types of both ends are the same!
-    SocketMeta fromMeta = d_get_socket_meta(sheet, from);
-    SocketMeta toMeta   = d_get_socket_meta(sheet, to);
-
-    if ((fromMeta.type & toMeta.type) == TYPE_NONE) {
-        SheetNode fromNode = sheet->nodes[from.nodeIndex];
-        SheetNode toNode   = sheet->nodes[to.nodeIndex];
-
-        const NodeDefinition *fromDef = fromNode.definition;
-        const NodeDefinition *toDef   = toNode.definition;
-
-        ERROR_COMPILER(sheet->filePath, toNode.lineNum, true,
-                       "Wire data type mismatch between socket of type %s "
-                       "(Output %zu/%zu of node %s on line %zu) and socket "
-                       "of type %s (Input %zu/%zu of node %s on line %zu)",
-                       d_type_name(fromMeta.type), from.socketIndex + 1,
-                       fromDef->numSockets, fromDef->name, fromNode.lineNum,
-                       d_type_name(toMeta.type), to.socketIndex + 1,
-                       toDef->numSockets, toDef->name, toNode.lineNum);
-    }
-
-    return true;
-}
-
-/**
- * \fn size_t d_sheet_add_node(Sheet *sheet, SheetNode node)
- * \brief Add a node to a sheet.
- *
- * \return The new node index.
- *
- * \param sheet The sheet to add the node to.
- * \param node The node to add.
- */
-size_t d_sheet_add_node(Sheet *sheet, SheetNode node) {
-    node._stackPositions = NULL;
-    LIST_PUSH(sheet->nodes, SheetNode, sheet->numNodes, node)
-    return sheet->numNodes - 1;
-}
-
-/**
  * \fn void d_sheet_add_variable(Sheet *sheet, const SocketMeta varMeta)
  * \brief Add a variable property to the sheet.
  *
@@ -688,17 +67,17 @@ void d_sheet_add_variable(Sheet *sheet, const SocketMeta varMeta) {
     memcpy(getterMeta, &varMeta, sizeof(SocketMeta));
 
     NodeDefinition getter;
-    getter.name = nameGetter;
-    getter.description = descriptionGetter;
-    getter.sockets = getterMeta;
-    getter.numSockets = 1;
+    getter.name             = nameGetter;
+    getter.description      = descriptionGetter;
+    getter.sockets          = getterMeta;
+    getter.numSockets       = 1;
     getter.startOutputIndex = 0;
-    getter.infiniteInputs = false;
+    getter.infiniteInputs   = false;
 
     SheetVariable variable;
-    *(SocketMeta *)&(variable.variableMeta) = varMeta;
+    *(SocketMeta *)&(variable.variableMeta)         = varMeta;
     *(NodeDefinition *)&(variable.getterDefinition) = getter;
-    variable.sheet = sheet;
+    variable.sheet                                  = sheet;
 
     LIST_PUSH(sheet->variables, SheetVariable, sheet->numVariables, variable)
 }
@@ -735,21 +114,21 @@ void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef) {
         (SocketMeta *)d_malloc(numSocketsDefine * sizeof(SocketMeta));
 
     SocketMeta defineNameSocket;
-    defineNameSocket.name = nameDefine;
-    defineNameSocket.description = descriptionDefine;
-    defineNameSocket.type = TYPE_NAME;
+    defineNameSocket.name                     = nameDefine;
+    defineNameSocket.description              = descriptionDefine;
+    defineNameSocket.type                     = TYPE_NAME;
     defineNameSocket.defaultValue.stringValue = (char *)funcDef.name;
 
     memcpy(defineMeta, &defineNameSocket, sizeof(SocketMeta));
     memcpy(defineMeta + 1, funcDef.sockets, numInputs * sizeof(SocketMeta));
 
     NodeDefinition defineDef;
-    defineDef.name = defineName;
-    defineDef.description = defineDescription;
-    defineDef.sockets = defineMeta;
-    defineDef.numSockets = numSocketsDefine;
+    defineDef.name             = defineName;
+    defineDef.description      = defineDescription;
+    defineDef.sockets          = defineMeta;
+    defineDef.numSockets       = numSocketsDefine;
     defineDef.startOutputIndex = 1;
-    defineDef.infiniteInputs = false;
+    defineDef.infiniteInputs   = false;
 
     char *nameReturn = (char *)d_malloc(7);
     strcpy(nameReturn, "Return");
@@ -764,9 +143,9 @@ void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef) {
         (SocketMeta *)d_malloc(numSocketsReturn * sizeof(SocketMeta));
 
     SocketMeta returnNameSocket;
-    returnNameSocket.name = returnName;
-    returnNameSocket.description = returnDescription;
-    returnNameSocket.type = TYPE_NAME;
+    returnNameSocket.name                     = returnName;
+    returnNameSocket.description              = returnDescription;
+    returnNameSocket.type                     = TYPE_NAME;
     returnNameSocket.defaultValue.stringValue = (char *)funcDef.name;
 
     memcpy(returnMeta, &returnNameSocket, sizeof(SocketMeta));
@@ -774,22 +153,22 @@ void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef) {
            numOutputs * sizeof(SocketMeta));
 
     NodeDefinition returnDef;
-    returnDef.name = returnName;
-    returnDef.description = returnDescription;
-    returnDef.sockets = returnMeta;
-    returnDef.numSockets = numSocketsDefine;
+    returnDef.name             = returnName;
+    returnDef.description      = returnDescription;
+    returnDef.sockets          = returnMeta;
+    returnDef.numSockets       = numSocketsDefine;
     returnDef.startOutputIndex = numSocketsReturn;
-    returnDef.infiniteInputs = false;
+    returnDef.infiniteInputs   = false;
 
     SheetFunction func;
     *(NodeDefinition *)&(func.functionDefinition) = funcDef;
-    *(NodeDefinition *)&(func.defineDefinition) = defineDef;
-    *(NodeDefinition *)&(func.returnDefinition) = returnDef;
-    func.defineNodeIndex = 0;
-    func.numDefineNodes = 0;
-    func.lastReturnNodeIndex = 0;
-    func.numReturnNodes = 0;
-    func.sheet = sheet;
+    *(NodeDefinition *)&(func.defineDefinition)   = defineDef;
+    *(NodeDefinition *)&(func.returnDefinition)   = returnDef;
+    func.defineNodeIndex                          = 0;
+    func.numDefineNodes                           = 0;
+    func.lastReturnNodeIndex                      = 0;
+    func.numReturnNodes                           = 0;
+    func.sheet                                    = sheet;
 
     LIST_PUSH(sheet->functions, SheetFunction, sheet->numFunctions, func)
 }
@@ -917,10 +296,7 @@ Sheet *d_sheet_create(const char *filePath) {
     sheet->numVariables     = 0;
     sheet->functions        = NULL;
     sheet->numFunctions     = 0;
-    sheet->nodes            = NULL;
-    sheet->numNodes         = 0;
-    sheet->wires            = NULL;
-    sheet->numWires         = 0;
+    sheet->graph            = EMPTY_GRAPH;
     sheet->startNodeIndex   = -1;
     sheet->numStarts        = 0;
     sheet->_main            = 0;
@@ -974,27 +350,7 @@ void d_sheet_free(Sheet *sheet) {
             sheet->includePath = NULL;
         }
 
-        if (sheet->nodes != NULL) {
-            for (size_t i = 0; i < sheet->numNodes; i++) {
-                SheetNode node = sheet->nodes[i];
-
-                if (node.reducedTypes != NULL) {
-                    free(node.reducedTypes);
-                }
-
-                if (node.literalValues != NULL) {
-                    free(node.literalValues);
-                }
-
-                if (node._stackPositions != NULL) {
-                    free(node._stackPositions);
-                }
-            }
-
-            free(sheet->nodes);
-            sheet->nodes    = NULL;
-            sheet->numNodes = 0;
-        }
+        d_graph_free(&(sheet->graph));
 
         if (sheet->variables != NULL) {
             for (size_t i = 0; i < sheet->numVariables; i++) {
@@ -1143,7 +499,7 @@ void d_functions_dump(SheetFunction *functions, size_t numFunctions) {
 
     if (functions != NULL && numFunctions > 0) {
         for (size_t i = 0; i < numFunctions; i++) {
-            SheetFunction function  = functions[i];
+            SheetFunction function        = functions[i];
             const NodeDefinition *funcDef = &(function.functionDefinition);
 
             size_t numInputs  = d_definition_num_inputs(funcDef);
@@ -1217,60 +573,11 @@ void d_sheet_dump(Sheet *sheet) {
     // Dump the variables, if there are any.
     d_variables_dump(sheet->variables, sheet->numVariables);
 
-    // Dump the functions, if there are any.
+    // Dump the functions,P if there are any.
     d_functions_dump(sheet->functions, sheet->numFunctions);
 
-    // Dump the nodes.
-    printf("# Nodes: %zu\n", sheet->numNodes);
-
-    if (sheet->nodes != NULL && sheet->numNodes > 0) {
-        for (size_t i = 0; i < sheet->numNodes; i++) {
-            SheetNode node      = sheet->nodes[i];
-            const NodeDefinition *def = node.definition;
-
-            printf("[%zu] %s (Line %zu)\n", i, def->name, node.lineNum);
-
-            size_t numInputs     = def->startOutputIndex;
-            size_t maxNumSockets = def->numSockets;
-
-            if (def->infiniteInputs) {
-                numInputs = node.startOutputIndex;
-                maxNumSockets +=
-                    (node.startOutputIndex - def->startOutputIndex);
-            }
-
-            if (def->sockets != NULL && def->numSockets > 0) {
-                for (size_t j = 0; j < maxNumSockets; j++) {
-                    NodeSocket socket;
-                    socket.nodeIndex   = i;
-                    socket.socketIndex = j;
-                    SocketMeta meta    = d_get_socket_meta(sheet, socket);
-
-                    bool isInput = (j < numInputs);
-
-                    printf("\t[%zu|%s] %s (%s)\n", j,
-                           (isInput) ? "Input" : "Output", meta.name,
-                           d_type_name(meta.type));
-                }
-            }
-        }
-    }
-
-    // Dump the wires.
-    printf("\n# Wires: %zu\n", sheet->numWires);
-
-    if (sheet->wires != NULL && sheet->numWires > 0) {
-        for (size_t i = 0; i < sheet->numWires; i++) {
-            SheetWire wire = sheet->wires[i];
-
-            NodeSocket from = wire.socketFrom;
-            NodeSocket to   = wire.socketTo;
-
-            printf("Node %zu Socket %zu\t->\tNode %zu Socket %zu\n",
-                   from.nodeIndex, from.socketIndex, to.nodeIndex,
-                   to.socketIndex);
-        }
-    }
+    // Dump the graph.
+    d_graph_dump(sheet->graph);
 
     printf("\n");
 }

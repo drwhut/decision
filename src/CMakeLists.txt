@@ -23,6 +23,7 @@ dcodegen.c
 dcore.c
 decision.c
 derror.c
+dgraph.c
 dlex.c
 dlink.c
 dmalloc.c
@@ -43,6 +44,7 @@ dcodegen.h
 dcore.h
 decision.h
 derror.h
+dgraph.h
 dlex.h
 dlink.h
 dmalloc.h
