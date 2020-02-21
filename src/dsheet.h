@@ -198,14 +198,6 @@ DECISION_API Sheet *d_sheet_add_include_from_path(Sheet *sheet,
 DECISION_API Sheet *d_sheet_create(const char *filePath);
 
 /**
- * \fn void d_definition_free(const NodeDefinition nodeDef)
- * \brief Free the malloc'd elements of a NodeDefinition.
- *
- * \param nodeDef The definition whose elements free from memory.
- */
-DECISION_API void d_definition_free(const NodeDefinition nodeDef);
-
-/**
  * \fn void d_sheet_free(Sheet *sheet)
  * \brief Free malloc'd memory in a sheet.
  *

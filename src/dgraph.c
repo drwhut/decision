@@ -739,3 +739,23 @@ void d_graph_free(Graph *graph) {
     graph->wires    = NULL;
     graph->numWires = 0;
 }
+
+/**
+ * \fn void d_definition_free(const NodeDefinition nodeDef)
+ * \brief Free the malloc'd elements of a NodeDefinition.
+ *
+ * \param nodeDef The definition whose elements free from memory.
+ */
+void d_definition_free(const NodeDefinition nodeDef) {
+    if (nodeDef.name != NULL) {
+        free((char *)nodeDef.name);
+    }
+
+    if (nodeDef.description != NULL) {
+        free((char *)nodeDef.description);
+    }
+
+    if (nodeDef.sockets != NULL) {
+        free((SocketMeta *)nodeDef.sockets);
+    }
+}

@@ -379,4 +379,12 @@ DECISION_API void d_graph_dump(Graph graph);
  */
 DECISION_API void d_graph_free(Graph *graph);
 
+/**
+ * \fn void d_definition_free(const NodeDefinition nodeDef)
+ * \brief Free the malloc'd elements of a NodeDefinition.
+ *
+ * \param nodeDef The definition whose elements free from memory.
+ */
+DECISION_API void d_definition_free(const NodeDefinition nodeDef);
+
 #endif // DGRAPH_H

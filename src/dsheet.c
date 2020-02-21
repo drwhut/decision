@@ -114,8 +114,8 @@ void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef) {
         (SocketMeta *)d_malloc(numSocketsDefine * sizeof(SocketMeta));
 
     SocketMeta defineNameSocket;
-    defineNameSocket.name                     = nameDefine;
-    defineNameSocket.description              = descriptionDefine;
+    defineNameSocket.name                     = defineName;
+    defineNameSocket.description              = defineDescription;
     defineNameSocket.type                     = TYPE_NAME;
     defineNameSocket.defaultValue.stringValue = (char *)funcDef.name;
 
@@ -123,8 +123,8 @@ void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef) {
     memcpy(defineMeta + 1, funcDef.sockets, numInputs * sizeof(SocketMeta));
 
     NodeDefinition defineDef;
-    defineDef.name             = defineName;
-    defineDef.description      = defineDescription;
+    defineDef.name             = nameDefine;
+    defineDef.description      = descriptionDefine;
     defineDef.sockets          = defineMeta;
     defineDef.numSockets       = numSocketsDefine;
     defineDef.startOutputIndex = 1;
@@ -153,8 +153,8 @@ void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef) {
            numOutputs * sizeof(SocketMeta));
 
     NodeDefinition returnDef;
-    returnDef.name             = returnName;
-    returnDef.description      = returnDescription;
+    returnDef.name             = nameReturn;
+    returnDef.description      = descriptionReturn;
     returnDef.sockets          = returnMeta;
     returnDef.numSockets       = numSocketsDefine;
     returnDef.startOutputIndex = numSocketsReturn;
@@ -309,26 +309,6 @@ Sheet *d_sheet_create(const char *filePath) {
     sheet->_insLinkListSize = 0;
 
     return sheet;
-}
-
-/**
- * \fn void d_definition_free(const NodeDefinition nodeDef)
- * \brief Free the malloc'd elements of a NodeDefinition.
- *
- * \param nodeDef The definition whose elements free from memory.
- */
-void d_definition_free(const NodeDefinition nodeDef) {
-    if (nodeDef.name != NULL) {
-        free((char *)nodeDef.name);
-    }
-
-    if (nodeDef.description != NULL) {
-        free((char *)nodeDef.description);
-    }
-
-    if (nodeDef.sockets != NULL) {
-        free((SocketMeta *)nodeDef.sockets);
-    }
 }
 
 /**

@@ -318,67 +318,234 @@ static void add_property_Include(Sheet *sheet, size_t lineNum,
     }
 }
 
+/*
+    Functions to help build up NodeDefinition structs for functions and
+    subroutines.
+    TODO: Move the storage of temporary definitions to a struct?
+*/
+
+static NodeDefinition *funcs = NULL;
+static size_t numFuncs       = 0;
+
+static void add_socket(const char *name, SocketMeta socket, bool isInput) {
+    size_t index = 0;
+    bool found   = false;
+
+    for (size_t i = 0; i < numFuncs; i++) {
+        NodeDefinition def = funcs[i];
+
+        if (strcmp(name, def.name) == 0) {
+            index = i;
+            found = true;
+            break;
+        }
+    }
+
+    if (found) {
+        NodeDefinition func = funcs[index];
+
+        SocketMeta *sockets     = (SocketMeta *)func.sockets;
+        size_t numSockets       = func.numSockets;
+        size_t startOutputIndex = func.startOutputIndex;
+
+        // Adjust the number of sockets and the start output index.
+        numSockets++;
+        if (isInput) {
+            startOutputIndex++;
+        }
+
+        const size_t newAlloc = numSockets * sizeof(SocketMeta);
+
+        if (sockets == NULL) {
+            sockets = d_malloc(newAlloc);
+        } else {
+            sockets = d_realloc(sockets, newAlloc);
+        }
+
+        // If it's an input, we need to shift the outputs along!
+        if (isInput) {
+            const size_t indexFrom      = startOutputIndex - 1;
+            const size_t indexTo        = indexFrom + 1;
+            const size_t numOutputsPrev = numSockets - startOutputIndex;
+            const size_t moveAmt        = numOutputsPrev * sizeof(SocketMeta);
+            memmove(sockets + indexTo, sockets + indexFrom, moveAmt);
+            sockets[startOutputIndex - 1] = socket;
+        } else {
+            sockets[numSockets - 1] = socket;
+        }
+
+        // Now save the new properties.
+        *(SocketMeta **)(&(funcs[index].sockets)) = sockets;
+        funcs[index].numSockets                   = numSockets;
+        funcs[index].startOutputIndex             = startOutputIndex;
+    }
+}
+
+// NOTE: This assumes the name and description are malloc'd!
+static void create_func(const char *name, const char *desc, bool sub) {
+    numFuncs++;
+    const size_t newAlloc = numFuncs * sizeof(NodeDefinition);
+
+    if (funcs == NULL) {
+        funcs = d_malloc(newAlloc);
+    } else {
+        funcs = d_realloc(funcs, newAlloc);
+    }
+
+    NodeDefinition def = {NULL, NULL, NULL, 0, 0, false};
+    def.name           = name;
+    def.description    = desc;
+
+    funcs[numFuncs - 1] = def;
+
+    // If it's a subroutine, add execution sockets.
+    // TODO: Make these consistent with the ones in dcfunc.c!
+    if (sub) {
+        SocketMeta beforeSocket;
+        beforeSocket.name = "before";
+        beforeSocket.description =
+            "The node will activate when this input is activated.";
+        beforeSocket.type                      = TYPE_EXECUTION;
+        beforeSocket.defaultValue.integerValue = 0;
+
+        SocketMeta afterSocket;
+        afterSocket.name = "after";
+        afterSocket.description =
+            "This output will activate once the node has finished executing.";
+        afterSocket.type                      = TYPE_EXECUTION;
+        afterSocket.defaultValue.integerValue = 0;
+
+        add_socket(name, beforeSocket, true);
+        add_socket(name, afterSocket, false);
+    }
+}
+
+static void add_funcs(Sheet *sheet) {
+    for (size_t i = 0; i < numFuncs; i++) {
+        d_sheet_add_function(sheet, funcs[i]);
+    }
+}
+
+static void free_funcs() {
+    if (funcs != NULL) {
+        free(funcs);
+    }
+
+    funcs    = NULL;
+    numFuncs = 0;
+}
+
 static void add_property_Function(Sheet *sheet, size_t lineNum,
                                   PropertyArgumentList argList) {
-    if (argList.numArgs == 1) {
-        PropertyArgument arg = argList.args[0];
+    if (argList.numArgs > 2) {
+        d_error_compiler_push("Function property needs at most 2 arguments",
+                              sheet->filePath, lineNum, true);
+    } else if (argList.numArgs < 1) {
+        d_error_compiler_push("Function property needs at least 1 argument",
+                              sheet->filePath, lineNum, true);
+    } else {
+        const char *name = NULL;
+        const char *desc = NULL;
 
-        if (PROPERTY_ARGUMENT_NAME_DEFINED(arg)) {
-            const char *name = arg.data.name;
+        PropertyArgument nameArg = argList.args[0];
+
+        if (PROPERTY_ARGUMENT_NAME_DEFINED(nameArg)) {
+            name = nameArg.data.name;
 
             // Does a function with this name already exist?
-            for (size_t i = 0; i < sheet->numFunctions; i++) {
-                SheetFunction func = sheet->functions[i];
+            for (size_t i = 0; i < numFuncs; i++) {
+                NodeDefinition func = funcs[i];
 
-                if (strcmp(func.functionDefinition.name, name) == 0) {
+                if (strcmp(name, func.name) == 0) {
                     ERROR_COMPILER(sheet->filePath, lineNum, true,
-                                   "Function %s is already defined.", name);
+                                   "Function %s is already defined", name);
                     return;
                 }
             }
 
-            // TODO: Build up NodeDefinition, then after we have scanned
-            // properties, add it to the sheet.
-            // d_sheet_create_function(sheet, name, false);
+            if (argList.numArgs == 2) {
+                PropertyArgument descArg = argList.args[1];
+
+                if (PROPERTY_ARGUMENT_LITERAL_DEFINED(descArg)) {
+                    LexToken *descToken = descArg.data.literal;
+
+                    if (TYPE_FROM_LEX_LITERAL(descToken->type) == TYPE_STRING) {
+                        desc = descToken->data.stringValue;
+                    } else {
+                        d_error_compiler_push(
+                            "Function description is not a literal string",
+                            sheet->filePath, lineNum, true);
+                    }
+                } else {
+                    d_error_compiler_push(
+                        "Function description is not a literal string",
+                        sheet->filePath, lineNum, true);
+                }
+            }
+
+            // Add the function to the list.
+            create_func(name, desc, false);
         } else {
-            d_error_compiler_push("Function property argument is not a name",
+            d_error_compiler_push("Function name argument is not a name",
                                   sheet->filePath, lineNum, true);
         }
-    } else {
-        d_error_compiler_push("1 argument needed for Function property",
-                              sheet->filePath, lineNum, true);
     }
 }
 
 static void add_property_Subroutine(Sheet *sheet, size_t lineNum,
                                     PropertyArgumentList argList) {
-    if (argList.numArgs == 1) {
-        PropertyArgument arg = argList.args[0];
+    if (argList.numArgs > 2) {
+        d_error_compiler_push("Subroutine property needs at most 2 arguments",
+                              sheet->filePath, lineNum, true);
+    } else if (argList.numArgs < 1) {
+        d_error_compiler_push("Subroutine property needs at least 1 argument",
+                              sheet->filePath, lineNum, true);
+    } else {
+        const char *name = NULL;
+        const char *desc = NULL;
 
-        if (PROPERTY_ARGUMENT_NAME_DEFINED(arg)) {
-            const char *name = arg.data.name;
+        PropertyArgument nameArg = argList.args[0];
+
+        if (PROPERTY_ARGUMENT_NAME_DEFINED(nameArg)) {
+            name = nameArg.data.name;
 
             // Does a function with this name already exist?
-            for (size_t i = 0; i < sheet->numFunctions; i++) {
-                SheetFunction func = sheet->functions[i];
+            for (size_t i = 0; i < numFuncs; i++) {
+                NodeDefinition func = funcs[i];
 
-                if (strcmp(func.functionDefinition.name, name) == 0) {
+                if (strcmp(name, func.name) == 0) {
                     ERROR_COMPILER(sheet->filePath, lineNum, true,
-                                   "Function %s is already defined.", name);
+                                   "Subroutine %s is already defined", name);
                     return;
                 }
             }
 
-            // TODO: Build up NodeDefinition, then after we have scanned
-            // properties, add it to the sheet.
-            // d_sheet_create_function(sheet, name, true);
+            if (argList.numArgs == 2) {
+                PropertyArgument descArg = argList.args[1];
+
+                if (PROPERTY_ARGUMENT_LITERAL_DEFINED(descArg)) {
+                    LexToken *descToken = descArg.data.literal;
+
+                    if (TYPE_FROM_LEX_LITERAL(descToken->type) == TYPE_STRING) {
+                        desc = descToken->data.stringValue;
+                    } else {
+                        d_error_compiler_push(
+                            "Subroutine description is not a literal string",
+                            sheet->filePath, lineNum, true);
+                    }
+                } else {
+                    d_error_compiler_push(
+                        "Subroutine description is not a literal string",
+                        sheet->filePath, lineNum, true);
+                }
+            }
+
+            // Add the subroutine to the list.
+            create_func(name, desc, true);
         } else {
-            d_error_compiler_push("Subroutine property argument is not a name",
+            d_error_compiler_push("Subroutine name argument is not a name",
                                   sheet->filePath, lineNum, true);
         }
-    } else {
-        d_error_compiler_push("1 argument needed for Subroutine property",
-                              sheet->filePath, lineNum, true);
     }
 }
 
@@ -534,15 +701,13 @@ static void add_property_FunctionInput(Sheet *sheet, size_t lineNum,
         }
 
         // Now we've organised the arguments, we can add the argument!
-        // d_sheet_function_add_argument(sheet, funcName, argName, argType,
-        //                               defaultValue);
-        printf("%s%s%d%d%s", funcName, socketName, socketType,
-               defaultValue.integerValue, socketDescription);
+        SocketMeta socket;
+        socket.name         = socketName;
+        socket.description  = socketDescription;
+        socket.type         = socketType;
+        socket.defaultValue = defaultValue;
 
-        // Free this instance of the function name, since it *should* have
-        // already been malloc'd elsewhere, and that version will go into
-        // the SheetFunction struct.
-        free((char *)funcName);
+        add_socket(funcName, socket, true);
     }
 }
 
@@ -648,16 +813,14 @@ static void add_property_FunctionOutput(Sheet *sheet, size_t lineNum,
             }
         }
 
-        // Now we've organised the arguments, we can add the argument!
-        // d_sheet_function_add_argument(sheet, funcName, retName, retType,
-        //                               defaultValue);
-        printf("%s%s%d%d%s", funcName, socketName, socketType,
-               defaultValue.integerValue, socketDescription);
+        // Now we've organised the arguments, we can add the return value!
+        SocketMeta socket;
+        socket.name                      = socketName;
+        socket.description               = socketDescription;
+        socket.type                      = socketType;
+        socket.defaultValue.integerValue = 0;
 
-        // Free this instance of the function name, since it *should* have
-        // already been malloc'd elsewhere, and that version will go into
-        // the SheetFunction struct.
-        free((char *)funcName);
+        add_socket(funcName, socket, false);
     }
 }
 
@@ -797,6 +960,10 @@ void d_semantic_scan_properties(Sheet *sheet, SyntaxNode *root) {
             }
         }
     }
+
+    // Next, if any functions were defined, add them to the sheet.
+    add_funcs(sheet);
+    free_funcs();
 
     // Lastly, free the search results.
     d_syntax_free_results(propertySearchResults);
@@ -951,6 +1118,12 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
             numInputs = inputArgs.numOccurances;
 
             startOutputIndex = numInputs;
+        }
+
+        // If there are no sockets in the definition, stop now!
+        if (inputArgs.numOccurances > 0 && (nodeDef->numSockets == 0)) {
+            ERROR_COMPILER(sheet->filePath, lineNum, true, "Node %s is defined to have no sockets", nodeDef->name);
+            return;
         }
 
         for (size_t inputIndex = 0; inputIndex < inputArgs.numOccurances;
@@ -1151,6 +1324,11 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
         // Go through all of the children of the
         // STX_listOfLineIdentifier
         while (node != NULL) {
+            if (inputArgs.numOccurances > 0 && (nodeDef->numSockets == 0)) {
+                ERROR_COMPILER(sheet->filePath, lineNum, true, "Node %s is defined to have no sockets", nodeDef->name);
+                return;
+            }
+
             if (numOutputs >= defNumOutputs) {
                 // We've got more arguments than we
                 // expected.
