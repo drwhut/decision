@@ -7,6 +7,8 @@ versions of the compiler.
 the same line will be ignored by the compiler.
 * All nodes, sockets, variables, functions and subroutines now have both names
 and descriptions which are accessible via the C API.
+  * The `Variable` property now has a description argument, e.g.
+  `Variable(count, Integer, 0, "Counts how many pies you've eaten today.")`
   * The `Function` and `Subroutine` properties now have a description argument,
   e.g. `Function(Double, "Doubles the number.")`
   * The `FunctionInput` and `FunctionOutput` argument specification has
