@@ -708,6 +708,10 @@ static void add_property_FunctionInput(Sheet *sheet, size_t lineNum,
         socket.defaultValue = defaultValue;
 
         add_socket(funcName, socket, true);
+
+        if (funcName != NULL) {
+            free((char *)funcName);
+        }
     }
 }
 
@@ -821,6 +825,10 @@ static void add_property_FunctionOutput(Sheet *sheet, size_t lineNum,
         socket.defaultValue.integerValue = 0;
 
         add_socket(funcName, socket, false);
+
+        if (funcName != NULL) {
+            free((char *)funcName);
+        }
     }
 }
 
@@ -1471,6 +1479,15 @@ void d_semantic_scan_nodes(Sheet *sheet, SyntaxNode *root) {
                     // We can't recognise the node name!
                     ERROR_COMPILER(sheet->filePath, lineNum, true,
                                    "Undefined node %s", nodeName);
+                }
+
+                // Free the node's name from the lexical token, as it will no
+                // longer be needed - it will be in the node's definition.
+                free(nodeInfo->data.stringValue);
+
+                // If there was a name argument, free that too.
+                if (funcName != NULL) {
+                    free((char *)funcName);
                 }
             }
         }

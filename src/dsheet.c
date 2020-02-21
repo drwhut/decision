@@ -337,7 +337,7 @@ void d_sheet_free(Sheet *sheet) {
                 SheetVariable var = sheet->variables[i];
 
                 // Free the getter definition.
-                d_definition_free(var.getterDefinition);
+                d_definition_free(var.getterDefinition, false);
             }
 
             free(sheet->variables);
@@ -350,9 +350,9 @@ void d_sheet_free(Sheet *sheet) {
                 SheetFunction func = sheet->functions[i];
 
                 // Free the definitions.
-                d_definition_free(func.functionDefinition);
-                d_definition_free(func.defineDefinition);
-                d_definition_free(func.returnDefinition);
+                d_definition_free(func.functionDefinition, true);
+                d_definition_free(func.defineDefinition, false);
+                d_definition_free(func.returnDefinition, false);
             }
 
             free(sheet->functions);

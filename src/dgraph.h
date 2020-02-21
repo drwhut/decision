@@ -320,10 +320,10 @@ DECISION_API int d_wire_find_first(Graph graph, NodeSocket socket);
  * \def IS_WIRE_FROM(graph, wireIndex, socket)
  * \brief Check if a wire starts from a given socket.
  */
-#define IS_WIRE_FROM(graph, wireIndex, socket)                                 \
+#define IS_WIRE_FROM(graph, wireIndex, socket)                                \
     ((wireIndex) >= 0 && (wireIndex) < (int)((graph).numWires) &&             \
      (socket).nodeIndex == (graph).wires[(wireIndex)].socketFrom.nodeIndex && \
-     (socket).socketIndex ==                                                   \
+     (socket).socketIndex ==                                                  \
          (graph).wires[(wireIndex)].socketFrom.socketIndex)
 
 /**
@@ -365,7 +365,7 @@ DECISION_API size_t d_graph_add_node(Graph *graph, Node node);
 /**
  * \fn void d_graph_dump(Graph graph)
  * \brief Dump the contents of a Graph to `stdout`.
- * 
+ *
  * \param graph The graph to dump.
  */
 DECISION_API void d_graph_dump(Graph graph);
@@ -380,11 +380,13 @@ DECISION_API void d_graph_dump(Graph graph);
 DECISION_API void d_graph_free(Graph *graph);
 
 /**
- * \fn void d_definition_free(const NodeDefinition nodeDef)
+ * \fn void d_definition_free(const NodeDefinition nodeDef, bool freeSocketStrs)
  * \brief Free the malloc'd elements of a NodeDefinition.
  *
  * \param nodeDef The definition whose elements free from memory.
+ * \param freeSocketStrs If true, free the names and descriptions of sockets.
  */
-DECISION_API void d_definition_free(const NodeDefinition nodeDef);
+DECISION_API void d_definition_free(const NodeDefinition nodeDef,
+                                    bool freeSocketStrs);
 
 #endif // DGRAPH_H

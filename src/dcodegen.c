@@ -985,7 +985,7 @@ BCode d_push_argument(BuildContext *context, NodeSocket socket) {
         }
 
         out = d_bytecode_ins(OP_GETFI);
-        d_bytecode_set_fimmediate(out, 1, index + 1);
+        d_bytecode_set_fimmediate(out, 1, index);
 
         // It is up to the caller to set the socket's stack index,
         // as it should not be set here, since it should be copied.
@@ -2184,6 +2184,12 @@ void d_codegen_compile(Sheet *sheet) {
 
         // If it was not found in the list, add it.
         if (metaInList == NULL) {
+            // But first, copy the name.
+            size_t nameLen = strlen(meta.name) + 1;
+            char *newName = d_malloc(nameLen);
+            memcpy(newName, meta.name, nameLen);
+            meta.name = newName;
+
             d_link_meta_list_push(&context.linkMetaList, meta);
             metaInList =
                 &(context.linkMetaList.list[context.linkMetaList.size - 1]);

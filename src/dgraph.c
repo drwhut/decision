@@ -741,12 +741,13 @@ void d_graph_free(Graph *graph) {
 }
 
 /**
- * \fn void d_definition_free(const NodeDefinition nodeDef)
+ * \fn void d_definition_free(const NodeDefinition nodeDef, bool freeSocketStrs)
  * \brief Free the malloc'd elements of a NodeDefinition.
  *
  * \param nodeDef The definition whose elements free from memory.
+ * \param freeSocketStrs If true, free the names and descriptions of sockets.
  */
-void d_definition_free(const NodeDefinition nodeDef) {
+void d_definition_free(const NodeDefinition nodeDef, bool freeSocketStrs) {
     if (nodeDef.name != NULL) {
         free((char *)nodeDef.name);
     }
@@ -756,6 +757,15 @@ void d_definition_free(const NodeDefinition nodeDef) {
     }
 
     if (nodeDef.sockets != NULL) {
+        if (freeSocketStrs) {
+            for (size_t i = 0; i < nodeDef.numSockets; i++) {
+                SocketMeta meta = nodeDef.sockets[i];
+
+                free(meta.name);
+                free(meta.description);
+            }
+        }
+
         free((SocketMeta *)nodeDef.sockets);
     }
 }
