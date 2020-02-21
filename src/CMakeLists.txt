@@ -28,6 +28,7 @@ dlex.c
 dlink.c
 dmalloc.c
 dname.c
+dobj.c
 doptimize.c
 dsemantic.c
 dsheet.c
@@ -49,6 +50,7 @@ dlex.h
 dlink.h
 dmalloc.h
 dname.h
+dobj.h
 doptimize.h
 dsemantic.h
 dsheet.h

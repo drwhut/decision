@@ -95,37 +95,4 @@ DECISION_API void d_asm_incl_dump(struct _sheet **includes, size_t size);
  */
 DECISION_API void d_asm_dump_all(struct _sheet *sheet);
 
-/**
- * \fn const char *d_asm_generate_object(Sheet *sheet, size_t *size)
- * \brief Given a sheet has been compiled, create the contents of the sheet's
- * object file.
- *
- * This function is essentially the reverse of `d_asm_load_object`.
- *
- * \return A malloc'd string of the contents of the future object file.
- *
- * \param sheet The sheet to use to create the object.
- * \param size A pointer to a size that is overwritten with the size of the
- * generated string.
- */
-DECISION_API const char *d_asm_generate_object(struct _sheet *sheet,
-                                               size_t *size);
-
-/**
- * \fn Sheet *d_asm_load_object(const char *obj, size_t size,
- *                              const char *filePath)
- * \brief Given a binary object string, create a malloc'd Sheet structure from
- * it.
- *
- * This function is essentially the reverse of `d_asm_generate_object`.
- *
- * \return The malloc'd sheet generated from the object string.
- *
- * \param obj The object string.
- * \param size The size of the object string.
- * \param filePath Where the object file the object string came from is located.
- */
-DECISION_API struct _sheet *d_asm_load_object(const char *obj, size_t size,
-                                              const char *filePath);
-
 #endif // DASM_H
