@@ -7,6 +7,12 @@ versions of the compiler.
 the same line will be ignored by the compiler.
 * All nodes, sockets, variables, functions and subroutines now have both names
 and descriptions which are accessible via the C API.
+  * The `Function` and `Subroutine` properties now have a description argument,
+  e.g. `Function(Double, "Doubles the number.")`
+  * The `FunctionInput` and `FunctionOutput` argument specification has
+  changed:
+    * `FunctionInput(functionName, inputName, inputType [,inputDefaultValue [, inputDescription]])`
+    * `FunctionOutput(functionName, outputName, outputType [, outputDescription])`
 * Nodes now reference their definitions, which reduces data redundancy.
 * Changed how sheets store wires in memory.
 * Reimplemented `Length` to use the C function `strlen`.
