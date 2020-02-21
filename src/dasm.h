@@ -26,6 +26,7 @@
 
 #include "dcfg.h"
 #include "dlink.h"
+#include "dvm.h"
 
 #include <stddef.h>
 
@@ -38,6 +39,109 @@ struct _sheet;
 
 /* Forward declaration of the InstructionToLink struct from dsheet.h */
 struct _insToLink;
+
+/**
+ * \struct _bcode
+ * \brief A struct for generic Decision bytecode.
+ *
+ * \typedef struct _bcode BCode
+ */
+typedef struct _bcode {
+    char *code;  ///< The bytecode as an array of bytes.
+    size_t size; ///< The size of the bytecode in bytes.
+
+    struct _insToLink *linkList; ///< An array of instructions that will need
+                                 ///< to be linked.
+    size_t linkListSize;         ///< The size of the `linkList` array.
+} BCode;
+
+/*
+=== STRUCTURE FUNCTIONS ===================================
+*/
+
+/**
+ * \fn BCode d_malloc_bytecode(size_t size)
+ * \brief Create a malloc'd BCode object, with a set number of bytes.
+ *
+ * \return The BCode object with malloc'd elements.
+ *
+ * \param size The number of bytes.
+ */
+DECISION_API BCode d_malloc_bytecode(size_t size);
+
+/**
+ * \fn BCode d_bytecode_ins(DIns opcode)
+ * \brief Quickly create bytecode that is the size of an opcode, which also has
+ * its first byte set as the opcode itself.
+ *
+ * \return The opcode-initialised bytecode.
+ *
+ * \param opcode The opcode to initialise with.
+ */
+DECISION_API BCode d_bytecode_ins(DIns opcode);
+
+/**
+ * \fn void d_bytecode_set_byte(BCode bcode, size_t index, char byte)
+ * \brief Given some bytecode, set a byte in the bytecode to a given value.
+ *
+ * \param bcode The bytecode to edit.
+ * \param index The index of the byte in the bytecode to set.
+ * \param byte The value to set.
+ */
+DECISION_API void d_bytecode_set_byte(BCode bcode, size_t index, char byte);
+
+/**
+ * \fn void d_bytecode_set_fimmediate(BCode bcode, size_t index,
+ *                                   fimmediate_t fimmediate)
+ * \brief Given some bytecode, set a full immediate value into the bytecode.
+ *
+ * **NOTE:** There are no functions to set byte or half immediates for a good
+ * reason: Mixing immediate sizes during code generation is a bad idea, as
+ * inserting bytecode in the middle of another bit of bytecode could make some
+ * smaller immediates invalid, and they would have to increase in size, which
+ * would be a pain. Instead, we only work with full immediates during code
+ * generation, and reduce down the full immediate instructions to byte or
+ * half immediate instructions in the optimisation stage.
+ *
+ * \param bcode The bytecode to edit.
+ * \param index The starting index of the section of the bytecode to edit.
+ * \param fimmediate The full immediate value to set.
+ */
+DECISION_API void d_bytecode_set_fimmediate(BCode bcode, size_t index,
+                                            fimmediate_t fimmediate);
+
+/**
+ * \fn void d_free_bytecode(BCode *bcode)
+ * \brief Free malloc'd elements of bytecode.
+ *
+ * \param bcode The bytecode to free.
+ */
+DECISION_API void d_free_bytecode(BCode *bcode);
+
+/**
+ * \fn void d_concat_bytecode(BCode *base, BCode *after)
+ * \brief Append bytecode to the end of another set of bytecode.
+ *
+ * \param base The bytecode to be added to.
+ * \param after The bytecode to append. Not changed.
+ */
+DECISION_API void d_concat_bytecode(BCode *base, BCode *after);
+
+/**
+ * \fn void d_insert_bytecode(BCode *base, BCode *insertCode,
+ *                            size_t insertIndex)
+ * \brief Insert some bytecode into another set of bytecode at a particular
+ * point.
+ *
+ * This is a modification of d_optimize_remove_bytecode()
+ *
+ * \param base The bytecode to insert into.
+ * \param insertCode The bytecode to insert.
+ * \param insertIndex The index to insert indexCode into base, i.e. when the
+ * operation is complete, this index will contain the start of insertCode.
+ */
+DECISION_API void d_insert_bytecode(BCode *base, BCode *insertCode,
+                                    size_t insertIndex);
 
 /*
 === FUNCTIONS =============================================

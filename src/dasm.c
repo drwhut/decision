@@ -30,6 +30,270 @@
 #include <stdlib.h>
 #include <string.h>
 
+/**
+ * \fn BCode d_malloc_bytecode(size_t size)
+ * \brief Create a malloc'd BCode object, with a set number of bytes.
+ *
+ * \return The BCode object with malloc'd elements.
+ *
+ * \param size The number of bytes.
+ */
+BCode d_malloc_bytecode(size_t size) {
+    BCode out;
+
+    out.code = (char *)d_malloc(size);
+    out.size = size;
+
+    out.linkList     = NULL;
+    out.linkListSize = 0;
+
+    return out;
+}
+
+/**
+ * \fn BCode d_bytecode_ins(DIns opcode)
+ * \brief Quickly create bytecode that is the size of an opcode, which also has
+ * its first byte set as the opcode itself.
+ *
+ * \return The opcode-initialised bytecode.
+ *
+ * \param opcode The opcode to initialise with.
+ */
+BCode d_bytecode_ins(DIns opcode) {
+    BCode out = d_malloc_bytecode(d_vm_ins_size(opcode));
+    d_bytecode_set_byte(out, 0, (char)opcode);
+    return out;
+}
+
+/**
+ * \fn void d_bytecode_set_byte(BCode bcode, size_t index, char byte)
+ * \brief Given some bytecode, set a byte in the bytecode to a given value.
+ *
+ * \param bcode The bytecode to edit.
+ * \param index The index of the byte in the bytecode to set.
+ * \param byte The value to set.
+ */
+void d_bytecode_set_byte(BCode bcode, size_t index, char byte) {
+    if (index < bcode.size) {
+        bcode.code[index] = byte;
+    }
+}
+
+/**
+ * \fn void d_bytecode_set_fimmediate(BCode bcode, size_t index,
+ *                                   fimmediate_t fimmediate)
+ * \brief Given some bytecode, set a full immediate value into the bytecode.
+ *
+ * **NOTE:** There are no functions to set byte or half immediates for a good
+ * reason: Mixing immediate sizes during code generation is a bad idea, as
+ * inserting bytecode in the middle of another bit of bytecode could make some
+ * smaller immediates invalid, and they would have to increase in size, which
+ * would be a pain. Instead, we only work with full immediates during code
+ * generation, and reduce down the full immediate instructions to byte or
+ * half immediate instructions in the optimisation stage.
+ *
+ * \param bcode The bytecode to edit.
+ * \param index The starting index of the section of the bytecode to edit.
+ * \param fimmediate The full immediate value to set.
+ */
+void d_bytecode_set_fimmediate(BCode bcode, size_t index,
+                               fimmediate_t fimmediate) {
+    if (index < bcode.size - FIMMEDIATE_SIZE + 1) {
+        fimmediate_t *ptr = (fimmediate_t *)(bcode.code + index);
+        *ptr              = fimmediate;
+    }
+}
+
+/**
+ * \fn void d_free_bytecode(BCode *bcode)
+ * \brief Free malloc'd elements of bytecode.
+ *
+ * \param bcode The bytecode to free.
+ */
+void d_free_bytecode(BCode *bcode) {
+    if (bcode->code != NULL) {
+        free(bcode->code);
+    }
+
+    if (bcode->linkList != NULL) {
+        free(bcode->linkList);
+    }
+
+    bcode->code         = NULL;
+    bcode->size         = 0;
+    bcode->linkList     = NULL;
+    bcode->linkListSize = 0;
+}
+
+/**
+ * \fn void d_concat_bytecode(BCode *base, BCode *after)
+ * \brief Append bytecode to the end of another set of bytecode.
+ *
+ * \param base The bytecode to be added to.
+ * \param after The bytecode to append. Not changed.
+ */
+void d_concat_bytecode(BCode *base, BCode *after) {
+    if (!(after->code == NULL || after->size == 0)) {
+        size_t totalSize = base->size + after->size;
+
+        if (base->code != NULL) {
+            base->code = (char *)d_realloc(base->code, totalSize);
+        } else {
+            base->code = (char *)d_malloc(totalSize);
+        }
+
+        // Pointer to the place we want to start adding "after".
+        // We haven't changed base->size yet!
+        char *addPtr = base->code + base->size;
+
+        memcpy(addPtr, after->code, after->size);
+
+        // Now we've concatenated the bytecode, we need to add the links as
+        // well, but change the index of the instruction they point to, since
+        // it's now changed.
+        if (after->linkList != NULL && after->linkListSize > 0) {
+            size_t totalLinkSize = base->linkListSize + after->linkListSize;
+
+            if (base->linkList != NULL) {
+                base->linkList = (InstructionToLink *)d_realloc(
+                    base->linkList, totalLinkSize * sizeof(InstructionToLink));
+            } else {
+                base->linkList = (InstructionToLink *)d_malloc(
+                    totalLinkSize * sizeof(InstructionToLink));
+            }
+
+            // i is the index in the base list.
+            // j is the index in the after list.
+            for (size_t i = base->linkListSize; i < totalLinkSize; i++) {
+                size_t j = i - base->linkListSize;
+
+                InstructionToLink newIns = after->linkList[j];
+                newIns.ins += base->size;
+                base->linkList[i] = newIns;
+            }
+
+            base->linkListSize = totalLinkSize;
+        }
+
+        base->size = totalSize;
+    }
+}
+
+/**
+ * \fn void d_insert_bytecode(BCode *base, BCode *insertCode,
+ *                            size_t insertIndex)
+ * \brief Insert some bytecode into another set of bytecode at a particular
+ * point.
+ *
+ * This is a modification of d_optimize_remove_bytecode()
+ *
+ * \param base The bytecode to insert into.
+ * \param insertCode The bytecode to insert.
+ * \param insertIndex The index to insert indexCode into base, i.e. when the
+ * operation is complete, this index will contain the start of insertCode.
+ */
+void d_insert_bytecode(BCode *base, BCode *insertCode, size_t insertIndex) {
+    if (insertCode->size > 0) {
+        // Resize the base bytecode.
+        if (base->code != NULL && base->size > 0) {
+            base->code =
+                (char *)d_realloc(base->code, base->size + insertCode->size);
+        } else {
+            base->code = (char *)d_malloc(insertCode->size);
+        }
+
+        // Move everything at and after the index in the base bytecode along to
+        // make room for the new bytecode.
+        char *moveFrom = base->code + insertIndex;
+        char *moveTo   = moveFrom + insertCode->size;
+        memmove(moveTo, moveFrom, base->size - insertIndex);
+
+        // Copy the new bytecode into the correct position.
+        memcpy(moveFrom, insertCode->code, insertCode->size);
+
+        // Set the new size of the base bytecode.
+        base->size = base->size + insertCode->size;
+
+        // By doing this we may have made some instructions that use relative
+        // addressing overshoot or undershoot. We need to fix those
+        // instructions.
+        for (size_t i = 0; i < base->size;) {
+            DIns opcode = base->code[i];
+
+            // Remember in code generation we only work with full immediates.
+            if (opcode == OP_CALLRF || opcode == OP_JRFI ||
+                opcode == OP_JRCONFI) {
+
+                fimmediate_t *jmpPtr = (fimmediate_t *)(base->code + i + 1);
+                fimmediate_t jmpAmt  = *jmpPtr;
+
+                // TODO: Deal with the case that it jumped INTO the inserted
+                // region.
+
+                // If the instruction was going backwards, and it was after the
+                // inserted region, we may have a problem.
+                if (i >= insertIndex + insertCode->size && jmpAmt < 0) {
+                    // Did it jump over the inserted region?
+                    if (i - insertCode->size + jmpAmt < insertIndex) {
+                        // Then fix the jump amount.
+                        jmpAmt  = jmpAmt - (fimmediate_t)insertCode->size;
+                        *jmpPtr = jmpAmt;
+                    }
+                }
+
+                // If the instruction was going forwards, and it was before the
+                // inserted region, we may have a problem.
+                else if (i < insertIndex && jmpAmt > 0) {
+                    // Did it jump over the inserted region?
+                    if (i + jmpAmt >= insertIndex + insertCode->size) {
+                        // Then fix the jump amount.
+                        jmpAmt  = jmpAmt + (fimmediate_t)insertCode->size;
+                        *jmpPtr = jmpAmt;
+                    }
+                }
+            }
+
+            i += d_vm_ins_size(opcode);
+        }
+
+        // Next, we need to fix the original InstructionToLinks before adding
+        // the new ones in, otherwise we won't know which is which.
+        for (size_t i = 0; i < base->linkListSize; i++) {
+            size_t insIndex = base->linkList[i].ins;
+
+            if (insIndex >= insertIndex) {
+                base->linkList[i].ins = insIndex + insertCode->size;
+            }
+        }
+
+        // Next, we'll insert the InstructionToLinks from the inserted bytecode,
+        // but we need to remember to modify their instruction indexes, since
+        // they will have changed.
+        if (insertCode->linkListSize > 0) {
+            if (base->linkList != NULL && base->linkListSize > 0) {
+                base->linkList = (InstructionToLink *)d_realloc(
+                    base->linkList,
+                    (base->linkListSize + insertCode->linkListSize) *
+                        sizeof(InstructionToLink));
+            } else {
+                base->linkList = (InstructionToLink *)d_malloc(
+                    (insertCode->linkListSize) * sizeof(InstructionToLink));
+            }
+
+            for (size_t i = 0; i < insertCode->linkListSize; i++) {
+                InstructionToLink itl = insertCode->linkList[i];
+                itl.ins               = itl.ins + insertIndex;
+
+                // linkListSize hasn't changed yet!
+                base->linkList[base->linkListSize + i] = itl;
+            }
+
+            // I spoke too soon...
+            base->linkListSize = base->linkListSize + insertCode->linkListSize;
+        }
+    }
+}
+
 /* A macro constant to state the number of columns d_asm_data_dump prints. */
 #define DATA_DUMP_NUM_COLS 16
 
