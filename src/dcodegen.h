@@ -46,7 +46,7 @@
  * \typedef struct _buildContext BuildContext
  */
 typedef struct _buildContext {
-    Sheet *sheet; ///< The sheet we're building for.
+    Graph graph; ///< The graph we're building for.
 
     int stackTop; ///< Where the stack pointer is relative to the base pointer.
 

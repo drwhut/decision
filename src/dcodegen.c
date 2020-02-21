@@ -32,7 +32,7 @@
 /* Functions to set the stack index of a socket at a given time. */
 
 static int get_stack_index(BuildContext *context, NodeSocket socket) {
-    SheetNode node = context->sheet->nodes[socket.nodeIndex];
+    Node node = context->graph.nodes[socket.nodeIndex];
 
     if (node._stackPositions == NULL) {
         return -1;
@@ -43,12 +43,12 @@ static int get_stack_index(BuildContext *context, NodeSocket socket) {
 
 static void set_stack_index(BuildContext *context, NodeSocket socket,
                             int index) {
-    SheetNode *node = context->sheet->nodes + socket.nodeIndex;
+    Node *node = context->graph.nodes + socket.nodeIndex;
 
     if (node->_stackPositions == NULL) {
         size_t numSockets =
-            d_node_num_inputs(context->sheet, socket.nodeIndex) +
-            d_node_num_outputs(context->sheet, socket.nodeIndex);
+            d_node_num_inputs(context->graph, socket.nodeIndex) +
+            d_node_num_outputs(context->graph, socket.nodeIndex);
 
         node->_stackPositions = d_malloc(numSockets * sizeof(int));
 
@@ -338,7 +338,7 @@ void d_allocate_variable(BuildContext *context, SheetVariable *variable,
  * \param cvtFloat Converts the literal to a float if possible.
  */
 BCode d_push_literal(BuildContext *context, NodeSocket socket, bool cvtFloat) {
-    SocketMeta meta = d_get_socket_meta(context->sheet, socket);
+    SocketMeta meta = d_get_socket_meta(context->graph, socket);
 
     VERBOSE(
         5,
@@ -378,7 +378,7 @@ BCode d_push_literal(BuildContext *context, NodeSocket socket, bool cvtFloat) {
  * \param nodeIndex The index of the node that is the getter of a variable.
  */
 BCode d_push_variable(BuildContext *context, size_t nodeIndex) {
-    SheetNode node                = context->sheet->nodes[nodeIndex];
+    Node node                     = context->graph.nodes[nodeIndex];
     SheetVariable *variable       = node.nameDefinition.definition.variable;
     const SocketMeta variableMeta = variable->variableMeta;
 
@@ -394,7 +394,7 @@ BCode d_push_variable(BuildContext *context, size_t nodeIndex) {
 
     // Set the socket's stack index so we know where the value lives.
     NodeSocket outSocket;
-    outSocket.nodeIndex = nodeIndex;
+    outSocket.nodeIndex   = nodeIndex;
     outSocket.socketIndex = 0;
     set_stack_index(context, outSocket, ++context->stackTop);
 
@@ -428,7 +428,7 @@ BCode d_push_variable(BuildContext *context, size_t nodeIndex) {
  * \param forceFloat Force integers to be converted to floats.
  */
 BCode d_push_input(BuildContext *context, NodeSocket socket, bool forceFloat) {
-    SocketMeta meta = d_get_socket_meta(context->sheet, socket);
+    SocketMeta meta = d_get_socket_meta(context->graph, socket);
 
     VERBOSE(5,
             "Generating bytecode to get the value of input socket %zd of node "
@@ -437,20 +437,20 @@ BCode d_push_input(BuildContext *context, NodeSocket socket, bool forceFloat) {
 
     BCode out = {NULL, 0};
 
-    if (d_is_input_socket(context->sheet, socket) &&
+    if (d_is_input_socket(context->graph, socket) &&
         meta.type != TYPE_EXECUTION) {
 
         // We could use d_socket_num_connections here, but if there is a
         // connection we will need the wire index.
-        int wireIndex = d_wire_find_first(context->sheet, socket);
+        int wireIndex = d_wire_find_first(context->graph, socket);
 
         if (wireIndex < 0) {
             // The socket input is a literal.
             out = d_push_literal(context, socket, forceFloat);
         } else {
             // The socket has a connected socket.
-            NodeSocket connSocket = context->sheet->wires[wireIndex].socketTo;
-            SheetNode connNode    = context->sheet->nodes[connSocket.nodeIndex];
+            NodeSocket connSocket = context->graph.wires[wireIndex].socketTo;
+            Node connNode         = context->graph.nodes[connSocket.nodeIndex];
 
             const NodeDefinition *connDef = connNode.definition;
 
@@ -545,12 +545,12 @@ BCode d_push_input(BuildContext *context, NodeSocket socket, bool forceFloat) {
 BCode d_push_node_inputs(BuildContext *context, size_t nodeIndex, bool order,
                          bool ignoreLiterals, bool forceFloat) {
     const NodeDefinition *nodeDef =
-        d_get_node_definition(context->sheet, nodeIndex);
+        d_get_node_definition(context->graph, nodeIndex);
 
     VERBOSE(5, "Generating bytecode to get the inputs for node %s...\n",
             nodeDef->name);
 
-    const size_t numInputs = d_node_num_inputs(context->sheet, nodeIndex);
+    const size_t numInputs = d_node_num_inputs(context->graph, nodeIndex);
 
     NodeSocket socket;
     socket.nodeIndex = nodeIndex;
@@ -577,10 +577,10 @@ BCode d_push_node_inputs(BuildContext *context, size_t nodeIndex, bool order,
 
     while (inLoop) {
         socket.socketIndex = i;
-        SocketMeta meta   = d_get_socket_meta(context->sheet, socket);
+        SocketMeta meta    = d_get_socket_meta(context->graph, socket);
 
         if ((meta.type & TYPE_VAR_ANY) != 0) {
-            size_t numCons = d_socket_num_connections(context->sheet, socket);
+            size_t numCons = d_socket_num_connections(context->graph, socket);
             if (numCons >= 1 || meta.type == TYPE_FLOAT || !ignoreLiterals) {
                 BCode input = d_push_input(context, socket, forceFloat);
                 d_concat_bytecode(&out, &input);
@@ -612,10 +612,10 @@ BCode d_push_node_inputs(BuildContext *context, size_t nodeIndex, bool order,
 
     while (inLoop) {
         socket.socketIndex = i;
-        SocketMeta meta   = d_get_socket_meta(context->sheet, socket);
+        SocketMeta meta    = d_get_socket_meta(context->graph, socket);
 
         if ((meta.type & TYPE_VAR_ANY) != 0) {
-            size_t numCons = d_socket_num_connections(context->sheet, socket);
+            size_t numCons = d_socket_num_connections(context->graph, socket);
             if (numCons >= 1 || meta.type == TYPE_FLOAT || !ignoreLiterals) {
                 int socketIndex = get_stack_index(context, socket);
                 // Is this input the correct amount from the top?
@@ -648,11 +648,11 @@ BCode d_push_node_inputs(BuildContext *context, size_t nodeIndex, bool order,
 
         while (inLoop) {
             socket.socketIndex = i;
-            SocketMeta meta   = d_get_socket_meta(context->sheet, socket);
+            SocketMeta meta    = d_get_socket_meta(context->graph, socket);
 
             if ((meta.type & TYPE_VAR_ANY) != 0) {
                 size_t numCons =
-                    d_socket_num_connections(context->sheet, socket);
+                    d_socket_num_connections(context->graph, socket);
                 if (numCons >= 1 || meta.type == TYPE_FLOAT ||
                     !ignoreLiterals) {
 
@@ -700,7 +700,7 @@ BCode d_push_node_inputs(BuildContext *context, size_t nodeIndex, bool order,
 BCode d_generate_operator(BuildContext *context, size_t nodeIndex, DIns opcode,
                           DIns fopcode, DIns fiopcode, bool forceFloat) {
     const NodeDefinition *nodeDef =
-        d_get_node_definition(context->sheet, nodeIndex);
+        d_get_node_definition(context->graph, nodeIndex);
 
     VERBOSE(5, "Generate bytecode for operator %s...\n", nodeDef->name);
 
@@ -713,14 +713,14 @@ BCode d_generate_operator(BuildContext *context, size_t nodeIndex, DIns opcode,
     // Do we need to convert integer inputs to floats?
     bool convertFloat = forceFloat;
 
-    const size_t numInputs = d_node_num_inputs(context->sheet, nodeIndex);
+    const size_t numInputs = d_node_num_inputs(context->graph, nodeIndex);
 
     // If we're not forcing it, we may still need to if any of the inputs are
     // floats.
     if (!convertFloat) {
         for (size_t j = 0; j < numInputs; j++) {
             socket.socketIndex = j;
-            SocketMeta meta   = d_get_socket_meta(context->sheet, socket);
+            SocketMeta meta    = d_get_socket_meta(context->graph, socket);
 
             if (meta.type == TYPE_FLOAT) {
                 convertFloat = true;
@@ -732,7 +732,7 @@ BCode d_generate_operator(BuildContext *context, size_t nodeIndex, DIns opcode,
     int initStackTop = context->stackTop;
 
     socket.socketIndex = 0;
-    size_t numCons    = d_socket_num_connections(context->sheet, socket);
+    size_t numCons     = d_socket_num_connections(context->graph, socket);
 
     // Generate the bytecode for the inputs without literals - but we want to
     // start working from the first input, even if it is a literal.
@@ -752,10 +752,10 @@ BCode d_generate_operator(BuildContext *context, size_t nodeIndex, DIns opcode,
     while (socket.socketIndex < numInputs) {
         socket.socketIndex++;
 
-        if (d_is_input_socket(context->sheet, socket)) {
-            SocketMeta meta = d_get_socket_meta(context->sheet, socket);
+        if (d_is_input_socket(context->graph, socket)) {
+            SocketMeta meta = d_get_socket_meta(context->graph, socket);
 
-            numCons = d_socket_num_connections(context->sheet, socket);
+            numCons = d_socket_num_connections(context->graph, socket);
 
             if (!convertFloat && meta.type != TYPE_FLOAT && numCons == 0) {
                 // This input is a literal, so we can use the immediate opcode.
@@ -805,7 +805,7 @@ BCode d_generate_comparator(BuildContext *context, size_t nodeIndex,
                             DIns opcode, DIns fopcode, fimmediate_t strCmpArg,
                             bool notAfter) {
     const NodeDefinition *nodeDef =
-        d_get_node_definition(context->sheet, nodeIndex);
+        d_get_node_definition(context->graph, nodeIndex);
 
     VERBOSE(5, "Generating bytecode for comparator %s...\n", nodeDef->name);
 
@@ -816,11 +816,11 @@ BCode d_generate_comparator(BuildContext *context, size_t nodeIndex,
     NodeSocket socket;
     socket.nodeIndex = nodeIndex;
 
-    const size_t numInputs = d_node_num_inputs(context->sheet, nodeIndex);
+    const size_t numInputs = d_node_num_inputs(context->graph, nodeIndex);
 
     for (size_t i = 0; i < numInputs; i++) {
         socket.socketIndex = i;
-        SocketMeta meta   = d_get_socket_meta(context->sheet, socket);
+        SocketMeta meta    = d_get_socket_meta(context->graph, socket);
 
         if (meta.type == TYPE_STRING) {
             isString = true;
@@ -877,7 +877,7 @@ BCode d_generate_comparator(BuildContext *context, size_t nodeIndex,
  * \param nodeIndex The index of the node to generate the bytecode for.
  */
 BCode d_generate_call(BuildContext *context, size_t nodeIndex) {
-    SheetNode node                = context->sheet->nodes[nodeIndex];
+    Node node                     = context->graph.nodes[nodeIndex];
     const NodeDefinition *nodeDef = node.definition;
     NameDefinition nameDef        = node.nameDefinition;
 
@@ -946,7 +946,7 @@ BCode d_generate_call(BuildContext *context, size_t nodeIndex) {
 
     for (size_t i = numArgs; i < numArgs + numRets; i++) {
         socket.socketIndex = i;
-        SocketMeta outMeta   = d_get_socket_meta(context->sheet, socket);
+        SocketMeta outMeta = d_get_socket_meta(context->graph, socket);
 
         if (outMeta.type != TYPE_EXECUTION) {
             set_stack_index(context, socket, stackTop--);
@@ -972,7 +972,7 @@ BCode d_push_argument(BuildContext *context, NodeSocket socket) {
 
     BCode out = {NULL, 0};
 
-    if (!d_is_input_socket(context->sheet, socket)) {
+    if (!d_is_input_socket(context->graph, socket)) {
 
         // Due to the calling convention, the argument should already be on the
         // stack, but relative to the frame pointer. We just need to figure out
@@ -980,7 +980,7 @@ BCode d_push_argument(BuildContext *context, NodeSocket socket) {
         fimmediate_t index = socket.socketIndex;
 
         // Ignore the execution socket if it exists.
-        if (d_is_execution_node(context->sheet, socket.nodeIndex)) {
+        if (d_is_execution_node(context->graph, socket.nodeIndex)) {
             index--;
         }
 
@@ -997,7 +997,7 @@ BCode d_push_argument(BuildContext *context, NodeSocket socket) {
 }
 
 /**
- * \fn BCode d_generate_return(BuildContext *context, SheetNode *returnNode)
+ * \fn BCode d_generate_return(BuildContext *context, Node *returnNode)
  * \brief Given a Return node, generate the bytecode to return from the
  * function/subroutine with the return values.
  *
@@ -1007,7 +1007,7 @@ BCode d_push_argument(BuildContext *context, NodeSocket socket) {
  * \param returnNode The Return node to return with.
  */
 BCode d_generate_return(BuildContext *context, size_t returnNodeIndex) {
-    SheetNode node               = context->sheet->nodes[returnNodeIndex];
+    Node node                    = context->graph.nodes[returnNodeIndex];
     SheetFunction *function      = node.nameDefinition.definition.function;
     const NodeDefinition funcDef = function->functionDefinition;
 
@@ -1042,7 +1042,7 @@ BCode d_generate_return(BuildContext *context, size_t returnNodeIndex) {
  * \param nodeIndex The index of the non-execution node.
  */
 BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
-    SheetNode node                = context->sheet->nodes[nodeIndex];
+    Node node                     = context->graph.nodes[nodeIndex];
     const NodeDefinition *nodeDef = node.definition;
     NameDefinition nameDef        = node.nameDefinition;
 
@@ -1071,14 +1071,14 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
         //     - drwhut
 
         // Firstly, generate the bytecode for the boolean input.
-        socket.socketIndex = 0;
-        SocketMeta boolMeta   = d_get_socket_meta(context->sheet, socket);
+        socket.socketIndex  = 0;
+        SocketMeta boolMeta = d_get_socket_meta(context->graph, socket);
 
         // If the boolean input is a literal, we only need to generate bytecode
         // for the input that is active, since that is all that is ever gonna
         // be picked!
         bool boolIsLiteral =
-            (d_socket_num_connections(context->sheet, socket) == 0);
+            (d_socket_num_connections(context->graph, socket) == 0);
         bool boolLiteralValue = boolMeta.defaultValue.booleanValue;
 
         BCode boolCode = d_push_input(context, socket, false);
@@ -1092,9 +1092,9 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
         int stackTopBefore = context->stackTop;
 
         // Next, get the bytecode for the true input.
-        NodeSocket trueSocket = socket;
+        NodeSocket trueSocket  = socket;
         trueSocket.socketIndex = 1;
-        BCode trueCode        = {NULL, 0};
+        BCode trueCode         = {NULL, 0};
 
         if (!boolIsLiteral || boolLiteralValue) {
             trueCode = d_push_input(context, trueSocket, false);
@@ -1107,7 +1107,7 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
 
         // Finally, get the bytecode for the false input.
         NodeSocket falseSocket = socket;
-        socket.socketIndex = 2;
+        socket.socketIndex     = 2;
         BCode falseCode        = {NULL, 0};
 
         if (!boolIsLiteral || !boolLiteralValue) {
@@ -1177,7 +1177,7 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
             // Since the boolean is going to get poped off by the JRCONFI
             // instruction, copy it on the stack in case other nodes still need
             // its value.
-            if (d_socket_num_connections(context->sheet, socket) > 1) {
+            if (d_socket_num_connections(context->graph, socket) > 1) {
                 BCode copyBool = d_bytecode_ins(OP_GETFI);
                 d_bytecode_set_fimmediate(copyBool, 1, 0);
                 d_concat_bytecode(&out, &copyBool);
@@ -1233,16 +1233,16 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
 
                     if (coreFunc == CORE_DIV) {
                         NodeSocket socket1;
-                        socket1.nodeIndex = nodeIndex;
+                        socket1.nodeIndex   = nodeIndex;
                         socket1.socketIndex = 0;
 
-                        NodeSocket socket2 = socket1;
+                        NodeSocket socket2  = socket1;
                         socket2.socketIndex = 1;
 
                         SocketMeta meta1 =
-                            d_get_socket_meta(context->sheet, socket1);
+                            d_get_socket_meta(context->graph, socket1);
                         SocketMeta meta2 =
-                            d_get_socket_meta(context->sheet, socket2);
+                            d_get_socket_meta(context->graph, socket2);
 
                         if (meta1.type == TYPE_FLOAT ||
                             meta2.type == TYPE_FLOAT) {
@@ -1265,7 +1265,7 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
                     break;
                 case CORE_LENGTH:;
                     socket.socketIndex = 0;
-                    action            = d_push_input(context, socket, false);
+                    action             = d_push_input(context, socket, false);
 
                     // Here we will use the SYS_STRLEN syscall.
                     BCode pushArgs = d_bytecode_ins(OP_PUSHNF);
@@ -1368,7 +1368,7 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
  */
 BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
                                 bool retAtEnd) {
-    SheetNode node                = context->sheet->nodes[nodeIndex];
+    Node node                     = context->graph.nodes[nodeIndex];
     const NodeDefinition *nodeDef = node.definition;
     NameDefinition nameDef        = node.nameDefinition;
 
@@ -1378,7 +1378,7 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
     const CoreFunction coreFunc = nameDef.definition.coreFunc;
 
     NodeSocket socket;
-    socket.nodeIndex = nodeIndex;
+    socket.nodeIndex   = nodeIndex;
     socket.socketIndex = 0;
 
     bool forceFloats = false;
@@ -1387,7 +1387,7 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
         // If the output is going to be a float, we need the inputs to be
         // floats.
         socket.socketIndex = 5;
-        SocketMeta meta   = d_get_socket_meta(context->sheet, socket);
+        SocketMeta meta    = d_get_socket_meta(context->graph, socket);
 
         if (meta.type == TYPE_FLOAT) {
             forceFloats = true;
@@ -1422,20 +1422,20 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
         switch (coreFunc) {
             case CORE_FOR:;
                 // We will be using the "start" input as the index.
-                NodeSocket indexSocket = socket;
+                NodeSocket indexSocket  = socket;
                 indexSocket.socketIndex = 5;
                 set_stack_index(context, indexSocket, context->stackTop);
 
                 // If the step input is an immediate, we can determine here what
                 // instruction to use to compare the index with the stop value.
                 // If not, we need to insert bytecode to decide.
-                NodeSocket stepSocket = socket;
+                NodeSocket stepSocket  = socket;
                 stepSocket.socketIndex = 3;
                 SocketMeta stepMeta =
-                    d_get_socket_meta(context->sheet, stepSocket);
+                    d_get_socket_meta(context->graph, stepSocket);
 
                 bool isStepImmediate =
-                    (d_socket_num_connections(context->sheet, stepSocket) == 0);
+                    (d_socket_num_connections(context->graph, stepSocket) == 0);
                 LexData stepValue = stepMeta.defaultValue;
 
                 // Start off the loop by getting the stop value, then getting
@@ -1541,11 +1541,11 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
 
                 BCode loopAfterJump = {NULL, 0};
 
-                wireIndex = d_wire_find_first(context->sheet, loopSocket);
+                wireIndex = d_wire_find_first(context->graph, loopSocket);
 
-                if (IS_WIRE_FROM(context->sheet, wireIndex, loopSocket)) {
+                if (IS_WIRE_FROM(context->graph, wireIndex, loopSocket)) {
                     NodeSocket connectedTo =
-                        context->sheet->wires[wireIndex].socketTo;
+                        context->graph.wires[wireIndex].socketTo;
                     firstNodeIndex = connectedTo.nodeIndex;
 
                     loopAfterJump = d_generate_execution_node(
@@ -1633,11 +1633,11 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
                 socket.nodeIndex   = nodeIndex;
                 socket.socketIndex = 2;
 
-                wireIndex = d_wire_find_first(context->sheet, socket);
+                wireIndex = d_wire_find_first(context->graph, socket);
 
-                if (IS_WIRE_FROM(context->sheet, wireIndex, socket)) {
+                if (IS_WIRE_FROM(context->graph, wireIndex, socket)) {
                     NodeSocket connectedTo =
-                        context->sheet->wires[wireIndex].socketTo;
+                        context->graph.wires[wireIndex].socketTo;
                     firstNodeIndex = connectedTo.nodeIndex;
 
                     thenBranch = d_generate_execution_node(
@@ -1652,11 +1652,11 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
 
                     socket.socketIndex = 3;
 
-                    wireIndex = d_wire_find_first(context->sheet, socket);
+                    wireIndex = d_wire_find_first(context->graph, socket);
 
-                    if (IS_WIRE_FROM(context->sheet, wireIndex, socket)) {
+                    if (IS_WIRE_FROM(context->graph, wireIndex, socket)) {
                         NodeSocket connectedTo =
-                            context->sheet->wires[wireIndex].socketTo;
+                            context->graph.wires[wireIndex].socketTo;
                         firstNodeIndex = connectedTo.nodeIndex;
 
                         elseBranch = d_generate_execution_node(
@@ -1753,7 +1753,7 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
                 action = d_bytecode_ins(OP_PUSHF);
                 d_bytecode_set_fimmediate(action, 1, 1);
 
-                SocketMeta meta = d_get_socket_meta(context->sheet, socket);
+                SocketMeta meta = d_get_socket_meta(context->graph, socket);
 
                 fimmediate_t typeArg = 0;
                 switch (meta.type) {
@@ -1839,11 +1839,11 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
                 socket.socketIndex = 1;
 
                 const SocketMeta boolMeta =
-                    d_get_socket_meta(context->sheet, socket);
+                    d_get_socket_meta(context->graph, socket);
 
                 // Check to see if it is a false literal. If it is, then this
                 // execution node is useless.
-                if (d_socket_num_connections(context->sheet, socket) == 0 &&
+                if (d_socket_num_connections(context->graph, socket) == 0 &&
                     boolMeta.defaultValue.booleanValue == false) {
                     break;
                 }
@@ -1853,20 +1853,20 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
                 socket.socketIndex = 2;
 
                 // TODO: What if there isn't a connecting node?
-                wireIndex = d_wire_find_first(context->sheet, socket);
+                wireIndex = d_wire_find_first(context->graph, socket);
 
-                BCode trueCode = { NULL, 0 };
+                BCode trueCode = {NULL, 0};
 
-                if (IS_WIRE_FROM(context->sheet, wireIndex, socket)) {
+                if (IS_WIRE_FROM(context->graph, wireIndex, socket)) {
                     NodeSocket connectedTo =
-                        context->sheet->wires[wireIndex].socketTo;
+                        context->graph.wires[wireIndex].socketTo;
                     firstNodeIndex = connectedTo.nodeIndex;
 
-                    // We need to simulate the boolean getting poped from the stack
-                    // by JRCONFI.
+                    // We need to simulate the boolean getting poped from the
+                    // stack by JRCONFI.
                     context->stackTop--;
-                    trueCode =
-                        d_generate_execution_node(context, firstNodeIndex, false);
+                    trueCode = d_generate_execution_node(context,
+                                                         firstNodeIndex, false);
                 }
 
                 // After the loop has executed, we want to pop from the stack
@@ -1954,15 +1954,15 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
     // Now, we generate the bytecode for the next execution node.
     BCode nextCode = {NULL, 0};
 
-    const size_t numInputs = d_node_num_inputs(context->sheet, nodeIndex);
+    const size_t numInputs = d_node_num_inputs(context->graph, nodeIndex);
 
-    NodeSocket lastExecSocket = socket;
+    NodeSocket lastExecSocket  = socket;
     lastExecSocket.socketIndex = 0;
-    bool lastExecFound        = false;
-    for (size_t i = 0; i < d_node_num_outputs(context->sheet, nodeIndex); i++) {
+    bool lastExecFound         = false;
+    for (size_t i = 0; i < d_node_num_outputs(context->graph, nodeIndex); i++) {
 
         socket.socketIndex = numInputs + i;
-        SocketMeta meta   = d_get_socket_meta(context->sheet, socket);
+        SocketMeta meta    = d_get_socket_meta(context->graph, socket);
 
         // We only care about the LAST execution socket.
         if (meta.type == TYPE_EXECUTION) {
@@ -1973,12 +1973,12 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
 
     bool isNextNode = false;
     if (lastExecFound) {
-        int wireIndex = d_wire_find_first(context->sheet, lastExecSocket);
+        int wireIndex = d_wire_find_first(context->graph, lastExecSocket);
 
-        if (IS_WIRE_FROM(context->sheet, wireIndex, lastExecSocket)) {
+        if (IS_WIRE_FROM(context->graph, wireIndex, lastExecSocket)) {
             isNextNode = true;
 
-            NodeSocket connectedTo = context->sheet->wires[wireIndex].socketTo;
+            NodeSocket connectedTo = context->graph.wires[wireIndex].socketTo;
             size_t nextNodeIndex   = connectedTo.nodeIndex;
 
             // Recursively call d_generate_execution_node to generate the
@@ -2000,7 +2000,7 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
 }
 
 /**
- * \fn BCode d_generate_start(BuildContext *context, SheetNode *startNode)
+ * \fn BCode d_generate_start(BuildContext *context, Node *startNode)
  * \brief Given a Start node, generate the bytecode for the sequence starting
  * from this node.
  *
@@ -2019,17 +2019,17 @@ BCode d_generate_start(BuildContext *context, size_t startNodeIndex) {
     // We just need to call the bytecode generation functions starting from the
     // first node after Start.
 
-    if (d_node_num_outputs(context->sheet, startNodeIndex) == 1) {
+    if (d_node_num_outputs(context->graph, startNodeIndex) == 1) {
         NodeSocket socket;
-        socket.nodeIndex = startNodeIndex;
+        socket.nodeIndex   = startNodeIndex;
         socket.socketIndex = 0;
 
-        int wireIndex = d_wire_find_first(context->sheet, socket);
+        int wireIndex = d_wire_find_first(context->graph, socket);
 
         if (wireIndex >= 0) {
             VERBOSE(5, "-- Generating bytecode for Start function...\n");
 
-            socket = context->sheet->wires[wireIndex].socketTo;
+            socket = context->graph.wires[wireIndex].socketTo;
 
             BCode exe =
                 d_generate_execution_node(context, socket.nodeIndex, true);
@@ -2072,13 +2072,13 @@ BCode d_generate_function(BuildContext *context, SheetFunction func) {
             // sequence to the Return.
             // NOTE: The first argument should be the name of the function.
             NodeSocket socket;
-            socket.nodeIndex = func.defineNodeIndex;
+            socket.nodeIndex   = func.defineNodeIndex;
             socket.socketIndex = 1;
 
-            int wireIndex = d_wire_find_first(context->sheet, socket);
+            int wireIndex = d_wire_find_first(context->graph, socket);
 
             if (wireIndex >= 0) {
-                socket = context->sheet->wires[wireIndex].socketTo;
+                socket = context->graph.wires[wireIndex].socketTo;
 
                 BCode exe =
                     d_generate_execution_node(context, socket.nodeIndex, true);
@@ -2124,7 +2124,7 @@ void d_codegen_compile(Sheet *sheet) {
 
     // Create a context object for the build.
     BuildContext context;
-    context.sheet    = sheet;
+    context.graph    = sheet->graph;
     context.stackTop = -1;
 
     context.linkMetaList = d_link_new_meta_list();
