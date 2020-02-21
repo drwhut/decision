@@ -383,7 +383,7 @@ static int find_link(LinkMetaList list, const char *name, LinkType type) {
         return -1;
     }
 
-    for (int i = 0; i < list.size; i++) {
+    for (int i = 0; i < (int)list.size; i++) {
         LinkMeta meta = list.list[i];
 
         if (strcmp(name, meta.name) == 0 && type == meta.type) {
@@ -627,26 +627,27 @@ Sheet *d_obj_load(const char *obj, size_t size, const char *filePath) {
     reader.obj                 = obj;
     *(size_t *)(&(reader.len)) = size;
 
+    if (!reader_test_string_n(&reader, "D", 1)) {
+        printf("%s cannot be loaded: object file is not a valid object file.\n",
+            filePath);
+        out->hasErrors = true;
+        return out;
+    }
+
 // We need to check if sizeof(dint) is the same as it is in the object.
 #ifdef DECISION_32
-    if (!reader_test_string_n(&reader, "D32", 3)) {
+    if (!reader_test_string_n(&reader, "32", 2)) {
         printf("%s cannot be loaded: object file is not 32-bit.\n", filePath);
         out->hasErrors = true;
         return out;
     }
 #else
-    if (!reader_test_string_n(&reader, "D64", 3)) {
+    if (!reader_test_string_n(&reader, "64", 2)) {
         printf("%s cannot be loaded: object file is not 64-bit.\n", filePath);
         out->hasErrors = true;
         return out;
     }
 #endif // DECISION_32
-    else {
-        printf("%s cannot be loaded: object file is not a valid object file.\n",
-               filePath);
-        out->hasErrors = true;
-        return out;
-    }
 
     // .text
     if (reader_test_string_n(&reader, ".text", 5)) {
@@ -688,7 +689,7 @@ Sheet *d_obj_load(const char *obj, size_t size, const char *filePath) {
 
             meta.type = read_byte(&reader);
             meta.name = read_string(&reader);
-            meta._ptr = read_uinteger(&reader);
+            meta._ptr = (char *)read_uinteger(&reader);
 
             // If the metadata isn't in our sheet, then we don't know where it
             // is at all. This will need to be found out at link time.
@@ -738,7 +739,7 @@ Sheet *d_obj_load(const char *obj, size_t size, const char *filePath) {
             size_t metaLinkIndex = read_uinteger(&reader);
 
             // Copy the name of the function from the link meta list.
-            char *name      = out->_link.list[metaLinkIndex].name;
+            const char *name      = out->_link.list[metaLinkIndex].name;
             size_t nameSize = strlen(name) + 1;
             char *newName   = d_malloc(nameSize);
             strcpy(newName, name);
@@ -796,7 +797,7 @@ Sheet *d_obj_load(const char *obj, size_t size, const char *filePath) {
             if (varMeta.type == TYPE_BOOL) {
                 varMeta.defaultValue.integerValue = *ptr;
             } else if (varMeta.type == TYPE_STRING) {
-                varMeta.defaultValue.stringValue = *(dint *)ptr;
+                varMeta.defaultValue.stringValue = (char *)(*(dint *)ptr);
             } else {
                 varMeta.defaultValue.integerValue = *(dint *)ptr;
             }

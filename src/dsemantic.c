@@ -1786,7 +1786,6 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
                         }
 
                         finalType = meta.type;
-
                     }
                     // So we need to check the connection.
                     else {
@@ -1818,7 +1817,7 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
                                     allSame = false;
                                 }
 
-                                finalType = meta.type;
+                                finalType = otherMeta.type;
                             } else {
                                 reducedAllInputs = false;
                             }
