@@ -141,271 +141,84 @@ static void write_uinteger(ObjectWriter *writer, duint uinteger) {
 }
 
 /**
- * \fn static size_t get_socket_meta_length(SocketMeta meta)
- * \brief Get the amount of space required to store a SocketMeta.
+ * \fn static void write_socket_meta(ObjectWriter *writer,
+ *                                   const SocketMeta meta, bool writeName)
+ * \brief Write socket metadata onto the end of an object writer.
  *
- * \return The number of bytes needed to store the socket meta.
- *
- * \param meta The socket metadata to query.
+ * \param writer The writer to write the socket to.
+ * \param meta The socket metadata to write.
+ * \param writeName Do we write the name onto the writer?
  */
-/*
-static size_t get_socket_meta_length(SocketMeta meta) {
-    // 3 = Type + 2 \0s.
-    size_t size = 3;
-
-    if (meta.name != NULL) {
-        size += strlen(meta.name);
+static void write_socket_meta(ObjectWriter *writer, const SocketMeta meta,
+                              bool writeName) {
+    if (writeName) {
+        write_string(writer, meta.name);
     }
-
-    if (meta.description != NULL) {
-        size += strlen(meta.description);
-    }
-
-    // The size could still vary depending on the default value.
-    if (meta.type == TYPE_STRING) {
-        if (meta.defaultValue.stringValue != NULL) {
-            size += strlen(meta.defaultValue.stringValue) + 1;
-        } else {
-            size += 1; // 0 to say no default value.
-        }
-    } else {
-        size += sizeof(dint);
-    }
-
-    return size;
-}
-*/
-
-/**
- * \fn static void write_socket_meta(char **ptr, SocketMeta meta)
- * \brief Write some socket metadata into a string.
- *
- * \param ptr The pointer being used to write to the string.
- * \param meta The socket metadata to write to the string.
- */
-/*
-static void write_socket_meta(char **ptr, const SocketMeta meta) {
-    char *str = *ptr;
-
-    if (meta.name != NULL) {
-        size_t nameSize = strlen(meta.name) + 1;
-        memcpy(str, meta.name, nameSize);
-        str += nameSize;
-    }
-    else {
-        *str = 0;
-        str++;
-    }
-
-    if (meta.description != NULL) {
-        size_t descriptionSize = strlen(meta.description) + 1;
-        memcpy(str, meta.description, descriptionSize);
-        str += descriptionSize;
-    }
-    else {
-        *str = 0;
-        str++;
-    }
-
-    *str = meta.type;
-    str++;
+    write_string(writer, meta.description);
+    write_byte(writer, meta.type);
 
     if (meta.type == TYPE_STRING) {
-        if (meta.defaultValue.stringValue != NULL) {
-            size_t defaultSize = strlen(meta.defaultValue.stringValue) + 1;
-            memcpy(str, meta.defaultValue.stringValue, defaultSize);
-            str += defaultSize;
-        } else {
-            *str = 0;
-            str++;
-        }
+        write_string(writer, meta.defaultValue.stringValue);
     } else {
-        memcpy(str, &(meta.defaultValue.integerValue), sizeof(dint));
-        str += sizeof(dint);
+        write_uinteger(writer, meta.defaultValue.integerValue);
     }
-
-    *ptr = str;
 }
-*/
 
 /**
- * \fn static SocketMeta read_socket_meta(char **ptr)
- * \brief Read in from a string socket metadata.
+ * \fn static void write_definition(ObjectWriter *writer,
+ *                                  const NodeDefinition def, bool writeName)
+ * \brief Write a node definition onto the end of an object writer.
  *
- * \return The socket metadata.
- *
- * \param ptr The pointer being used to read the string.
+ * \param writer The writer to wrire the definition to.
+ * \param def The definition to write.
+ * \param writeName Do we write the name onto the writer?
  */
-/*
-static const SocketMeta read_socket_meta(char **ptr) {
-    char *str = *ptr;
-
-    size_t nameSize = strlen(str) + 1;
-    char *name      = (char *)d_malloc(nameSize);
-    memcpy(name, str, nameSize);
-    str += nameSize;
-
-    size_t desciptionSize = strlen(str) + 1;
-    char *description     = (char *)d_malloc(desciptionSize);
-    memcpy(description, str, desciptionSize);
-    str += desciptionSize;
-
-    DType type = *str;
-    str++;
-
-    LexData defaultValue;
-
-    if (type == TYPE_STRING) {
-        size_t defaultSize = strlen(str) + 1;
-        char *defaultStr   = (char *)d_malloc(defaultSize);
-        memcpy(defaultStr, str, defaultSize);
-        str += defaultSize;
-
-        defaultValue.stringValue = defaultStr;
-    } else {
-        defaultValue.integerValue = *((dint *)str);
+static void write_definition(ObjectWriter *writer, const NodeDefinition def,
+                             bool writeName) {
+    if (writeName) {
+        write_string(writer, def.name);
     }
+    write_string(writer, def.description);
 
-    *ptr = str;
+    write_uinteger(writer, def.numSockets);
+    write_uinteger(writer, def.startOutputIndex);
 
-    SocketMeta meta;
-    meta.name         = name;
-    meta.description  = description;
-    meta.type         = type;
-    meta.defaultValue = defaultValue;
-
-    return meta;
+    for (size_t i = 0; i < def.numSockets; i++) {
+        const SocketMeta meta = def.sockets[i];
+        write_socket_meta(writer, meta, true);
+    }
 }
-*/
-
-/**
- * \fn static size_t get_node_definition_length(NodeDefinition *definition)
- * \brief Get the amount of space required to store a NodeDefinition.
- *
- * \return The number of bytes needed to store the node definition.
- *
- * \param definition The node definition to query.
- */
-/*
-static size_t get_node_definition_length(const NodeDefinition *definition) {
-    // 2 = 2 \0s.
-    size_t size = 2 * sizeof(duint) + 2;
-
-    if (definition->name != NULL) {
-        size += strlen(definition->name);
-    }
-
-    if (definition->description != NULL) {
-        size += strlen(definition->description);
-    }
-
-    for (size_t i = 0; i < definition->numSockets; i++) {
-        SocketMeta meta = definition->sockets[i];
-        size += get_socket_meta_length(meta);
-    }
-
-    return size;
-}
-*/
-
-/**
- * \fn static void write_node_definition(char **ptr, NodeDefinition *definition)
- * \brief Write a node definition into a string.
- *
- * \param ptr The pointer being used to write the string.
- * \param definition The node definition to write into the string.
- */
-/*
-static void write_node_definition(char **ptr,
-                                  const NodeDefinition *definition) {
-    char *str = *ptr;
-
-    if (definition->name != NULL) {
-        size_t nameSize = strlen(definition->name) + 1;
-        memcpy(str, definition->name, nameSize);
-        str += nameSize;
-    }
-    else {
-        *str = 0;
-        str++;
-    }
-
-    if (definition->description != NULL) {
-        size_t descriptionSize = strlen(definition->description) + 1;
-        memcpy(str, definition->description, descriptionSize);
-        str += descriptionSize;
-    }
-    else {
-        *str = 0;
-        str++;
-    }
-
-    memcpy(str, &(definition->startOutputIndex), sizeof(duint));
-    str += sizeof(duint);
-
-    memcpy(str, &(definition->numSockets), sizeof(duint));
-    str += sizeof(duint);
-
-    for (size_t i = 0; i < definition->numSockets; i++) {
-        SocketMeta meta = definition->sockets[i];
-        write_socket_meta(&str, meta);
-    }
-
-    *ptr = str;
-}
-*/
-
-/**
- * \fn static NodeDefinition read_node_definition(char **ptr)
- * \brief Read a node definition from a string.
- *
- * \return The node definition.
- *
- * \param ptr The pointer being used to read the string.
- */
-/*
-static const NodeDefinition read_node_definition(char **ptr) {
-    char *str = *ptr;
-
-    size_t nameSize = strlen(str) + 1;
-    char *name      = (char *)d_malloc(nameSize);
-    memcpy(name, str, nameSize);
-    str += nameSize;
-
-    size_t desciptionSize = strlen(str) + 1;
-    char *description     = (char *)d_malloc(desciptionSize);
-    memcpy(description, str, desciptionSize);
-    str += desciptionSize;
-
-    size_t startOutputIndex = *((duint *)str);
-    str += sizeof(duint);
-
-    size_t numSockets = *((duint *)str);
-    str += sizeof(duint);
-
-    SocketMeta *list = (SocketMeta *)d_malloc(numSockets * sizeof(SocketMeta));
-
-    for (size_t i = 0; i < numSockets; i++) {
-        SocketMeta meta = read_socket_meta(&str);
-        memcpy(list + i, &meta, sizeof(SocketMeta));
-    }
-
-    *ptr = str;
-
-    NodeDefinition definition             = {NULL, NULL, NULL, 0, 0, false};
-    definition.name                       = name;
-    definition.description                = description;
-    *(SocketMeta **)&(definition.sockets) = list;
-    definition.numSockets                 = numSockets;
-    definition.startOutputIndex           = startOutputIndex;
-
-    return definition;
-}
-*/
 
 /*
 === GLOBAL FUNCTIONS ======================================
 */
+
+/**
+ * \fn static int find_link(LinkMetaList list, const char *name, LinkType type)
+ * \brief Find the index of the link metadata with a given name and type.
+ *
+ * \return The index of the corresponding link metadata in the list. `-1` if
+ * it cannot be found.
+ *
+ * \param list The list to query.
+ * \param name The name to query.
+ * \param type The type to query.
+ */
+static int find_link(LinkMetaList list, const char *name, LinkType type) {
+    if (list.list == NULL || list.size == 0) {
+        return -1;
+    }
+
+    for (int i = 0; i < list.size; i++) {
+        LinkMeta meta = list.list[i];
+
+        if (strcmp(name, meta.name) == 0 && type == meta.type) {
+            return i;
+        }
+    }
+
+    return -1;
+}
 
 /**
  * \fn const char *d_obj_generate(Sheet *sheet, size_t *size)
@@ -515,7 +328,16 @@ const char *d_obj_generate(Sheet *sheet, size_t *size) {
         for (size_t i = 0; i < sheet->numFunctions; i++) {
             const NodeDefinition funcDef =
                 sheet->functions[i].functionDefinition;
-            write_definition(&writer, funcDef);
+
+            int linkIndex =
+                find_link(sheet->_link, funcDef.name, LINK_FUNCTION);
+
+            // TODO: Error if the index is invalid.
+
+            if (linkIndex >= 0) {
+                write_uinteger(&writer, linkIndex);
+                write_definition(&writer, funcDef, false);
+            }
         }
     }
 
@@ -527,7 +349,21 @@ const char *d_obj_generate(Sheet *sheet, size_t *size) {
 
         for (size_t i = 0; i < sheet->numVariables; i++) {
             const SocketMeta varMeta = sheet->variables[i].variableMeta;
-            write_socket(&writer, varMeta);
+
+            LinkType linkType = LINK_VARIABLE;
+
+            if (varMeta.type == TYPE_STRING) {
+                linkType = LINK_VARIABLE_POINTER;
+            }
+
+            int linkIndex = find_link(sheet->_link, varMeta.name, linkType);
+
+            // TODO: Error if the index is invalid.
+
+            if (linkIndex >= 0) {
+                write_uinteger(&writer, linkIndex);
+                write_socket_meta(&writer, varMeta, false);
+            }
         }
     }
 
@@ -570,10 +406,18 @@ const char *d_obj_generate(Sheet *sheet, size_t *size) {
             LinkMeta meta = sheet->_link.list[i];
 
             if (meta.type == LINK_CFUNCTION) {
-                CFunction *cFunc = (CFunction *)meta.meta;
+                CFunction *cFunc          = (CFunction *)meta.meta;
                 const NodeDefinition cDef = cFunc->definition;
 
-                write_definition(&writer, cDef);
+                int linkIndex =
+                    find_link(sheet->_link, cDef.name, LINK_CFUNCTION);
+
+                // TODO: Error if the index is invalid.
+
+                if (linkIndex >= 0) {
+                    write_uinteger(&writer, linkIndex);
+                    write_definition(&writer, cDef, false);
+                }
             }
         }
     }
