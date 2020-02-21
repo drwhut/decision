@@ -761,8 +761,8 @@ void d_definition_free(const NodeDefinition nodeDef, bool freeSocketStrs) {
             for (size_t i = 0; i < nodeDef.numSockets; i++) {
                 SocketMeta meta = nodeDef.sockets[i];
 
-                free(meta.name);
-                free(meta.description);
+                free((char *)meta.name);
+                free((char *)meta.description);
             }
         }
 
