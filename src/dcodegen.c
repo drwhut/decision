@@ -1107,7 +1107,7 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
 
         // Finally, get the bytecode for the false input.
         NodeSocket falseSocket = socket;
-        socket.socketIndex     = 2;
+        falseSocket.socketIndex     = 2;
         BCode falseCode        = {NULL, 0};
 
         if (!boolIsLiteral || !boolLiteralValue) {
