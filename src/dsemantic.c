@@ -882,7 +882,7 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
 
     // What will the index of the node be when it's stored in
     // the sheet?
-    const size_t nodeIndex = sheet->numNodes;
+    const size_t nodeIndex = sheet->graph.numNodes;
 
     NodeSocket socket;
     socket.nodeIndex = nodeIndex;
@@ -1197,14 +1197,14 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
     }
 
     // FINALLY, add the node to the sheet.
-    SheetNode newNode;
+    Node newNode;
     newNode.definition       = nodeDef;
     newNode.lineNum          = lineNum;
     newNode.reducedTypes     = types;
     newNode.literalValues    = literals;
     newNode.startOutputIndex = startOutputIndex;
     newNode.nameDefinition   = nameDefinition;
-    d_sheet_add_node(sheet, newNode);
+    d_graph_add_node(&(sheet->graph), newNode);
 }
 
 /**
@@ -1300,7 +1300,7 @@ void d_semantic_scan_nodes(Sheet *sheet, SyntaxNode *root) {
 
     // Now we've gone through all of the nodes, we need to do some checks.
     if (sheet->numStarts > 1) {
-        SheetNode startNode = sheet->nodes[sheet->startNodeIndex];
+        Node startNode = sheet->graph.nodes[sheet->startNodeIndex];
         ERROR_COMPILER(sheet->filePath, startNode.lineNum, true,
                        "Found %zu Start functions, only 1 is allowed",
                        sheet->numStarts);
@@ -1319,7 +1319,7 @@ void d_semantic_scan_nodes(Sheet *sheet, SyntaxNode *root) {
                            "node defined",
                            func.functionDefinition.name);
         } else if (func.numDefineNodes > 1) {
-            SheetNode defineNode = sheet->nodes[func.defineNodeIndex];
+            Node defineNode = sheet->graph.nodes[func.defineNodeIndex];
             ERROR_COMPILER(sheet->filePath, defineNode.lineNum, true,
                            "Function %s has %zu Define nodes defined when only "
                            "1 is allowed",
@@ -1334,8 +1334,8 @@ void d_semantic_scan_nodes(Sheet *sheet, SyntaxNode *root) {
                                "node defined",
                                func.functionDefinition.name);
             } else if (func.numReturnNodes > 1) {
-                SheetNode lastReturnNode =
-                    sheet->nodes[func.lastReturnNodeIndex];
+                Node lastReturnNode =
+                    sheet->graph.nodes[func.lastReturnNodeIndex];
                 ERROR_COMPILER(sheet->filePath, lastReturnNode.lineNum, true,
                                "Function %s has %zu Return nodes defined when "
                                "only 1 is allowed",
@@ -1366,15 +1366,15 @@ void d_semantic_scan_nodes(Sheet *sheet, SyntaxNode *root) {
                 foundMatch = true;
 
                 // Create a wire and add it to the sheet.
-                SheetWire wire;
+                Wire wire;
                 wire.socketFrom = knownLine.socket;
                 wire.socketTo   = unknownLine.socket;
-                d_sheet_add_wire(sheet, wire);
+                d_graph_add_wire(&(sheet->graph), wire, sheet->filePath);
             }
         }
 
         if (!foundMatch) {
-            SheetNode node = sheet->nodes[unknownLine.socket.nodeIndex];
+            Node node = sheet->graph.nodes[unknownLine.socket.nodeIndex];
             ERROR_COMPILER(sheet->filePath, node.lineNum, true,
                            "Undefined line identifier %" DINT_PRINTF_u,
                            unknownLine.identifier)
@@ -1423,11 +1423,11 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
             for (size_t socketIndex = 0; socketIndex < numSockets;
                  socketIndex++) {
                 socket.socketIndex = socketIndex;
-                SocketMeta meta    = d_get_socket_meta(sheet, socket);
+                SocketMeta meta    = d_get_socket_meta(sheet->graph, socket);
 
                 if (meta.type != TYPE_EXECUTION) {
                     // Is the socket an input?
-                    if (d_is_input_socket(sheet, socket)) {
+                    if (d_is_input_socket(sheet->graph, socket)) {
                         // If we know it's a Float anyway (from a literal
                         // argument)...
                         if (meta.type == TYPE_FLOAT) {
@@ -1437,19 +1437,20 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
                         // It's already reduced. So, we need to check
                         // connections.
                         else {
-                            int wireIndex = d_wire_find_first(sheet, socket);
+                            int wireIndex =
+                                d_wire_find_first(sheet->graph, socket);
 
-                            if (IS_WIRE_FROM(sheet, wireIndex, socket)) {
+                            if (IS_WIRE_FROM(sheet->graph, wireIndex, socket)) {
                                 NodeSocket otherSide =
-                                    sheet->wires[wireIndex].socketTo;
+                                    sheet->graph.wires[wireIndex].socketTo;
 
                                 // If this socket reduced?
                                 SocketMeta otherMeta =
-                                    d_get_socket_meta(sheet, otherSide);
+                                    d_get_socket_meta(sheet->graph, otherSide);
                                 if (IS_TYPE_REDUCED(otherMeta.type)) {
                                     // Great! We can set this socket's type to
                                     // be discrete!
-                                    sheet->nodes[nodeIndex]
+                                    sheet->graph.nodes[nodeIndex]
                                         .reducedTypes[socketIndex] =
                                         otherMeta.type;
 
@@ -1470,7 +1471,7 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
             // If we know our output needs to be a Float, set it now. (Except if
             // it is a divide.)
             if (coreFunc != CORE_DIVIDE) {
-                sheet->nodes[outputSocket.nodeIndex]
+                sheet->graph.nodes[outputSocket.nodeIndex]
                     .reducedTypes[outputSocket.socketIndex] =
                     (hasFloatInput) ? TYPE_FLOAT : TYPE_INT;
             }
@@ -1493,9 +1494,9 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
             for (size_t socketIndex = 0; socketIndex < numSockets;
                  socketIndex++) {
                 socket.socketIndex = socketIndex;
-                SocketMeta meta    = d_get_socket_meta(sheet, socket);
+                SocketMeta meta    = d_get_socket_meta(sheet->graph, socket);
 
-                if (d_is_input_socket(sheet, socket)) {
+                if (d_is_input_socket(sheet->graph, socket)) {
                     if (meta.type == TYPE_NAME) {
                         inputName = meta.defaultValue.stringValue;
                     }
@@ -1510,20 +1511,20 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
                     // case... muhaha?
                     if (meta.type == TYPE_VAR_ANY) {
                         // Ok... we'll try the connection.
-                        int wireIndex = d_wire_find_first(sheet, socket);
+                        int wireIndex = d_wire_find_first(sheet->graph, socket);
 
-                        if (IS_WIRE_FROM(sheet, wireIndex, socket)) {
+                        if (IS_WIRE_FROM(sheet->graph, wireIndex, socket)) {
                             NodeSocket otherSide =
-                                sheet->wires[wireIndex].socketTo;
+                                sheet->graph.wires[wireIndex].socketTo;
 
                             // Is the socket reduced?
                             SocketMeta otherMeta =
-                                d_get_socket_meta(sheet, otherSide);
+                                d_get_socket_meta(sheet->graph, otherSide);
 
                             if (IS_TYPE_REDUCED(otherMeta.type)) {
                                 // Great! We can set this socket's type to be
                                 // discrete!
-                                sheet->nodes[nodeIndex]
+                                sheet->graph.nodes[nodeIndex]
                                     .reducedTypes[socketIndex] = otherMeta.type;
 
                                 reducedTo = otherMeta.type;
@@ -1537,7 +1538,7 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
                 nodeReduced[nodeIndex] = true;
 
                 if (coreFunc == CORE_SET && inputName != NULL) {
-                    SheetNode node = sheet->nodes[nodeIndex];
+                    Node node = sheet->graph.nodes[nodeIndex];
 
                     // We need to check the variable type matches!
                     SheetVariable *var =
@@ -1570,8 +1571,8 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
                  socketIndex++) {
                 socket.socketIndex = socketIndex;
 
-                if (d_is_input_socket(sheet, socket)) {
-                    SocketMeta meta = d_get_socket_meta(sheet, socket);
+                if (d_is_input_socket(sheet->graph, socket)) {
+                    SocketMeta meta = d_get_socket_meta(sheet->graph, socket);
 
                     // If we know it's an Integer or Boolean anyway (from a
                     // literal argument)...
@@ -1580,7 +1581,7 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
                         // Before we replace finalType, we need to make sure, if
                         // finalType has a type, if this type is the same.
                         if (finalType != TYPE_NONE && meta.type != finalType) {
-                            SheetNode node = sheet->nodes[nodeIndex];
+                            Node node = sheet->graph.nodes[nodeIndex];
                             d_error_compiler_push("All inputs in bitwise "
                                                   "operators must be of the "
                                                   "same type",
@@ -1594,27 +1595,27 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
                     }
                     // So we need to check the connection.
                     else {
-                        int wireIndex = d_wire_find_first(sheet, socket);
+                        int wireIndex = d_wire_find_first(sheet->graph, socket);
 
-                        if (IS_WIRE_FROM(sheet, wireIndex, socket)) {
+                        if (IS_WIRE_FROM(sheet->graph, wireIndex, socket)) {
                             NodeSocket otherSide =
-                                sheet->wires[wireIndex].socketTo;
+                                sheet->graph.wires[wireIndex].socketTo;
 
                             SocketMeta otherMeta =
-                                d_get_socket_meta(sheet, otherSide);
+                                d_get_socket_meta(sheet->graph, otherSide);
 
                             // Is this socket reduced?
                             if (IS_TYPE_REDUCED(otherMeta.type)) {
                                 // Great! We can set this socket's type to be
                                 // discrete!
-                                sheet->nodes[nodeIndex]
+                                sheet->graph.nodes[nodeIndex]
                                     .reducedTypes[socketIndex] = otherMeta.type;
 
                                 // But wait... is it the same as the rest of the
                                 // types???
                                 if (finalType != TYPE_NONE &&
                                     otherMeta.type != finalType) {
-                                    SheetNode node = sheet->nodes[nodeIndex];
+                                    Node node = sheet->graph.nodes[nodeIndex];
                                     d_error_compiler_push(
                                         "All inputs in bitwise operators must "
                                         "be of the same type",
@@ -1629,7 +1630,7 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
                         }
                     }
                 } else if (finalType != TYPE_NONE) {
-                    sheet->nodes[nodeIndex].reducedTypes[socketIndex] =
+                    sheet->graph.nodes[nodeIndex].reducedTypes[socketIndex] =
                         finalType;
                 }
             }
@@ -1656,10 +1657,10 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
             for (size_t socketIndex = 0; socketIndex < numSockets;
                  socketIndex++) {
                 socket.socketIndex = socketIndex;
-                SocketMeta meta    = d_get_socket_meta(sheet, socket);
+                SocketMeta meta    = d_get_socket_meta(sheet->graph, socket);
 
                 if (meta.type != TYPE_EXECUTION) {
-                    if (d_is_input_socket(sheet, socket)) {
+                    if (d_is_input_socket(sheet->graph, socket)) {
                         // If we know it's a Number anyway (from a literal
                         // argument)...
                         if ((meta.type & (TYPE_NUMBER | TYPE_BOOL)) != 0) {
@@ -1673,20 +1674,21 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
                         // It's already reduced. So, we need to check
                         // connections.
                         else {
-                            int wireIndex = d_wire_find_first(sheet, socket);
+                            int wireIndex =
+                                d_wire_find_first(sheet->graph, socket);
 
-                            if (IS_WIRE_FROM(sheet, wireIndex, socket)) {
+                            if (IS_WIRE_FROM(sheet->graph, wireIndex, socket)) {
                                 NodeSocket otherSide =
-                                    sheet->wires[wireIndex].socketTo;
+                                    sheet->graph.wires[wireIndex].socketTo;
 
                                 SocketMeta otherMeta =
-                                    d_get_socket_meta(sheet, otherSide);
+                                    d_get_socket_meta(sheet->graph, otherSide);
 
                                 // Is this socket reduced?
                                 if (IS_TYPE_REDUCED(otherMeta.type)) {
                                     // Great! We can set this socket's type to
                                     // be discrete!
-                                    sheet->nodes[nodeIndex]
+                                    sheet->graph.nodes[nodeIndex]
                                         .reducedTypes[socketIndex] =
                                         otherMeta.type;
 
@@ -1710,7 +1712,7 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
             // If they've mixed numbers and strings.. remind them of their dirty
             // deeds.
             if (hasNumberInput && hasStringInput) {
-                SheetNode node = sheet->nodes[nodeIndex];
+                Node node = sheet->graph.nodes[nodeIndex];
                 d_error_compiler_push("Comparison operators cannot compare "
                                       "between numbers and strings",
                                       sheet->filePath, node.lineNum, true);
@@ -1734,9 +1736,9 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
             for (size_t socketIndex = 1; socketIndex < numSockets;
                  socketIndex++) {
                 socket.socketIndex = socketIndex;
-                SocketMeta meta    = d_get_socket_meta(sheet, socket);
+                SocketMeta meta    = d_get_socket_meta(sheet->graph, socket);
 
-                if (d_is_input_socket(sheet, socket)) {
+                if (d_is_input_socket(sheet->graph, socket)) {
 
                     // If we already know the type (since) the input could be a
                     // literal...
@@ -1746,7 +1748,7 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
                         // set, then we need to check our type is the type that
                         // is already there.
                         if (inputType != TYPE_NONE && meta.type != inputType) {
-                            SheetNode node = sheet->nodes[nodeIndex];
+                            Node node = sheet->graph.nodes[nodeIndex];
                             d_error_compiler_push("Value inputs in a Ternary "
                                                   "operator must be of the "
                                                   "same type",
@@ -1760,28 +1762,28 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
 
                     // So we need to check the connection.
                     else {
-                        int wireIndex = d_wire_find_first(sheet, socket);
+                        int wireIndex = d_wire_find_first(sheet->graph, socket);
 
-                        if (IS_WIRE_FROM(sheet, wireIndex, socket)) {
+                        if (IS_WIRE_FROM(sheet->graph, wireIndex, socket)) {
                             NodeSocket otherSide =
-                                sheet->wires[wireIndex].socketTo;
+                                sheet->graph.wires[wireIndex].socketTo;
 
                             SocketMeta otherMeta =
-                                d_get_socket_meta(sheet, otherSide);
+                                d_get_socket_meta(sheet->graph, otherSide);
 
                             // Is this socket reduced?
                             if (IS_TYPE_REDUCED(otherMeta.type)) {
 
                                 // Great! We can set this socket's type to be
                                 // discrete!
-                                sheet->nodes[nodeIndex]
+                                sheet->graph.nodes[nodeIndex]
                                     .reducedTypes[socketIndex] = otherMeta.type;
 
                                 // But wait... is it the same as the rest of the
                                 // types???
                                 if (inputType != TYPE_NONE &&
                                     otherMeta.type != inputType) {
-                                    SheetNode node = sheet->nodes[nodeIndex];
+                                    Node node = sheet->graph.nodes[nodeIndex];
                                     d_error_compiler_push(
                                         "Value inputs in a Ternary operator "
                                         "must be of the same type",
@@ -1795,7 +1797,7 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
                     }
 
                 } else if (inputType != TYPE_NONE) {
-                    sheet->nodes[nodeIndex].reducedTypes[socketIndex] =
+                    sheet->graph.nodes[nodeIndex].reducedTypes[socketIndex] =
                         inputType;
                 }
             }
@@ -1827,8 +1829,8 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
 void d_semantic_reduce_types(Sheet *sheet) {
     // An array of booleans to say whether we have reduced the node with the
     // same index.
-    bool *nodeReduced = (bool *)d_malloc(sheet->numNodes * sizeof(bool));
-    for (size_t i = 0; i < sheet->numNodes; i++) {
+    bool *nodeReduced = (bool *)d_malloc(sheet->graph.numNodes * sizeof(bool));
+    for (size_t i = 0; i < sheet->graph.numNodes; i++) {
         nodeReduced[i] = false;
     }
 
@@ -1839,19 +1841,20 @@ void d_semantic_reduce_types(Sheet *sheet) {
 
         bool neededToReduce = false;
 
-        for (size_t nodeIndex = 0; nodeIndex < sheet->numNodes; nodeIndex++) {
+        for (size_t nodeIndex = 0; nodeIndex < sheet->graph.numNodes;
+             nodeIndex++) {
             bool isReduced = nodeReduced[nodeIndex];
 
             // We haven't reduced this node yet.
             if (!isReduced) {
                 neededToReduce = true;
                 const char *name =
-                    d_get_node_definition(sheet, nodeIndex)->name;
+                    d_get_node_definition(sheet->graph, nodeIndex)->name;
 
                 VERBOSE(5, "Reducing node #%zu (%s)... ", nodeIndex, name)
 
-                size_t numInputs  = d_node_num_inputs(sheet, nodeIndex);
-                size_t numOutputs = d_node_num_outputs(sheet, nodeIndex);
+                size_t numInputs  = d_node_num_inputs(sheet->graph, nodeIndex);
+                size_t numOutputs = d_node_num_outputs(sheet->graph, nodeIndex);
                 size_t numSockets = numInputs + numOutputs;
 
                 // Is it a core function?
@@ -1916,7 +1919,7 @@ static void check_loop(Sheet *sheet, size_t start, size_t *pathArray,
         if (start == pathArray[i]) {
             VERBOSE(5, "FOUND LOOP\n")
 
-            SheetNode node = sheet->nodes[start];
+            Node node = sheet->graph.nodes[start];
 
             ERROR_COMPILER(sheet->filePath, node.lineNum, true,
                            "Detected loop entering node %s",
@@ -1930,8 +1933,8 @@ static void check_loop(Sheet *sheet, size_t start, size_t *pathArray,
 
     // Now, go through all of our output connections,
     // and call this function on them.
-    size_t numInputs  = d_node_num_inputs(sheet, start);
-    size_t numOutputs = d_node_num_outputs(sheet, start);
+    size_t numInputs  = d_node_num_inputs(sheet->graph, start);
+    size_t numOutputs = d_node_num_outputs(sheet->graph, start);
 
     // Start from the first output socket.
     for (size_t i = numInputs; i < numInputs + numOutputs; i++) {
@@ -1939,11 +1942,12 @@ static void check_loop(Sheet *sheet, size_t start, size_t *pathArray,
         socket.nodeIndex   = start;
         socket.socketIndex = i;
 
-        int wireIndex = d_wire_find_first(sheet, socket);
+        int wireIndex = d_wire_find_first(sheet->graph, socket);
 
-        while (IS_WIRE_FROM(sheet, wireIndex, socket)) {
-            size_t nextNodeIndex = sheet->wires[wireIndex].socketTo.nodeIndex;
-            SheetNode nextNode   = sheet->nodes[nextNodeIndex];
+        while (IS_WIRE_FROM(sheet->graph, wireIndex, socket)) {
+            size_t nextNodeIndex =
+                sheet->graph.wires[wireIndex].socketTo.nodeIndex;
+            Node nextNode = sheet->graph.nodes[nextNodeIndex];
 
             VERBOSE(5, "ENTER %s LINE %zu\n", nextNode.definition->name,
                     nextNode.lineNum)
@@ -1979,15 +1983,17 @@ void d_semantic_detect_loops(Sheet *sheet) {
     // If we end up visiting a node we've already visited on our
     // journey, error.
 
-    if (sheet->nodes != NULL && sheet->numNodes > 0) {
+    if (sheet->graph.nodes != NULL && sheet->graph.numNodes > 0) {
         // We can't go on a journey that is bigger than the number
         // of nodes (without looping)
-        size_t *path = (size_t *)d_malloc(sheet->numNodes * sizeof(size_t));
+        size_t *path =
+            (size_t *)d_malloc(sheet->graph.numNodes * sizeof(size_t));
 
         // Find nodes with no inputs (except name sockets).
-        for (size_t i = 0; i < sheet->numNodes; i++) {
-            const NodeDefinition *nodeDef = d_get_node_definition(sheet, i);
-            bool hasInputs                = false;
+        for (size_t i = 0; i < sheet->graph.numNodes; i++) {
+            const NodeDefinition *nodeDef =
+                d_get_node_definition(sheet->graph, i);
+            bool hasInputs = false;
 
             for (size_t j = 0; j < d_definition_num_inputs(nodeDef); j++) {
                 if (nodeDef->sockets[j].type != TYPE_NAME) {

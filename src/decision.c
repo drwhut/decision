@@ -22,8 +22,9 @@
 #include "dcodegen.h"
 #include "derror.h"
 #include "dlex.h"
-#include "dlink.h"
+#include "dlink.h"  
 #include "dmalloc.h"
+#include "dobj.h"
 #include "doptimize.h"
 #include "dsemantic.h"
 #include "dsheet.h"
@@ -404,7 +405,7 @@ bool d_compile_string(const char *source, const char *filePath) {
 
     if (!hadErrors) {
         size_t objSize;
-        const char *obj = d_asm_generate_object(sheet, &objSize);
+        const char *obj = d_obj_generate(sheet, &objSize);
         save_object_to_file(filePath, obj, objSize);
 
         free((char *)obj);
@@ -482,7 +483,7 @@ bool d_compile_file(const char *filePathIn, const char *filePathOut) {
 
     if (!hadErrors) {
         size_t objSize;
-        const char *obj = d_asm_generate_object(sheet, &objSize);
+        const char *obj = d_obj_generate(sheet, &objSize);
         save_object_to_file(filePathOut, obj, objSize);
 
         free((char *)obj);
@@ -507,7 +508,7 @@ Sheet *d_load_object_file(const char *filePath) {
     Sheet *out      = NULL;
 
     if (obj != NULL) {
-        out = d_asm_load_object(obj, size, filePath);
+        out = d_obj_load(obj, size, filePath);
         free((char *)obj);
 
         out->hasErrors = d_error_report();
