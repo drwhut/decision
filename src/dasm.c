@@ -26,7 +26,6 @@
 #include "dtype.h"
 #include "dvm.h"
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 

@@ -18,7 +18,13 @@
 
 #include "dobj.h"
 
+#include "derror.h"
+#include "dmalloc.h"
 #include "dsheet.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 /**
  * \fn static size_t get_socket_meta_length(SocketMeta meta)

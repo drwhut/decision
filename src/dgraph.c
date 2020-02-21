@@ -19,6 +19,11 @@
 #include "dgraph.h"
 
 #include "derror.h"
+#include "dmalloc.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 /**
  * \fn size_t d_definition_num_inputs(const NodeDefinition *nodeDef)
