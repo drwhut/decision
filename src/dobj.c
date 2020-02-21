@@ -615,12 +615,12 @@ const char *d_obj_generate(Sheet *sheet, size_t *size) {
     }
 
     // ".c"
-    memcpy(ptr, ".c", 2);
-    ptr += 2;
+    //memcpy(ptr, ".c", 2);
+    //ptr += 2;
 
     // sizeof(.c)
-    memcpy(ptr, &cLen, sizeof(duint));
-    ptr += sizeof(duint);
+    //memcpy(ptr, &cLen, sizeof(duint));
+    //ptr += sizeof(duint);
 
     // .c section.
     /*
