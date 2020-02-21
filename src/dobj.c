@@ -34,7 +34,9 @@
  * \typedef struct _objReader ObjectReader
  */
 typedef struct _objReader {
-
+    const char *obj;  ///< The object file contents.
+    const size_t len; ///< The length of the object file.
+    size_t ptr;       ///< The current "pointer".
 } ObjectReader;
 
 /**
@@ -48,9 +50,177 @@ typedef struct _objWriter {
     size_t len; ///< The length of the object string in bytes.
 } ObjectWriter;
 
+/**
+ * \struct _indexList
+ * \brief A struct for storing a list of indexes.
+ *
+ * \typedef struct _indexList IndexList
+ */
+typedef struct _indexList {
+    size_t *indexList;
+    size_t length;
+} IndexList;
+
 /*
 === READER FUNCTIONS ======================================
 */
+
+/**
+ * \fn static bool reader_test_string_n(ObjectReader *reader, const char *str,
+ *                                      size_t n)
+ * \brief Check if there is a specific length-n string at the current position.
+ * If the string is at the current position, move the reader's point to the
+ * character after the string.
+ *
+ * \return If the string of length n is at the current position in the reader.
+ *
+ * \param reader The reader to query.
+ * \param str The string to test for.
+ * \param n The number of characters to test.
+ */
+static bool reader_test_string_n(ObjectReader *reader, const char *str,
+                                 size_t n) {
+    if (reader->obj == NULL || str == NULL) {
+        return false;
+    }
+
+    if (reader->ptr + n > reader->len) {
+        return false;
+    }
+
+    if (strncmp(str, reader->obj + reader->ptr, n) == 0) {
+        reader->ptr += n;
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * \fn static char read_byte(ObjectReader *reader)
+ * \brief Read a byte from an object reader.
+ *
+ * \return The byte at the reader's current position.
+ *
+ * \param reader The reader to read from.
+ */
+static char read_byte(ObjectReader *reader) {
+    char out = *(reader->obj + reader->ptr);
+    reader->ptr++;
+    return out;
+}
+
+/**
+ * \fn static char *read_string_n(ObjectReader *reader, size_t n)
+ * \brief Read an malloc'd length-n string from an object reader.
+ *
+ * \return The malloc'd length-n string at the reader's current position.
+ *
+ * \param reader The reader to read from.
+ * \param n The number of bytes to read.
+ */
+static char *read_string_n(ObjectReader *reader, size_t n) {
+    char *out = d_malloc(n);
+    memcpy(out, reader->obj + reader->ptr, n);
+    reader->ptr += n;
+    return out;
+}
+
+/**
+ * \fn static char *read_string(ObjectReader *reader)
+ * \brief Read a malloc'd string from an object reader. The end of the string
+ * is determined by where the next \0 character is.
+ *
+ * \return The malloc'd string at the reader's current position.
+ *
+ * \param reader The reader to read from.
+ */
+static char *read_string(ObjectReader *reader) {
+    size_t nameLen = strlen(reader->obj + reader->ptr);
+    return read_string_n(reader, nameLen + 1);
+}
+
+/**
+ * \fn static duint read_uinteger(ObjectReader *reader)
+ * \brief Read an unsigned integer from an object reader.
+ *
+ * \return The unsigned integer at the reader's current position.
+ *
+ * \param reader The reader to read from.
+ */
+static duint read_uinteger(ObjectReader *reader) {
+    duint out = *(duint *)(reader->obj + reader->ptr);
+    reader->ptr += sizeof(duint);
+    return out;
+}
+
+/**
+ * \fn static SocketMeta read_socket_meta(ObjectWriter *writer, bool hasName,
+ *                                        bool hasDefault)
+ * \brief Read socket metadata from an object reader.
+ *
+ * \return The socket metadata at the reader's current position.
+ *
+ * \param reader The reader to read from.
+ * \param hasName Should we read the name as well?
+ * \param hasDefault Should we read the default value as well?
+ */
+static SocketMeta read_socket_meta(ObjectReader *reader, bool hasName,
+                                   bool hasDefault) {
+    SocketMeta out = {NULL, NULL, TYPE_NONE, {0}};
+
+    if (hasName) {
+        out.name = read_string(reader);
+    }
+
+    out.description = read_string(reader);
+    out.type        = read_byte(reader);
+
+    if (hasDefault) {
+        if (out.type == TYPE_STRING) {
+            out.defaultValue.stringValue = read_string(reader);
+        } else {
+            out.defaultValue.integerValue = read_uinteger(reader);
+        }
+    }
+
+    return out;
+}
+
+/**
+ * \fn static NodeDefinition read_definition(ObjectReader *reader, bool hasName)
+ * \brief Read a node definition from an object reader.
+ *
+ * \return The node definition at the reader's current position.
+ *
+ * \param reader The reader to read from.
+ * \param hasName Should we read the name as well?
+ */
+static NodeDefinition read_definition(ObjectReader *reader, bool hasName) {
+    NodeDefinition def = {NULL, NULL, NULL, 0, 0, false};
+
+    if (hasName) {
+        def.name = read_string(reader);
+    }
+
+    def.description = read_string(reader);
+
+    def.numSockets       = read_uinteger(reader);
+    def.startOutputIndex = read_uinteger(reader);
+
+    def.infiniteInputs = false;
+
+    SocketMeta *sockets = d_malloc(def.numSockets * sizeof(SocketMeta));
+
+    for (size_t i = 0; i < def.numSockets; i++) {
+        SocketMeta meta = read_socket_meta(reader, true, true);
+        sockets[i]      = meta;
+    }
+
+    *(SocketMeta **)(&(def.sockets)) = sockets;
+
+    return def;
+}
 
 /*
 === WRITER FUNCTIONS ======================================
@@ -142,25 +312,29 @@ static void write_uinteger(ObjectWriter *writer, duint uinteger) {
 
 /**
  * \fn static void write_socket_meta(ObjectWriter *writer,
- *                                   const SocketMeta meta, bool writeName)
+ *                                   const SocketMeta meta, bool writeName,
+ *                                   bool writeDefault)
  * \brief Write socket metadata onto the end of an object writer.
  *
  * \param writer The writer to write the socket to.
  * \param meta The socket metadata to write.
  * \param writeName Do we write the name onto the writer?
+ * \param writeDefault Do we write the default value onto the writer?
  */
 static void write_socket_meta(ObjectWriter *writer, const SocketMeta meta,
-                              bool writeName) {
+                              bool writeName, bool writeDefault) {
     if (writeName) {
         write_string(writer, meta.name);
     }
     write_string(writer, meta.description);
     write_byte(writer, meta.type);
 
-    if (meta.type == TYPE_STRING) {
-        write_string(writer, meta.defaultValue.stringValue);
-    } else {
-        write_uinteger(writer, meta.defaultValue.integerValue);
+    if (writeDefault) {
+        if (meta.type == TYPE_STRING) {
+            write_string(writer, meta.defaultValue.stringValue);
+        } else {
+            write_uinteger(writer, meta.defaultValue.integerValue);
+        }
     }
 }
 
@@ -185,7 +359,7 @@ static void write_definition(ObjectWriter *writer, const NodeDefinition def,
 
     for (size_t i = 0; i < def.numSockets; i++) {
         const SocketMeta meta = def.sockets[i];
-        write_socket_meta(writer, meta, true);
+        write_socket_meta(writer, meta, true, true);
     }
 }
 
@@ -218,6 +392,42 @@ static int find_link(LinkMetaList list, const char *name, LinkType type) {
     }
 
     return -1;
+}
+
+/**
+ * \fn static void push_index(IndexList *list, size_t index)
+ * \brief Add an index to an index list.
+ *
+ * \param list The list to add the index to.
+ * \param index The index to add.
+ */
+static void push_index(IndexList *list, size_t index) {
+    list->length++;
+
+    const size_t newAlloc = list->length * sizeof(size_t);
+
+    if (list->indexList == NULL) {
+        list->indexList = d_malloc(newAlloc);
+    } else {
+        list->indexList = d_realloc(list->indexList, newAlloc);
+    }
+
+    list->indexList[list->length - 1] = index;
+}
+
+/**
+ * \fn static void free_index_list(IndexList *list)
+ * \brief Free the contents of an index list.
+ *
+ * \param list The index list to free.
+ */
+static void free_index_list(IndexList *list) {
+    if (list->indexList != NULL) {
+        free(list->indexList);
+    }
+
+    list->indexList = NULL;
+    list->length    = 0;
 }
 
 /**
@@ -362,7 +572,7 @@ const char *d_obj_generate(Sheet *sheet, size_t *size) {
 
             if (linkIndex >= 0) {
                 write_uinteger(&writer, linkIndex);
-                write_socket_meta(&writer, varMeta, false);
+                write_socket_meta(&writer, varMeta, false, false);
             }
         }
     }
@@ -386,41 +596,7 @@ const char *d_obj_generate(Sheet *sheet, size_t *size) {
     }
 
     // .c
-    // If the sheet doesn't use any C functions, don't bother putting anything
-    // here.
-    size_t numCFunctionsUsed = 0;
-
-    for (size_t i = 0; i < sheet->_link.size; i++) {
-        LinkMeta meta = sheet->_link.list[i];
-
-        if (meta.type == LINK_CFUNCTION) {
-            numCFunctionsUsed++;
-        }
-    }
-
-    if (numCFunctionsUsed > 0) {
-        write_string_n(&writer, ".c", 2);
-        write_uinteger(&writer, numCFunctionsUsed);
-
-        for (size_t i = 0; i < sheet->_link.size; i++) {
-            LinkMeta meta = sheet->_link.list[i];
-
-            if (meta.type == LINK_CFUNCTION) {
-                CFunction *cFunc          = (CFunction *)meta.meta;
-                const NodeDefinition cDef = cFunc->definition;
-
-                int linkIndex =
-                    find_link(sheet->_link, cDef.name, LINK_CFUNCTION);
-
-                // TODO: Error if the index is invalid.
-
-                if (linkIndex >= 0) {
-                    write_uinteger(&writer, linkIndex);
-                    write_definition(&writer, cDef, false);
-                }
-            }
-        }
-    }
+    // TODO: DO!
 
     *size = writer.len;
     return (const char *)writer.obj;
@@ -447,384 +623,233 @@ Sheet *d_obj_load(const char *obj, size_t size, const char *filePath) {
     // TODO: Account for edianness in the instructions, and also for variables
     // in the data section.
 
-    // A pointer to parse through the content.
-    char *ptr = (char *)obj;
-
-    // We need to check that there is a 'D' character at the start.
-    if (*ptr != 'D') {
-        printf("%s cannot be loaded: object file is not a valid object file.\n",
-               filePath);
-        out->hasErrors = true;
-        return out;
-    }
-    ptr++;
+    ObjectReader reader        = {NULL, 0, 0};
+    reader.obj                 = obj;
+    *(size_t *)(&(reader.len)) = size;
 
 // We need to check if sizeof(dint) is the same as it is in the object.
 #ifdef DECISION_32
-    if (strncmp(ptr, "32", 2) != 0) {
+    if (!reader_test_string_n(&reader, "D32", 3)) {
         printf("%s cannot be loaded: object file is not 32-bit.\n", filePath);
         out->hasErrors = true;
         return out;
     }
 #else
-    if (strncmp(ptr, "64", 2) != 0) {
+    if (!reader_test_string_n(&reader, "D64", 3)) {
         printf("%s cannot be loaded: object file is not 64-bit.\n", filePath);
         out->hasErrors = true;
         return out;
     }
 #endif // DECISION_32
-    ptr += 2;
-
-    // END OF METADATA
-    // Now, we check for each section.
-    duint sizeOfSection;
-    while ((size_t)(ptr - obj) < size) {
-        if (strncmp(ptr, ".text", 5) == 0) {
-            ptr += 5;
-            sizeOfSection = *((duint *)ptr);
-            ptr += sizeof(duint);
-
-            // Extract the machine code.
-            out->_text = (char *)d_malloc(sizeOfSection);
-            memcpy(out->_text, ptr, sizeOfSection);
-
-            // Make sure we get the size correct, and move on.
-            out->_textSize = (size_t)(sizeOfSection);
-            ptr += sizeOfSection;
-        } else if (strncmp(ptr, ".main", 5) == 0) {
-            ptr += 5;
-            out->_main = (size_t)(*((duint *)ptr));
-            ptr += sizeof(duint);
-        } else if (strncmp(ptr, ".data", 5) == 0) {
-            ptr += 5;
-            sizeOfSection = *((duint *)ptr);
-            ptr += sizeof(duint);
-
-            // Extract the data.
-            out->_data = (char *)d_malloc(sizeOfSection);
-            memcpy(out->_data, ptr, sizeOfSection);
-
-            // Make sure we get the size correct, and move on.
-            out->_dataSize = (size_t)(sizeOfSection);
-            ptr += sizeOfSection;
-
-        } else if (strncmp(ptr, ".lmeta", 6) == 0) {
-            ptr += 6;
-            sizeOfSection = *((duint *)ptr);
-            ptr += sizeof(duint);
-
-            char *startOfData = ptr;
-
-            // Extract the data.
-            out->_link = d_link_new_meta_list();
-            while ((size_t)(ptr - startOfData) < sizeOfSection) {
-                LinkMeta lm;
-
-                lm.type = *ptr;
-                ptr++;
-
-                size_t strLen = strlen(ptr);
-                char *name    = (char *)d_malloc(strLen + 1);
-                memcpy(name, ptr, strLen + 1);
-                lm.name = (const char *)name;
-                ptr += strLen + 1;
-
-                lm._ptr = (char *)(*((dint *)ptr));
-                ptr += sizeof(dint);
-
-                // If the metadata isn't in our sheet, then we don't know where
-                // it is at all. This will need to be found out at link time.
-                if (lm._ptr == (char *)-1)
-                    lm.meta = (void *)-1;
-
-                d_link_meta_list_push(&out->_link, lm);
-            }
-        } else if (strncmp(ptr, ".link", 5) == 0) {
-            ptr += 5;
-            sizeOfSection = *((duint *)ptr);
-            ptr += sizeof(duint);
-
-            size_t numElements = sizeOfSection / (2 * sizeof(duint));
-
-            // Extract the data.
-            out->_insLinkList = (InstructionToLink *)d_malloc(
-                numElements * sizeof(InstructionToLink));
-            out->_insLinkListSize = numElements;
-            for (size_t i = 0; i < numElements; i++) {
-                InstructionToLink itl;
-
-                itl.ins = (size_t)(*((duint *)ptr));
-                ptr += sizeof(duint);
-
-                itl.link = (size_t)(*((duint *)ptr));
-                ptr += sizeof(duint);
-
-                out->_insLinkList[i] = itl;
-            }
-        } else if (strncmp(ptr, ".func", 5) == 0) {
-            // TODO: Make sure this sections runs after the .lmeta section, as
-            // we need to make sure we can access the array!
-
-            ptr += 5;
-            sizeOfSection = *((duint *)ptr);
-            ptr += sizeof(duint);
-
-            char *startOfData = ptr;
-
-            // We need to make sure that the entries in the LinkMetaList of the
-            // sheet point to these SheetFunctions we are about to make. But
-            // we can only link them once we've created the array of functions
-            // fully, as reallocing *may* move the address of the array.
-            size_t *funcMetaIndexList    = NULL;
-            size_t funcMetaIndexListSize = 0;
-
-            while ((size_t)(ptr - startOfData) < sizeOfSection) {
-                // Extract the data for this function.
-                size_t metaListIndex = (size_t)(*((duint *)ptr));
-                ptr += sizeof(duint);
-
-                NodeDefinition funcDef = read_node_definition(&ptr);
-
-                // Add the function to the sheet.
-                d_sheet_add_function(out, funcDef);
-
-                // Add the LinkMetaList index to the dynamic array we are
-                // creating.
-                funcMetaIndexListSize++;
-
-                if (funcMetaIndexListSize == 1) {
-                    funcMetaIndexList = (size_t *)d_malloc(sizeof(size_t));
-                } else {
-                    funcMetaIndexList = (size_t *)d_realloc(
-                        funcMetaIndexList,
-                        funcMetaIndexListSize * sizeof(size_t));
-                }
-
-                funcMetaIndexList[funcMetaIndexListSize - 1] = metaListIndex;
-            }
-
-            // Now the function array has been fully created, we can now safely
-            // point to the functions.
-            for (size_t i = 0; i < funcMetaIndexListSize; i++) {
-                size_t varMetaIndex = funcMetaIndexList[i];
-
-                // NOTE: This assumes there were no functions in the sheet
-                // beforehand.
-                out->_link.list[varMetaIndex].meta =
-                    (void *)(out->functions + i);
-            }
-
-            free(funcMetaIndexList);
-        } else if (strncmp(ptr, ".var", 4) == 0) {
-            // TODO: Make sure this sections runs after the .lmeta section, as
-            // we need to make sure we can access the array!
-
-            ptr += 4;
-            sizeOfSection = *((duint *)ptr);
-            ptr += sizeof(duint);
-
-            char *startOfData = ptr;
-
-            // We need to make sure that the entries in the LinkMetaList of the
-            // sheet point to these SheetVariables we are about to make. But
-            // we can only link them once we've created the array of variables
-            // fully, as reallocing *may* move the address of the array.
-            size_t *varMetaIndexList    = NULL;
-            size_t varMetaIndexListSize = 0;
-
-            while ((size_t)(ptr - startOfData) < sizeOfSection) {
-                // Extract the data.
-                size_t varMetaIndex = *((duint *)ptr);
-                ptr += sizeof(duint);
-
-                // TODO: The default value is already in the data section!
-                SocketMeta varMeta = read_socket_meta(&ptr);
-
-                // Add the variable to the sheet.
-                d_sheet_add_variable(out, varMeta);
-
-                // Add the LinkMetaList index to the dynamic array we are
-                // creating.
-                varMetaIndexListSize++;
-
-                if (varMetaIndexListSize == 1) {
-                    varMetaIndexList = (size_t *)d_malloc(sizeof(size_t));
-                } else {
-                    varMetaIndexList = (size_t *)d_realloc(
-                        varMetaIndexList,
-                        varMetaIndexListSize * sizeof(size_t));
-                }
-
-                varMetaIndexList[varMetaIndexListSize - 1] = varMetaIndex;
-            }
-
-            // Now the variable array has been fully created, we can now safely
-            // point to the variables.
-            for (size_t i = 0; i < varMetaIndexListSize; i++) {
-                size_t varMetaIndex = varMetaIndexList[i];
-
-                // NOTE: This assumes there were no variables in the sheet
-                // beforehand.
-                out->_link.list[varMetaIndex].meta =
-                    (void *)(out->variables + i);
-            }
-
-            free(varMetaIndexList);
-        } else if (strncmp(ptr, ".incl", 5) == 0) {
-            ptr += 5;
-            sizeOfSection = *((duint *)ptr);
-            ptr += sizeof(duint);
-
-            char *startOfData = ptr;
-
-            char *includeFilePath;
-
-            while ((size_t)(ptr - startOfData) < sizeOfSection) {
-                size_t filePathLen = strlen(ptr);
-
-                includeFilePath = (char *)d_malloc(filePathLen + 1);
-                memcpy(includeFilePath, ptr, filePathLen + 1);
-
-                Sheet *includedSheet =
-                    d_sheet_add_include_from_path(out, includeFilePath);
-
-                if (includedSheet->hasErrors) {
-                    ERROR_COMPILER(out->filePath, 0, true,
-                                   "Included sheet %s produced errors",
-                                   includedSheet->filePath);
-                }
-
-                // When the file path enters the sheet, it is copied, so we can
-                // safely free the file path here.
-                free(includeFilePath);
-
-                ptr += filePathLen + 1;
-            }
-        } else if (strncmp(ptr, ".c", 2) == 0) {
-            // TODO: Make sure this sections runs after the .lmeta section, as
-            // we need to make sure we can access the array!
-
-            ptr += 2;
-            sizeOfSection = *((duint *)ptr);
-            ptr += sizeof(duint);
-
-            char *startOfData = ptr;
-            /*
-            while ((size_t)(ptr - startOfData) < sizeOfSection) {
-                // The name of the function.
-                char *funcName = ptr;
-                ptr += strlen(funcName) + 1;
-
-                // The input array.
-                DType *inputs = (DType *)ptr;
-
-                while (*((DType *)ptr) != TYPE_NONE) {
-                    ptr += sizeof(DType);
-                }
-
-                ptr += sizeof(DType); // Skip over the TYPE_NONE.
-
-                // The output array.
-                DType *outputs = (DType *)ptr;
-
-                while (*((DType *)ptr) != TYPE_NONE) {
-                    ptr += sizeof(DType);
-                }
-
-                ptr += sizeof(DType); // Skip over the TYPE_NONE.
-
-                // We have all the information we need - now we need to make
-                // sure the C function the object described exists.
-                bool cFuncFound  = false;
-                CFunction *cFunc = NULL;
-
-                size_t numCFunctions = d_get_num_c_functions();
-                for (size_t cIndex = 0; cIndex < numCFunctions; cIndex++) {
-                    cFunc = (CFunction *)d_get_c_functions() + cIndex;
-
-                    // Does it have the same name?
-                    if (strcmp(cFunc->name, funcName) == 0) {
-
-                        // Does it have the same number of inputs and outputs?
-                        size_t numInputs = 0, numOutputs = 0;
-                        DType *typePtr;
-
-                        for (typePtr = inputs; *typePtr != TYPE_NONE;
-                             typePtr++) {
-                            numInputs++;
-                        }
-
-                        for (typePtr = outputs; *typePtr != TYPE_NONE;
-                             typePtr++) {
-                            numOutputs++;
-                        }
-
-                        if ((cFunc->numInputs == numInputs) &&
-                            (cFunc->numOutputs == numOutputs)) {
-
-                            // Are the input and output types the same?
-                            bool sameInputs = true, sameOutputs = true;
-
-                            typePtr           = inputs;
-                            DType *typePtrDef = (DType *)cFunc->inputs;
-                            for (size_t i = 0; i < numInputs; i++) {
-                                if (*typePtr != *typePtrDef) {
-                                    sameInputs = false;
-                                    break;
-                                }
-                                typePtr++;
-                                typePtrDef++;
-                            }
-
-                            typePtr    = outputs;
-                            typePtrDef = (DType *)cFunc->outputs;
-                            for (size_t i = 0; i < numOutputs; i++) {
-                                if (*typePtr != *typePtrDef) {
-                                    sameOutputs = false;
-                                    break;
-                                }
-                                typePtr++;
-                                typePtrDef++;
-                            }
-
-                            if (sameInputs && sameOutputs) {
-                                // Then we've found the C function!
-                                cFuncFound = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                if (cFuncFound) {
-                    // Great! We just need to edit the LinkMeta entry to point
-                    // to the CFunction.
-                    for (size_t linkMetaIndex = 0;
-                         linkMetaIndex < out->_link.size; linkMetaIndex++) {
-                        LinkMeta *meta = out->_link.list + linkMetaIndex;
-
-                        if (meta->type == LINK_CFUNCTION) {
-                            if (strcmp(meta->name, funcName) == 0) {
-                                meta->meta = cFunc;
-                            }
-                        }
-                    }
-                } else {
-                    ERROR_COMPILER(out->filePath, 0, true,
-                                   "Sheet requires a C function %s to work",
-                                   funcName);
-                }
-            }
-            */
-        } else if (strncmp(ptr, ".\0", 2) == 0) {
-            // We've reached the end, stop parsing.
-            break;
-        } else {
-            // We don't recognise this bit, keep going until we find a bit we
-            // do recognise.
-            ptr++;
-        }
+    else {
+        printf("%s cannot be loaded: object file is not a valid object file.\n",
+               filePath);
+        out->hasErrors = true;
+        return out;
     }
+
+    // .text
+    if (reader_test_string_n(&reader, ".text", 5)) {
+        size_t textSize = read_uinteger(&reader);
+        char *text      = read_string_n(&reader, textSize);
+
+        out->_text     = text;
+        out->_textSize = textSize;
+    } else {
+        out->_text     = NULL;
+        out->_textSize = 0;
+    }
+
+    // .main
+    if (reader_test_string_n(&reader, ".main", 5)) {
+        out->_main = read_uinteger(&reader);
+    } else {
+        out->_main = 0;
+    }
+
+    // .data
+    if (reader_test_string_n(&reader, ".data", 5)) {
+        size_t dataSize = read_uinteger(&reader);
+        char *data      = read_string_n(&reader, dataSize);
+
+        out->_data     = data;
+        out->_dataSize = dataSize;
+    } else {
+        out->_data     = NULL;
+        out->_dataSize = 0;
+    }
+
+    // .lmeta
+    if (reader_test_string_n(&reader, ".lmeta", 6)) {
+        size_t numMeta = read_uinteger(&reader);
+
+        for (size_t i = 0; i < numMeta; i++) {
+            LinkMeta meta;
+
+            meta.type = read_byte(&reader);
+            meta.name = read_string(&reader);
+            meta._ptr = read_uinteger(&reader);
+
+            // If the metadata isn't in our sheet, then we don't know where it
+            // is at all. This will need to be found out at link time.
+            if (meta._ptr == (char *)-1) {
+                meta.meta = (void *)-1;
+            }
+
+            d_link_meta_list_push(&(out->_link), meta);
+        }
+    } else {
+        out->_link.list = NULL;
+        out->_link.size = 0;
+    }
+
+    // .link
+    if (reader_test_string_n(&reader, ".link", 5)) {
+        size_t numLinks = read_uinteger(&reader);
+
+        out->_insLinkList     = d_malloc(numLinks * sizeof(InstructionToLink));
+        out->_insLinkListSize = numLinks;
+
+        for (size_t i = 0; i < numLinks; i++) {
+            InstructionToLink itl;
+
+            itl.ins  = read_uinteger(&reader);
+            itl.link = read_uinteger(&reader);
+
+            out->_insLinkList[i] = itl;
+        }
+    } else {
+        out->_insLinkList     = NULL;
+        out->_insLinkListSize = 0;
+    }
+
+    // .func
+    if (reader_test_string_n(&reader, ".func", 5)) {
+        size_t numFunctions = read_uinteger(&reader);
+
+        // We need to make sure that the entries in the LinkMetaList of the
+        // sheet point to these SheetFunctions we are about to make. But we can
+        // only link them once we've created the array of functions fully, as
+        // reallocing *may* move the address of the array.
+        IndexList funcMetaIndexList = {NULL, 0};
+
+        for (size_t i = 0; i < numFunctions; i++) {
+            // TODO: Error if the index is out of bounds.
+            size_t metaLinkIndex = read_uinteger(&reader);
+
+            // Copy the name of the function from the link meta list.
+            char *name      = out->_link.list[metaLinkIndex].name;
+            size_t nameSize = strlen(name) + 1;
+            char *newName   = d_malloc(nameSize);
+            strcpy(newName, name);
+
+            NodeDefinition funcDef = read_definition(&reader, false);
+            funcDef.name           = newName;
+
+            // Add the function to the sheet.
+            d_sheet_add_function(out, funcDef);
+
+            // Add the LinkMetaList index to the dynamic array we are creating.
+            push_index(&funcMetaIndexList, metaLinkIndex);
+        }
+
+        // Now the function array has been fully created, we can now safely
+        // point to the functions.
+        for (size_t i = 0; i < funcMetaIndexList.length; i++) {
+            size_t funcMetaIndex = funcMetaIndexList.indexList[i];
+
+            // NOTE: This assumes there were no functions in the sheet
+            // beforehand.
+            out->_link.list[funcMetaIndex].meta = (void *)(out->functions + i);
+        }
+
+        free_index_list(&funcMetaIndexList);
+    } else {
+        out->functions    = NULL;
+        out->numFunctions = 0;
+    }
+
+    // .var
+    if (reader_test_string_n(&reader, ".var", 4)) {
+        size_t numVars = read_uinteger(&reader);
+
+        // We need to make sure that the entries in the LinkMetaList of the
+        // sheet point to these SheetVariables we are about to make. But we can
+        // only link them once we've created the array of variables fully, as
+        // reallocing *may* move the address of the array.
+        IndexList varMetaIndexList = {NULL, 0};
+
+        for (size_t i = 0; i < numVars; i++) {
+            // TODO: Error if the index is out of bounds.
+            size_t metaLinkIndex = read_uinteger(&reader);
+
+            SocketMeta varMeta = read_socket_meta(&reader, false, false);
+
+            LinkMeta varLinkMeta = out->_link.list[metaLinkIndex];
+
+            // Reference the name of the function from the link meta list.
+            varMeta.name = varLinkMeta.name;
+
+            // Reference the default value from the data section.
+            char *ptr = out->_data + (size_t)varLinkMeta._ptr;
+
+            if (varMeta.type == TYPE_BOOL) {
+                varMeta.defaultValue.integerValue = *ptr;
+            } else if (varMeta.type == TYPE_STRING) {
+                varMeta.defaultValue.stringValue = *(dint *)ptr;
+            } else {
+                varMeta.defaultValue.integerValue = *(dint *)ptr;
+            }
+
+            // Add the variable to the sheet.
+            d_sheet_add_variable(out, varMeta);
+
+            // Add the LinkMetaList index to the dynamic array we are creating.
+            push_index(&varMetaIndexList, metaLinkIndex);
+        }
+
+        // Now the variable array has been fully created, we can now safely
+        // point to the variables.
+        for (size_t i = 0; i < varMetaIndexList.length; i++) {
+            size_t funcMetaIndex = varMetaIndexList.indexList[i];
+
+            // NOTE: This assumes there were no variables in the sheet
+            // beforehand.
+            out->_link.list[funcMetaIndex].meta = (void *)(out->variables + i);
+        }
+
+        free_index_list(&varMetaIndexList);
+    } else {
+        out->variables    = NULL;
+        out->numVariables = 0;
+    }
+
+    // .incl
+    if (reader_test_string_n(&reader, ".incl", 5)) {
+        size_t numIncludes = read_uinteger(&reader);
+
+        for (size_t i = 0; i < numIncludes; i++) {
+            const char *path = read_string(&reader);
+
+            Sheet *include = d_sheet_add_include_from_path(out, path);
+
+            if (include->hasErrors) {
+                ERROR_COMPILER(out->filePath, 0, true,
+                               "Included sheet %s produced errors",
+                               include->filePath);
+            }
+
+            // When the file path enters the sheet, it is copied, so we can
+            // safely free our copy here.
+            free((char *)path);
+        }
+    } else {
+        out->includes    = NULL;
+        out->numIncludes = 0;
+    }
+
+    // .c
+    // TODO: DO!
 
     return out;
 }
