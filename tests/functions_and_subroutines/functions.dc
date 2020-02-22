@@ -36,10 +36,10 @@ Equal(#22, 0)~#23
 Return(IsDivisor, #23)
 
 > function that uses Ternary node
-[Function(CanDrink, "Determines if someone is allowed to drink.")]
+[Function(CanDrink, "Determine if someone is allowed to drink in the UK given their age.")]
 [FunctionInput(CanDrink, age, Integer, 0)]
 [FunctionOutput(CanDrink, allowedToDrink, Boolean)]
-[FunctionOutput(CanDrink, reason, Integer)]
+[FunctionOutput(CanDrink, canDrinkIn, Integer, "If they are not allowed to drink now, how many years will it be before they can?")]
 
 Define(CanDrink)~#30
 MoreThanOrEqual(#30, 18)~#31

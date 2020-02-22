@@ -909,7 +909,7 @@ BCode d_generate_call(BuildContext *context, size_t nodeIndex) {
         isSubroutine = d_is_execution_definition(&funcDef);
     }
 
-    size_t numInputs = numArgs;
+    size_t numInputs  = numArgs;
     size_t numOutputs = numRets;
 
     // If it is a subroutine, we don't want to count the execution sockets.
@@ -1113,9 +1113,9 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
         context->stackTop = stackTopBefore;
 
         // Finally, get the bytecode for the false input.
-        NodeSocket falseSocket = socket;
-        falseSocket.socketIndex     = 2;
-        BCode falseCode        = {NULL, 0};
+        NodeSocket falseSocket  = socket;
+        falseSocket.socketIndex = 2;
+        BCode falseCode         = {NULL, 0};
 
         if (!boolIsLiteral || !boolLiteralValue) {
             falseCode = d_push_input(context, falseSocket, false);
@@ -1184,11 +1184,19 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
             // Since the boolean is going to get poped off by the JRCONFI
             // instruction, copy it on the stack in case other nodes still need
             // its value.
-            if (d_socket_num_connections(context->graph, socket) > 1) {
-                BCode copyBool = d_bytecode_ins(OP_GETFI);
-                d_bytecode_set_fimmediate(copyBool, 1, 0);
-                d_concat_bytecode(&out, &copyBool);
-                d_free_bytecode(&boolCode);
+            socket.socketIndex = 0;
+            int wireIndex      = d_wire_find_first(context->graph, socket);
+
+            if (IS_WIRE_FROM(context->graph, wireIndex, socket)) {
+                NodeSocket connSocket =
+                    context->graph.wires[wireIndex].socketTo;
+
+                if (d_socket_num_connections(context->graph, connSocket) > 1) {
+                    BCode copyBool = d_bytecode_ins(OP_GETFI);
+                    d_bytecode_set_fimmediate(copyBool, 1, 0);
+                    d_concat_bytecode(&out, &copyBool);
+                    d_free_bytecode(&boolCode);
+                }
             }
 
             // At the end of the false code, we need to add a JRFI to jump over
@@ -2193,7 +2201,7 @@ void d_codegen_compile(Sheet *sheet) {
         if (metaInList == NULL) {
             // But first, copy the name.
             size_t nameLen = strlen(meta.name) + 1;
-            char *newName = d_malloc(nameLen);
+            char *newName  = d_malloc(nameLen);
             memcpy(newName, meta.name, nameLen);
             meta.name = newName;
 
