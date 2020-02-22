@@ -103,14 +103,7 @@ int main() {
     // d_sheet_free
     d_sheet_free(sheet);
 
-    FILE *file;
-
-#ifdef DECISION_SAFE_FUNCTIONS
-    fopen_s(&file, "main.dc", "w");
-#else
-    file = fopen("main.dc", "w");
-#endif // DECISION_SAFE_FUNCTIONS
-
+    FILE *file = fopen("main.dc", "w");
     fprintf(file, "%s", src);
     fclose(file);
 

@@ -25,12 +25,7 @@
 #include <stdio.h>
 
 void write_source_file() {
-    FILE *file;
-#ifdef DECISION_SAFE_FUNCTIONS
-    fopen_s(&file, "main.dc", "w");
-#else
-    file = fopen("main.dc", "w");
-#endif // DECISION_SAFE_FUNCTIONS
+    FILE *file = fopen("main.dc", "w");
 
     fprintf(file, "Start~#1\nPrint(#1, 'Hello, world!')");
     fclose(file);

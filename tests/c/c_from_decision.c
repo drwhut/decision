@@ -124,13 +124,7 @@ int main() {
     STOP_CAPTURE_STDOUT()
     ASSERT_CAPTURED_STDOUT(answer)
 
-    FILE *file;
-
-#ifdef DECISION_SAFE_FUNCTIONS
-    fopen_s(&file, "main.dc", "w");
-#else
-    file = fopen("main.dc", "w");
-#endif // DECISION_SAFE_FUNCTIONS
+    FILE *file = fopen("main.dc", "w");
 
     fprintf(file, "%s", src);
     fclose(file);
