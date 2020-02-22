@@ -34,6 +34,8 @@ void write_source_file() {
 int main() {
     write_source_file();
 
+    printf("So putting this here fixes testing on Linux? Ok.\n");
+
     // d_load_source_file
     Sheet *sheet = d_load_source_file("main.dc", NULL);
 
