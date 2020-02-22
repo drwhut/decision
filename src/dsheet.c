@@ -174,6 +174,20 @@ void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef) {
 }
 
 /**
+ * \fn void d_sheet_add_c_function(Sheet *sheet, CFunction *cFunction)
+ * \brief Add a C function to a sheet.
+ *
+ * **NOTE:** To create a C function, have a look at `dcfunc.h`.
+ *
+ * \param sheet The sheet to add the C function to.
+ * \param cFunction The C function to add.
+ */
+void d_sheet_add_c_function(Sheet *sheet, CFunction *cFunction) {
+    CFunction cFunc = *cFunction;
+    LIST_PUSH(sheet->cFunctions, CFunction *, sheet->numCFunctions, cFunc);
+}
+
+/**
  * \fn bool d_is_subroutine(SheetFunction func)
  * \brief Is the given function a subroutine?
  *
@@ -296,6 +310,8 @@ Sheet *d_sheet_create(const char *filePath) {
     sheet->numVariables     = 0;
     sheet->functions        = NULL;
     sheet->numFunctions     = 0;
+    sheet->cFunctions       = NULL;
+    sheet->numCFunctions    = 0;
     sheet->graph            = EMPTY_GRAPH;
     sheet->startNodeIndex   = -1;
     sheet->numStarts        = 0;
@@ -358,6 +374,18 @@ void d_sheet_free(Sheet *sheet) {
             free(sheet->functions);
             sheet->functions    = NULL;
             sheet->numFunctions = 0;
+        }
+
+        if (sheet->cFunctions != NULL) {
+            for (size_t i = 0; i < sheet->numCFunctions; i++) {
+                CFunction cFunc = sheet->cFunctions[i];
+
+                d_definition_free(cFunc.definition, true);
+            }
+
+            free(sheet->cFunctions);
+            sheet->cFunctions    = NULL;
+            sheet->numCFunctions = 0;
         }
 
         if (sheet->includes != NULL) {
