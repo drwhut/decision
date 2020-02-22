@@ -33,9 +33,9 @@ static const SocketMeta CORE_FUNC_SOCKETS[NUM_CORE_FUNCTIONS][7] = {
         {"output", "The addition of all the inputs.", TYPE_NUMBER, {0}}
     },
     { // CORE_AND
-        {"input1", "The first integer or boolean input.", TYPE_INT | TYPE_BOOL, {0}},
-        {"input2", "The second integer or boolean input.", TYPE_INT | TYPE_BOOL, {0}},
-        {"output", "The bitwise AND of the two inputs.", TYPE_INT | TYPE_BOOL, {0}}
+        {"input1", "The first integer or boolean input.", TYPE_BITWISE, {0}},
+        {"input2", "The second integer or boolean input.", TYPE_BITWISE, {0}},
+        {"output", "The bitwise AND of the two inputs.", TYPE_BITWISE, {0}}
     },
     { // CORE_DIV
         {"dividend", "The dividend of the division.", TYPE_NUMBER, {0}},
@@ -109,8 +109,8 @@ static const SocketMeta CORE_FUNC_SOCKETS[NUM_CORE_FUNCTIONS][7] = {
         {"output", "The multiplication of all the inputs.", TYPE_NUMBER, {0}}
     },
     { // CORE_NOT
-        {"input", "The integer or boolean input.", TYPE_INT | TYPE_BOOL, {0}},
-        {"output", "The bitwise NOT of the input.", TYPE_INT | TYPE_BOOL, {0}}
+        {"input", "The integer or boolean input.", TYPE_BITWISE, {0}},
+        {"output", "The bitwise NOT of the input.", TYPE_BITWISE, {0}}
     },
     { // CORE_NOT_EQUAL
         {"input1", "The first input.", TYPE_VAR_ANY, {0}},
@@ -118,9 +118,9 @@ static const SocketMeta CORE_FUNC_SOCKETS[NUM_CORE_FUNCTIONS][7] = {
         {"output", "True if the two inputs are not equal, false otherwise.", TYPE_BOOL, {0}}   
     },
     { // CORE_OR
-        {"input1", "The first integer or boolean input.", TYPE_INT | TYPE_BOOL, {0}},
-        {"input2", "The second integer or boolean input.", TYPE_INT | TYPE_BOOL, {0}},
-        {"output", "The bitwise OR of the two inputs.", TYPE_INT | TYPE_BOOL, {0}}   
+        {"input1", "The first integer or boolean input.", TYPE_BITWISE, {0}},
+        {"input2", "The second integer or boolean input.", TYPE_BITWISE, {0}},
+        {"output", "The bitwise OR of the two inputs.", TYPE_BITWISE, {0}}   
     },
     { // CORE_PRINT
         {"before", "The node will print the value when this input is activated.", TYPE_EXECUTION, {0}},
@@ -151,9 +151,9 @@ static const SocketMeta CORE_FUNC_SOCKETS[NUM_CORE_FUNCTIONS][7] = {
         {"after", "This output will activate when the while loop is over.", TYPE_EXECUTION, {0}}
     },
     { // CORE_XOR
-        {"input1", "The first integer or boolean input.", TYPE_INT | TYPE_BOOL, {0}},
-        {"input2", "The second integer or boolean input.", TYPE_INT | TYPE_BOOL, {0}},
-        {"output", "The bitwise XOR of the two inputs.", TYPE_INT | TYPE_BOOL, {0}}  
+        {"input1", "The first integer or boolean input.", TYPE_BITWISE, {0}},
+        {"input2", "The second integer or boolean input.", TYPE_BITWISE, {0}},
+        {"output", "The bitwise XOR of the two inputs.", TYPE_BITWISE, {0}}  
     }
 };
 
