@@ -124,21 +124,16 @@ static void get_name_definitions_recursive(Sheet *sheet, const char *name,
     }
 
     // It could also be a C function.
-    size_t numCFunctions = d_get_num_c_functions();
-
-    if (numCFunctions > 0) {
-        const CFunction *cFunctionList = d_get_c_functions();
-
+    if (sheet->cFunctions != NULL && sheet->numCFunctions > 0) {
         size_t hits = 0;
-        for (size_t i = 0; i < numCFunctions; i++) {
-            if (strcmp(cFunctionList[i].definition.name, name) == 0) {
+        for (size_t i = 0; i < sheet->numCFunctions; i++) {
+            if (strcmp(name, sheet->cFunctions[i].definition.name) == 0) {
                 hits++;
 
                 NameDefinition definition;
                 definition.sheet = sheet;
-                definition.type  = NAME_CFUNCTION;
-                definition.definition.cFunction =
-                    (CFunction *)cFunctionList + i;
+                definition.type = NAME_CFUNCTION;
+                definition.definition.cFunction = &(sheet->cFunctions[i]);
 
                 add_name_definition(state, definition);
             }
@@ -146,8 +141,8 @@ static void get_name_definitions_recursive(Sheet *sheet, const char *name,
 
         VERBOSE(5, "C Function: %zu\n", hits);
     } else {
-        VERBOSE(5,
-                "Not checking if a C function, no C function are defined.\n");
+        VERBOSE(5, "Not checking if a C function, no C functions defined in "
+                   "this sheet.\n")
     }
 
     // Please sir... may I have some more names? (If it isn't a core function)
