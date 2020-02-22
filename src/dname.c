@@ -131,8 +131,8 @@ static void get_name_definitions_recursive(Sheet *sheet, const char *name,
                 hits++;
 
                 NameDefinition definition;
-                definition.sheet = sheet;
-                definition.type = NAME_CFUNCTION;
+                definition.sheet                = sheet;
+                definition.type                 = NAME_CFUNCTION;
                 definition.definition.cFunction = &(sheet->cFunctions[i]);
 
                 add_name_definition(state, definition);
@@ -155,8 +155,7 @@ static void get_name_definitions_recursive(Sheet *sheet, const char *name,
 }
 
 /**
- * \fn AllNameDefinitions d_semantic_get_name_definitions(Sheet *sheet,
- *                                                        const char *name)
+ * \fn AllNameDefinitions d_get_name_definitions(Sheet *sheet, const char *name)
  * \brief Get all of the places where a name is defined, and what the name's
  * type is.
  *
@@ -167,8 +166,7 @@ static void get_name_definitions_recursive(Sheet *sheet, const char *name,
  * \param sheet The sheet to start looking from.
  * \param name The name to query.
  */
-AllNameDefinitions d_semantic_get_name_definitions(struct _sheet *sheet,
-                                                   const char *name) {
+AllNameDefinitions d_get_name_definitions(Sheet *sheet, const char *name) {
     VERBOSE(5, "Finding definitions for name %s...\n", name)
 
     AllNameDefinitions allDefinitions = (AllNameDefinitions){NULL, 0};
@@ -181,9 +179,9 @@ AllNameDefinitions d_semantic_get_name_definitions(struct _sheet *sheet,
 }
 
 /**
- * \fn bool d_semantic_select_name_definition(const char *name,
- *                                            AllNameDefinitions allDefinitions,
- *                                            NameDefinition *selection)
+ * \fn bool d_select_name_definition(const char *name,
+ *                                   AllNameDefinitions allDefinitions,
+ *                                   NameDefinition *selection)
  * \brief Given a set of definitions, select the one the user intended, give
  * the name of the node.
  *
@@ -195,9 +193,9 @@ AllNameDefinitions d_semantic_get_name_definitions(struct _sheet *sheet,
  * selected, i.e. if we return `true`. If `false` is returned, do not trust
  * this value.
  */
-bool d_semantic_select_name_definition(const char *name,
-                                       AllNameDefinitions allDefinitions,
-                                       NameDefinition *selection) {
+bool d_select_name_definition(const char *name,
+                              AllNameDefinitions allDefinitions,
+                              NameDefinition *selection) {
     // TODO: Once you get around to linking other sheets, use name components
     // to decide properly. For now, we're just picking the first one from the
     // list.
@@ -214,13 +212,13 @@ bool d_semantic_select_name_definition(const char *name,
 }
 
 /**
- * \fn void d_semantic_free_name_definitions(AllNameDefinitions *definitions)
+ * \fn void d_free_name_definitions(AllNameDefinitions *definitions)
  * \brief Free an `AllNameDefinitions` struct. It should not be used after it
  * has been freed.
  *
  * \param definitions The structure to free.
  */
-void d_semantic_free_name_definitions(AllNameDefinitions *definitions) {
+void d_free_name_definitions(AllNameDefinitions *definitions) {
     if (definitions->definitions != NULL) {
         free(definitions->definitions);
         definitions->definitions = NULL;
@@ -245,11 +243,10 @@ static const NodeDefinition startDefinition = {
     false};
 
 /**
- * \fn const NodeDefinition *d_semantic_get_definition(Sheet *sheet,
- *                                                     const char *name,
- *                                                     size_t lineNum,
- *                                                     const char *funcName,
- *                                                     NameDefinition *nameDef)
+ * \fn const NodeDefinition *d_get_definition(Sheet *sheet, const char *name,
+ *                                            size_t lineNum,
+ *                                            const char *funcName,
+ *                                            NameDefinition *nameDef)
  * \brief Get a node's definition from it's name.
  *
  * \return The node's definition.
@@ -262,10 +259,9 @@ static const NodeDefinition startDefinition = {
  * \param nameDef A pointer that is set to the node's name definition. If the
  * node definition returns NULL, do not trust this value.
  */
-const NodeDefinition *d_semantic_get_definition(Sheet *sheet, const char *name,
-                                                size_t lineNum,
-                                                const char *funcName,
-                                                NameDefinition *nameDef) {
+const NodeDefinition *d_get_definition(Sheet *sheet, const char *name,
+                                       size_t lineNum, const char *funcName,
+                                       NameDefinition *nameDef) {
     VERBOSE(5, "Getting node definitions of node %s on line %zu in %s...\n",
             name, lineNum, sheet->filePath);
 
@@ -281,12 +277,12 @@ const NodeDefinition *d_semantic_get_definition(Sheet *sheet, const char *name,
         // of a function that is defined in the same sheet!
         if (funcName != NULL) {
             AllNameDefinitions funcDefinitions =
-                d_semantic_get_name_definitions(sheet, funcName);
-            if (d_semantic_select_name_definition(funcName, funcDefinitions,
-                                                  &nameDefinition)) {
+                d_get_name_definitions(sheet, funcName);
+            if (d_select_name_definition(funcName, funcDefinitions,
+                                         &nameDefinition)) {
                 if (nameDefinition.sheet == sheet) {
                     SheetFunction *func = nameDefinition.definition.function;
-                    d_semantic_free_name_definitions(&funcDefinitions);
+                    d_free_name_definitions(&funcDefinitions);
                     *nameDef = nameDefinition;
                     return &(func->returnDefinition);
                 } else {
@@ -301,7 +297,7 @@ const NodeDefinition *d_semantic_get_definition(Sheet *sheet, const char *name,
                                funcName);
             }
 
-            d_semantic_free_name_definitions(&funcDefinitions);
+            d_free_name_definitions(&funcDefinitions);
         } else {
             d_error_compiler_push("Return call but function name not found",
                                   sheet->filePath, lineNum, true);
@@ -311,12 +307,12 @@ const NodeDefinition *d_semantic_get_definition(Sheet *sheet, const char *name,
         // of a function that is defined in the same sheet!
         if (funcName != NULL) {
             AllNameDefinitions funcDefinitions =
-                d_semantic_get_name_definitions(sheet, funcName);
-            if (d_semantic_select_name_definition(funcName, funcDefinitions,
-                                                  &nameDefinition)) {
+                d_get_name_definitions(sheet, funcName);
+            if (d_select_name_definition(funcName, funcDefinitions,
+                                         &nameDefinition)) {
                 if (nameDefinition.sheet == sheet) {
                     SheetFunction *func = nameDefinition.definition.function;
-                    d_semantic_free_name_definitions(&funcDefinitions);
+                    d_free_name_definitions(&funcDefinitions);
                     *nameDef = nameDefinition;
                     return &(func->defineDefinition);
                 } else {
@@ -331,7 +327,7 @@ const NodeDefinition *d_semantic_get_definition(Sheet *sheet, const char *name,
                                funcName);
             }
 
-            d_semantic_free_name_definitions(&funcDefinitions);
+            d_free_name_definitions(&funcDefinitions);
         } else {
             d_error_compiler_push("Define call but function name not found",
                                   sheet->filePath, lineNum, true);
@@ -339,14 +335,13 @@ const NodeDefinition *d_semantic_get_definition(Sheet *sheet, const char *name,
     } else {
         // Let's find out if the name we're looking for exists, first.
         AllNameDefinitions nameDefinitions =
-            d_semantic_get_name_definitions(sheet, name);
-        if (d_semantic_select_name_definition(name, nameDefinitions,
-                                              &nameDefinition)) {
+            d_get_name_definitions(sheet, name);
+        if (d_select_name_definition(name, nameDefinitions, &nameDefinition)) {
             switch (nameDefinition.type) {
                 case NAME_CORE:;
 
                     // This bit's simple, all of the info we need is in dcore.h
-                    d_semantic_free_name_definitions(&nameDefinitions);
+                    d_free_name_definitions(&nameDefinitions);
                     *nameDef = nameDefinition;
                     return d_core_get_definition(
                         nameDefinition.definition.coreFunc);
@@ -357,7 +352,7 @@ const NodeDefinition *d_semantic_get_definition(Sheet *sheet, const char *name,
                     // The definition of the getter will be stored in the
                     // variable structure itself.
                     SheetVariable *var = nameDefinition.definition.variable;
-                    d_semantic_free_name_definitions(&nameDefinitions);
+                    d_free_name_definitions(&nameDefinitions);
                     *nameDef = nameDefinition;
                     return &(var->getterDefinition);
 
@@ -365,7 +360,7 @@ const NodeDefinition *d_semantic_get_definition(Sheet *sheet, const char *name,
                 case NAME_FUNCTION:;
 
                     SheetFunction *func = nameDefinition.definition.function;
-                    d_semantic_free_name_definitions(&nameDefinitions);
+                    d_free_name_definitions(&nameDefinitions);
                     *nameDef = nameDefinition;
                     return &(func->functionDefinition);
 
@@ -377,7 +372,7 @@ const NodeDefinition *d_semantic_get_definition(Sheet *sheet, const char *name,
 
                     // This one is simple, all the info we need is in the
                     // CFunction struct.
-                    d_semantic_free_name_definitions(&nameDefinitions);
+                    d_free_name_definitions(&nameDefinitions);
                     *nameDef = nameDefinition;
                     return &(cFunction->definition);
 
@@ -390,7 +385,7 @@ const NodeDefinition *d_semantic_get_definition(Sheet *sheet, const char *name,
             }
         }
 
-        d_semantic_free_name_definitions(&nameDefinitions);
+        d_free_name_definitions(&nameDefinitions);
     }
 
     return NULL;

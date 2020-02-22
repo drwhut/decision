@@ -96,8 +96,7 @@ typedef struct _allNameDefinitions {
 */
 
 /**
- * \fn AllNameDefinitions d_semantic_get_name_definitions(Sheet *sheet,
- *                                                        const char *name)
+ * \fn AllNameDefinitions d_get_name_definitions(Sheet *sheet, const char *name)
  * \brief Get all of the places where a name is defined, and what the name's
  * type is.
  *
@@ -108,13 +107,13 @@ typedef struct _allNameDefinitions {
  * \param sheet The sheet to start looking from.
  * \param name The name to query.
  */
-DECISION_API AllNameDefinitions
-d_semantic_get_name_definitions(struct _sheet *sheet, const char *name);
+DECISION_API AllNameDefinitions d_get_name_definitions(struct _sheet *sheet,
+                                                       const char *name);
 
 /**
- * \fn bool d_semantic_select_name_definition(const char *name,
- *                                            AllNameDefinitions allDefinitions,
- *                                            NameDefinition *selection)
+ * \fn bool d_select_name_definition(const char *name,
+ *                                   AllNameDefinitions allDefinitions,
+ *                                   NameDefinition *selection)
  * \brief Given a set of definitions, select the one the user intended, give
  * the name of the node.
  *
@@ -126,27 +125,24 @@ d_semantic_get_name_definitions(struct _sheet *sheet, const char *name);
  * selected, i.e. if we return `true`. If `false` is returned, do not trust
  * this value.
  */
-DECISION_API bool
-d_semantic_select_name_definition(const char *name,
-                                  AllNameDefinitions allDefinitions,
-                                  NameDefinition *selection);
+DECISION_API bool d_select_name_definition(const char *name,
+                                           AllNameDefinitions allDefinitions,
+                                           NameDefinition *selection);
 
 /**
- * \fn void d_semantic_free_name_definitions(AllNameDefinitions *definitions)
+ * \fn void d_free_name_definitions(AllNameDefinitions *definitions)
  * \brief Free an `AllNameDefinitions` struct. It should not be used after it
  * has been freed.
  *
  * \param definitions The structure to free.
  */
-DECISION_API void
-d_semantic_free_name_definitions(AllNameDefinitions *definitions);
+DECISION_API void d_free_name_definitions(AllNameDefinitions *definitions);
 
 /**
- * \fn const NodeDefinition *d_semantic_get_definition(Sheet *sheet,
- *                                                     const char *name,
- *                                                     size_t lineNum,
- *                                                     const char *funcName,
- *                                                     NameDefinition *nameDef)
+ * \fn const NodeDefinition *d_get_definition(Sheet *sheet, const char *name,
+ *                                            size_t lineNum,
+ *                                            const char *funcName,
+ *                                            NameDefinition *nameDef)
  * \brief Get a node's definition from it's name.
  *
  * \return The node's definition.
@@ -160,8 +156,7 @@ d_semantic_free_name_definitions(AllNameDefinitions *definitions);
  * node definition returns NULL, do not trust this value.
  */
 DECISION_API const struct _nodeDefinition *
-d_semantic_get_definition(struct _sheet *sheet, const char *name,
-                          size_t lineNum, const char *funcName,
-                          NameDefinition *nameDef);
+d_get_definition(struct _sheet *sheet, const char *name, size_t lineNum,
+                 const char *funcName, NameDefinition *nameDef);
 
 #endif // DNAME_H

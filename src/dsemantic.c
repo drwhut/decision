@@ -1266,7 +1266,7 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
                             // Check to see if the name is
                             // defined.
                             AllNameDefinitions nameDefinitions =
-                                d_semantic_get_name_definitions(sheet, name);
+                                d_get_name_definitions(sheet, name);
 
                             if (nameDefinitions.numDefinitions > 0) {
                                 // Set the input socket's string
@@ -1281,7 +1281,7 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
                                     CORE_SET) {
                                     NameDefinition varDefinition;
 
-                                    if (d_semantic_select_name_definition(
+                                    if (d_select_name_definition(
                                             name, nameDefinitions,
                                             &varDefinition)) {
                                         nameDefinition = varDefinition;
@@ -1292,7 +1292,7 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
                                                "Name %s is not defined", name);
                             }
 
-                            d_semantic_free_name_definitions(&nameDefinitions);
+                            d_free_name_definitions(&nameDefinitions);
                         } else {
                             d_error_compiler_push("Name argument given when "
                                                   "socket input isn't a name",
@@ -1486,7 +1486,7 @@ void d_semantic_scan_nodes(Sheet *sheet, SyntaxNode *root) {
                 NameDefinition nameDefinition;
 
                 // Get the node's true properties!
-                const NodeDefinition *nodeDef = d_semantic_get_definition(
+                const NodeDefinition *nodeDef = d_get_definition(
                     sheet, nodeName, lineNum, funcName, &nameDefinition);
 
                 if (nodeDef != NULL) {

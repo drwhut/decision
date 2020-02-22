@@ -260,10 +260,10 @@ bool d_run_function(DVM *vm, Sheet *sheet, const char *funcName) {
             // where this sheet is and run it there.
             if (funcPtr == NULL) {
                 AllNameDefinitions nameDefs =
-                    d_semantic_get_name_definitions(sheet, funcName);
+                    d_get_name_definitions(sheet, funcName);
 
                 NameDefinition definition;
-                if (d_semantic_select_name_definition(funcName, nameDefs,
+                if (d_select_name_definition(funcName, nameDefs,
                                                       &definition)) {
                     if (definition.type == NAME_FUNCTION) {
                         Sheet *extSheet = definition.sheet;
@@ -274,7 +274,7 @@ bool d_run_function(DVM *vm, Sheet *sheet, const char *funcName) {
                            sheet->filePath, funcName);
                 }
 
-                d_semantic_free_name_definitions(&nameDefs);
+                d_free_name_definitions(&nameDefs);
             } else {
                 // We know where it lives, so we can run it!
                 return d_vm_run(vm, funcPtr);

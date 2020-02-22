@@ -896,7 +896,7 @@ Sheet *d_obj_load(const char *obj, size_t size, const char *filePath,
         if (meta->type == LINK_CFUNCTION) {
             NameDefinition nameDefinition;
 
-            if (d_semantic_get_definition(out, meta->name, 0, NULL,
+            if (d_get_definition(out, meta->name, 0, NULL,
                                           &nameDefinition)) {
                 if (nameDefinition.type == NAME_CFUNCTION) {
                     meta->meta = nameDefinition.definition.cFunction;
