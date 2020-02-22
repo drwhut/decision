@@ -28,6 +28,10 @@ and descriptions which are accessible via the C API.
 * C functions are now stored in sheets, rather than in a global list.
 * Sheets now have an `allowFree` property that stops sheets that include it
 from freeing the sheet when they are freed.
+* Removed all calls to "safe" Visual C++ functions.
+* Changed the build system such that most of the code compiles to a singular
+library (which is either static or shared, static by default), and link the
+executable to that library.
 
 # Decision v0.2.0 - 16th January 2020
 

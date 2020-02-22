@@ -35,17 +35,45 @@
 === HEADER DEFINITIONS ====================================
 */
 
+// clang-format off
+
+/**
+ * \def DECISION_VERSION_MAJOR
+ * \brief The major verion number.
+ */
+#define DECISION_VERSION_MAJOR @Decision_VERSION_MAJOR@
+
+/**
+ * \def DECISION_VERSION_MINOR
+ * \brief The minor verion number.
+ */
+#define DECISION_VERSION_MINOR @Decision_VERSION_MINOR@
+
+/**
+ * \def DECISION_VERSION_PATCH
+ * \brief The patch verion number.
+ */
+#define DECISION_VERSION_PATCH @Decision_VERSION_PATCH@
+
+#define _STR(x)         #x
+#define _VERSION_STR(x) _STR(x)
+
 /**
  * \def DECISION_VERSION
  * \brief The current version of Decision.
  */
-#define DECISION_VERSION "@Decision_VERSION@"
+#define DECISION_VERSION \
+    _VERSION_STR(DECISION_VERSION_MAJOR) "." \
+    _VERSION_STR(DECISION_VERSION_MINOR) "." \
+    _VERSION_STR(DECISION_VERSION_PATCH)
+
+// clang-format on
 
 /**
  * \var extern char VERBOSE_LEVEL
  * \brief A variable stating the verbose level being used.
  */
-extern char VERBOSE_LEVEL;
+DECISION_API char VERBOSE_LEVEL;
 
 /**
  * \def VERBOSE(level, ...)
