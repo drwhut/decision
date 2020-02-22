@@ -716,9 +716,9 @@ static void add_property_FunctionInput(Sheet *sheet, size_t lineNum,
         // Now we've organised the arguments, we can add the argument!
         if (socketName != NULL && socketType != TYPE_NONE) {
             SocketMeta socket;
-            socket.name = socketName;
-            socket.description = socketDescription;
-            socket.type = socketType;
+            socket.name         = socketName;
+            socket.description  = socketDescription;
+            socket.type         = socketType;
             socket.defaultValue = defaultValue;
 
             add_socket(funcName, socket, true);
@@ -835,9 +835,9 @@ static void add_property_FunctionOutput(Sheet *sheet, size_t lineNum,
         // Now we've organised the arguments, we can add the return value!
         if (socketName != NULL && socketType != TYPE_NONE) {
             SocketMeta socket;
-            socket.name = socketName;
-            socket.description = socketDescription;
-            socket.type = socketType;
+            socket.name                      = socketName;
+            socket.description               = socketDescription;
+            socket.type                      = socketType;
             socket.defaultValue.integerValue = 0;
 
             add_socket(funcName, socket, false);
@@ -1124,9 +1124,8 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
     if (node != NULL) {
         inputArgs = d_syntax_get_all_nodes_with(node, STX_argument, false);
 
-        // If the number of inputs we got was bigger than what
-        // we expected, resize the type and literal arrays in
-        // the node.
+        // If the number of inputs we got was bigger than what we expected,
+        // resize the type and literal arrays in the node.
         if (inputArgs.numOccurances > numInputs) {
             types =
                 (DType *)d_realloc(types, (inputArgs.numOccurances +
@@ -1136,7 +1135,11 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
             literals = (LexData *)d_realloc(literals, inputArgs.numOccurances *
                                                           sizeof(LexData));
 
+            memmove(types + inputArgs.numOccurances, types + numInputs,
+                    d_definition_num_outputs(nodeDef) * sizeof(DType));
+
             for (size_t i = numInputs; i < inputArgs.numOccurances; i++) {
+                types[i]                 = types[numInputs - 1];
                 literals[i].integerValue = 0;
             }
 

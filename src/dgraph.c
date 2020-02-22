@@ -179,6 +179,10 @@ bool d_is_socket_index_valid(const NodeDefinition *nodeDef,
         return false;
     }
 
+    if (nodeDef->infiniteInputs) {
+        return true;
+    }
+
     return socketIndex < nodeDef->numSockets;
 }
 
