@@ -20,6 +20,7 @@
 
 #include "dmalloc.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 /**
@@ -70,8 +71,8 @@ CFunction d_create_c_function(DecisionCFunction function, const char *name,
         memcpy(newSockets, sockets, numSockets * sizeof(SocketMeta));
 
         for (size_t i = 0; i < numSockets; i++) {
-            char *socketName = newSockets[i].name;
-            char *socketDesc = newSockets[i].description;
+            const char *socketName = newSockets[i].name;
+            const char *socketDesc = newSockets[i].description;
 
             if (socketName != NULL) {
                 size_t nameSize     = strlen(socketName) + 1;

@@ -182,7 +182,7 @@ void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef) {
  * \param cFunction The C function to add.
  */
 void d_sheet_add_c_function(Sheet *sheet, CFunction cFunction) {
-    LIST_PUSH(sheet->cFunctions, CFunction *, sheet->numCFunctions, cFunction);
+    LIST_PUSH(sheet->cFunctions, CFunction, sheet->numCFunctions, cFunction);
 }
 
 /**

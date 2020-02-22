@@ -59,7 +59,7 @@ DECISION_API const char *d_obj_generate(struct _sheet *sheet, size_t *size);
 
 /**
  * \fn Sheet *d_obj_load(const char *obj, size_t size,
- *                              const char *filePath)
+ *                              const char *filePath, Sheet **includes)
  * \brief Given a binary object string, create a malloc'd Sheet structure from
  * it.
  *
@@ -70,8 +70,11 @@ DECISION_API const char *d_obj_generate(struct _sheet *sheet, size_t *size);
  * \param obj The object string.
  * \param size The size of the object string.
  * \param filePath Where the object file the object string came from is located.
+ * \param includes A NULL-terminated list of initially included sheets.
+ * Can be NULL.
  */
 DECISION_API struct _sheet *d_obj_load(const char *obj, size_t size,
-                                       const char *filePath);
+                                       const char *filePath,
+                                       struct _sheet **includes);
 
 #endif // DOBJ_H

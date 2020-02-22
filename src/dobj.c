@@ -439,7 +439,7 @@ static void free_index_list(IndexList *list) {
  *
  * **NOTE:** You cannot compile the sheet if it has any C functions defined in
  * it!
- * 
+ *
  * \return A malloc'd string of the contents of the future object file.
  *
  * \param sheet The sheet to use to create the object.
@@ -613,7 +613,7 @@ const char *d_obj_generate(Sheet *sheet, size_t *size) {
 
 /**
  * \fn Sheet *d_obj_load(const char *obj, size_t size,
- *                              const char *filePath)
+ *                              const char *filePath, Sheet **includes)
  * \brief Given a binary object string, create a malloc'd Sheet structure from
  * it.
  *
@@ -624,10 +624,21 @@ const char *d_obj_generate(Sheet *sheet, size_t *size) {
  * \param obj The object string.
  * \param size The size of the object string.
  * \param filePath Where the object file the object string came from is located.
+ * \param includes A NULL-terminated list of initially included sheets.
+ * Can be NULL.
  */
-Sheet *d_obj_load(const char *obj, size_t size, const char *filePath) {
+Sheet *d_obj_load(const char *obj, size_t size, const char *filePath,
+                  Sheet **includes) {
     Sheet *out       = d_sheet_create(filePath);
     out->_isCompiled = true;
+
+    if (includes != NULL) {
+        Sheet **include = includes;
+
+        while (*include) {
+            d_sheet_add_include(out, *include);
+        }
+    }
 
     // TODO: Account for edianness in the instructions, and also for variables
     // in the data section.
