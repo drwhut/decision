@@ -250,16 +250,16 @@ static void print_socket(size_t indent, const SocketMeta *meta) {
     printf("{\n");
 
     print_indent(indent + 1);
-    printf("\"name\":\"%s\"\n", meta->name);
+    printf("\"name\":\"%s\",\n", meta->name);
 
     print_indent(indent + 1);
-    printf("\"description\":\"%s\"\n", meta->description);
+    printf("\"description\":\"%s\",\n", meta->description);
 
     print_indent(indent + 1);
-    printf("\"type\":\"%s\"\n", d_type_name(meta->type));
+    printf("\"type\":\"%s\",\n", d_type_name(meta->type));
 
     print_indent(indent + 1);
-    printf("\"name\":\"\"\n"); // TODO
+    printf("\"name\":\"\",\n"); // TODO
 
     print_indent(indent);
     printf("},\n");
@@ -270,10 +270,10 @@ static void print_definition(size_t indent, const NodeDefinition *def) {
     printf("{\n");
 
     print_indent(indent + 1);
-    printf("\"name\":\"%s\"\n", def->name);
+    printf("\"name\":\"%s\",\n", def->name);
 
     print_indent(indent + 1);
-    printf("\"description\":\"%s\"\n", def->description);
+    printf("\"description\":\"%s\",\n", def->description);
 
     print_indent(indent + 1);
     printf("\"inputs\": [\n");
@@ -284,7 +284,7 @@ static void print_definition(size_t indent, const NodeDefinition *def) {
     }
 
     print_indent(indent + 1);
-    printf("],");
+    printf("],\n");
 
     print_indent(indent + 1);
     printf("\"outputs\": [\n");
@@ -295,10 +295,10 @@ static void print_definition(size_t indent, const NodeDefinition *def) {
     }
 
     print_indent(indent + 1);
-    printf("],");
+    printf("],\n");
 
     print_indent(indent + 1);
-    printf("\"infiniteInputs\":\"%s\"\n",
+    printf("\"infiniteInputs\":\"%s\",\n",
            (def->infiniteInputs) ? "true" : "false");
 
     print_indent(indent);
