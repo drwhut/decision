@@ -135,7 +135,7 @@ static const SocketMeta CORE_FUNC_SOCKETS[NUM_CORE_FUNCTIONS][7] = {
     },
     { // CORE_SUBTRACT
         {"from", "The number to subtract from.", TYPE_NUMBER, {0}},
-        {"subtract", "How much to subtract.", TYPE_NUMBER, {1}},
+        {"subtract", "How much to subtract.", TYPE_NUMBER, {0}},
         {"output", "The subtraction of the two inputs.", TYPE_NUMBER, {0}}
     },
     { // CORE_TERNARY
@@ -245,7 +245,7 @@ static void print_indent(size_t indent) {
     }
 }
 
-static void print_socket(size_t indent, const SocketMeta *meta) {
+static void print_socket(size_t indent, const SocketMeta *meta, bool input) {
     print_indent(indent);
     printf("{\n");
 
@@ -258,8 +258,31 @@ static void print_socket(size_t indent, const SocketMeta *meta) {
     print_indent(indent + 1);
     printf("\"type\":\"%s\",\n", d_type_name(meta->type));
 
-    print_indent(indent + 1);
-    printf("\"name\":\"\",\n"); // TODO
+    if (input) {
+        print_indent(indent + 1);
+
+        DType type = meta->type;
+
+        if ((type & TYPE_INT) != 0) {
+            printf("\"default\":%" DINT_PRINTF_d ",\n",
+                   meta->defaultValue.integerValue);
+        } else if ((type & TYPE_FLOAT) != 0) {
+            printf("\"default\":%g,\n", meta->defaultValue.floatValue);
+        } else if ((type & TYPE_STRING) != 0) {
+            const char *str = meta->defaultValue.stringValue;
+
+            if (str) {
+                printf("\"default\":\"%s\",\n", str);
+            } else {
+                printf("\"default\":\"\",\n");
+            }
+        } else if ((type & TYPE_BOOL) != 0) {
+            printf("\"default\":%s,\n",
+                   (meta->defaultValue.booleanValue) ? "true" : "false");
+        } else {
+            printf("\"default\":\"unknown\",\n");
+        }
+    }
 
     print_indent(indent);
     printf("},\n");
@@ -277,10 +300,10 @@ static void print_definition(size_t indent, const NodeDefinition *def) {
 
     print_indent(indent + 1);
     printf("\"inputs\": [\n");
-    
+
     const size_t numInputs = d_definition_num_inputs(def);
     for (size_t i = 0; i < numInputs; i++) {
-        print_socket(indent + 2, def->sockets + i);
+        print_socket(indent + 2, def->sockets + i, true);
     }
 
     print_indent(indent + 1);
@@ -288,10 +311,10 @@ static void print_definition(size_t indent, const NodeDefinition *def) {
 
     print_indent(indent + 1);
     printf("\"outputs\": [\n");
-    
+
     const size_t numOutputs = d_definition_num_outputs(def);
     for (size_t i = numInputs; i < numInputs + numOutputs; i++) {
-        print_socket(indent + 2, def->sockets + i);
+        print_socket(indent + 2, def->sockets + i, false);
     }
 
     print_indent(indent + 1);
