@@ -401,17 +401,30 @@ static void create_func(const char *name, const char *desc, bool sub) {
     // If it's a subroutine, add execution sockets.
     // TODO: Make these consistent with the ones in dcfunc.c!
     if (sub) {
+        char *beforeSocketName = d_malloc(7);
+        strcpy(beforeSocketName, "before");
+
+        char *beforeSocketDescription = d_malloc(53);
+        strcpy(beforeSocketDescription,
+               "The node will activate when this input is activated.");
+
         SocketMeta beforeSocket;
-        beforeSocket.name = "before";
-        beforeSocket.description =
-            "The node will activate when this input is activated.";
+        beforeSocket.name                      = beforeSocketName;
+        beforeSocket.description               = beforeSocketDescription;
         beforeSocket.type                      = TYPE_EXECUTION;
         beforeSocket.defaultValue.integerValue = 0;
 
+        char *afterSocketName = d_malloc(6);
+        strcpy(afterSocketName, "after");
+
+        char *afterSocketDescription = d_malloc(64);
+        strcpy(
+            afterSocketDescription,
+            "This output will activate once the node has finished executing.");
+
         SocketMeta afterSocket;
-        afterSocket.name = "after";
-        afterSocket.description =
-            "This output will activate once the node has finished executing.";
+        afterSocket.name                      = afterSocketName;
+        afterSocket.description               = afterSocketDescription;
         afterSocket.type                      = TYPE_EXECUTION;
         afterSocket.defaultValue.integerValue = 0;
 
@@ -593,7 +606,7 @@ static void add_property_FunctionInput(Sheet *sheet, size_t lineNum,
 
             if (argList.numArgs == 3) {
                 d_error_compiler_push(
-                    "No default value specified in Variable property",
+                    "No default value specified in FunctionInput property",
                     sheet->filePath, lineNum, false);
                 hasDefault = false;
             }
@@ -701,13 +714,15 @@ static void add_property_FunctionInput(Sheet *sheet, size_t lineNum,
         }
 
         // Now we've organised the arguments, we can add the argument!
-        SocketMeta socket;
-        socket.name         = socketName;
-        socket.description  = socketDescription;
-        socket.type         = socketType;
-        socket.defaultValue = defaultValue;
+        if (socketName != NULL && socketType != TYPE_NONE) {
+            SocketMeta socket;
+            socket.name         = socketName;
+            socket.description  = socketDescription;
+            socket.type         = socketType;
+            socket.defaultValue = defaultValue;
 
-        add_socket(funcName, socket, true);
+            add_socket(funcName, socket, true);
+        }
 
         if (funcName != NULL) {
             free((char *)funcName);
@@ -818,13 +833,15 @@ static void add_property_FunctionOutput(Sheet *sheet, size_t lineNum,
         }
 
         // Now we've organised the arguments, we can add the return value!
-        SocketMeta socket;
-        socket.name                      = socketName;
-        socket.description               = socketDescription;
-        socket.type                      = socketType;
-        socket.defaultValue.integerValue = 0;
+        if (socketName != NULL && socketType != TYPE_NONE) {
+            SocketMeta socket;
+            socket.name                      = socketName;
+            socket.description               = socketDescription;
+            socket.type                      = socketType;
+            socket.defaultValue.integerValue = 0;
 
-        add_socket(funcName, socket, false);
+            add_socket(funcName, socket, false);
+        }
 
         if (funcName != NULL) {
             free((char *)funcName);
@@ -1107,9 +1124,8 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
     if (node != NULL) {
         inputArgs = d_syntax_get_all_nodes_with(node, STX_argument, false);
 
-        // If the number of inputs we got was bigger than what
-        // we expected, resize the type and literal arrays in
-        // the node.
+        // If the number of inputs we got was bigger than what we expected,
+        // resize the type and literal arrays in the node.
         if (inputArgs.numOccurances > numInputs) {
             types =
                 (DType *)d_realloc(types, (inputArgs.numOccurances +
@@ -1119,7 +1135,11 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
             literals = (LexData *)d_realloc(literals, inputArgs.numOccurances *
                                                           sizeof(LexData));
 
+            memmove(types + inputArgs.numOccurances, types + numInputs,
+                    d_definition_num_outputs(nodeDef) * sizeof(DType));
+
             for (size_t i = numInputs; i < inputArgs.numOccurances; i++) {
+                types[i]                 = types[numInputs - 1];
                 literals[i].integerValue = 0;
             }
 
@@ -1130,7 +1150,9 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
 
         // If there are no sockets in the definition, stop now!
         if (inputArgs.numOccurances > 0 && (nodeDef->numSockets == 0)) {
-            ERROR_COMPILER(sheet->filePath, lineNum, true, "Node %s is defined to have no sockets", nodeDef->name);
+            ERROR_COMPILER(sheet->filePath, lineNum, true,
+                           "Node %s is defined to have no sockets",
+                           nodeDef->name);
             return;
         }
 
@@ -1333,7 +1355,9 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
         // STX_listOfLineIdentifier
         while (node != NULL) {
             if (inputArgs.numOccurances > 0 && (nodeDef->numSockets == 0)) {
-                ERROR_COMPILER(sheet->filePath, lineNum, true, "Node %s is defined to have no sockets", nodeDef->name);
+                ERROR_COMPILER(sheet->filePath, lineNum, true,
+                               "Node %s is defined to have no sockets",
+                               nodeDef->name);
                 return;
             }
 
@@ -1349,7 +1373,7 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
             }
 
             // Create the socket index.
-            size_t socketIndex = nodeDef->startOutputIndex + numOutputs;
+            size_t socketIndex = numInputs + numOutputs;
             socket.socketIndex = socketIndex;
 
             numOutputs++;
@@ -1786,7 +1810,6 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
                         }
 
                         finalType = meta.type;
-
                     }
                     // So we need to check the connection.
                     else {
@@ -1818,7 +1841,7 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
                                     allSame = false;
                                 }
 
-                                finalType = meta.type;
+                                finalType = otherMeta.type;
                             } else {
                                 reducedAllInputs = false;
                             }

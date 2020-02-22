@@ -1,6 +1,6 @@
 > This subroutine prints the first n fibonacci numbers.
-[Subroutine(Fibonacci)]
-[FunctionInput(Fibonacci, Integer)]
+[Subroutine(Fibonacci, "Print the fibonacci numbers.")]
+[FunctionInput(Fibonacci, n, Integer, 10, "The number of fibonacci numbers to print.")]
 
 [Variable(_fib1, Integer, 0)]
 [Variable(_fib2, Integer, 1)]

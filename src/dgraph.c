@@ -114,9 +114,9 @@ size_t d_node_num_inputs(Graph graph, size_t nodeIndex) {
     const NodeDefinition *nodeDef = node.definition;
 
     if (nodeDef->infiniteInputs) {
-        return d_definition_num_inputs(nodeDef);
-    } else {
         return node.startOutputIndex;
+    } else {
+        return d_definition_num_inputs(nodeDef);
     }
 }
 
@@ -177,6 +177,10 @@ bool d_is_socket_index_valid(const NodeDefinition *nodeDef,
                              size_t socketIndex) {
     if (nodeDef == NULL) {
         return false;
+    }
+
+    if (nodeDef->infiniteInputs) {
+        return true;
     }
 
     return socketIndex < nodeDef->numSockets;
@@ -457,9 +461,9 @@ static void add_edge(Graph *graph, Wire wire, const char *filePath) {
         *(graph->wires) = wire;
     } else {
         // Use binary insertion, since the list should be sorted!
-        size_t left   = 0;
-        size_t right  = graph->numWires - 1;
-        size_t middle = (left + right) / 2;
+        int left   = 0;
+        int right  = (int)graph->numWires - 1;
+        int middle = (left + right) / 2;
 
         while (left <= right) {
             middle = (left + right) / 2;
@@ -483,7 +487,7 @@ static void add_edge(Graph *graph, Wire wire, const char *filePath) {
         graph->wires =
             (Wire *)d_realloc(graph->wires, graph->numWires * sizeof(Wire));
 
-        if (middle < graph->numWires - 1) {
+        if (middle < (int)graph->numWires - 1) {
             memmove(graph->wires + middle + 1, graph->wires + middle,
                     (graph->numWires - middle - 1) * sizeof(Wire));
         }

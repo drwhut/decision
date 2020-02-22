@@ -1,7 +1,7 @@
 Start~#1
 
-[Variable(myIntegerVar, Integer, 69)]
-[Variable(myFloatVar, Float, 420.69)]
+[Variable(myIntegerVar, Integer, 69, "Because I'm sensible.")]
+[Variable(myFloatVar, Float, 420.69, "Just to show I'm REALLY sensible.")]
 [Variable(myStringVar, String, "Hello, world!")]
 [Variable(myBooleanVar, Boolean, true)]
 

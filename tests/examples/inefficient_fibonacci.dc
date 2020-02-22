@@ -2,9 +2,9 @@
 > dynamically resize. Please don't actually implement a Fibonacci function
 > like this, or you will be judged.
 
-[Function(Fibonacci)]
-[FunctionInput(Fibonacci, Integer)]
-[FunctionOutput(Fibonacci, Integer)]
+[Function(Fibonacci, "Get the ith fibonacci number using recursion.")]
+[FunctionInput(Fibonacci, i, Integer, 1)]
+[FunctionOutput(Fibonacci, fib_i, Integer, "The ith fibonacci number.")]
 
 Define(Fibonacci)~#1
 
