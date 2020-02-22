@@ -909,6 +909,9 @@ BCode d_generate_call(BuildContext *context, size_t nodeIndex) {
         isSubroutine = d_is_execution_definition(&funcDef);
     }
 
+    size_t numInputs = numArgs;
+    size_t numOutputs = numRets;
+
     // If it is a subroutine, we don't want to count the execution sockets.
     if (isSubroutine) {
         numArgs--;
@@ -944,7 +947,7 @@ BCode d_generate_call(BuildContext *context, size_t nodeIndex) {
     // TODO: Think about if we need to copy the values when they are used...
     int stackTop = context->stackTop;
 
-    for (size_t i = numArgs; i < numArgs + numRets; i++) {
+    for (size_t i = numInputs; i < numInputs + numOutputs; i++) {
         socket.socketIndex = i;
         SocketMeta outMeta = d_get_socket_meta(context->graph, socket);
 
@@ -1015,7 +1018,11 @@ BCode d_generate_return(BuildContext *context, size_t returnNodeIndex) {
 
     BCode out = {NULL, 0};
 
-    const size_t numReturns = d_definition_num_outputs(&funcDef);
+    size_t numReturns = d_definition_num_outputs(&funcDef);
+
+    if (d_is_execution_definition(&funcDef)) {
+        numReturns--;
+    }
 
     if (numReturns == 0) {
         out = d_bytecode_ins(OP_RET);

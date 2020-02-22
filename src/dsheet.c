@@ -156,7 +156,7 @@ void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef) {
     returnDef.name             = nameReturn;
     returnDef.description      = descriptionReturn;
     returnDef.sockets          = returnMeta;
-    returnDef.numSockets       = numSocketsDefine;
+    returnDef.numSockets       = numSocketsReturn;
     returnDef.startOutputIndex = numSocketsReturn;
     returnDef.infiniteInputs   = false;
 
