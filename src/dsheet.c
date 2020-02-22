@@ -300,6 +300,7 @@ Sheet *d_sheet_create(const char *filePath) {
     sheet->filePath         = (const char *)cpyFilePath;
     sheet->includePath      = NULL;
     sheet->hasErrors        = false;
+    sheet->allowFree        = true;
     sheet->_isCompiled      = false;
     sheet->_isLinked        = false;
     sheet->includes         = NULL;
@@ -328,7 +329,7 @@ Sheet *d_sheet_create(const char *filePath) {
 /**
  * \fn void d_sheet_free(Sheet *sheet)
  * \brief Free malloc'd memory in a sheet.
- * 
+ *
  * **NOTE:** This will also free all included sheets recursively!
  *
  * \param sheet The sheet to free from memory.
@@ -391,7 +392,10 @@ void d_sheet_free(Sheet *sheet) {
         if (sheet->includes != NULL) {
             for (size_t i = 0; i < sheet->numIncludes; i++) {
                 Sheet *include = sheet->includes[i];
-                d_sheet_free(include);
+
+                if (include->allowFree) {
+                    d_sheet_free(include);
+                }
             }
 
             free(sheet->includes);
@@ -567,7 +571,7 @@ void d_functions_dump(SheetFunction *functions, size_t numFunctions) {
 /**
  * \fn void d_c_functions_dump(CFunction *functions, size_t numFunctions)
  * \brief Dump the details of an array of C functions to `stdout`.
- * 
+ *
  * \param functions The array of C functions.
  * \param numFunctions The number of functions in the array.
  */
@@ -576,7 +580,7 @@ void d_c_functions_dump(CFunction *functions, size_t numFunctions) {
 
     if (functions != NULL && numFunctions > 0) {
         for (size_t i = 0; i < numFunctions; i++) {
-            CFunction function = functions[i];
+            CFunction function            = functions[i];
             const NodeDefinition *funcDef = &(function.definition);
             dump_definition(funcDef);
         }

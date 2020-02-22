@@ -99,6 +99,8 @@ typedef struct _sheet {
                              ///< value is `NULL`.
     bool hasErrors;
 
+    bool allowFree; ///< Allow sheets that include this sheet to free it?
+
     bool _isCompiled;
     bool _isLinked;
 
@@ -215,7 +217,8 @@ DECISION_API Sheet *d_sheet_create(const char *filePath);
  * \fn void d_sheet_free(Sheet *sheet)
  * \brief Free malloc'd memory in a sheet.
  * 
- * **NOTE:** This will also free all included sheets recursively!
+ * **NOTE:** This will also free all included sheets recursively that have
+ * the `allowFree` property set to `true`, which is the default!
  *
  * \param sheet The sheet to free from memory.
  */
