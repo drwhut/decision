@@ -25,7 +25,7 @@
 #define DCFUNC_H
 
 #include "dcfg.h"
-#include "dsheet.h"
+#include "dgraph.h"
 #include "dtype.h"
 
 /*

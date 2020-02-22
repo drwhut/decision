@@ -25,6 +25,7 @@
 #define DSHEET_H
 
 #include "dcfg.h"
+#include "dcfunc.h"
 #include "dgraph.h"
 #include "dlink.h"
 #include <stdbool.h>
@@ -37,9 +38,6 @@
 
 /* Forward declaration of the Sheet struct from later on. */
 struct _sheet;
-
-/* Forward declaration of the CFunction struct from dcfunc.h */
-struct _cFunction;
 
 /**
  * \struct _insToLink
@@ -111,7 +109,7 @@ typedef struct _sheet {
     size_t numVariables;
     SheetFunction *functions;
     size_t numFunctions;
-    struct _cFunction *cFunctions;
+    CFunction *cFunctions;
     size_t numCFunctions;
 
     Graph graph; ///< Can be empty if the sheet came from a Decision object
@@ -158,16 +156,15 @@ DECISION_API void d_sheet_add_function(Sheet *sheet,
                                        const NodeDefinition funcDef);
 
 /**
- * \fn void d_sheet_add_c_function(Sheet *sheet, CFunction *cFunction)
+ * \fn void d_sheet_add_c_function(Sheet *sheet, CFunction cFunction)
  * \brief Add a C function to a sheet.
- * 
+ *
  * **NOTE:** To create a C function, have a look at `dcfunc.h`.
- * 
+ *
  * \param sheet The sheet to add the C function to.
  * \param cFunction The C function to add.
  */
-DECISION_API void d_sheet_add_c_function(Sheet *sheet,
-                                         struct _cFunction *cFunction);
+DECISION_API void d_sheet_add_c_function(Sheet *sheet, CFunction cFunction);
 
 /**
  * \fn bool d_is_subroutine(SheetFunction func)

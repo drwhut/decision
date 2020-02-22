@@ -18,7 +18,6 @@
 
 #include "dsheet.h"
 
-#include "dcfunc.h"
 #include "decision.h"
 #include "derror.h"
 #include "dmalloc.h"
@@ -174,7 +173,7 @@ void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef) {
 }
 
 /**
- * \fn void d_sheet_add_c_function(Sheet *sheet, CFunction *cFunction)
+ * \fn void d_sheet_add_c_function(Sheet *sheet, CFunction cFunction)
  * \brief Add a C function to a sheet.
  *
  * **NOTE:** To create a C function, have a look at `dcfunc.h`.
@@ -182,9 +181,8 @@ void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef) {
  * \param sheet The sheet to add the C function to.
  * \param cFunction The C function to add.
  */
-void d_sheet_add_c_function(Sheet *sheet, CFunction *cFunction) {
-    CFunction cFunc = *cFunction;
-    LIST_PUSH(sheet->cFunctions, CFunction *, sheet->numCFunctions, cFunc);
+void d_sheet_add_c_function(Sheet *sheet, CFunction cFunction) {
+    LIST_PUSH(sheet->cFunctions, CFunction *, sheet->numCFunctions, cFunction);
 }
 
 /**
