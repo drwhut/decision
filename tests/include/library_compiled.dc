@@ -6,11 +6,11 @@
 
 > Library function
 [Function(Quadratic)]
-[FunctionInput(Quadratic, Float)] > a
-[FunctionInput(Quadratic, Float)] > b
-[FunctionInput(Quadratic, Float)] > c
-[FunctionInput(Quadratic, Float)] > x
-[FunctionOutput(Quadratic, Float)] > ax^2 + bx + c
+[FunctionInput(Quadratic, a, Float, 1)]
+[FunctionInput(Quadratic, b, Float, 0)]
+[FunctionInput(Quadratic, c, Float, 0)]
+[FunctionInput(Quadratic, x, Float, 0)]
+[FunctionOutput(Quadratic, out, Float, "ax^2 + bx + c")]
 
 Define(Quadratic)~#1, #2, #3, #4
 Multiply(#1, #4, #4)~#5
@@ -19,9 +19,9 @@ Add(#5, #6, #3)~#7
 Return(Quadratic, #7)
 
 > Library subroutine
-[Subroutine(IsPowerOfTwo)]
-[FunctionInput(IsPowerOfTwo, Integer)]
-[FunctionOutput(IsPowerOfTwo, Boolean)]
+[Subroutine(IsPowerOfTwo, "Check if a number is a power of two.")]
+[FunctionInput(IsPowerOfTwo, n, Integer)]
+[FunctionOutput(IsPowerOfTwo, isPowerOfTwo, Boolean)]
 
 [Variable(_num, Integer, 0)]
 [Variable(_isPowerOfTwo, Boolean, true)]

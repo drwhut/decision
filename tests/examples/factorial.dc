@@ -1,7 +1,7 @@
 > This function version of Factorial uses recursion.
-[Function(FactorialFunction)]
-[FunctionInput(FactorialFunction, Integer)]
-[FunctionOutput(FactorialFunction, Integer)]
+[Function(FactorialFunction, "Calculate the factorial of a number using recursion.")]
+[FunctionInput(FactorialFunction, n, Integer, 0)]
+[FunctionOutput(FactorialFunction, n_factorial, Integer, "The factorial of n, n!")]
 
 Define(FactorialFunction)~#1
 LessThanOrEqual(#1, 1)~#2
@@ -14,9 +14,9 @@ Ternary(#2, 1, #5)~#6
 Return(FactorialFunction, #6)
 
 > This subroutine version of Factorial uses iteration.
-[Subroutine(FactorialSubroutine)]
-[FunctionInput(FactorialSubroutine, Integer)]
-[FunctionOutput(FactorialSubroutine, Integer)]
+[Subroutine(FactorialSubroutine, "Calculate the factorial of a number using iteration.")]
+[FunctionInput(FactorialSubroutine, n, Integer, 0)]
+[FunctionOutput(FactorialSubroutine, n_factorial, Integer, "The factorial of n, n!")]
 
 [Variable(_fac, Integer, 1)]
 

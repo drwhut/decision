@@ -606,7 +606,7 @@ static void add_property_FunctionInput(Sheet *sheet, size_t lineNum,
 
             if (argList.numArgs == 3) {
                 d_error_compiler_push(
-                    "No default value specified in Variable property",
+                    "No default value specified in FunctionInput property",
                     sheet->filePath, lineNum, false);
                 hasDefault = false;
             }
@@ -714,13 +714,15 @@ static void add_property_FunctionInput(Sheet *sheet, size_t lineNum,
         }
 
         // Now we've organised the arguments, we can add the argument!
-        SocketMeta socket;
-        socket.name         = socketName;
-        socket.description  = socketDescription;
-        socket.type         = socketType;
-        socket.defaultValue = defaultValue;
+        if (socketName != NULL && socketType != TYPE_NONE) {
+            SocketMeta socket;
+            socket.name = socketName;
+            socket.description = socketDescription;
+            socket.type = socketType;
+            socket.defaultValue = defaultValue;
 
-        add_socket(funcName, socket, true);
+            add_socket(funcName, socket, true);
+        }
 
         if (funcName != NULL) {
             free((char *)funcName);
@@ -831,13 +833,15 @@ static void add_property_FunctionOutput(Sheet *sheet, size_t lineNum,
         }
 
         // Now we've organised the arguments, we can add the return value!
-        SocketMeta socket;
-        socket.name                      = socketName;
-        socket.description               = socketDescription;
-        socket.type                      = socketType;
-        socket.defaultValue.integerValue = 0;
+        if (socketName != NULL && socketType != TYPE_NONE) {
+            SocketMeta socket;
+            socket.name = socketName;
+            socket.description = socketDescription;
+            socket.type = socketType;
+            socket.defaultValue.integerValue = 0;
 
-        add_socket(funcName, socket, false);
+            add_socket(funcName, socket, false);
+        }
 
         if (funcName != NULL) {
             free((char *)funcName);
