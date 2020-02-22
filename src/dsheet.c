@@ -18,7 +18,6 @@
 
 #include "dsheet.h"
 
-#include "dcfunc.h"
 #include "decision.h"
 #include "derror.h"
 #include "dmalloc.h"
@@ -174,6 +173,19 @@ void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef) {
 }
 
 /**
+ * \fn void d_sheet_add_c_function(Sheet *sheet, CFunction cFunction)
+ * \brief Add a C function to a sheet.
+ *
+ * **NOTE:** To create a C function, have a look at `dcfunc.h`.
+ *
+ * \param sheet The sheet to add the C function to.
+ * \param cFunction The C function to add.
+ */
+void d_sheet_add_c_function(Sheet *sheet, CFunction cFunction) {
+    LIST_PUSH(sheet->cFunctions, CFunction, sheet->numCFunctions, cFunction);
+}
+
+/**
  * \fn bool d_is_subroutine(SheetFunction func)
  * \brief Is the given function a subroutine?
  *
@@ -244,12 +256,12 @@ Sheet *d_sheet_add_include_from_path(Sheet *sheet, const char *includePath) {
 
         strcat(dir, includePath);
 
-        includeSheet = d_load_file((const char *)dir);
+        includeSheet = d_load_file((const char *)dir, NULL);
     }
     // If there isn't either character, we don't need to worry about
     // changing the directory.
     else {
-        includeSheet = d_load_file(includePath);
+        includeSheet = d_load_file(includePath, NULL);
     }
 
     d_sheet_add_include(sheet, includeSheet);
@@ -288,6 +300,7 @@ Sheet *d_sheet_create(const char *filePath) {
     sheet->filePath         = (const char *)cpyFilePath;
     sheet->includePath      = NULL;
     sheet->hasErrors        = false;
+    sheet->allowFree        = true;
     sheet->_isCompiled      = false;
     sheet->_isLinked        = false;
     sheet->includes         = NULL;
@@ -296,6 +309,8 @@ Sheet *d_sheet_create(const char *filePath) {
     sheet->numVariables     = 0;
     sheet->functions        = NULL;
     sheet->numFunctions     = 0;
+    sheet->cFunctions       = NULL;
+    sheet->numCFunctions    = 0;
     sheet->graph            = EMPTY_GRAPH;
     sheet->startNodeIndex   = -1;
     sheet->numStarts        = 0;
@@ -314,6 +329,8 @@ Sheet *d_sheet_create(const char *filePath) {
 /**
  * \fn void d_sheet_free(Sheet *sheet)
  * \brief Free malloc'd memory in a sheet.
+ *
+ * **NOTE:** This will also free all included sheets recursively!
  *
  * \param sheet The sheet to free from memory.
  */
@@ -360,10 +377,25 @@ void d_sheet_free(Sheet *sheet) {
             sheet->numFunctions = 0;
         }
 
+        if (sheet->cFunctions != NULL) {
+            for (size_t i = 0; i < sheet->numCFunctions; i++) {
+                CFunction cFunc = sheet->cFunctions[i];
+
+                d_definition_free(cFunc.definition, true);
+            }
+
+            free(sheet->cFunctions);
+            sheet->cFunctions    = NULL;
+            sheet->numCFunctions = 0;
+        }
+
         if (sheet->includes != NULL) {
             for (size_t i = 0; i < sheet->numIncludes; i++) {
                 Sheet *include = sheet->includes[i];
-                d_sheet_free(include);
+
+                if (include->allowFree) {
+                    d_sheet_free(include);
+                }
             }
 
             free(sheet->includes);
@@ -467,6 +499,56 @@ void d_variables_dump(SheetVariable *variables, size_t numVariables) {
     }
 }
 
+/* A helper function for printing a node definition. */
+static void dump_definition(const NodeDefinition *definition) {
+    size_t numInputs  = d_definition_num_inputs(definition);
+    size_t numOutputs = d_definition_num_outputs(definition);
+
+    printf("\tFunction %s is %s with %zu arguments:\n", definition->name,
+           ((d_is_execution_definition(definition)) ? "a SUBROUTINE"
+                                                    : "a FUNCTION"),
+           numInputs);
+
+    if (definition->sockets != NULL && numInputs > 0) {
+        for (size_t j = 0; j < numInputs; j++) {
+            SocketMeta arg = definition->sockets[j];
+
+            printf("\t\tArgument %s (%s) is of type %s with default "
+                   "value ",
+                   arg.name, arg.description, d_type_name(arg.type));
+            switch (arg.type) {
+                case TYPE_INT:
+                    printf("%" DINT_PRINTF_d, arg.defaultValue.integerValue);
+                    break;
+                case TYPE_FLOAT:
+                    printf("%f", arg.defaultValue.floatValue);
+                    break;
+                case TYPE_STRING:
+                    printf("%s", arg.defaultValue.stringValue);
+                    break;
+                case TYPE_BOOL:
+                    printf("%d", arg.defaultValue.booleanValue);
+                    break;
+                default:
+                    break;
+            }
+            printf("\n");
+        }
+    }
+
+    printf("\tand %zu returns:\n", numOutputs);
+
+    if (definition->sockets != NULL && numOutputs > 0) {
+        for (size_t j = 0; j < numOutputs; j++) {
+            SocketMeta ret =
+                definition->sockets[definition->startOutputIndex + j];
+
+            printf("\t\tReturn %s (%s) is of type %s\n", ret.name,
+                   ret.description, d_type_name(ret.type));
+        }
+    }
+}
+
 /**
  * \fn void d_functions_dump(SheetFunction *functions, size_t numFunctions)
  * \brief Dump the details of an array of functions to `stdout`.
@@ -481,54 +563,26 @@ void d_functions_dump(SheetFunction *functions, size_t numFunctions) {
         for (size_t i = 0; i < numFunctions; i++) {
             SheetFunction function        = functions[i];
             const NodeDefinition *funcDef = &(function.functionDefinition);
+            dump_definition(funcDef);
+        }
+    }
+}
 
-            size_t numInputs  = d_definition_num_inputs(funcDef);
-            size_t numOutputs = d_definition_num_outputs(funcDef);
+/**
+ * \fn void d_c_functions_dump(CFunction *functions, size_t numFunctions)
+ * \brief Dump the details of an array of C functions to `stdout`.
+ *
+ * \param functions The array of C functions.
+ * \param numFunctions The number of functions in the array.
+ */
+void d_c_functions_dump(CFunction *functions, size_t numFunctions) {
+    printf("# C Functions: %zu\n", numFunctions);
 
-            printf("\tFunction %s is %s with %zu arguments:\n", funcDef->name,
-                   ((d_is_execution_definition(funcDef)) ? "a SUBROUTINE"
-                                                         : "a FUNCTION"),
-                   numInputs);
-
-            if (funcDef->sockets != NULL && numInputs > 0) {
-                for (size_t j = 0; j < numInputs; j++) {
-                    SocketMeta arg = funcDef->sockets[j];
-
-                    printf("\t\tArgument %s (%s) is of type %s with default "
-                           "value ",
-                           arg.name, arg.description, d_type_name(arg.type));
-                    switch (arg.type) {
-                        case TYPE_INT:
-                            printf("%" DINT_PRINTF_d,
-                                   arg.defaultValue.integerValue);
-                            break;
-                        case TYPE_FLOAT:
-                            printf("%f", arg.defaultValue.floatValue);
-                            break;
-                        case TYPE_STRING:
-                            printf("%s", arg.defaultValue.stringValue);
-                            break;
-                        case TYPE_BOOL:
-                            printf("%d", arg.defaultValue.booleanValue);
-                            break;
-                        default:
-                            break;
-                    }
-                    printf("\n");
-                }
-            }
-
-            printf("\tand %zu returns:\n", numOutputs);
-
-            if (funcDef->sockets != NULL && numOutputs > 0) {
-                for (size_t j = 0; j < numOutputs; j++) {
-                    SocketMeta ret =
-                        funcDef->sockets[funcDef->startOutputIndex + j];
-
-                    printf("\t\tReturn %s (%s) is of type %s\n", ret.name,
-                           ret.description, d_type_name(ret.type));
-                }
-            }
+    if (functions != NULL && numFunctions > 0) {
+        for (size_t i = 0; i < numFunctions; i++) {
+            CFunction function            = functions[i];
+            const NodeDefinition *funcDef = &(function.definition);
+            dump_definition(funcDef);
         }
     }
 }
@@ -553,8 +607,11 @@ void d_sheet_dump(Sheet *sheet) {
     // Dump the variables, if there are any.
     d_variables_dump(sheet->variables, sheet->numVariables);
 
-    // Dump the functions,P if there are any.
+    // Dump the functions, if there are any.
     d_functions_dump(sheet->functions, sheet->numFunctions);
+
+    // Dump the C functions, if there are any.
+    d_c_functions_dump(sheet->cFunctions, sheet->numCFunctions);
 
     // Dump the graph.
     d_graph_dump(sheet->graph);

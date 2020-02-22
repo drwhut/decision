@@ -25,7 +25,7 @@
 #define DCFUNC_H
 
 #include "dcfg.h"
-#include "dsheet.h"
+#include "dgraph.h"
 #include "dtype.h"
 
 /*
@@ -59,11 +59,11 @@ typedef struct _cFunction {
 */
 
 /**
- * \fn void d_create_c_function(DecisionCFunction function, const char *name,
- *                              const char *description, SocketMeta *sockets,
- *                              size_t numInputs, size_t numOutputs)
- * \brief Create a function that calls a C function. Any sheets that are loaded
- * after this call can use this new function.
+ * \fn CFunction d_create_c_function(DecisionCFunction function,
+ *                                   const char *name, const char *description,
+ *                                   SocketMeta *sockets, size_t numInputs,
+ *                                   size_t numOutputs)
+ * \brief Create a function that calls a C function.
  *
  * \param function The C function to call when this node is activated.
  * \param name The name of the function.
@@ -73,17 +73,19 @@ typedef struct _cFunction {
  * \param numInputs The number of input sockets the function has.
  * \param numOutputs The number of output sockets the function has.
  */
-DECISION_API void d_create_c_function(DecisionCFunction function,
-                                      const char *name, const char *description,
-                                      SocketMeta *sockets, size_t numInputs,
-                                      size_t numOutputs);
+DECISION_API CFunction d_create_c_function(DecisionCFunction function,
+                                           const char *name,
+                                           const char *description,
+                                           SocketMeta *sockets,
+                                           size_t numInputs, size_t numOutputs);
 
 /**
- * \fn void d_create_c_subroutine(DecisionCFunction function, const char *name,
- *                                const char *description, SocketMeta *sockets,
- *                                size_t numInputs, size_t numOutputs)
- * \brief Create a subroutine that calls a C function. Any sheets that are
- * loaded after this call can use this new function.
+ * \fn CFunction d_create_c_subroutine(DecisionCFunction function,
+ *                                     const char *name,
+ *                                     const char *description,
+ *                                     SocketMeta *sockets, size_t numInputs,
+ *                                     size_t numOutputs)
+ * \brief Create a subroutine that calls a C function.
  *
  * **NOTE:** The `sockets` array should not have any execution sockets in,
  * these will automatically be added. Thus `numInputs` and `numOutputs` should
@@ -97,38 +99,8 @@ DECISION_API void d_create_c_function(DecisionCFunction function,
  * \param numInputs The number of input sockets the function has.
  * \param numOutputs The number of output sockets the function has.
  */
-DECISION_API void d_create_c_subroutine(DecisionCFunction function,
-                                        const char *name,
-                                        const char *description,
-                                        SocketMeta *sockets, size_t numInputs,
-                                        size_t numOutputs);
-
-/**
- * \fn size_t d_get_num_c_functions()
- * \brief Get the current number of C functions.
- *
- * **NOTE:** Use `d_get_c_functions` to get the items in the list.
- *
- * \return The number of C functions added.
- */
-DECISION_API size_t d_get_num_c_functions();
-
-/**
- * \fn const CFunction *d_get_c_functions()
- * \brief Get the current list of C functions.
- *
- * **NOTE:** Use `d_get_num_c_functions` to get the number of items in this
- * list.
- *
- * \return The current list of C functions.
- */
-DECISION_API const CFunction *d_get_c_functions();
-
-/**
- * \fn void d_free_c_functions()
- * \brief If any functions or subroutines have been created that call C
- * functions, free them.
- */
-DECISION_API void d_free_c_functions();
+DECISION_API CFunction d_create_c_subroutine(
+    DecisionCFunction function, const char *name, const char *description,
+    SocketMeta *sockets, size_t numInputs, size_t numOutputs);
 
 #endif // DCFUNC_H

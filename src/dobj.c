@@ -437,6 +437,9 @@ static void free_index_list(IndexList *list) {
  *
  * This function is essentially the reverse of `d_obj_load`.
  *
+ * **NOTE:** You cannot compile the sheet if it has any C functions defined in
+ * it!
+ *
  * \return A malloc'd string of the contents of the future object file.
  *
  * \param sheet The sheet to use to create the object.
@@ -444,6 +447,15 @@ static void free_index_list(IndexList *list) {
  * generated string.
  */
 const char *d_obj_generate(Sheet *sheet, size_t *size) {
+    // First, check to see if the sheet has any C functions defined.
+    // We are checking because we cannot compile the sheet into an object file
+    // if the sheet relies on a C function that won't be put in.
+    if (sheet->numCFunctions > 0) {
+        printf("%s cannot be compiled into an object file: Has C functions.",
+               sheet->filePath);
+        return NULL;
+    }
+
     // Create the ObjectWriter struct.
     ObjectWriter writer = {NULL, 0};
 
@@ -595,16 +607,13 @@ const char *d_obj_generate(Sheet *sheet, size_t *size) {
         }
     }
 
-    // .c
-    // TODO: DO!
-
     *size = writer.len;
     return (const char *)writer.obj;
 }
 
 /**
  * \fn Sheet *d_obj_load(const char *obj, size_t size,
- *                              const char *filePath)
+ *                              const char *filePath, Sheet **includes)
  * \brief Given a binary object string, create a malloc'd Sheet structure from
  * it.
  *
@@ -615,10 +624,22 @@ const char *d_obj_generate(Sheet *sheet, size_t *size) {
  * \param obj The object string.
  * \param size The size of the object string.
  * \param filePath Where the object file the object string came from is located.
+ * \param includes A NULL-terminated list of initially included sheets.
+ * Can be NULL.
  */
-Sheet *d_obj_load(const char *obj, size_t size, const char *filePath) {
+Sheet *d_obj_load(const char *obj, size_t size, const char *filePath,
+                  Sheet **includes) {
     Sheet *out       = d_sheet_create(filePath);
     out->_isCompiled = true;
+
+    if (includes != NULL) {
+        Sheet **include = includes;
+
+        while (*include) {
+            d_sheet_add_include(out, *include);
+            include++;
+        }
+    }
 
     // TODO: Account for edianness in the instructions, and also for variables
     // in the data section.
@@ -629,7 +650,7 @@ Sheet *d_obj_load(const char *obj, size_t size, const char *filePath) {
 
     if (!reader_test_string_n(&reader, "D", 1)) {
         printf("%s cannot be loaded: object file is not a valid object file.\n",
-            filePath);
+               filePath);
         out->hasErrors = true;
         return out;
     }
@@ -739,9 +760,9 @@ Sheet *d_obj_load(const char *obj, size_t size, const char *filePath) {
             size_t metaLinkIndex = read_uinteger(&reader);
 
             // Copy the name of the function from the link meta list.
-            const char *name      = out->_link.list[metaLinkIndex].name;
-            size_t nameSize = strlen(name) + 1;
-            char *newName   = d_malloc(nameSize);
+            const char *name = out->_link.list[metaLinkIndex].name;
+            size_t nameSize  = strlen(name) + 1;
+            char *newName    = d_malloc(nameSize);
             strcpy(newName, name);
 
             NodeDefinition funcDef = read_definition(&reader, false);
@@ -832,12 +853,30 @@ Sheet *d_obj_load(const char *obj, size_t size, const char *filePath) {
         for (size_t i = 0; i < numIncludes; i++) {
             const char *path = read_string(&reader);
 
-            Sheet *include = d_sheet_add_include_from_path(out, path);
+            // Check that it wasn't in the includes list!
+            Sheet **test    = includes;
+            bool inIncludes = false;
 
-            if (include->hasErrors) {
-                ERROR_COMPILER(out->filePath, 0, true,
-                               "Included sheet %s produced errors",
-                               include->filePath);
+            if (includes != NULL) {
+                while (*test) {
+                    Sheet *testInclude = *test;
+                    if (strcmp(path, testInclude->filePath) == 0) {
+                        inIncludes = true;
+                        break;
+                    }
+
+                    test++;
+                }
+            }
+
+            if (!inIncludes) {
+                Sheet *include = d_sheet_add_include_from_path(out, path);
+
+                if (include->hasErrors) {
+                    ERROR_COMPILER(out->filePath, 0, true,
+                                   "Included sheet %s produced errors",
+                                   include->filePath);
+                }
             }
 
             // When the file path enters the sheet, it is copied, so we can
@@ -849,8 +888,31 @@ Sheet *d_obj_load(const char *obj, size_t size, const char *filePath) {
         out->numIncludes = 0;
     }
 
-    // .c
-    // TODO: DO!
+    // There isn't a C function section, but we may still need to find the
+    // metadata of C functions in our includes.
+    for (size_t i = 0; i < out->_link.size; i++) {
+        LinkMeta *meta = out->_link.list + i;
+
+        if (meta->type == LINK_CFUNCTION) {
+            NameDefinition nameDefinition;
+
+            if (d_semantic_get_definition(out, meta->name, 0, NULL,
+                                          &nameDefinition)) {
+                if (nameDefinition.type == NAME_CFUNCTION) {
+                    meta->meta = nameDefinition.definition.cFunction;
+                } else {
+                    printf("%s failed to load: %s is not a C function.\n",
+                           out->filePath, meta->name);
+                    out->hasErrors = true;
+                }
+            } else {
+                printf("%s failed to load: Could not find definition of C "
+                       "function %s.\n",
+                       out->filePath, meta->name);
+                out->hasErrors = true;
+            }
+        }
+    }
 
     return out;
 }

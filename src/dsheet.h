@@ -25,6 +25,7 @@
 #define DSHEET_H
 
 #include "dcfg.h"
+#include "dcfunc.h"
 #include "dgraph.h"
 #include "dlink.h"
 #include <stdbool.h>
@@ -98,6 +99,8 @@ typedef struct _sheet {
                              ///< value is `NULL`.
     bool hasErrors;
 
+    bool allowFree; ///< Allow sheets that include this sheet to free it?
+
     bool _isCompiled;
     bool _isLinked;
 
@@ -108,6 +111,8 @@ typedef struct _sheet {
     size_t numVariables;
     SheetFunction *functions;
     size_t numFunctions;
+    CFunction *cFunctions;
+    size_t numCFunctions;
 
     Graph graph; ///< Can be empty if the sheet came from a Decision object
                  ///< file.
@@ -151,6 +156,17 @@ DECISION_API void d_sheet_add_variable(Sheet *sheet, const SocketMeta varMeta);
  */
 DECISION_API void d_sheet_add_function(Sheet *sheet,
                                        const NodeDefinition funcDef);
+
+/**
+ * \fn void d_sheet_add_c_function(Sheet *sheet, CFunction cFunction)
+ * \brief Add a C function to a sheet.
+ *
+ * **NOTE:** To create a C function, have a look at `dcfunc.h`.
+ *
+ * \param sheet The sheet to add the C function to.
+ * \param cFunction The C function to add.
+ */
+DECISION_API void d_sheet_add_c_function(Sheet *sheet, CFunction cFunction);
 
 /**
  * \fn bool d_is_subroutine(SheetFunction func)
@@ -200,6 +216,9 @@ DECISION_API Sheet *d_sheet_create(const char *filePath);
 /**
  * \fn void d_sheet_free(Sheet *sheet)
  * \brief Free malloc'd memory in a sheet.
+ * 
+ * **NOTE:** This will also free all included sheets recursively that have
+ * the `allowFree` property set to `true`, which is the default!
  *
  * \param sheet The sheet to free from memory.
  */
@@ -224,6 +243,15 @@ DECISION_API void d_variables_dump(SheetVariable *variables,
  */
 DECISION_API void d_functions_dump(SheetFunction *functions,
                                    size_t numFunctions);
+
+/**
+ * \fn void d_c_functions_dump(CFunction *functions, size_t numFunctions)
+ * \brief Dump the details of an array of C functions to `stdout`.
+ * 
+ * \param functions The array of C functions.
+ * \param numFunctions The number of functions in the array.
+ */
+DECISION_API void d_c_functions_dump(CFunction *functions, size_t numFunctions);
 
 /**
  * \fn void d_sheet_dump(Sheet *sheet)
