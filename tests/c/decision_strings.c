@@ -25,7 +25,7 @@ int main() {
     // d_load_string
     Sheet *sheet =
         d_load_string("Start~#1; Print(#1, 'Hello, world!');", NULL, NULL);
-    
+
     // d_run_sheet
     START_CAPTURE_STDOUT()
     d_run_sheet(sheet);

@@ -45,7 +45,7 @@ struct _sheet;
  * object file.
  *
  * This function is essentially the reverse of `d_obj_load`.
- * 
+ *
  * **NOTE:** You cannot compile the sheet if it has any C functions defined in
  * it!
  *

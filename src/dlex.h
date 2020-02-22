@@ -24,8 +24,8 @@
 #ifndef DLEX_H
 #define DLEX_H
 
-#include <stdbool.h>
 #include "dcfg.h"
+#include <stdbool.h>
 
 #include <stddef.h>
 

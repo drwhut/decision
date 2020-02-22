@@ -42,6 +42,6 @@ int main() {
     d_run_object_file("main.dco", NULL);
     STOP_CAPTURE_STDOUT()
     ASSERT_CAPTURED_STDOUT("Hello, world!\n")
-    
+
     return 0;
 }

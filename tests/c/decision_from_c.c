@@ -93,13 +93,13 @@ int main() {
                       "Define(Double)~#20\n"
                       "Multiply(#20, 2)~#21\n"
                       "Return(Double, #21)\n";
-                    
+
     // d_load_string
     Sheet *sheet = d_load_string(src, NULL, NULL);
 
     int result = test_sheet(sheet);
     ASSERT_EQUAL(result, 0)
-    
+
     // d_sheet_free
     d_sheet_free(sheet);
 
@@ -119,7 +119,7 @@ int main() {
 
     result = test_sheet(sheet);
     ASSERT_EQUAL(result, 0)
-    
+
     // d_sheet_free
     d_sheet_free(sheet);
 
@@ -131,7 +131,7 @@ int main() {
 
     result = test_sheet(sheet);
     ASSERT_EQUAL(result, 0)
-    
+
     // d_sheet_free
     d_sheet_free(sheet);
 

@@ -216,7 +216,7 @@ DECISION_API Sheet *d_sheet_create(const char *filePath);
 /**
  * \fn void d_sheet_free(Sheet *sheet)
  * \brief Free malloc'd memory in a sheet.
- * 
+ *
  * **NOTE:** This will also free all included sheets recursively that have
  * the `allowFree` property set to `true`, which is the default!
  *
@@ -247,7 +247,7 @@ DECISION_API void d_functions_dump(SheetFunction *functions,
 /**
  * \fn void d_c_functions_dump(CFunction *functions, size_t numFunctions)
  * \brief Dump the details of an array of C functions to `stdout`.
- * 
+ *
  * \param functions The array of C functions.
  * \param numFunctions The number of functions in the array.
  */

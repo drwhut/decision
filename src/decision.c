@@ -207,8 +207,7 @@ bool d_run_function(DVM *vm, Sheet *sheet, const char *funcName) {
                     d_get_name_definitions(sheet, funcName);
 
                 NameDefinition definition;
-                if (d_select_name_definition(funcName, nameDefs,
-                                                      &definition)) {
+                if (d_select_name_definition(funcName, nameDefs, &definition)) {
                     if (definition.type == NAME_FUNCTION) {
                         Sheet *extSheet = definition.sheet;
                         return d_run_function(vm, extSheet, funcName);
