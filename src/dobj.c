@@ -637,6 +637,7 @@ Sheet *d_obj_load(const char *obj, size_t size, const char *filePath,
 
         while (*include) {
             d_sheet_add_include(out, *include);
+            include++;
         }
     }
 
@@ -852,12 +853,28 @@ Sheet *d_obj_load(const char *obj, size_t size, const char *filePath,
         for (size_t i = 0; i < numIncludes; i++) {
             const char *path = read_string(&reader);
 
-            Sheet *include = d_sheet_add_include_from_path(out, path);
+            // Check that it wasn't in the includes list!
+            Sheet **test    = includes;
+            bool inIncludes = false;
 
-            if (include->hasErrors) {
-                ERROR_COMPILER(out->filePath, 0, true,
-                               "Included sheet %s produced errors",
-                               include->filePath);
+            while (*test) {
+                Sheet *testInclude = *test;
+                if (strcmp(path, testInclude->filePath) == 0) {
+                    inIncludes = true;
+                    break;
+                }
+
+                test++;
+            }
+
+            if (!inIncludes) {
+                Sheet *include = d_sheet_add_include_from_path(out, path);
+
+                if (include->hasErrors) {
+                    ERROR_COMPILER(out->filePath, 0, true,
+                                   "Included sheet %s produced errors",
+                                   include->filePath);
+                }
             }
 
             // When the file path enters the sheet, it is copied, so we can
@@ -867,6 +884,32 @@ Sheet *d_obj_load(const char *obj, size_t size, const char *filePath,
     } else {
         out->includes    = NULL;
         out->numIncludes = 0;
+    }
+
+    // There isn't a C function section, but we may still need to find the
+    // metadata of C functions in our includes.
+    for (size_t i = 0; i < out->_link.size; i++) {
+        LinkMeta *meta = out->_link.list + i;
+
+        if (meta->type == LINK_CFUNCTION) {
+            NameDefinition nameDefinition;
+
+            if (d_semantic_get_definition(out, meta->name, 0, NULL,
+                                          &nameDefinition)) {
+                if (nameDefinition.type == NAME_CFUNCTION) {
+                    meta->meta = nameDefinition.definition.cFunction;
+                } else {
+                    printf("%s failed to load: %s is not a C function.\n",
+                           out->filePath, meta->name);
+                    out->hasErrors = true;
+                }
+            } else {
+                printf("%s failed to load: Could not find definition of C "
+                       "function %s.\n",
+                       out->filePath, meta->name);
+                out->hasErrors = true;
+            }
+        }
     }
 
     return out;

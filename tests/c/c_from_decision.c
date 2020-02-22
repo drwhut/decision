@@ -70,26 +70,40 @@ void myFactorial(DVM *vm) {
     d_vm_push(vm, output);
 }
 
+Sheet *mySheet() {
+    SocketMeta halfSockets[] = {
+        {"number", "The number to half", TYPE_FLOAT, {0}},
+        {"half", "The number halved", TYPE_FLOAT, {0}}
+    };
+
+    CFunction halfFunction = d_create_c_function(&myHalf, "Half", "Half a number.", halfSockets, 1, 1);
+
+    SocketMeta canDriveSockets[] = {
+        {"age", "The age of the person.", TYPE_INT, {0}},
+        {"hasLicense", "Has the person got a driving license?", TYPE_BOOL, {0}},
+        {"canDrive", "If the person can drive.", TYPE_BOOL, {0}},
+        {"reason", "If the person cannot drive, why?", TYPE_STRING, {0}}
+    };
+
+    CFunction canDriveFunction = d_create_c_function(&myCanDrive, "CanDrive", "Determine if a person can drive.", canDriveSockets, 2, 2);
+
+    SocketMeta factorialSockets[] = {
+        {"n", "The number to get the factorial of.", TYPE_INT, {0}},
+        {"nFactorial", "The factorial of n, n!", TYPE_INT, {0}}
+    };
+
+    CFunction factorialSubroutine = d_create_c_subroutine(&myFactorial, "Factorial", "Calculate the factorial of an integer.", factorialSockets, 1, 1);
+
+    Sheet *out = d_sheet_create("MyFunctions");
+
+    d_sheet_add_c_function(out, halfFunction);
+    d_sheet_add_c_function(out, canDriveFunction);
+    d_sheet_add_c_function(out, factorialSubroutine);
+
+    return out;
+}
+
 int main() {
-    DType halfInputs[]  = {TYPE_FLOAT, TYPE_NONE};
-    DType halfOutputs[] = {TYPE_FLOAT, TYPE_NONE};
-
-    // d_create_c_function
-    d_create_c_function("Half", &myHalf, halfInputs, halfOutputs);
-
-    DType canDriveInputs[]  = {TYPE_INT, TYPE_BOOL, TYPE_NONE};
-    DType canDriveOutputs[] = {TYPE_BOOL, TYPE_STRING, TYPE_NONE};
-
-    // d_create_c_function
-    d_create_c_function("CanDrive", &myCanDrive, canDriveInputs,
-                        canDriveOutputs);
-
-    DType factorialInputs[]  = {TYPE_INT, TYPE_NONE};
-    DType factorialOutputs[] = {TYPE_INT, TYPE_NONE};
-
-    // d_create_c_subroutine
-    d_create_c_subroutine("Factorial", &myFactorial, factorialInputs,
-                          factorialOutputs);
 
     char *src = "Start~#1\n"
                 "Half(100.125)~#2\n"
@@ -98,13 +112,16 @@ int main() {
                 "Print(#3, #4)~#6\n"
                 "Print(#6, #5)~#7\n"
                 "Factorial(#7, 10)~#8, #9\n"
-                "Print(#8, #9)\n";
+                "Print(#9, #8)\n";
 
     char *answer = "50.0625\nfalse\nYou do not have a license.\n3628800\n";
+
+    Sheet *includedSheets[] = { NULL, NULL };
+    includedSheets[0] = mySheet();
     
     // d_run_string
     START_CAPTURE_STDOUT()
-    d_run_string(src, NULL);
+    d_run_string(src, NULL, includedSheets);
     STOP_CAPTURE_STDOUT()
     ASSERT_CAPTURED_STDOUT(answer)
 
@@ -119,22 +136,26 @@ int main() {
     fprintf(file, "%s", src);
     fclose(file);
 
+    includedSheets[0] = mySheet();
+
     // d_run_file
     START_CAPTURE_STDOUT()
-    d_run_file("main.dc");
+    d_run_file("main.dc", includedSheets);
     STOP_CAPTURE_STDOUT()
-    ASSERT_CAPTURED_STDOUT(answer)
+        ASSERT_CAPTURED_STDOUT(answer)
+
+        includedSheets[0] = mySheet();
 
     // d_compile_string
-    d_compile_string(src, "main.dco");
+    d_compile_string(src, "main.dco", includedSheets);
+
+    includedSheets[0] = mySheet();
 
     // d_run_file
     START_CAPTURE_STDOUT()
-    d_run_file("main.dco");
+    d_run_file("main.dco", includedSheets);
     STOP_CAPTURE_STDOUT()
     ASSERT_CAPTURED_STDOUT(answer)
-    
-    d_free_c_functions();
 
     return 0;
 }

@@ -314,6 +314,7 @@ Sheet *d_load_string(const char *source, const char *name, Sheet **includes) {
 
         while (*include) {
             d_sheet_add_include(sheet, *include);
+            include++;
         }
     }
 

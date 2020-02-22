@@ -214,6 +214,8 @@ DECISION_API Sheet *d_sheet_create(const char *filePath);
 /**
  * \fn void d_sheet_free(Sheet *sheet)
  * \brief Free malloc'd memory in a sheet.
+ * 
+ * **NOTE:** This will also free all included sheets recursively!
  *
  * \param sheet The sheet to free from memory.
  */
