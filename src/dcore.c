@@ -21,6 +21,7 @@
 #include "dsheet.h"
 #include "dtype.h"
 
+#include <stdio.h>
 #include <string.h>
 
 // clang-format off
@@ -234,4 +235,112 @@ const CoreFunction d_core_find_name(const char *name) {
     }
 
     return -1;
+}
+
+/* Helper functions for printing JSON to the screen. */
+
+static void print_indent(size_t indent) {
+    for (size_t i = 0; i < indent; i++) {
+        printf("  ");
+    }
+}
+
+static void print_socket(size_t indent, const SocketMeta *meta) {
+    print_indent(indent);
+    printf("{\n");
+
+    print_indent(indent + 1);
+    printf("\"name\":\"%s\"\n", meta->name);
+
+    print_indent(indent + 1);
+    printf("\"description\":\"%s\"\n", meta->description);
+
+    print_indent(indent + 1);
+    printf("\"type\":\"%s\"\n", d_type_name(meta->type));
+
+    print_indent(indent + 1);
+    printf("\"name\":\"\"\n"); // TODO
+
+    print_indent(indent);
+    printf("},\n");
+}
+
+static void print_definition(size_t indent, const NodeDefinition *def) {
+    print_indent(indent);
+    printf("{\n");
+
+    print_indent(indent + 1);
+    printf("\"name\":\"%s\"\n", def->name);
+
+    print_indent(indent + 1);
+    printf("\"description\":\"%s\"\n", def->description);
+
+    print_indent(indent + 1);
+    printf("\"inputs\": [\n");
+    
+    const size_t numInputs = d_definition_num_inputs(def);
+    for (size_t i = 0; i < numInputs; i++) {
+        print_socket(indent + 2, def->sockets + i);
+    }
+
+    print_indent(indent + 1);
+    printf("],");
+
+    print_indent(indent + 1);
+    printf("\"outputs\": [\n");
+    
+    const size_t numOutputs = d_definition_num_outputs(def);
+    for (size_t i = numInputs; i < numInputs + numOutputs; i++) {
+        print_socket(indent + 2, def->sockets + i);
+    }
+
+    print_indent(indent + 1);
+    printf("],");
+
+    print_indent(indent + 1);
+    printf("\"infiniteInputs\":\"%s\"\n",
+           (def->infiniteInputs) ? "true" : "false");
+
+    print_indent(indent);
+    printf("},\n");
+}
+
+/**
+ * \fn void d_core_dump_json()
+ * \brief Dump the core functions and subroutines to `stdout` in JSON format.
+ */
+void d_core_dump_json() {
+    printf("{\n");
+
+    size_t indent = 1;
+
+    print_indent(indent);
+    printf("\"functions\": [\n");
+
+    for (size_t i = 0; i < NUM_CORE_FUNCTIONS; i++) {
+        const NodeDefinition *def = CORE_FUNC_DEFINITIONS + i;
+
+        if (!d_is_execution_definition(def)) {
+            print_definition(indent + 2, def);
+        }
+    }
+
+    print_indent(indent);
+    printf("],\n");
+
+    print_indent(indent);
+    printf("\"subroutines\": [\n");
+
+    for (size_t i = 0; i < NUM_CORE_FUNCTIONS; i++) {
+        const NodeDefinition *def = CORE_FUNC_DEFINITIONS + i;
+
+        if (d_is_execution_definition(def)) {
+            print_definition(indent + 2, def);
+        }
+    }
+
+    print_indent(indent);
+    printf("],\n");
+
+    printf("}\n");
 }
