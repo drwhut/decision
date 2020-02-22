@@ -26,6 +26,8 @@
 
 #include "dcfg.h"
 
+#include <stddef.h>
+
 /*
 === HEADER DEFINITIONS ====================================
 */

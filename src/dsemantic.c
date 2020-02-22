@@ -748,9 +748,6 @@ static void add_property_FunctionOutput(Sheet *sheet, size_t lineNum,
     descriptionArg.type         = 0;
     descriptionArg.data.literal = NULL;
 
-    LexData defaultValue;
-    defaultValue.integerValue = 0;
-
     bool description = true;
 
     if (argList.numArgs < 3) {
