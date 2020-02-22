@@ -437,6 +437,9 @@ static void free_index_list(IndexList *list) {
  *
  * This function is essentially the reverse of `d_obj_load`.
  *
+ * **NOTE:** You cannot compile the sheet if it has any C functions defined in
+ * it!
+ * 
  * \return A malloc'd string of the contents of the future object file.
  *
  * \param sheet The sheet to use to create the object.
@@ -444,6 +447,15 @@ static void free_index_list(IndexList *list) {
  * generated string.
  */
 const char *d_obj_generate(Sheet *sheet, size_t *size) {
+    // First, check to see if the sheet has any C functions defined.
+    // We are checking because we cannot compile the sheet into an object file
+    // if the sheet relies on a C function that won't be put in.
+    if (sheet->numCFunctions > 0) {
+        printf("%s cannot be compiled into an object file: Has C functions.",
+               sheet->filePath);
+        return NULL;
+    }
+
     // Create the ObjectWriter struct.
     ObjectWriter writer = {NULL, 0};
 
@@ -595,9 +607,6 @@ const char *d_obj_generate(Sheet *sheet, size_t *size) {
         }
     }
 
-    // .c
-    // TODO: DO!
-
     *size = writer.len;
     return (const char *)writer.obj;
 }
@@ -629,7 +638,7 @@ Sheet *d_obj_load(const char *obj, size_t size, const char *filePath) {
 
     if (!reader_test_string_n(&reader, "D", 1)) {
         printf("%s cannot be loaded: object file is not a valid object file.\n",
-            filePath);
+               filePath);
         out->hasErrors = true;
         return out;
     }
@@ -739,9 +748,9 @@ Sheet *d_obj_load(const char *obj, size_t size, const char *filePath) {
             size_t metaLinkIndex = read_uinteger(&reader);
 
             // Copy the name of the function from the link meta list.
-            const char *name      = out->_link.list[metaLinkIndex].name;
-            size_t nameSize = strlen(name) + 1;
-            char *newName   = d_malloc(nameSize);
+            const char *name = out->_link.list[metaLinkIndex].name;
+            size_t nameSize  = strlen(name) + 1;
+            char *newName    = d_malloc(nameSize);
             strcpy(newName, name);
 
             NodeDefinition funcDef = read_definition(&reader, false);
@@ -848,9 +857,6 @@ Sheet *d_obj_load(const char *obj, size_t size, const char *filePath) {
         out->includes    = NULL;
         out->numIncludes = 0;
     }
-
-    // .c
-    // TODO: DO!
 
     return out;
 }
