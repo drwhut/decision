@@ -493,6 +493,56 @@ void d_variables_dump(SheetVariable *variables, size_t numVariables) {
     }
 }
 
+/* A helper function for printing a node definition. */
+static void dump_definition(const NodeDefinition *definition) {
+    size_t numInputs  = d_definition_num_inputs(definition);
+    size_t numOutputs = d_definition_num_outputs(definition);
+
+    printf("\tFunction %s is %s with %zu arguments:\n", definition->name,
+           ((d_is_execution_definition(definition)) ? "a SUBROUTINE"
+                                                    : "a FUNCTION"),
+           numInputs);
+
+    if (definition->sockets != NULL && numInputs > 0) {
+        for (size_t j = 0; j < numInputs; j++) {
+            SocketMeta arg = definition->sockets[j];
+
+            printf("\t\tArgument %s (%s) is of type %s with default "
+                   "value ",
+                   arg.name, arg.description, d_type_name(arg.type));
+            switch (arg.type) {
+                case TYPE_INT:
+                    printf("%" DINT_PRINTF_d, arg.defaultValue.integerValue);
+                    break;
+                case TYPE_FLOAT:
+                    printf("%f", arg.defaultValue.floatValue);
+                    break;
+                case TYPE_STRING:
+                    printf("%s", arg.defaultValue.stringValue);
+                    break;
+                case TYPE_BOOL:
+                    printf("%d", arg.defaultValue.booleanValue);
+                    break;
+                default:
+                    break;
+            }
+            printf("\n");
+        }
+    }
+
+    printf("\tand %zu returns:\n", numOutputs);
+
+    if (definition->sockets != NULL && numOutputs > 0) {
+        for (size_t j = 0; j < numOutputs; j++) {
+            SocketMeta ret =
+                definition->sockets[definition->startOutputIndex + j];
+
+            printf("\t\tReturn %s (%s) is of type %s\n", ret.name,
+                   ret.description, d_type_name(ret.type));
+        }
+    }
+}
+
 /**
  * \fn void d_functions_dump(SheetFunction *functions, size_t numFunctions)
  * \brief Dump the details of an array of functions to `stdout`.
@@ -507,54 +557,26 @@ void d_functions_dump(SheetFunction *functions, size_t numFunctions) {
         for (size_t i = 0; i < numFunctions; i++) {
             SheetFunction function        = functions[i];
             const NodeDefinition *funcDef = &(function.functionDefinition);
+            dump_definition(funcDef);
+        }
+    }
+}
 
-            size_t numInputs  = d_definition_num_inputs(funcDef);
-            size_t numOutputs = d_definition_num_outputs(funcDef);
+/**
+ * \fn void d_c_functions_dump(CFunction *functions, size_t numFunctions)
+ * \brief Dump the details of an array of C functions to `stdout`.
+ * 
+ * \param functions The array of C functions.
+ * \param numFunctions The number of functions in the array.
+ */
+void d_c_functions_dump(CFunction *functions, size_t numFunctions) {
+    printf("# C Functions: %zu\n", numFunctions);
 
-            printf("\tFunction %s is %s with %zu arguments:\n", funcDef->name,
-                   ((d_is_execution_definition(funcDef)) ? "a SUBROUTINE"
-                                                         : "a FUNCTION"),
-                   numInputs);
-
-            if (funcDef->sockets != NULL && numInputs > 0) {
-                for (size_t j = 0; j < numInputs; j++) {
-                    SocketMeta arg = funcDef->sockets[j];
-
-                    printf("\t\tArgument %s (%s) is of type %s with default "
-                           "value ",
-                           arg.name, arg.description, d_type_name(arg.type));
-                    switch (arg.type) {
-                        case TYPE_INT:
-                            printf("%" DINT_PRINTF_d,
-                                   arg.defaultValue.integerValue);
-                            break;
-                        case TYPE_FLOAT:
-                            printf("%f", arg.defaultValue.floatValue);
-                            break;
-                        case TYPE_STRING:
-                            printf("%s", arg.defaultValue.stringValue);
-                            break;
-                        case TYPE_BOOL:
-                            printf("%d", arg.defaultValue.booleanValue);
-                            break;
-                        default:
-                            break;
-                    }
-                    printf("\n");
-                }
-            }
-
-            printf("\tand %zu returns:\n", numOutputs);
-
-            if (funcDef->sockets != NULL && numOutputs > 0) {
-                for (size_t j = 0; j < numOutputs; j++) {
-                    SocketMeta ret =
-                        funcDef->sockets[funcDef->startOutputIndex + j];
-
-                    printf("\t\tReturn %s (%s) is of type %s\n", ret.name,
-                           ret.description, d_type_name(ret.type));
-                }
-            }
+    if (functions != NULL && numFunctions > 0) {
+        for (size_t i = 0; i < numFunctions; i++) {
+            CFunction function = functions[i];
+            const NodeDefinition *funcDef = &(function.definition);
+            dump_definition(funcDef);
         }
     }
 }
@@ -579,8 +601,11 @@ void d_sheet_dump(Sheet *sheet) {
     // Dump the variables, if there are any.
     d_variables_dump(sheet->variables, sheet->numVariables);
 
-    // Dump the functions,P if there are any.
+    // Dump the functions, if there are any.
     d_functions_dump(sheet->functions, sheet->numFunctions);
+
+    // Dump the C functions, if there are any.
+    d_c_functions_dump(sheet->cFunctions, sheet->numCFunctions);
 
     // Dump the graph.
     d_graph_dump(sheet->graph);

@@ -240,6 +240,15 @@ DECISION_API void d_functions_dump(SheetFunction *functions,
                                    size_t numFunctions);
 
 /**
+ * \fn void d_c_functions_dump(CFunction *functions, size_t numFunctions)
+ * \brief Dump the details of an array of C functions to `stdout`.
+ * 
+ * \param functions The array of C functions.
+ * \param numFunctions The number of functions in the array.
+ */
+DECISION_API void d_c_functions_dump(CFunction *functions, size_t numFunctions);
+
+/**
  * \fn void d_sheet_dump(Sheet *sheet)
  * \brief Dump the contents of a `Sheet` struct to `stdout`.
  *
