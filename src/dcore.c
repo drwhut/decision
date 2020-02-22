@@ -245,7 +245,8 @@ static void print_indent(size_t indent) {
     }
 }
 
-static void print_socket(size_t indent, const SocketMeta *meta, bool input) {
+static void print_socket(size_t indent, const SocketMeta *meta, bool input,
+                         bool last) {
     print_indent(indent);
     printf("{\n");
 
@@ -256,7 +257,12 @@ static void print_socket(size_t indent, const SocketMeta *meta, bool input) {
     printf("\"description\":\"%s\",\n", meta->description);
 
     print_indent(indent + 1);
-    printf("\"type\":\"%s\",\n", d_type_name(meta->type));
+    printf("\"type\":\"%s\"", d_type_name(meta->type));
+
+    if (input) {
+        printf(",");
+    }
+    printf("\n");
 
     if (input) {
         print_indent(indent + 1);
@@ -264,31 +270,36 @@ static void print_socket(size_t indent, const SocketMeta *meta, bool input) {
         DType type = meta->type;
 
         if ((type & TYPE_INT) != 0) {
-            printf("\"default\":%" DINT_PRINTF_d ",\n",
+            printf("\"default\":%" DINT_PRINTF_d "\n",
                    meta->defaultValue.integerValue);
         } else if ((type & TYPE_FLOAT) != 0) {
-            printf("\"default\":%g,\n", meta->defaultValue.floatValue);
+            printf("\"default\":%g\n", meta->defaultValue.floatValue);
         } else if ((type & TYPE_STRING) != 0) {
             const char *str = meta->defaultValue.stringValue;
 
             if (str) {
-                printf("\"default\":\"%s\",\n", str);
+                printf("\"default\":\"%s\"\n", str);
             } else {
-                printf("\"default\":\"\",\n");
+                printf("\"default\":\"\"\n");
             }
         } else if ((type & TYPE_BOOL) != 0) {
-            printf("\"default\":%s,\n",
+            printf("\"default\":%s\n",
                    (meta->defaultValue.booleanValue) ? "true" : "false");
         } else {
-            printf("\"default\":\"unknown\",\n");
+            printf("\"default\":\"unknown\"\n");
         }
     }
 
     print_indent(indent);
-    printf("},\n");
+    printf("}");
+    if (!last) {
+        printf(",");
+    }
+    printf("\n");
 }
 
-static void print_definition(size_t indent, const NodeDefinition *def) {
+static void print_definition(size_t indent, const NodeDefinition *def,
+                             bool last) {
     print_indent(indent);
     printf("{\n");
 
@@ -303,7 +314,7 @@ static void print_definition(size_t indent, const NodeDefinition *def) {
 
     const size_t numInputs = d_definition_num_inputs(def);
     for (size_t i = 0; i < numInputs; i++) {
-        print_socket(indent + 2, def->sockets + i, true);
+        print_socket(indent + 2, def->sockets + i, true, i == numInputs - 1);
     }
 
     print_indent(indent + 1);
@@ -314,18 +325,23 @@ static void print_definition(size_t indent, const NodeDefinition *def) {
 
     const size_t numOutputs = d_definition_num_outputs(def);
     for (size_t i = numInputs; i < numInputs + numOutputs; i++) {
-        print_socket(indent + 2, def->sockets + i, false);
+        print_socket(indent + 2, def->sockets + i, false,
+                     i == numInputs + numOutputs - 1);
     }
 
     print_indent(indent + 1);
     printf("],\n");
 
     print_indent(indent + 1);
-    printf("\"infiniteInputs\":\"%s\",\n",
+    printf("\"infiniteInputs\":\"%s\"\n",
            (def->infiniteInputs) ? "true" : "false");
 
     print_indent(indent);
-    printf("},\n");
+    printf("}");
+    if (!last) {
+        printf(",");
+    }
+    printf("\n");
 }
 
 /**
@@ -337,14 +353,30 @@ void d_core_dump_json() {
 
     size_t indent = 1;
 
-    print_indent(indent);
-    printf("\"functions\": [\n");
+    size_t numFunctions   = 0;
+    size_t numSubroutines = 0;
 
     for (size_t i = 0; i < NUM_CORE_FUNCTIONS; i++) {
         const NodeDefinition *def = CORE_FUNC_DEFINITIONS + i;
 
+        if (d_is_execution_definition(def)) {
+            numSubroutines++;
+        } else {
+            numFunctions++;
+        }
+    }
+
+    print_indent(indent);
+    printf("\"functions\": [\n");
+
+    size_t numFuncsPrinted = 0;
+    for (size_t i = 0; i < NUM_CORE_FUNCTIONS; i++) {
+        const NodeDefinition *def = CORE_FUNC_DEFINITIONS + i;
+
         if (!d_is_execution_definition(def)) {
-            print_definition(indent + 2, def);
+            print_definition(indent + 2, def,
+                             numFuncsPrinted == numFunctions - 1);
+            numFuncsPrinted++;
         }
     }
 
@@ -354,16 +386,19 @@ void d_core_dump_json() {
     print_indent(indent);
     printf("\"subroutines\": [\n");
 
+    size_t numSubsPrinted = 0;
     for (size_t i = 0; i < NUM_CORE_FUNCTIONS; i++) {
         const NodeDefinition *def = CORE_FUNC_DEFINITIONS + i;
 
         if (d_is_execution_definition(def)) {
-            print_definition(indent + 2, def);
+            print_definition(indent + 2, def,
+                             numSubsPrinted == numSubroutines - 1);
+            numSubsPrinted++;
         }
     }
 
     print_indent(indent);
-    printf("],\n");
+    printf("]\n");
 
     printf("}\n");
 }
