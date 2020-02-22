@@ -20,7 +20,7 @@ Return(Quadratic, #7)
 
 > Library subroutine
 [Subroutine(IsPowerOfTwo, "Check if a number is a power of two.")]
-[FunctionInput(IsPowerOfTwo, n, Integer)]
+[FunctionInput(IsPowerOfTwo, n, Integer, 1)]
 [FunctionOutput(IsPowerOfTwo, isPowerOfTwo, Boolean)]
 
 [Variable(_num, Integer, 0)]

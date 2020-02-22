@@ -114,9 +114,9 @@ size_t d_node_num_inputs(Graph graph, size_t nodeIndex) {
     const NodeDefinition *nodeDef = node.definition;
 
     if (nodeDef->infiniteInputs) {
-        return d_definition_num_inputs(nodeDef);
-    } else {
         return node.startOutputIndex;
+    } else {
+        return d_definition_num_inputs(nodeDef);
     }
 }
 

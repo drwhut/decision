@@ -1373,7 +1373,7 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
             }
 
             // Create the socket index.
-            size_t socketIndex = nodeDef->startOutputIndex + numOutputs;
+            size_t socketIndex = numInputs + numOutputs;
             socket.socketIndex = socketIndex;
 
             numOutputs++;
