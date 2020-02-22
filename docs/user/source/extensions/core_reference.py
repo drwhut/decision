@@ -31,12 +31,14 @@ class CoreReference(Directive):
         desc = nodes.list_item()
         desc += nodes.paragraph(text=socket["description"])
 
-        if isInput:
+        displayDefault = isInput and socket["type"] != "Execution"
+
+        if displayDefault:
             default = nodes.list_item()
             defaultText = "Default value: " + str(socket["default"])
             default += nodes.paragraph(text=defaultText)
 
-        if isInput:
+        if displayDefault:
             body += [desc, default]
         else:
             body += [desc]
