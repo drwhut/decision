@@ -20,12 +20,7 @@
 
 #include "dmalloc.h"
 
-#include <stdlib.h>
 #include <string.h>
-
-/* A dynamic list of all defined C functions. */
-static CFunction *cFunctionList = NULL;
-static size_t numCFunctions     = 0;
 
 /**
  * \fn void d_create_c_function(DecisionCFunction function, const char *name,
@@ -42,9 +37,9 @@ static size_t numCFunctions     = 0;
  * \param numInputs The number of input sockets the function has.
  * \param numOutputs The number of output sockets the function has.
  */
-void d_create_c_function(DecisionCFunction function, const char *name,
-                         const char *description, SocketMeta *sockets,
-                         size_t numInputs, size_t numOutputs) {
+CFunction d_create_c_function(DecisionCFunction function, const char *name,
+                              const char *description, SocketMeta *sockets,
+                              size_t numInputs, size_t numOutputs) {
     // Create a node definition to define the function.
 
     char *newName = NULL;
@@ -53,7 +48,7 @@ void d_create_c_function(DecisionCFunction function, const char *name,
     if (name != NULL) {
         size_t nameSize = strlen(name) + 1;
         newName         = (char *)d_malloc(nameSize);
-        memcpy(newName, name, nameSize);
+        strcpy(newName, name);
     }
 
     char *newDescription = NULL;
@@ -61,44 +56,51 @@ void d_create_c_function(DecisionCFunction function, const char *name,
     // Copy the description over.
     if (description != NULL) {
         size_t descriptionSize = strlen(description) + 1;
-        newDescription   = (char *)d_malloc(descriptionSize);
-        memcpy(newDescription, description, descriptionSize);
+        newDescription         = (char *)d_malloc(descriptionSize);
+        strcpy(newDescription, description);
     }
 
     SocketMeta *newSockets = NULL;
     size_t numSockets      = 0;
 
-    // Copy the sockets array.
+    // Copy the sockets array, and copy the names and descriptions over as well.
     if (sockets != NULL) {
         numSockets = numInputs + numOutputs;
-        newSockets =
-            (SocketMeta *)d_malloc(numSockets * sizeof(SocketMeta));
+        newSockets = (SocketMeta *)d_malloc(numSockets * sizeof(SocketMeta));
         memcpy(newSockets, sockets, numSockets * sizeof(SocketMeta));
+
+        for (size_t i = 0; i < numSockets; i++) {
+            char *socketName = newSockets[i].name;
+            char *socketDesc = newSockets[i].description;
+
+            if (socketName != NULL) {
+                size_t nameSize     = strlen(socketName) + 1;
+                char *newSocketName = d_malloc(nameSize);
+                strcpy(newSocketName, socketName);
+                newSockets[i].name = newSocketName;
+            }
+
+            if (socketDesc != NULL) {
+                size_t descSize     = strlen(socketDesc) + 1;
+                char *newSocketDesc = d_malloc(descSize);
+                strcpy(newSocketDesc, socketDesc);
+                newSockets[i].description = newSocketDesc;
+            }
+        }
     }
 
-    NodeDefinition definition = {NULL,    NULL, NULL,
-                                       0, 0,   false};
-    *(char **)&(definition.name) = newName;
-    *(char **)&(definition.description) = newDescription;
+    NodeDefinition definition             = {NULL, NULL, NULL, 0, 0, false};
+    definition.name                       = newName;
+    definition.description                = newDescription;
     *(SocketMeta **)&(definition.sockets) = newSockets;
-    *(size_t *)&(definition.numSockets) = numSockets;
-    *(size_t *)&(definition.startOutputIndex) = numInputs;
+    definition.numSockets                 = numSockets;
+    definition.startOutputIndex           = numInputs;
 
-    // Add the function to the global list.
     CFunction newFunction;
-    newFunction.function = function;
-    memcpy((NodeDefinition *)&(newFunction.definition), &definition, sizeof(NodeDefinition));
+    newFunction.function                           = function;
+    *(NodeDefinition *)(&(newFunction.definition)) = definition;
 
-    if (numCFunctions == 0) {
-        cFunctionList = (CFunction *)d_malloc(sizeof(CFunction));
-        memcpy(cFunctionList, &newFunction, sizeof(CFunction));
-    } else {
-        cFunctionList = (CFunction *)d_realloc(
-            cFunctionList, (numCFunctions + 1) * sizeof(CFunction));
-        memcpy(cFunctionList + numCFunctions, &newFunction, sizeof(CFunction));
-    }
-
-    numCFunctions++;
+    return newFunction;
 }
 
 /**
@@ -120,9 +122,9 @@ void d_create_c_function(DecisionCFunction function, const char *name,
  * \param numInputs The number of input sockets the function has.
  * \param numOutputs The number of output sockets the function has.
  */
-void d_create_c_subroutine(DecisionCFunction function, const char *name,
-                           const char *description, SocketMeta *sockets,
-                           size_t numInputs, size_t numOutputs) {
+CFunction d_create_c_subroutine(DecisionCFunction function, const char *name,
+                                const char *description, SocketMeta *sockets,
+                                size_t numInputs, size_t numOutputs) {
     // For this function, we're going to add a "before" and "after" socket to
     // what the user has already given us, and pass that onto
     // d_create_c_function.
@@ -142,66 +144,25 @@ void d_create_c_subroutine(DecisionCFunction function, const char *name,
 
     // Add the "before" node.
     SocketMeta before;
-    before.name = "before";
+    before.name        = "before";
     before.description = "The node will activate when this input is activated.";
-    before.type = TYPE_EXECUTION;
+    before.type        = TYPE_EXECUTION;
     before.defaultValue.integerValue = 0;
     memcpy(newSockets, &before, sizeof(SocketMeta));
 
     // Add the "after" node.
     SocketMeta after;
     after.name = "after";
-    after.description = "This output will activate once the node has finished executing.";
-    after.type = TYPE_EXECUTION;
+    after.description =
+        "This output will activate once the node has finished executing.";
+    after.type                      = TYPE_EXECUTION;
     after.defaultValue.integerValue = 0;
     memcpy(newSockets + newNumSockets - 1, &after, sizeof(SocketMeta));
 
-    d_create_c_function(function, name, description, newSockets, newNumInputs,
-                        newNumOutputs);
+    CFunction out = d_create_c_function(function, name, description, newSockets,
+                                        newNumInputs, newNumOutputs);
 
     free(newSockets);
-}
 
-/**
- * \fn size_t d_get_num_c_functions()
- * \brief Get the current number of C functions.
- *
- * **NOTE:** Use `d_get_c_functions` to get the items in the list.
- *
- * \return The number of C functions added.
- */
-size_t d_get_num_c_functions() {
-    return numCFunctions;
-}
-
-/**
- * \fn const CFunction *d_get_c_functions()
- * \brief Get the current list of C functions.
- *
- * **NOTE:** Use `d_get_num_c_functions` to get the number of items in this
- * list.
- *
- * \return The current list of C functions.
- */
-const CFunction *d_get_c_functions() {
-    return (const CFunction *)cFunctionList;
-}
-
-/**
- * \fn void d_free_c_functions()
- * \brief If any functions or subroutines have been created that call C
- * functions, free them.
- */
-void d_free_c_functions() {
-    for (size_t i = 0; i < numCFunctions; i++) {
-        CFunction func     = cFunctionList[i];
-        NodeDefinition def = func.definition;
-
-        d_definition_free(def, false);
-    }
-
-    free(cFunctionList);
-
-    cFunctionList = NULL;
-    numCFunctions = 0;
+    return out;
 }
