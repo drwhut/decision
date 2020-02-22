@@ -256,12 +256,12 @@ Sheet *d_sheet_add_include_from_path(Sheet *sheet, const char *includePath) {
 
         strcat(dir, includePath);
 
-        includeSheet = d_load_file((const char *)dir);
+        includeSheet = d_load_file((const char *)dir, NULL);
     }
     // If there isn't either character, we don't need to worry about
     // changing the directory.
     else {
-        includeSheet = d_load_file(includePath);
+        includeSheet = d_load_file(includePath, NULL);
     }
 
     d_sheet_add_include(sheet, includeSheet);
