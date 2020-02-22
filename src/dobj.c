@@ -857,14 +857,16 @@ Sheet *d_obj_load(const char *obj, size_t size, const char *filePath,
             Sheet **test    = includes;
             bool inIncludes = false;
 
-            while (*test) {
-                Sheet *testInclude = *test;
-                if (strcmp(path, testInclude->filePath) == 0) {
-                    inIncludes = true;
-                    break;
-                }
+            if (includes != NULL) {
+                while (*test) {
+                    Sheet *testInclude = *test;
+                    if (strcmp(path, testInclude->filePath) == 0) {
+                        inIncludes = true;
+                        break;
+                    }
 
-                test++;
+                    test++;
+                }
             }
 
             if (!inIncludes) {
