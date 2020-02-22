@@ -24,9 +24,9 @@
 #ifndef DTYPE_H
 #define DTYPE_H
 
-#include <stdbool.h>
 #include "dcfg.h"
 #include "dlex.h"
+#include <stdbool.h>
 
 /*
 === HEADER DEFINITIONS ====================================

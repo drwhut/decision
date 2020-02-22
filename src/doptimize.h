@@ -29,7 +29,6 @@
 #include "dcfg.h"
 #include <stdbool.h>
 
-
 #include <stddef.h>
 
 /*
@@ -87,9 +86,9 @@ DECISION_API bool d_optimize_not_consecutive(struct _sheet *sheet);
  * \fn d_optimize_useless(Sheet *sheet)
  * \brief Try and find useless instructions in the bytecode, e.g. poping 0
  * items.
- * 
+ *
  * \return If we were able to optimise.
- * 
+ *
  * \param sheet The sheet containing the bytecode to optimise.
  */
 DECISION_API bool d_optimize_useless(struct _sheet *sheet);
@@ -109,9 +108,9 @@ DECISION_API bool d_optimize_call_func_relative(struct _sheet *sheet);
 /**
  * \fn bool d_optimize_simplify(Sheet *sheet)
  * \brief Try and find instructions that can be simplified, i.e. POPB 1 = POP.
- * 
+ *
  * \return If we were able to optimise.
- * 
+ *
  * \param sheet The sheet containing the bytecode to optimise.
  */
 DECISION_API bool d_optimize_simplify(struct _sheet *sheet);
@@ -121,9 +120,9 @@ DECISION_API bool d_optimize_simplify(struct _sheet *sheet);
  * \brief For instructions that have full immediate operands, try and replace
  * them with equivalent instructions that use immediates that are smaller, i.e.
  * half and byte immediates.
- * 
+ *
  * \return If we were able to optimise.
- * 
+ *
  * \param sheet The sheet containing the bytecode to optimise.
  */
 DECISION_API bool d_optimize_shrink_fimmediate(struct _sheet *sheet);

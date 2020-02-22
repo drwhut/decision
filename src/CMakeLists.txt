@@ -23,9 +23,12 @@ dcodegen.c
 dcore.c
 decision.c
 derror.c
+dgraph.c
 dlex.c
 dlink.c
 dmalloc.c
+dname.c
+dobj.c
 doptimize.c
 dsemantic.c
 dsheet.c
@@ -42,9 +45,12 @@ dcodegen.h
 dcore.h
 decision.h
 derror.h
+dgraph.h
 dlex.h
 dlink.h
 dmalloc.h
+dname.h
+dobj.h
 doptimize.h
 dsemantic.h
 dsheet.h

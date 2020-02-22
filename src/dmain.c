@@ -193,7 +193,7 @@ int main(int argc, char *argv[]) {
 
                 // Now we have our new objFilePath, let's compile!
                 d_compile_file((const char *)filePath,
-                               (const char *)objFilePath);
+                               (const char *)objFilePath, NULL);
 
                 free(objFilePath);
             }
@@ -212,13 +212,14 @@ int main(int argc, char *argv[]) {
 
             if (isObjectFile) {
                 if (disassemble) {
-                    Sheet *sheet = d_load_object_file((const char *)filePath);
+                    Sheet *sheet =
+                        d_load_object_file((const char *)filePath, NULL);
                     d_asm_dump_all(sheet);
                     d_sheet_free(sheet);
 
                     return 0;
                 } else
-                    return d_run_object_file((const char *)filePath);
+                    return d_run_object_file((const char *)filePath, NULL);
             } else {
                 // Check that we are not disassembling a source file.
                 if (disassemble) {
@@ -226,7 +227,7 @@ int main(int argc, char *argv[]) {
                            "object file!\n");
                     return 1;
                 } else
-                    return d_run_source_file((const char *)filePath);
+                    return d_run_source_file((const char *)filePath, NULL);
             }
         }
     } else {

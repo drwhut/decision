@@ -40,7 +40,7 @@ int main() {
     write_source_file();
 
     // d_load_source_file
-    Sheet *sheet = d_load_source_file("main.dc");
+    Sheet *sheet = d_load_source_file("main.dc", NULL);
 
     // d_run_sheet
     START_CAPTURE_STDOUT()
@@ -53,16 +53,16 @@ int main() {
 
     // d_run_source_file
     START_CAPTURE_STDOUT()
-    d_run_source_file("main.dc");
+    d_run_source_file("main.dc", NULL);
     STOP_CAPTURE_STDOUT()
     ASSERT_CAPTURED_STDOUT("Hello, world!\n")
 
     // d_compile_file
-    d_compile_file("main.dc", "main.dco");
+    d_compile_file("main.dc", "main.dco", NULL);
 
     // d_run_object_file
     START_CAPTURE_STDOUT()
-    d_run_object_file("main.dco");
+    d_run_object_file("main.dco", NULL);
     STOP_CAPTURE_STDOUT()
     ASSERT_CAPTURED_STDOUT("Hello, world!\n")
 
@@ -73,7 +73,7 @@ int main() {
     ASSERT_EQUAL(isObj, 1)
 
     // d_load_file
-    sheet = d_load_file("main.dc");
+    sheet = d_load_file("main.dc", NULL);
 
     // d_run_sheet
     START_CAPTURE_STDOUT()
@@ -86,7 +86,7 @@ int main() {
 
     // d_run_file
     START_CAPTURE_STDOUT()
-    d_run_file("main.dco");
+    d_run_file("main.dco", NULL);
     STOP_CAPTURE_STDOUT()
     ASSERT_CAPTURED_STDOUT("Hello, world!\n")
 

@@ -23,10 +23,10 @@
 
 int main() {
     // d_compile_string
-    d_compile_string("Start~#1; Print(#1, 'Hello, world!');", "main.dco");
+    d_compile_string("Start~#1; Print(#1, 'Hello, world!');", "main.dco", NULL);
 
     // d_load_object_file
-    Sheet *sheet = d_load_object_file("main.dco");
+    Sheet *sheet = d_load_object_file("main.dco", NULL);
 
     // d_run_sheet
     START_CAPTURE_STDOUT()
@@ -39,9 +39,9 @@ int main() {
 
     // d_run_object_file
     START_CAPTURE_STDOUT()
-    d_run_object_file("main.dco");
+    d_run_object_file("main.dco", NULL);
     STOP_CAPTURE_STDOUT()
     ASSERT_CAPTURED_STDOUT("Hello, world!\n")
-    
+
     return 0;
 }

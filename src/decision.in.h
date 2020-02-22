@@ -129,7 +129,8 @@ DECISION_API bool d_run_function(struct _DVM *vm, struct _sheet *sheet,
                                  const char *funcName);
 
 /**
- * \fn Sheet *d_load_string(const char *source, const char *name)
+ * \fn Sheet *d_load_string(const char *source, const char *name,
+ *                          Sheet **includes)
  * \brief Take Decision source code and compile it into bytecode, but do not
  * run it.
  *
@@ -137,11 +138,14 @@ DECISION_API bool d_run_function(struct _DVM *vm, struct _sheet *sheet,
  *
  * \param source The source code to compile.
  * \param name The name of the sheet. If NULL, it is set to `"source"`.
+ * \param includes A NULL-terminated list of initially included sheets.
+ * Can be NULL.
  */
-DECISION_API struct _sheet *d_load_string(const char *source, const char *name);
+DECISION_API struct _sheet *d_load_string(const char *source, const char *name,
+                                          struct _sheet **includes);
 
 /**
- * \fn bool d_run_string(const char *source, const char *name)
+ * \fn bool d_run_string(const char *source, const char *name, Sheet **includes)
  * \brief Take Decision source code and compile it into bytecode. If it
  * compiled successfully, run it in the virtual machine.
  *
@@ -149,11 +153,15 @@ DECISION_API struct _sheet *d_load_string(const char *source, const char *name);
  *
  * \param source The source code the compile.
  * \param name The name of the sheet. If `NULL`, it is set to `"source"`.
+ * \param includes A NULL-terminated list of initially included sheets.
+ * Can be NULL.
  */
-DECISION_API bool d_run_string(const char *source, const char *name);
+DECISION_API bool d_run_string(const char *source, const char *name,
+                               struct _sheet **includes);
 
 /**
- * \fn bool d_compile_string(const char *source, const char *filePath)
+ * \fn bool d_compile_string(const char *source, const char *filePath,
+ *                           Sheet **includes)
  * \brief Take Decision source code and compile it into bytecode. Then save
  * it into a binary file if it compiled successfully.
  *
@@ -161,33 +169,43 @@ DECISION_API bool d_run_string(const char *source, const char *name);
  *
  * \param source The source code to compile.
  * \param filePath Where to write the object file to.
+ * \param includes A NULL-terminated list of initially included sheets.
+ * Can be NULL.
  */
-DECISION_API bool d_compile_string(const char *source, const char *filePath);
+DECISION_API bool d_compile_string(const char *source, const char *filePath,
+                                   struct _sheet **includes);
 
 /**
- * \fn Sheet *d_load_source_file(const char *filePath)
+ * \fn Sheet *d_load_source_file(const char *filePath, Sheet **includes)
  * \brief Take Decision source code from a file and compile it into bytecode,
  * but do not run it.
  *
  * \return A malloc'd sheet containing all of the compilation info.
  *
  * \param filePath The file path of the source file to compile.
+ * \param includes A NULL-terminated list of initially included sheets.
+ * Can be NULL.
  */
-DECISION_API struct _sheet *d_load_source_file(const char *filePath);
+DECISION_API struct _sheet *d_load_source_file(const char *filePath,
+                                               struct _sheet **includes);
 
 /**
- * \fn bool d_run_source_file(const char *filePath)
+ * \fn bool d_run_source_file(const char *filePath, Sheet **includes)
  * \brief Take Decision source code in a file and compile it into bytecode. If
  * it compiled successfully, run it in the virtual machine.
  *
  * \return If the code compiled/ran without any errors.
  *
  * \param filePath The file path of the source file to compile.
+ * \param includes A NULL-terminated list of initially included sheets.
+ * Can be NULL.
  */
-DECISION_API bool d_run_source_file(const char *filePath);
+DECISION_API bool d_run_source_file(const char *filePath,
+                                    struct _sheet **includes);
 
 /**
- * \fn bool d_compile_file(const char *filePathIn, const char *filePathOut)
+ * \fn bool d_compile_file(const char *filePathIn, const char *filePathOut
+ *                         Sheet **includes)
  * \brief Take Decision source code from a file and compile it into bytecode.
  * If it compiled successfully, save it into a binary file.
  *
@@ -195,30 +213,39 @@ DECISION_API bool d_run_source_file(const char *filePath);
  *
  * \param filePathIn The file path of the source file to compile.
  * \param filePathOut Where to write the object file to.
+ * \param includes A NULL-terminated list of initially included sheets.
+ * Can be NULL.
  */
 DECISION_API bool d_compile_file(const char *filePathIn,
-                                 const char *filePathOut);
+                                 const char *filePathOut,
+                                 struct _sheet **includes);
 
 /**
- * \fn Sheet *d_load_object_file(const char *filePath)
+ * \fn Sheet *d_load_object_file(const char *filePath, Sheet **includes)
  * \brief Take a Decision object file and load it into memory.
  *
  * \return A malloc'd sheet object containing all of the compilation info.
  *
  * \param filePath The file path of the object file.
+ * \param includes A NULL-terminated list of initially included sheets.
+ * Can be NULL.
  */
-DECISION_API struct _sheet *d_load_object_file(const char *filePath);
+DECISION_API struct _sheet *d_load_object_file(const char *filePath,
+                                               struct _sheet **includes);
 
 /**
- * \fn bool d_run_object_file(const char *filePath)
+ * \fn bool d_run_object_file(const char *filePath, Sheet **includes)
  * \brief Take a Decision object file, load it into memory, and run it in the
  * virtual machine.
  *
  * \return If the code ran without any errors.
  *
  * \param filePath The file path of the object file.
+ * \param includes A NULL-terminated list of initially included sheets.
+ * Can be NULL.
  */
-DECISION_API bool d_run_object_file(const char *filePath);
+DECISION_API bool d_run_object_file(const char *filePath,
+                                    struct _sheet **includes);
 
 /**
  * \fn short d_is_object_file(const char *filePath)
@@ -233,25 +260,30 @@ DECISION_API bool d_run_object_file(const char *filePath);
 DECISION_API short d_is_object_file(const char *filePath);
 
 /**
- * \fn Sheet *d_load_file(const char *filePath)
+ * \fn Sheet *d_load_file(const char *filePath, Sheet **includes)
  * \brief Take a Decision file, decide whether it is a source or an object file
  * based on its contents, and load it into memory.
  *
  * \return A malloc'd sheet object containing all of the compilation info.
  *
  * \param filePath The file path of the file to load.
+ * \param includes A NULL-terminated list of initially included sheets.
+ * Can be NULL.
  */
-DECISION_API struct _sheet *d_load_file(const char *filePath);
+DECISION_API struct _sheet *d_load_file(const char *filePath,
+                                        struct _sheet **includes);
 
 /**
- * \fn bool d_run_file(const char *filePath)
+ * \fn bool d_run_file(const char *filePath, Sheet **includes)
  * \brief Take a Decision file, decide whether it is a source or an object file
  * based on its contents, and run it in the virtual machine.
  *
  * \return If the code compiled/ran without any errors.
  *
  * \param filePath The file path of the file to load.
+ * \param includes A NULL-terminated list of initially included sheets.
+ * Can be NULL.
  */
-DECISION_API bool d_run_file(const char *filePath);
+DECISION_API bool d_run_file(const char *filePath, struct _sheet **includes);
 
 #endif // DECISION_H

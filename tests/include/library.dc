@@ -5,9 +5,9 @@
 [Variable(libBoolean, Boolean, false)]
 
 > Library function
-[Function(IsEven)]
-[FunctionInput(IsEven, Integer)]
-[FunctionOutput(IsEven, Boolean)]
+[Function(IsEven, "Check if a number is even.")]
+[FunctionInput(IsEven, n, Integer, 1)]
+[FunctionOutput(IsEven, isEven, Boolean)]
 
 Define(IsEven)~#1
 Mod(#1, 2)~#2
@@ -15,9 +15,9 @@ Equal(#2, 0)~#3
 Return(IsEven, #3)
 
 > Library subroutine
-[Subroutine(SendLetter)]
-[FunctionInput(SendLetter, String)]
-[FunctionInput(SendLetter, String)]
+[Subroutine(SendLetter, "Send a letter to someone.")]
+[FunctionInput(SendLetter, message, String, "Hello!")]
+[FunctionInput(SendLetter, from, String, "Bob")]
 
 Define(SendLetter)~#10, #11, #12
 Print(#10, #11)~#13

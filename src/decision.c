@@ -24,6 +24,7 @@
 #include "dlex.h"
 #include "dlink.h"
 #include "dmalloc.h"
+#include "dobj.h"
 #include "doptimize.h"
 #include "dsemantic.h"
 #include "dsheet.h"
@@ -102,7 +103,7 @@ static const char *load_string_from_file(const char *filePath, size_t *size,
 static void save_object_to_file(const char *filePath, const char *content,
                                 size_t len) {
     FILE *f;
-    
+
     f = fopen(filePath, "wb");
     if (f == NULL) {
         printf("Can't open the file!\n");
@@ -128,7 +129,7 @@ bool d_run_sheet(Sheet *sheet) {
         if (sheet->_isLinked) {
             if (sheet->_main > 0) // A Start function exists.
             {
-                DVM vm = d_vm_create();
+                DVM vm       = d_vm_create();
                 bool success = d_vm_run(&vm, sheet->_text + sheet->_main);
                 d_vm_free(&vm);
                 return success;
@@ -150,9 +151,9 @@ bool d_run_sheet(Sheet *sheet) {
  * \fn bool d_run_function(DVM *vm, Sheet *sheet, const char *funcName)
  * \brief Run the specified function/subroutine in a given sheet, given the
  * sheet has gone through `d_codegen_compile`.
- * 
+ *
  * \return If the function/subroutine ran without any errors.
- * 
+ *
  * \param vm The VM to run the function on. The reason it is a seperate
  * argument is because it allows you to push and pop arguments and return values
  * seperately.
@@ -203,11 +204,10 @@ bool d_run_function(DVM *vm, Sheet *sheet, const char *funcName) {
             // where this sheet is and run it there.
             if (funcPtr == NULL) {
                 AllNameDefinitions nameDefs =
-                    d_semantic_get_name_definitions(sheet, funcName);
+                    d_get_name_definitions(sheet, funcName);
 
                 NameDefinition definition;
-                if (d_semantic_select_name_definition(funcName, nameDefs,
-                                                      &definition)) {
+                if (d_select_name_definition(funcName, nameDefs, &definition)) {
                     if (definition.type == NAME_FUNCTION) {
                         Sheet *extSheet = definition.sheet;
                         return d_run_function(vm, extSheet, funcName);
@@ -217,7 +217,7 @@ bool d_run_function(DVM *vm, Sheet *sheet, const char *funcName) {
                            sheet->filePath, funcName);
                 }
 
-                d_semantic_free_name_definitions(nameDefs);
+                d_free_name_definitions(&nameDefs);
             } else {
                 // We know where it lives, so we can run it!
                 return d_vm_run(vm, funcPtr);
@@ -233,7 +233,8 @@ bool d_run_function(DVM *vm, Sheet *sheet, const char *funcName) {
 }
 
 /**
- * \fn Sheet *d_load_string(const char *source, const char *name)
+ * \fn Sheet *d_load_string(const char *source, const char *name,
+ *                          Sheet **includes)
  * \brief Take Decision source code and compile it into bytecode, but do not
  * run it.
  *
@@ -241,13 +242,24 @@ bool d_run_function(DVM *vm, Sheet *sheet, const char *funcName) {
  *
  * \param source The source code to compile.
  * \param name The name of the sheet. If NULL, it is set to `"source"`.
+ * \param includes A NULL-terminated list of initially included sheets.
+ * Can be NULL.
  */
-Sheet *d_load_string(const char *source, const char *name) {
+Sheet *d_load_string(const char *source, const char *name, Sheet **includes) {
     // If name is NULL, set a name.
     name = (name != NULL) ? name : "source";
 
     // Represent the sheet in memory, and check for errors along the way.
     Sheet *sheet = d_sheet_create(name);
+
+    if (includes != NULL) {
+        Sheet **include = includes;
+
+        while (*include) {
+            d_sheet_add_include(sheet, *include);
+            include++;
+        }
+    }
 
     VERBOSE(1, "--- STAGE 1: Creating lexical stream...\n")
     LexStream stream = d_lex_create_stream(source, name);
@@ -307,7 +319,7 @@ Sheet *d_load_string(const char *source, const char *name) {
 }
 
 /**
- * \fn bool d_run_string(const char *source, const char *name)
+ * \fn bool d_run_string(const char *source, const char *name, Sheet **includes)
  * \brief Take Decision source code and compile it into bytecode. If it
  * compiled successfully, run it in the virtual machine.
  *
@@ -315,9 +327,11 @@ Sheet *d_load_string(const char *source, const char *name) {
  *
  * \param source The source code the compile.
  * \param name The name of the sheet. If `NULL`, it is set to `"source"`.
+ * \param includes A NULL-terminated list of initially included sheets.
+ * Can be NULL.
  */
-bool d_run_string(const char *source, const char *name) {
-    Sheet *sheet   = d_load_string(source, name);
+bool d_run_string(const char *source, const char *name, Sheet **includes) {
+    Sheet *sheet   = d_load_string(source, name, includes);
     bool hadErrors = sheet->hasErrors;
 
     if (!hadErrors) {
@@ -333,7 +347,8 @@ bool d_run_string(const char *source, const char *name) {
 }
 
 /**
- * \fn bool d_compile_string(const char *source, const char *filePath)
+ * \fn bool d_compile_string(const char *source, const char *filePath,
+ *                           Sheet **includes)
  * \brief Take Decision source code and compile it into bytecode. Then save
  * it into a binary file if it compiled successfully.
  *
@@ -341,14 +356,17 @@ bool d_run_string(const char *source, const char *name) {
  *
  * \param source The source code to compile.
  * \param filePath Where to write the object file to.
+ * \param includes A NULL-terminated list of initially included sheets.
+ * Can be NULL.
  */
-bool d_compile_string(const char *source, const char *filePath) {
-    Sheet *sheet   = d_load_string(source, NULL);
+bool d_compile_string(const char *source, const char *filePath,
+                      Sheet **includes) {
+    Sheet *sheet   = d_load_string(source, NULL, includes);
     bool hadErrors = sheet->hasErrors;
 
     if (!hadErrors) {
         size_t objSize;
-        const char *obj = d_asm_generate_object(sheet, &objSize);
+        const char *obj = d_obj_generate(sheet, &objSize);
         save_object_to_file(filePath, obj, objSize);
 
         free((char *)obj);
@@ -360,21 +378,23 @@ bool d_compile_string(const char *source, const char *filePath) {
 }
 
 /**
- * \fn Sheet *d_load_source_file(const char *filePath)
+ * \fn Sheet *d_load_source_file(const char *filePath, Sheet **includes)
  * \brief Take Decision source code from a file and compile it into bytecode,
  * but do not run it.
  *
  * \return A malloc'd sheet containing all of the compilation info.
  *
  * \param filePath The file path of the source file to compile.
+ * \param includes A NULL-terminated list of initially included sheets.
+ * Can be NULL.
  */
-Sheet *d_load_source_file(const char *filePath) {
+Sheet *d_load_source_file(const char *filePath, Sheet **includes) {
     size_t _size; // Not needed.
     const char *source = load_string_from_file(filePath, &_size, false);
     Sheet *sheet       = NULL;
 
     if (source != NULL) {
-        sheet = d_load_string(source, filePath);
+        sheet = d_load_string(source, filePath, includes);
         free((void *)source);
     } else {
         // We errored loading the file.
@@ -386,16 +406,18 @@ Sheet *d_load_source_file(const char *filePath) {
 }
 
 /**
- * \fn bool d_run_source_file(const char *filePath)
+ * \fn bool d_run_source_file(const char *filePath, Sheet **includes)
  * \brief Take Decision source code in a file and compile it into bytecode. If
  * it compiled successfully, run it in the virtual machine.
  *
  * \return If the code compiled/ran without any errors.
  *
  * \param filePath The file path of the source file to compile.
+ * \param includes A NULL-terminated list of initially included sheets.
+ * Can be NULL.
  */
-bool d_run_source_file(const char *filePath) {
-    Sheet *sheet   = d_load_source_file(filePath);
+bool d_run_source_file(const char *filePath, Sheet **includes) {
+    Sheet *sheet   = d_load_source_file(filePath, includes);
     bool hadErrors = sheet->hasErrors;
 
     if (!hadErrors) {
@@ -411,7 +433,8 @@ bool d_run_source_file(const char *filePath) {
 }
 
 /**
- * \fn bool d_compile_file(const char *filePathIn, const char *filePathOut)
+ * \fn bool d_compile_file(const char *filePathIn, const char *filePathOut
+ *                         Sheet **includes)
  * \brief Take Decision source code from a file and compile it into bytecode.
  * If it compiled successfully, save it into a binary file.
  *
@@ -419,14 +442,17 @@ bool d_run_source_file(const char *filePath) {
  *
  * \param filePathIn The file path of the source file to compile.
  * \param filePathOut Where to write the object file to.
+ * \param includes A NULL-terminated list of initially included sheets.
+ * Can be NULL.
  */
-bool d_compile_file(const char *filePathIn, const char *filePathOut) {
-    Sheet *sheet   = d_load_source_file(filePathIn);
+bool d_compile_file(const char *filePathIn, const char *filePathOut,
+                    Sheet **includes) {
+    Sheet *sheet   = d_load_source_file(filePathIn, includes);
     bool hadErrors = sheet->hasErrors;
 
     if (!hadErrors) {
         size_t objSize;
-        const char *obj = d_asm_generate_object(sheet, &objSize);
+        const char *obj = d_obj_generate(sheet, &objSize);
         save_object_to_file(filePathOut, obj, objSize);
 
         free((char *)obj);
@@ -438,20 +464,22 @@ bool d_compile_file(const char *filePathIn, const char *filePathOut) {
 }
 
 /**
- * \fn Sheet *d_load_object_file(const char *filePath)
+ * \fn Sheet *d_load_object_file(const char *filePath, Sheet **includes)
  * \brief Take a Decision object file and load it into memory.
  *
  * \return A malloc'd sheet object containing all of the compilation info.
  *
  * \param filePath The file path of the object file.
+ * \param includes A NULL-terminated list of initially included sheets.
+ * Can be NULL.
  */
-Sheet *d_load_object_file(const char *filePath) {
+Sheet *d_load_object_file(const char *filePath, Sheet **includes) {
     size_t size;
     const char *obj = load_string_from_file(filePath, &size, true);
     Sheet *out      = NULL;
 
     if (obj != NULL) {
-        out = d_asm_load_object(obj, size, filePath);
+        out = d_obj_load(obj, size, filePath, includes);
         free((char *)obj);
 
         out->hasErrors = d_error_report();
@@ -469,16 +497,18 @@ Sheet *d_load_object_file(const char *filePath) {
 }
 
 /**
- * \fn bool d_run_object_file(const char *filePath)
+ * \fn bool d_run_object_file(const char *filePath, Sheet **includes)
  * \brief Take a Decision object file, load it into memory, and run it in the
  * virtual machine.
  *
  * \return If the code ran without any errors.
  *
  * \param filePath The file path of the object file.
+ * \param includes A NULL-terminated list of initially included sheets.
+ * Can be NULL.
  */
-bool d_run_object_file(const char *filePath) {
-    Sheet *sheet   = d_load_object_file(filePath);
+bool d_run_object_file(const char *filePath, Sheet **includes) {
+    Sheet *sheet   = d_load_object_file(filePath, includes);
     bool hadErrors = sheet->hasErrors;
 
     if (!hadErrors) {
@@ -527,15 +557,17 @@ short d_is_object_file(const char *filePath) {
 }
 
 /**
- * \fn Sheet *d_load_file(const char *filePath)
+ * \fn Sheet *d_load_file(const char *filePath, Sheet **includes)
  * \brief Take a Decision file, decide whether it is a source or an object file
  * based on its contents, and load it into memory.
  *
  * \return A malloc'd sheet object containing all of the compilation info.
  *
  * \param filePath The file path of the file to load.
+ * \param includes A NULL-terminated list of initially included sheets.
+ * Can be NULL.
  */
-Sheet *d_load_file(const char *filePath) {
+Sheet *d_load_file(const char *filePath, Sheet **includes) {
     short fileType = d_is_object_file(filePath);
 
     Sheet *out;
@@ -543,13 +575,13 @@ Sheet *d_load_file(const char *filePath) {
     switch (fileType) {
         case 0:
             // It is a source file.
-            out = d_load_source_file(filePath);
+            out = d_load_source_file(filePath, includes);
 
             break;
 
         case 1:
             // It is an object file.
-            out = d_load_object_file(filePath);
+            out = d_load_object_file(filePath, includes);
 
             break;
 
@@ -565,16 +597,18 @@ Sheet *d_load_file(const char *filePath) {
 }
 
 /**
- * \fn bool d_run_file(const char *filePath)
+ * \fn bool d_run_file(const char *filePath, Sheet **includes)
  * \brief Take a Decision file, decide whether it is a source or an object file
  * based on its contents, and run it in the virtual machine.
  *
  * \return If the code compiled/ran without any errors.
  *
  * \param filePath The file path of the file to load.
+ * \param includes A NULL-terminated list of initially included sheets.
+ * Can be NULL.
  */
-bool d_run_file(const char *filePath) {
-    Sheet *sheet   = d_load_file(filePath);
+bool d_run_file(const char *filePath, Sheet **includes) {
+    Sheet *sheet   = d_load_file(filePath, includes);
     bool hadErrors = sheet->hasErrors;
 
     if (!hadErrors) {

@@ -24,8 +24,8 @@
 #ifndef DLEX_H
 #define DLEX_H
 
-#include <stdbool.h>
 #include "dcfg.h"
+#include <stdbool.h>
 
 #include <stddef.h>
 
@@ -121,10 +121,10 @@ typedef enum _lexType {
  * \typedef union _lexData LexData
  */
 typedef union _lexData {
-    char *stringValue;
     dint integerValue;
     dfloat floatValue;
     bool booleanValue;
+    char *stringValue;
 } LexData;
 
 /**
