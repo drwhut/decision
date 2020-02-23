@@ -77,6 +77,13 @@ typedef enum _dType {
 #define TYPE_BITWISE (TYPE_INT | TYPE_BOOL)
 
 /**
+ * \def TYPE_COMPARABLE
+ * \brief A vague type representing types that can be compared, i.e. one value
+ * can be "more" than another.
+ */
+#define TYPE_COMPARABLE (TYPE_INT | TYPE_FLOAT | TYPE_STRING)
+
+/**
  * \def TYPE_VAR_ANY
  * \brief A vague type representing all variable types.
  */

@@ -72,11 +72,13 @@ const char *d_type_name(DType type) {
             return "Name";
         // Vague types:
         case TYPE_NUMBER:
-            return "Number";
+            return "Number; Integer/Float";
         case TYPE_BITWISE:
-            return "Bitwise";
+            return "Bitwise; Integer/Boolean";
+        case TYPE_COMPARABLE:
+            return "Comparable; Integer/Float/String";
         case TYPE_VAR_ANY:
-            return "Any";
+            return "Any; Integer/Float/String/Boolean";
         default:
             return NULL;
     }
