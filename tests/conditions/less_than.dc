@@ -35,3 +35,15 @@ Print(#15, #16)~#17
 > 2 strings less than = false
 LessThan("help", "hello")~#18
 Print(#17, #18)~#19
+
+> 2 booleans less than = true
+LessThan(false, true)~#20
+Print(#19, #20)~#21
+
+> 2 booleans less than = false
+LessThan(false, false)~#22
+Print(#21, #22)~#23
+
+> 2 booleans less than = false
+LessThan(true, false)~#24
+Print(#23, #24)~#25

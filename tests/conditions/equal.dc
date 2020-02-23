@@ -23,3 +23,11 @@ Print(#9, #10)~#11
 > 2 strings equal = false
 Equal("Hello, world!", "Goodbye, world!")~#12
 Print(#11, #12)~#13
+
+> 2 booleans equal = true
+Equal(true, true)~#14
+Print(#13, #14)~#15
+
+> 2 booleans equal = false
+Equal(false, true)~#16
+Print(#15, #16)~#17
