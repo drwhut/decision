@@ -48,7 +48,7 @@ CFunction d_create_c_function(DecisionCFunction function, const char *name,
     // Copy the name over.
     if (name != NULL) {
         size_t nameSize = strlen(name) + 1;
-        newName         = (char *)d_malloc(nameSize);
+        newName         = d_calloc(nameSize, sizeof(char));
         strcpy(newName, name);
     }
 
@@ -57,7 +57,7 @@ CFunction d_create_c_function(DecisionCFunction function, const char *name,
     // Copy the description over.
     if (description != NULL) {
         size_t descriptionSize = strlen(description) + 1;
-        newDescription         = (char *)d_malloc(descriptionSize);
+        newDescription         = d_calloc(descriptionSize, sizeof(char));
         strcpy(newDescription, description);
     }
 
@@ -67,7 +67,7 @@ CFunction d_create_c_function(DecisionCFunction function, const char *name,
     // Copy the sockets array, and copy the names and descriptions over as well.
     if (sockets != NULL) {
         numSockets = numInputs + numOutputs;
-        newSockets = (SocketMeta *)d_malloc(numSockets * sizeof(SocketMeta));
+        newSockets = d_calloc(numSockets, sizeof(SocketMeta));
         memcpy(newSockets, sockets, numSockets * sizeof(SocketMeta));
 
         for (size_t i = 0; i < numSockets; i++) {
@@ -76,14 +76,14 @@ CFunction d_create_c_function(DecisionCFunction function, const char *name,
 
             if (socketName != NULL) {
                 size_t nameSize     = strlen(socketName) + 1;
-                char *newSocketName = d_malloc(nameSize);
+                char *newSocketName = d_calloc(nameSize, sizeof(char));
                 strcpy(newSocketName, socketName);
                 newSockets[i].name = newSocketName;
             }
 
             if (socketDesc != NULL) {
                 size_t descSize     = strlen(socketDesc) + 1;
-                char *newSocketDesc = d_malloc(descSize);
+                char *newSocketDesc = d_calloc(descSize, sizeof(char));
                 strcpy(newSocketDesc, socketDesc);
                 newSockets[i].description = newSocketDesc;
             }
@@ -136,8 +136,7 @@ CFunction d_create_c_subroutine(DecisionCFunction function, const char *name,
     const size_t newNumOutputs = numOutputs + 1;
     const size_t newNumSockets = newNumInputs + newNumOutputs;
 
-    SocketMeta *newSockets =
-        (SocketMeta *)d_malloc(newNumSockets * sizeof(SocketMeta));
+    SocketMeta *newSockets = d_calloc(newNumSockets, sizeof(SocketMeta));
 
     // Copy the array we've been given to the middle of this new array, such
     // that there is a free spot either end.

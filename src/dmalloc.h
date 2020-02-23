@@ -54,4 +54,15 @@ DECISION_API void *d_malloc(size_t size);
  */
 DECISION_API void *d_realloc(void *ptr, size_t size);
 
+/**
+ * \fn void *d_calloc(size_t num, size_t size)
+ * \brief A wrapper function for `calloc` with error checking.
+ * 
+ * \return A pointer to the allocated memory.
+ * 
+ * \param num The number of elements to allocate.
+ * \param size The size of each element.
+ */
+DECISION_API void *d_calloc(size_t num, size_t size);
+
 #endif // DMALLOC_H

@@ -59,3 +59,23 @@ void *d_realloc(void *ptr, size_t size) {
 
     return newptr;
 }
+
+/**
+ * \fn void *d_calloc(size_t num, size_t size)
+ * \brief A wrapper function for `calloc` with error checking.
+ * 
+ * \return A pointer to the allocated memory.
+ * 
+ * \param num The number of elements to allocate.
+ * \param size The size of each element.
+ */
+void *d_calloc(size_t num, size_t size) {
+    void *newptr = calloc(num, size);
+
+    if (newptr == NULL) {
+        printf("Fatal: calloc returned NULL\n");
+        exit(1);
+    }
+
+    return newptr;
+}

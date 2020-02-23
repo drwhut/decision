@@ -48,7 +48,7 @@ static size_t add_length_to_messages(size_t length) {
     size_t indexOfFirstFreeSpace = 0;
 
     if (errorMessages == NULL) {
-        errorMessages = (char *)d_malloc((length + 1) * sizeof(char));
+        errorMessages = d_calloc((length + 1), sizeof(char));
 
         if (errorMessages != NULL)
             lenErrorMessages = length + 1;
@@ -56,8 +56,7 @@ static size_t add_length_to_messages(size_t length) {
         indexOfFirstFreeSpace =
             lenErrorMessages - 1; // lenErrorMessages includes the \0.
         size_t newLength = lenErrorMessages + length + 1;
-        errorMessages =
-            (char *)d_realloc(errorMessages, newLength * sizeof(char));
+        errorMessages    = d_realloc(errorMessages, newLength * sizeof(char));
 
         if (errorMessages != NULL)
             lenErrorMessages = newLength;

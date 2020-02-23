@@ -40,7 +40,7 @@
 BCode d_malloc_bytecode(size_t size) {
     BCode out;
 
-    out.code = (char *)d_malloc(size);
+    out.code = d_calloc(size, sizeof(char));
     out.size = size;
 
     out.linkList     = NULL;
@@ -136,9 +136,9 @@ void d_concat_bytecode(BCode *base, BCode *after) {
         size_t totalSize = base->size + after->size;
 
         if (base->code != NULL) {
-            base->code = (char *)d_realloc(base->code, totalSize);
+            base->code = d_realloc(base->code, totalSize);
         } else {
-            base->code = (char *)d_malloc(totalSize);
+            base->code = d_calloc(totalSize, sizeof(char));
         }
 
         // Pointer to the place we want to start adding "after".
@@ -154,11 +154,11 @@ void d_concat_bytecode(BCode *base, BCode *after) {
             size_t totalLinkSize = base->linkListSize + after->linkListSize;
 
             if (base->linkList != NULL) {
-                base->linkList = (InstructionToLink *)d_realloc(
+                base->linkList = d_realloc(
                     base->linkList, totalLinkSize * sizeof(InstructionToLink));
             } else {
-                base->linkList = (InstructionToLink *)d_malloc(
-                    totalLinkSize * sizeof(InstructionToLink));
+                base->linkList =
+                    d_calloc(totalLinkSize, sizeof(InstructionToLink));
             }
 
             // i is the index in the base list.
@@ -196,9 +196,9 @@ void d_insert_bytecode(BCode *base, BCode *insertCode, size_t insertIndex) {
         // Resize the base bytecode.
         if (base->code != NULL && base->size > 0) {
             base->code =
-                (char *)d_realloc(base->code, base->size + insertCode->size);
+                d_realloc(base->code, base->size + insertCode->size);
         } else {
-            base->code = (char *)d_malloc(insertCode->size);
+            base->code = d_calloc(insertCode->size, sizeof(char));
         }
 
         // Move everything at and after the index in the base bytecode along to
@@ -270,13 +270,13 @@ void d_insert_bytecode(BCode *base, BCode *insertCode, size_t insertIndex) {
         // they will have changed.
         if (insertCode->linkListSize > 0) {
             if (base->linkList != NULL && base->linkListSize > 0) {
-                base->linkList = (InstructionToLink *)d_realloc(
-                    base->linkList,
-                    (base->linkListSize + insertCode->linkListSize) *
-                        sizeof(InstructionToLink));
+                base->linkList =
+                    d_realloc(base->linkList,
+                              (base->linkListSize + insertCode->linkListSize) *
+                                  sizeof(InstructionToLink));
             } else {
-                base->linkList = (InstructionToLink *)d_malloc(
-                    (insertCode->linkListSize) * sizeof(InstructionToLink));
+                base->linkList = d_calloc(insertCode->linkListSize,
+                                          sizeof(InstructionToLink));
             }
 
             for (size_t i = 0; i < insertCode->linkListSize; i++) {

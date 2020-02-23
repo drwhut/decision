@@ -121,7 +121,7 @@ typedef struct {
  */
 SyntaxNode *d_syntax_create_node(SyntaxDefinition d, LexToken *info,
                                  size_t line) {
-    SyntaxNode *n = (SyntaxNode *)d_malloc(sizeof(SyntaxNode));
+    SyntaxNode *n = d_malloc(sizeof(SyntaxNode));
 
     n->definition = d;
     n->info       = info;
@@ -285,8 +285,7 @@ SyntaxSearchResult d_syntax_get_all_nodes_with(SyntaxNode *root,
     size_t n = 0;
 
     size_t currentSize = 16;
-    SyntaxNode **found =
-        (SyntaxNode **)d_malloc(currentSize * sizeof(SyntaxNode *));
+    SyntaxNode **found = d_calloc(currentSize, sizeof(SyntaxNode *));
 
     // Iterative traversal.
     SyntaxNode *nodeStack[32];
@@ -308,8 +307,7 @@ SyntaxSearchResult d_syntax_get_all_nodes_with(SyntaxNode *root,
             // Resize if the array is too small!
             if (n + 1 > currentSize) {
                 currentSize++;
-                found = (SyntaxNode **)d_realloc(
-                    found, currentSize * sizeof(SyntaxNode **));
+                found = d_realloc(found, currentSize * sizeof(SyntaxNode **));
             }
 
             found[n++] = top;
@@ -326,7 +324,7 @@ SyntaxSearchResult d_syntax_get_all_nodes_with(SyntaxNode *root,
     }
 
     // Cleaning up and outputting.
-    found = (SyntaxNode **)d_realloc(found, (n + 1) * sizeof(SyntaxNode *));
+    found             = d_realloc(found, (n + 1) * sizeof(SyntaxNode *));
     out.numOccurances = n;
     out.occurances    = found;
     out.occurances[n] = 0;

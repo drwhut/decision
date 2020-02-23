@@ -30,13 +30,12 @@
  * \def LIST_PUSH(array, arrayType, numCurrentItems, newItem)
  * \brief A generic macro for adding items to a dynamic array.
  */
-#define LIST_PUSH(array, arrayType, numCurrentItems, newItem)               \
-    size_t newNumItems = (numCurrentItems) + 1;                             \
-    if (newNumItems == 1)                                                   \
-        array = (arrayType *)d_malloc(sizeof(arrayType));                   \
-    else                                                                    \
-        array =                                                             \
-            (arrayType *)d_realloc(array, newNumItems * sizeof(arrayType)); \
+#define LIST_PUSH(array, arrayType, numCurrentItems, newItem)      \
+    size_t newNumItems = (numCurrentItems) + 1;                    \
+    if (newNumItems == 1)                                          \
+        array = d_calloc(1, sizeof(arrayType));                    \
+    else                                                           \
+        array = d_realloc(array, newNumItems * sizeof(arrayType)); \
     memcpy(array + numCurrentItems++, &newItem, sizeof(arrayType));
 
 /**
@@ -51,18 +50,18 @@ void d_sheet_add_variable(Sheet *sheet, const SocketMeta varMeta) {
 
     // Copy the name.
     size_t nameSize  = strlen(varMeta.name) + 1;
-    char *nameGetter = (char *)d_malloc(nameSize);
+    char *nameGetter = d_calloc(nameSize, sizeof(char));
     memcpy(nameGetter, varMeta.name, nameSize);
 
     // Create a new description for the getter, i.e.
     // "Get the value of the variable <VARIABLE NAME>."
     size_t descriptionSize  = 32 + strlen(varMeta.name);
-    char *descriptionGetter = (char *)d_malloc(descriptionSize);
+    char *descriptionGetter = d_calloc(descriptionSize, sizeof(char));
     sprintf(descriptionGetter, "Get the value of the variable %s.",
             varMeta.name);
 
     // Copy the variable metadata.
-    SocketMeta *getterMeta = (SocketMeta *)d_malloc(sizeof(SocketMeta));
+    SocketMeta *getterMeta = d_malloc(sizeof(SocketMeta));
     memcpy(getterMeta, &varMeta, sizeof(SocketMeta));
 
     NodeDefinition getter;
@@ -100,17 +99,16 @@ void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef) {
     // Before we add the function to the sheet, we need to know what the Define
     // and Return nodes for this function will look like.
 
-    char *nameDefine = (char *)d_malloc(7);
+    char *nameDefine = d_calloc(7, sizeof(char));
     strcpy(nameDefine, "Define");
 
-    char *descriptionDefine = (char *)d_malloc(33);
+    char *descriptionDefine = d_calloc(33, sizeof(char));
     strcpy(descriptionDefine, "Define a function or subroutine.");
 
     const size_t numInputs        = d_definition_num_inputs(&funcDef);
     const size_t numSocketsDefine = 1 + numInputs;
 
-    SocketMeta *defineMeta =
-        (SocketMeta *)d_malloc(numSocketsDefine * sizeof(SocketMeta));
+    SocketMeta *defineMeta = d_calloc(numSocketsDefine, sizeof(SocketMeta));
 
     SocketMeta defineNameSocket;
     defineNameSocket.name                     = defineName;
@@ -129,17 +127,16 @@ void d_sheet_add_function(Sheet *sheet, const NodeDefinition funcDef) {
     defineDef.startOutputIndex = 1;
     defineDef.infiniteInputs   = false;
 
-    char *nameReturn = (char *)d_malloc(7);
+    char *nameReturn = d_calloc(7, sizeof(char));
     strcpy(nameReturn, "Return");
 
-    char *descriptionReturn = (char *)d_malloc(38);
+    char *descriptionReturn = d_calloc(38, sizeof(char));
     strcpy(descriptionReturn, "Return from a function or subroutine.");
 
     const size_t numOutputs       = d_definition_num_outputs(&funcDef);
     const size_t numSocketsReturn = 1 + numOutputs;
 
-    SocketMeta *returnMeta =
-        (SocketMeta *)d_malloc(numSocketsReturn * sizeof(SocketMeta));
+    SocketMeta *returnMeta = d_calloc(numSocketsReturn, sizeof(SocketMeta));
 
     SocketMeta returnNameSocket;
     returnNameSocket.name                     = returnName;
@@ -233,7 +230,7 @@ Sheet *d_sheet_add_include_from_path(Sheet *sheet, const char *includePath) {
 
     // Copy the file path of the current sheet.
     const size_t filePathLen = strlen(sheet->filePath);
-    char *dir                = (char *)d_malloc(filePathLen + 1);
+    char *dir                = d_calloc(filePathLen + 1, sizeof(char));
     memcpy(dir, sheet->filePath, filePathLen + 1);
 
     // Find the last / or \ character.
@@ -252,7 +249,7 @@ Sheet *d_sheet_add_include_from_path(Sheet *sheet, const char *includePath) {
         // of the literal string.
         const size_t newPathLength =
             (size_t)lastSeperator + 1 + strlen(includePath);
-        dir = (char *)d_realloc(dir, newPathLength + 1);
+        dir = d_realloc(dir, newPathLength + 1);
 
         strcat(dir, includePath);
 
@@ -272,7 +269,7 @@ Sheet *d_sheet_add_include_from_path(Sheet *sheet, const char *includePath) {
     // that value, instead of the directory, for if we run the sheet including
     // this sheet from a different working directory.
     const size_t includePathLen = strlen(includePath);
-    char *cpyIncludePath        = (char *)d_malloc(includePathLen + 1);
+    char *cpyIncludePath        = d_calloc(includePathLen + 1, sizeof(char));
     memcpy(cpyIncludePath, includePath, includePathLen + 1);
 
     includeSheet->includePath = (const char *)cpyIncludePath;
@@ -289,12 +286,12 @@ Sheet *d_sheet_add_include_from_path(Sheet *sheet, const char *includePath) {
  * \param filePath The file where this sheet originated.
  */
 Sheet *d_sheet_create(const char *filePath) {
-    Sheet *sheet = (Sheet *)d_malloc(sizeof(Sheet));
+    Sheet *sheet = d_malloc(sizeof(Sheet));
 
     // Copy the file path string into heap memory so we know for sure we can
     // free it later.
     size_t filePathLen = strlen(filePath);
-    char *cpyFilePath  = (char *)d_malloc(filePathLen + 1);
+    char *cpyFilePath  = d_calloc(filePathLen + 1, sizeof(char));
     memcpy(cpyFilePath, filePath, filePathLen + 1);
 
     sheet->filePath         = (const char *)cpyFilePath;

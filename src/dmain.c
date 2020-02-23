@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
             disassemble = true;
         }
         // --export-core
-        else if (ARG(--export-core)) {
+        else if (ARG(--export - core)) {
             d_core_dump_json();
             return 0;
         }
@@ -184,7 +184,7 @@ int main(int argc, char *argv[]) {
                 size_t objFilePathLen = filePathLen + addedSpace;
 
                 // Copy the filePath into a bigger char array.
-                char *objFilePath = (char *)d_malloc(objFilePathLen + 1);
+                char *objFilePath = d_calloc(objFilePathLen + 1, sizeof(char));
                 memcpy(objFilePath, filePath, filePathLen);
 
                 if (dcExtension) {

@@ -40,9 +40,9 @@ static void add_name_definition(AllNameDefinitions *all,
                                 NameDefinition definition) {
     size_t newNumDefinitions = all->numDefinitions + 1;
     if (newNumDefinitions == 1)
-        all->definitions = (NameDefinition *)d_malloc(sizeof(NameDefinition));
+        all->definitions = d_malloc(sizeof(NameDefinition));
     else
-        all->definitions = (NameDefinition *)d_realloc(
+        all->definitions = d_realloc(
             all->definitions, newNumDefinitions * sizeof(NameDefinition));
     all->definitions[all->numDefinitions++] = definition;
 }

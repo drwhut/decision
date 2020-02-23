@@ -146,7 +146,7 @@ const char *d_lex_get_string_literal(const char *source, size_t *i,
     }
 
     // Now we are building the string.
-    out = (char *)d_malloc((lenStr + 1) * sizeof(char));
+    out = d_calloc((lenStr + 1), sizeof(char));
 
     size_t pos = oldi + 1;
 
@@ -265,7 +265,7 @@ const char *d_lex_get_name(const char *source, size_t *i, const char *filePath,
     }
 
     // Now we are building the string.
-    out = (char *)d_malloc(((size_t)lenStr + 1) * sizeof(char));
+    out = d_calloc(((size_t)lenStr + 1), sizeof(char));
 
     memcpy(out, source + oldi, lenStr);
     out[lenStr] = '\0';
@@ -304,7 +304,7 @@ LexStream d_lex_create_stream(const char *source, const char *filePath) {
 
     // We set the size now to the length of the source code,
     // but we will later resize it to the actual amount of tokens.
-    LexToken *lexArray = (LexToken *)d_malloc(sourceLength * sizeof(LexToken));
+    LexToken *lexArray = d_calloc(sourceLength, sizeof(LexToken));
 
     if (lexArray != NULL) {
         size_t i       = 0; // The character we're on in the source.
@@ -536,7 +536,7 @@ LexStream d_lex_create_stream(const char *source, const char *filePath) {
 
         // Format output and reduce size of stream.
         if (n > 0) {
-            lexArray = (LexToken *)d_realloc(lexArray, n * sizeof(LexToken));
+            lexArray = d_realloc(lexArray, n * sizeof(LexToken));
         } else {
             free(lexArray);
             lexArray = NULL;

@@ -408,6 +408,10 @@ int d_wire_find_first(Graph graph, NodeSocket socket) {
         middle--;
 
         wire = graph.wires[middle];
+
+        if (middle < 0) {
+            break;
+        }
     }
 
     return middle + 1;
@@ -457,7 +461,7 @@ static void add_edge(Graph *graph, Wire wire, const char *filePath) {
     // correct position.
     if (graph->wires == NULL) {
         graph->numWires = 1;
-        graph->wires    = (Wire *)d_malloc(sizeof(Wire));
+        graph->wires    = d_malloc(sizeof(Wire));
         *(graph->wires) = wire;
     } else {
         // Use binary insertion, since the list should be sorted!
@@ -484,8 +488,7 @@ static void add_edge(Graph *graph, Wire wire, const char *filePath) {
         }
 
         graph->numWires++;
-        graph->wires =
-            (Wire *)d_realloc(graph->wires, graph->numWires * sizeof(Wire));
+        graph->wires = d_realloc(graph->wires, graph->numWires * sizeof(Wire));
 
         if (middle < (int)graph->numWires - 1) {
             memmove(graph->wires + middle + 1, graph->wires + middle,
@@ -632,9 +635,9 @@ size_t d_graph_add_node(Graph *graph, Node node) {
     const size_t newAlloc    = newNumNodes * sizeof(Node);
 
     if (graph->nodes == NULL) {
-        graph->nodes = (Node *)d_malloc(newAlloc);
+        graph->nodes = d_calloc(newNumNodes, sizeof(Node));
     } else {
-        graph->nodes = (Node *)d_realloc(graph->nodes, newAlloc);
+        graph->nodes = d_realloc(graph->nodes, newAlloc);
     }
 
     graph->numNodes = newNumNodes;

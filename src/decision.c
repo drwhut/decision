@@ -64,10 +64,7 @@ static const char *load_string_from_file(const char *filePath, size_t *size,
     *size        = fSize;
     fseek(f, 0, SEEK_SET);
 
-    char *string = (char *)d_malloc(fSize + 2);
-
-    // There were problems on Windows with trailing rogue charatcers.
-    memset(string, 0, fSize + 2);
+    char *string = d_calloc(fSize + 2, sizeof(char));
 
     fread(string, fSize, 1, f);
 

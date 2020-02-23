@@ -120,7 +120,7 @@ static char read_byte(ObjectReader *reader) {
  * \param n The number of bytes to read.
  */
 static char *read_string_n(ObjectReader *reader, size_t n) {
-    char *out = d_malloc(n);
+    char *out = d_calloc(n, sizeof(char));
     memcpy(out, reader->obj + reader->ptr, n);
     reader->ptr += n;
     return out;
@@ -210,7 +210,7 @@ static NodeDefinition read_definition(ObjectReader *reader, bool hasName) {
 
     def.infiniteInputs = false;
 
-    SocketMeta *sockets = d_malloc(def.numSockets * sizeof(SocketMeta));
+    SocketMeta *sockets = d_calloc(def.numSockets, sizeof(SocketMeta));
 
     for (size_t i = 0; i < def.numSockets; i++) {
         SocketMeta meta = read_socket_meta(reader, true, true);
@@ -237,7 +237,7 @@ static void writer_alloc_end(ObjectWriter *writer, size_t numBytes) {
     size_t newLen = writer->len + numBytes;
 
     if (writer->obj == NULL) {
-        writer->obj = d_malloc(newLen);
+        writer->obj = d_calloc(newLen, sizeof(char));
     } else {
         writer->obj = d_realloc(writer->obj, newLen);
     }
@@ -407,7 +407,7 @@ static void push_index(IndexList *list, size_t index) {
     const size_t newAlloc = list->length * sizeof(size_t);
 
     if (list->indexList == NULL) {
-        list->indexList = d_malloc(newAlloc);
+        list->indexList = d_calloc(list->length, sizeof(size_t));
     } else {
         list->indexList = d_realloc(list->indexList, newAlloc);
     }
@@ -729,7 +729,7 @@ Sheet *d_obj_load(const char *obj, size_t size, const char *filePath,
     if (reader_test_string_n(&reader, ".link", 5)) {
         size_t numLinks = read_uinteger(&reader);
 
-        out->_insLinkList     = d_malloc(numLinks * sizeof(InstructionToLink));
+        out->_insLinkList     = d_calloc(numLinks, sizeof(InstructionToLink));
         out->_insLinkListSize = numLinks;
 
         for (size_t i = 0; i < numLinks; i++) {
@@ -762,7 +762,7 @@ Sheet *d_obj_load(const char *obj, size_t size, const char *filePath,
             // Copy the name of the function from the link meta list.
             const char *name = out->_link.list[metaLinkIndex].name;
             size_t nameSize  = strlen(name) + 1;
-            char *newName    = d_malloc(nameSize);
+            char *newName    = d_calloc(nameSize, sizeof(char));
             strcpy(newName, name);
 
             NodeDefinition funcDef = read_definition(&reader, false);
