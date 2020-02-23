@@ -55,20 +55,13 @@ typedef enum _syntaxDefinition {
     STX_listOfLineIdentifier,    // = 2
     STX_dataType,                // = 3
     STX_literal,                 // = 4
-    STX_oneeos,                  // = 5
-    STX_eos,                     // = 6
-    STX_argument,                // = 7
-    STX_propertyArgument,        // = 8
-    STX_listOfArguments,         // = 9
-    STX_listOfPropertyArguments, // = 10
-    STX_call,                    // = 11
-    STX_propertyCall,            // = 12
-    STX_expression,              // = 13
-    STX_propertyExpression,      // = 14
-    STX_statement,               // = 15
-    STX_propertyStatement,       // = 16
-    STX_generalStatement,        // = 17
-    STX_program                  // = 18
+    STX_argument,                // = 5
+    STX_propertyArgument,        // = 6
+    STX_listOfArguments,         // = 7
+    STX_listOfPropertyArguments, // = 8
+    STX_statement,               // = 9
+    STX_propertyStatement,       // = 10
+    STX_program                  // = 11
 } SyntaxDefinition;
 
 /**
