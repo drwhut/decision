@@ -1866,8 +1866,9 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
         case CORE_MORE_THAN:
         case CORE_MORE_THAN_OR_EQUAL:
         case CORE_NOT_EQUAL:;
-            bool hasNumberInput = false; // This includes Booleans.
+            bool hasNumberInput = false;
             bool hasStringInput = false;
+            bool hasBoolInput   = false;
 
             for (size_t socketIndex = 0; socketIndex < numSockets;
                  socketIndex++) {
@@ -1878,12 +1879,16 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
                     if (d_is_input_socket(sheet->graph, socket)) {
                         // If we know it's a Number anyway (from a literal
                         // argument)...
-                        if ((meta.type & (TYPE_NUMBER | TYPE_BOOL)) != 0) {
+                        if ((meta.type & TYPE_NUMBER) != 0) {
                             hasNumberInput = true;
                         }
                         // Or if we know it's a String anyway...
                         else if (meta.type == TYPE_STRING) {
                             hasStringInput = true;
+                        }
+                        // Or if we know it's a Boolean anyway...
+                        else if (meta.type == TYPE_BOOL) {
+                            hasBoolInput = true;
                         }
                         // If it's an Integer literal, we don't care about it.
                         // It's already reduced. So, we need to check
@@ -1907,11 +1912,12 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
                                         .reducedTypes[socketIndex] =
                                         otherMeta.type;
 
-                                    if ((otherMeta.type &
-                                         (TYPE_NUMBER | TYPE_BOOL)) != 0) {
+                                    if ((otherMeta.type & TYPE_NUMBER) != 0) {
                                         hasNumberInput = true;
                                     } else if (otherMeta.type == TYPE_STRING) {
                                         hasStringInput = true;
+                                    } else if (otherMeta.type == TYPE_BOOL) {
+                                        hasBoolInput = true;
                                     }
                                 } else {
                                     reducedAllInputs = false;
@@ -1924,12 +1930,25 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
                 }
             }
 
-            // If they've mixed numbers and strings.. remind them of their dirty
-            // deeds.
+            // If they've mixed data types... remind them of their dirty deeds.
             if (hasNumberInput && hasStringInput) {
                 Node node = sheet->graph.nodes[nodeIndex];
                 d_error_compiler_push("Comparison operators cannot compare "
                                       "between numbers and strings",
+                                      sheet->filePath, node.lineNum, true);
+            }
+
+            if (hasNumberInput && hasBoolInput) {
+                Node node = sheet->graph.nodes[nodeIndex];
+                d_error_compiler_push("Comparison operators cannot compare "
+                                      "between numbers and booleans",
+                                      sheet->filePath, node.lineNum, true);
+            }
+
+            if (hasStringInput && hasBoolInput) {
+                Node node = sheet->graph.nodes[nodeIndex];
+                d_error_compiler_push("Comparison operators cannot compare "
+                                      "between strings and booleans",
                                       sheet->filePath, node.lineNum, true);
             }
 

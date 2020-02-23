@@ -79,13 +79,13 @@ static const SocketMeta CORE_FUNC_SOCKETS[NUM_CORE_FUNCTIONS][7] = {
         {"length", "The length of the input string.", TYPE_INT, {0}}
     },
     { // CORE_LESS_THAN
-        {"input1", "The first input.", TYPE_VAR_ANY, {0}},
-        {"input2", "The second input.", TYPE_VAR_ANY, {0}},
+        {"input1", "The first input.", TYPE_COMPARABLE, {0}},
+        {"input2", "The second input.", TYPE_COMPARABLE, {0}},
         {"output", "True if the first input is less than the second input, false otherwise.", TYPE_BOOL, {0}}
     },
     { // CORE_LESS_THAN_OR_EQUAL
-        {"input1", "The first input.", TYPE_VAR_ANY, {0}},
-        {"input2", "The second input.", TYPE_VAR_ANY, {0}},
+        {"input1", "The first input.", TYPE_COMPARABLE, {0}},
+        {"input2", "The second input.", TYPE_COMPARABLE, {0}},
         {"output", "True if the first input is less than or equal to the second input, false otherwise.", TYPE_BOOL, {0}}
     },
     { // CORE_MOD
@@ -94,13 +94,13 @@ static const SocketMeta CORE_FUNC_SOCKETS[NUM_CORE_FUNCTIONS][7] = {
         {"output", "The remainder after division of the dividend by the divisor.", TYPE_INT, {0}}
     },
     { // CORE_MORE_THAN
-        {"input1", "The first input.", TYPE_VAR_ANY, {0}},
-        {"input2", "The second input.", TYPE_VAR_ANY, {0}},
+        {"input1", "The first input.", TYPE_COMPARABLE, {0}},
+        {"input2", "The second input.", TYPE_COMPARABLE, {0}},
         {"output", "True if the first input is more than the second input, false otherwise.", TYPE_BOOL, {0}}
     },
     { // CORE_MORE_THAN_OR_EQUAL
-        {"input1", "The first input.", TYPE_VAR_ANY, {0}},
-        {"input2", "The second input.", TYPE_VAR_ANY, {0}},
+        {"input1", "The first input.", TYPE_COMPARABLE, {0}},
+        {"input2", "The second input.", TYPE_COMPARABLE, {0}},
         {"output", "True if the first input is more than or equal to the second input, false otherwise.", TYPE_BOOL, {0}}
     },
     { // CORE_MULTIPLY
