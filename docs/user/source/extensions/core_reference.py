@@ -20,35 +20,17 @@ class CoreReference(Directive):
     Your knowledge and wisdom would be greatly appreciated!
     """
     
-    def parse_socket(self, socket, isInput):
-        header = "%s (%s)" % (socket["name"], socket["type"])
+    def parse_socket(self, socket):
+        text = "%s (%s): %s" % (socket["name"], socket["type"], socket["description"])
 
         i = nodes.list_item()
-        i += nodes.paragraph(text=header)
-
-        body = nodes.bullet_list()
+        i += nodes.paragraph(text=text)
         
-        desc = nodes.list_item()
-        desc += nodes.paragraph(text=socket["description"])
-
-        displayDefault = isInput and socket["type"] != "Execution"
-
-        if displayDefault:
-            default = nodes.list_item()
-            defaultText = "Default value: " + str(socket["default"])
-            default += nodes.paragraph(text=defaultText)
-
-        if displayDefault:
-            body += [desc, default]
-        else:
-            body += [desc]
-
-        i += [body]
         return i
     
-    def parse_sockets(self, sockets, isInput):
+    def parse_sockets(self, sockets):
         l = nodes.enumerated_list()
-        l += [self.parse_socket(socket, isInput) for socket in sockets]
+        l += [self.parse_socket(socket) for socket in sockets]
         return l
 
     def parse_definition(self, definition):
@@ -66,14 +48,14 @@ class CoreReference(Directive):
         inputs = nodes.section(ids=[name + "-inputs"])
         inputs += nodes.title("Inputs", "Inputs")
 
-        inputs += self.parse_sockets(definition["inputs"], True)
+        inputs += self.parse_sockets(definition["inputs"])
 
         d += [inputs]
         
         outputs = nodes.section(ids=[name + "-outputs"])
         outputs += nodes.title("Outputs", "Outputs")
 
-        outputs += self.parse_sockets(definition["outputs"], False)
+        outputs += self.parse_sockets(definition["outputs"])
 
         d += [outputs]
 
