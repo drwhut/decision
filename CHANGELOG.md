@@ -32,6 +32,10 @@ from freeing the sheet when they are freed.
 * Changed the build system such that most of the code compiles to a singular
 library (which is either static or shared, static by default), and link the
 executable to that library.
+* The compiler now has a `--export-core` flag, which will output the core
+reference in JSON format.
+  * This is used in conjunction with an extension added to the user manual,
+  which reads the JSON and displays the core reference automatically.
 
 # Decision v0.2.0 - 16th January 2020
 
