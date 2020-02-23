@@ -36,6 +36,8 @@ executable to that library.
 reference in JSON format.
   * This is used in conjunction with an extension added to the user manual,
   which reads the JSON and displays the core reference automatically.
+* Integers as inputs to bitwise operators is now supported.
+* Booleans as inputs to comparison operators is now supported.
 
 # Decision v0.2.0 - 16th January 2020
 
