@@ -71,6 +71,7 @@ static const unsigned char VM_INS_SIZE[NUM_OPCODES] = {
     1 + BIMMEDIATE_SIZE,                   // OP_GETBI
     1 + HIMMEDIATE_SIZE,                   // OP_GETHI
     1 + FIMMEDIATE_SIZE,                   // OP_GETFI
+    1,                                     // OP_INV
     1,                                     // OP_J
     1,                                     // OP_JCON
     1 + FIMMEDIATE_SIZE,                   // OP_JCONI
@@ -1213,6 +1214,10 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
 
         case OP_GETFI:;
             d_vm_push(vm, d_vm_get(vm, GET_FIMMEDIATE(1)));
+            break;
+        
+        case OP_INV:;
+            *VM_GET_STACK_PTR(vm, 0) = ~VM_GET_STACK(vm, 0);
             break;
 
         case OP_J:;

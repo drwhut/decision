@@ -298,20 +298,20 @@ void d_insert_bytecode(BCode *base, BCode *insertCode, size_t insertIndex) {
 
 /* An array of mnemonics, where the index matches the opcode. */
 static const char *MNEMONICS[NUM_OPCODES] = {
-    "RET",    "RETN",   "ADD",    "ADDF",    "ADDBI",   "ADDHI",   "ADDFI",
-    "AND",    "ANDBI",  "ANDHI",  "ANDFI",   "CALL",    "CALLC",   "CALLCI",
-    "CALLI",  "CALLR",  "CALLRB", "CALLRH",  "CALLRF",  "CEQ",     "CEQF",
-    "CLEQ",   "CLEQF",  "CLT",    "CLTF",    "CMEQ",    "CMEQF",   "CMT",
-    "CMTF",   "CVTF",   "CVTI",   "DEREF",   "DEREFI",  "DEREFB",  "DEREFBI",
-    "DIV",    "DIVF",   "DIVBI",  "DIVHI",   "DIVFI",   "GET",     "GETBI",
-    "GETHI",  "GETFI",  "J",      "JCON",    "JCONI",   "JI",      "JR",
-    "JRBI",   "JRHI",   "JRFI",   "JRCON",   "JRCONBI", "JRCONHI", "JRCONFI",
-    "MOD",    "MODBI",  "MODHI",  "MODFI",   "MUL",     "MULF",    "MULBI",
-    "MULHI",  "MULFI",  "NOT",    "OR",      "ORBI",    "ORHI",    "ORFI",
-    "POP",    "POPB",   "POPH",   "POPF",    "PUSHB",   "PUSHH",   "PUSHF",
-    "PUSHNB", "PUSHNH", "PUSHNF", "SETADR",  "SETADRB", "SUB",     "SUBF",
-    "SUBBI",  "SUBHI",  "SUBFI",  "SYSCALL", "XOR",     "XORBI",   "XORHI",
-    "XORFI"};
+    "RET",     "RETN",   "ADD",    "ADDF",   "ADDBI",   "ADDHI",   "ADDFI",
+    "AND",     "ANDBI",  "ANDHI",  "ANDFI",  "CALL",    "CALLC",   "CALLCI",
+    "CALLI",   "CALLR",  "CALLRB", "CALLRH", "CALLRF",  "CEQ",     "CEQF",
+    "CLEQ",    "CLEQF",  "CLT",    "CLTF",   "CMEQ",    "CMEQF",   "CMT",
+    "CMTF",    "CVTF",   "CVTI",   "DEREF",  "DEREFI",  "DEREFB",  "DEREFBI",
+    "DIV",     "DIVF",   "DIVBI",  "DIVHI",  "DIVFI",   "GET",     "GETBI",
+    "GETHI",   "GETFI",  "INV",    "J",      "JCON",    "JCONI",   "JI",
+    "JR",      "JRBI",   "JRHI",   "JRFI",   "JRCON",   "JRCONBI", "JRCONHI",
+    "JRCONFI", "MOD",    "MODBI",  "MODHI",  "MODFI",   "MUL",     "MULF",
+    "MULBI",   "MULHI",  "MULFI",  "NOT",    "OR",      "ORBI",    "ORHI",
+    "ORFI",    "POP",    "POPB",   "POPH",   "POPF",    "PUSHB",   "PUSHH",
+    "PUSHF",   "PUSHNB", "PUSHNH", "PUSHNF", "SETADR",  "SETADRB", "SUB",
+    "SUBF",    "SUBBI",  "SUBHI",  "SUBFI",  "SYSCALL", "XOR",     "XORBI",
+    "XORHI",   "XORFI"};
 
 /**
  * \fn void d_asm_text_dump(char *code, size_t size)
