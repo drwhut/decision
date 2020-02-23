@@ -408,6 +408,10 @@ int d_wire_find_first(Graph graph, NodeSocket socket) {
         middle--;
 
         wire = graph.wires[middle];
+
+        if (middle < 0) {
+            break;
+        }
     }
 
     return middle + 1;
