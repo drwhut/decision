@@ -1317,7 +1317,14 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
                                                    OP_CMEQF, 3, false);
                     break;
                 case CORE_NOT:;
-                    action = d_generate_operator(context, nodeIndex, OP_NOT, 0,
+                    // This can mean 2 different thing depending on the data
+                    // types.
+                    socket.socketIndex = 0;
+                    const SocketMeta meta =
+                        d_get_socket_meta(context->graph, socket);
+                    DIns notOp = (meta.type == TYPE_INT) ? OP_INV : OP_NOT;
+
+                    action = d_generate_operator(context, nodeIndex, notOp, 0,
                                                  0, false);
                     break;
                 case CORE_NOT_EQUAL:;
