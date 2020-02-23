@@ -357,7 +357,7 @@ static void add_socket(const char *name, SocketMeta socket, bool isInput) {
         const size_t newAlloc = numSockets * sizeof(SocketMeta);
 
         if (sockets == NULL) {
-            sockets = d_malloc(newAlloc);
+            sockets = d_calloc(numSockets, sizeof(SocketMeta));
         } else {
             sockets = d_realloc(sockets, newAlloc);
         }
@@ -387,7 +387,7 @@ static void create_func(const char *name, const char *desc, bool sub) {
     const size_t newAlloc = numFuncs * sizeof(NodeDefinition);
 
     if (funcs == NULL) {
-        funcs = d_malloc(newAlloc);
+        funcs = d_calloc(numFuncs, sizeof(NodeDefinition));
     } else {
         funcs = d_realloc(funcs, newAlloc);
     }
@@ -401,10 +401,10 @@ static void create_func(const char *name, const char *desc, bool sub) {
     // If it's a subroutine, add execution sockets.
     // TODO: Make these consistent with the ones in dcfunc.c!
     if (sub) {
-        char *beforeSocketName = d_malloc(7);
+        char *beforeSocketName = d_calloc(7, sizeof(char));
         strcpy(beforeSocketName, "before");
 
-        char *beforeSocketDescription = d_malloc(53);
+        char *beforeSocketDescription = d_calloc(53, sizeof(char));
         strcpy(beforeSocketDescription,
                "The node will activate when this input is activated.");
 
@@ -414,10 +414,10 @@ static void create_func(const char *name, const char *desc, bool sub) {
         beforeSocket.type                      = TYPE_EXECUTION;
         beforeSocket.defaultValue.integerValue = 0;
 
-        char *afterSocketName = d_malloc(6);
+        char *afterSocketName = d_calloc(6, sizeof(char));
         strcpy(afterSocketName, "after");
 
-        char *afterSocketDescription = d_malloc(64);
+        char *afterSocketDescription = d_calloc(64, sizeof(char));
         strcpy(
             afterSocketDescription,
             "This output will activate once the node has finished executing.");
@@ -869,9 +869,8 @@ static void scan_property(Sheet *sheet, const char *propertyName,
 
             if (numArgs > 0) {
                 argList.numArgs = numArgs;
-                argList.args    = (PropertyArgument *)d_malloc(
-                    numArgs * sizeof(PropertyArgument));
-                argListMallocd = true;
+                argList.args    = d_calloc(numArgs, sizeof(PropertyArgument));
+                argListMallocd  = true;
 
                 for (size_t i = 0; i < numArgs; i++) {
                     SyntaxNode *argNode = argParentNode->child;
@@ -1054,18 +1053,14 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
     size_t _numOutputs = d_definition_num_outputs(nodeDef);
 
     // Malloc the array of types.
-    DType *types = (DType *)d_malloc(nodeDef->numSockets * sizeof(DType));
+    DType *types = d_calloc(nodeDef->numSockets, sizeof(DType));
 
     for (size_t i = 0; i < numInputs + _numOutputs; i++) {
         types[i] = nodeDef->sockets[i].type;
     }
 
     // Malloc the array of literal inputs.
-    LexData *literals = (LexData *)d_malloc(numInputs * sizeof(LexData));
-
-    for (size_t i = 0; i < numInputs; i++) {
-        literals[i].integerValue = 0;
-    }
+    LexData *literals = d_calloc(numInputs, sizeof(LexData));
 
     size_t startOutputIndex = nodeDef->startOutputIndex;
 
@@ -1124,13 +1119,12 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
         // If the number of inputs we got was bigger than what we expected,
         // resize the type and literal arrays in the node.
         if (inputArgs.numOccurances > numInputs) {
-            types =
-                (DType *)d_realloc(types, (inputArgs.numOccurances +
-                                           d_definition_num_outputs(nodeDef)) *
-                                              sizeof(DType));
+            types = d_realloc(types, (inputArgs.numOccurances +
+                                      d_definition_num_outputs(nodeDef)) *
+                                         sizeof(DType));
 
-            literals = (LexData *)d_realloc(literals, inputArgs.numOccurances *
-                                                          sizeof(LexData));
+            literals =
+                d_realloc(literals, inputArgs.numOccurances * sizeof(LexData));
 
             memmove(types + inputArgs.numOccurances, types + numInputs,
                     d_definition_num_outputs(nodeDef) * sizeof(DType));
@@ -1234,7 +1228,7 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
                             // If we need to up the capacity of
                             // the list, do so.
                             if (*numUnknownLines + 1 > *unknownLinesCapacity) {
-                                *unknownLines = (LineSocketPair *)d_realloc(
+                                *unknownLines = d_realloc(
                                     *unknownLines, (++(*unknownLinesCapacity)) *
                                                        sizeof(LineSocketPair));
                             }
@@ -1387,9 +1381,9 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
                     // If we need to up the capacity of the
                     // list, do so.
                     if (*numKnownLines + 1 > *knownLinesCapacity) {
-                        *knownLines = (LineSocketPair *)d_realloc(
-                            *knownLines,
-                            (++(*knownLinesCapacity)) * sizeof(LineSocketPair));
+                        *knownLines =
+                            d_realloc(*knownLines, (++(*knownLinesCapacity)) *
+                                                       sizeof(LineSocketPair));
                     }
 
                     LineSocketPair knownLine;
@@ -1435,8 +1429,8 @@ void d_semantic_scan_nodes(Sheet *sheet, SyntaxNode *root) {
     // We put lines into this list as we scan output sockets,
     // and then connect them to their respective input socket
     // using the line identifier.
-    LineSocketPair *knownLineDefinitions = (LineSocketPair *)d_malloc(
-        3 * statementSearchResults.numOccurances * sizeof(LineSocketPair));
+    LineSocketPair *knownLineDefinitions = d_calloc(
+        3 * statementSearchResults.numOccurances, sizeof(LineSocketPair));
     size_t knownLineDefinitionsCapacity =
         3 * statementSearchResults.numOccurances;
     size_t numKnownLineDefinitions = 0;
@@ -1445,8 +1439,8 @@ void d_semantic_scan_nodes(Sheet *sheet, SyntaxNode *root) {
     // We put lines in this list as we scan input sockets,
     // and then connect them to their respective output socket
     // using the line identifier.
-    LineSocketPair *unknownLineDefinitions = (LineSocketPair *)d_malloc(
-        3 * statementSearchResults.numOccurances * sizeof(LineSocketPair));
+    LineSocketPair *unknownLineDefinitions = d_calloc(
+        3 * statementSearchResults.numOccurances, sizeof(LineSocketPair));
     size_t unknownLineDefinitionsCapacity =
         3 * statementSearchResults.numOccurances;
     size_t numUnknownLineDefinitions = 0;
@@ -2063,10 +2057,7 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
 void d_semantic_reduce_types(Sheet *sheet) {
     // An array of booleans to say whether we have reduced the node with the
     // same index.
-    bool *nodeReduced = (bool *)d_malloc(sheet->graph.numNodes * sizeof(bool));
-    for (size_t i = 0; i < sheet->graph.numNodes; i++) {
-        nodeReduced[i] = false;
-    }
+    bool *nodeReduced = d_calloc(sheet->graph.numNodes, sizeof(bool));
 
     bool allReduced = false;
 
@@ -2220,8 +2211,7 @@ void d_semantic_detect_loops(Sheet *sheet) {
     if (sheet->graph.nodes != NULL && sheet->graph.numNodes > 0) {
         // We can't go on a journey that is bigger than the number
         // of nodes (without looping)
-        size_t *path =
-            (size_t *)d_malloc(sheet->graph.numNodes * sizeof(size_t));
+        size_t *path = d_calloc(sheet->graph.numNodes, sizeof(size_t));
 
         // Find nodes with no inputs (except name sockets).
         for (size_t i = 0; i < sheet->graph.numNodes; i++) {

@@ -109,7 +109,7 @@ void d_add_link_to_ins(BuildContext *context, BCode *bcode, size_t insIndex,
         // This prevents the name being free'd from 2 seperate places: once
         // from a node name, and the other being in the LinkMetaList.
         size_t nameLen = strlen(linkMeta.name);
-        char *cpyName  = (char *)d_malloc(nameLen + 1);
+        char *cpyName  = d_calloc(nameLen + 1, sizeof(char));
         memcpy(cpyName, linkMeta.name, nameLen);
         cpyName[nameLen] = 0;
         linkMeta.name    = (const char *)cpyName;
@@ -132,12 +132,12 @@ void d_add_link_to_ins(BuildContext *context, BCode *bcode, size_t insIndex,
         itl.link = linkIndex;
 
         if (bcode->linkList != NULL && bcode->linkListSize > 0) {
-            bcode->linkList = (InstructionToLink *)d_realloc(
-                bcode->linkList,
-                (bcode->linkListSize + 1) * sizeof(InstructionToLink));
+            bcode->linkList =
+                d_realloc(bcode->linkList, (bcode->linkListSize + 1) *
+                                               sizeof(InstructionToLink));
         } else {
-            bcode->linkList = (InstructionToLink *)d_malloc(
-                (bcode->linkListSize + 1) * sizeof(InstructionToLink));
+            bcode->linkList =
+                d_calloc((bcode->linkListSize + 1), sizeof(InstructionToLink));
         }
 
         // linkListSize hasn't changed yet!
@@ -172,12 +172,11 @@ char *d_allocate_from_data_section(BuildContext *context, size_t size,
         context->dataSectionSize = newSize;
 
         if (context->dataSection != NULL && context->dataSectionSize > 0) {
-            context->dataSection =
-                (char *)d_realloc(context->dataSection, newSize);
-            *index = oldSize;
+            context->dataSection = d_realloc(context->dataSection, newSize);
+            *index               = oldSize;
             return context->dataSection + oldSize;
         } else {
-            context->dataSection = (char *)d_malloc(newSize);
+            context->dataSection = d_calloc(newSize, sizeof(char));
             *index               = 0;
             return context->dataSection;
         }
@@ -2161,7 +2160,7 @@ void d_codegen_compile(Sheet *sheet) {
 
         // Copy the name so d_link_free_list doesn't go balistic.
         size_t nameLengthPlusNull = strlen(varMeta.name) + 1;
-        char *varName             = (char *)d_malloc(nameLengthPlusNull);
+        char *varName             = d_calloc(nameLengthPlusNull, sizeof(char));
         memcpy(varName, varMeta.name, nameLengthPlusNull);
 
         // Create a LinkMeta entry so we know it exists.
@@ -2208,7 +2207,7 @@ void d_codegen_compile(Sheet *sheet) {
         if (metaInList == NULL) {
             // But first, copy the name.
             size_t nameLen = strlen(meta.name) + 1;
-            char *newName  = d_malloc(nameLen);
+            char *newName  = d_calloc(nameLen, sizeof(char));
             memcpy(newName, meta.name, nameLen);
             meta.name = newName;
 

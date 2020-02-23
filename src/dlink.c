@@ -67,10 +67,9 @@ void d_link_meta_list_push(LinkMetaList *list, LinkMeta item) {
     size_t newSize = list->size + 1;
 
     if (list->list != NULL) {
-        list->list =
-            (LinkMeta *)d_realloc(list->list, newSize * sizeof(LinkMeta));
+        list->list = d_realloc(list->list, newSize * sizeof(LinkMeta));
     } else {
-        list->list = (LinkMeta *)d_malloc(newSize * sizeof(LinkMeta));
+        list->list = d_calloc(newSize, sizeof(LinkMeta));
     }
 
     list->list[newSize - 1] = item;
@@ -269,7 +268,8 @@ void d_link_self(Sheet *sheet) {
 
                     // Now we malloc, copy the default value into the new
                     // location, and store the new pointer.
-                    char *newPtr = (char *)d_malloc(defaultValueLength + 1);
+                    char *newPtr =
+                        d_calloc(defaultValueLength + 1, sizeof(char));
                     memcpy(newPtr, strVarDefaultValue, defaultValueLength + 1);
 
                     memcpy(strVarPtr, &newPtr, sizeof(dint));
