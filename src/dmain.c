@@ -18,6 +18,7 @@
 
 #include "dasm.h"
 #include "dcfg.h"
+#include "dcore.h"
 #include "decision.h"
 #include "dmalloc.h"
 #include "dsheet.h"
@@ -44,6 +45,8 @@ static const char *HELP =
     "  -c, --compile:                    Compile all source file(s) into .dco\n"
     "                                      object files.\n"
     "  -D, --disassemble:                Disassemble a given object file.\n"
+    "  --export-core:                    Output the core reference in JSON\n"
+    "                                      format.\n"
     "  -h, -?, --help:                   Display this screen and exit.\n"
     "  -V[=LEVEL], --verbose[=LEVEL]:    Output verbose debugging information "
     "as\n"
@@ -100,6 +103,11 @@ int main(int argc, char *argv[]) {
         // -D, --disassemble
         else if (ARG(-D) || ARG(--disassemble)) {
             disassemble = true;
+        }
+        // --export-core
+        else if (ARG(--export-core)) {
+            d_core_dump_json();
+            return 0;
         }
         // -h, -?, --help
         else if (ARG(-h) || ARG(-?) || ARG(--help))

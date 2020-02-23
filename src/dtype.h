@@ -71,6 +71,12 @@ typedef enum _dType {
 #define TYPE_NUMBER (TYPE_INT | TYPE_FLOAT)
 
 /**
+ * \def TYPE_BITWISE
+ * \brief A vague type representing bitwise types.
+ */
+#define TYPE_BITWISE (TYPE_INT | TYPE_BOOL)
+
+/**
  * \def TYPE_VAR_ANY
  * \brief A vague type representing all variable types.
  */

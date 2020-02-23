@@ -17,6 +17,10 @@ The documentation is created in *reStructuredText* format, and is built using a
 Python tool called [Sphinx](http://www.sphinx-doc.org/en/master/) to convert
 the text into an HTML format thats easy to read.
 
+The **user** documentation includes a reference of all of the core functions
+and subroutines in Decision, which is retrieved from the compiler itself in
+a JSON format.
+
 The **developer** documentation also includes a reference to all of the
 functions, structures, etc. defined in the header files of the project.
 This information is compiled into XML format with **Doxygen**, and then used
@@ -50,6 +54,14 @@ You can download **Doxygen** [here](http://www.doxygen.nl/download.html) if
 you are not on Linux.
 
 ### Building the Documentation
+
+If you are building the **user** documentation, you will need the Decision
+compiler. Once you have it, you can run this command to generate the JSON
+representation of the core reference:
+
+```bash
+build/decision --export-core > docs/user/core.json
+```
 
 If you are building the **developer** documentation, you should first generate
 the XML reference using **Doxygen**. To do this, go to the root directory of

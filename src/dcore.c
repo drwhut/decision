@@ -21,6 +21,7 @@
 #include "dsheet.h"
 #include "dtype.h"
 
+#include <stdio.h>
 #include <string.h>
 
 // clang-format off
@@ -32,9 +33,9 @@ static const SocketMeta CORE_FUNC_SOCKETS[NUM_CORE_FUNCTIONS][7] = {
         {"output", "The addition of all the inputs.", TYPE_NUMBER, {0}}
     },
     { // CORE_AND
-        {"input1", "The first integer or boolean input.", TYPE_INT | TYPE_BOOL, {0}},
-        {"input2", "The second integer or boolean input.", TYPE_INT | TYPE_BOOL, {0}},
-        {"output", "The bitwise AND of the two inputs.", TYPE_INT | TYPE_BOOL, {0}}
+        {"input1", "The first integer or boolean input.", TYPE_BITWISE, {0}},
+        {"input2", "The second integer or boolean input.", TYPE_BITWISE, {0}},
+        {"output", "The bitwise AND of the two inputs.", TYPE_BITWISE, {0}}
     },
     { // CORE_DIV
         {"dividend", "The dividend of the division.", TYPE_NUMBER, {0}},
@@ -108,8 +109,8 @@ static const SocketMeta CORE_FUNC_SOCKETS[NUM_CORE_FUNCTIONS][7] = {
         {"output", "The multiplication of all the inputs.", TYPE_NUMBER, {0}}
     },
     { // CORE_NOT
-        {"input", "The integer or boolean input.", TYPE_INT | TYPE_BOOL, {0}},
-        {"output", "The bitwise NOT of the input.", TYPE_INT | TYPE_BOOL, {0}}
+        {"input", "The integer or boolean input.", TYPE_BITWISE, {0}},
+        {"output", "The bitwise NOT of the input.", TYPE_BITWISE, {0}}
     },
     { // CORE_NOT_EQUAL
         {"input1", "The first input.", TYPE_VAR_ANY, {0}},
@@ -117,9 +118,9 @@ static const SocketMeta CORE_FUNC_SOCKETS[NUM_CORE_FUNCTIONS][7] = {
         {"output", "True if the two inputs are not equal, false otherwise.", TYPE_BOOL, {0}}   
     },
     { // CORE_OR
-        {"input1", "The first integer or boolean input.", TYPE_INT | TYPE_BOOL, {0}},
-        {"input2", "The second integer or boolean input.", TYPE_INT | TYPE_BOOL, {0}},
-        {"output", "The bitwise OR of the two inputs.", TYPE_INT | TYPE_BOOL, {0}}   
+        {"input1", "The first integer or boolean input.", TYPE_BITWISE, {0}},
+        {"input2", "The second integer or boolean input.", TYPE_BITWISE, {0}},
+        {"output", "The bitwise OR of the two inputs.", TYPE_BITWISE, {0}}   
     },
     { // CORE_PRINT
         {"before", "The node will print the value when this input is activated.", TYPE_EXECUTION, {0}},
@@ -134,7 +135,7 @@ static const SocketMeta CORE_FUNC_SOCKETS[NUM_CORE_FUNCTIONS][7] = {
     },
     { // CORE_SUBTRACT
         {"from", "The number to subtract from.", TYPE_NUMBER, {0}},
-        {"subtract", "How much to subtract.", TYPE_NUMBER, {1}},
+        {"subtract", "How much to subtract.", TYPE_NUMBER, {0}},
         {"output", "The subtraction of the two inputs.", TYPE_NUMBER, {0}}
     },
     { // CORE_TERNARY
@@ -150,9 +151,9 @@ static const SocketMeta CORE_FUNC_SOCKETS[NUM_CORE_FUNCTIONS][7] = {
         {"after", "This output will activate when the while loop is over.", TYPE_EXECUTION, {0}}
     },
     { // CORE_XOR
-        {"input1", "The first integer or boolean input.", TYPE_INT | TYPE_BOOL, {0}},
-        {"input2", "The second integer or boolean input.", TYPE_INT | TYPE_BOOL, {0}},
-        {"output", "The bitwise XOR of the two inputs.", TYPE_INT | TYPE_BOOL, {0}}  
+        {"input1", "The first integer or boolean input.", TYPE_BITWISE, {0}},
+        {"input2", "The second integer or boolean input.", TYPE_BITWISE, {0}},
+        {"output", "The bitwise XOR of the two inputs.", TYPE_BITWISE, {0}}  
     }
 };
 
@@ -234,4 +235,170 @@ const CoreFunction d_core_find_name(const char *name) {
     }
 
     return -1;
+}
+
+/* Helper functions for printing JSON to the screen. */
+
+static void print_indent(size_t indent) {
+    for (size_t i = 0; i < indent; i++) {
+        printf("  ");
+    }
+}
+
+static void print_socket(size_t indent, const SocketMeta *meta, bool input,
+                         bool last) {
+    print_indent(indent);
+    printf("{\n");
+
+    print_indent(indent + 1);
+    printf("\"name\":\"%s\",\n", meta->name);
+
+    print_indent(indent + 1);
+    printf("\"description\":\"%s\",\n", meta->description);
+
+    print_indent(indent + 1);
+    printf("\"type\":\"%s\"", d_type_name(meta->type));
+
+    if (input) {
+        printf(",");
+    }
+    printf("\n");
+
+    if (input) {
+        print_indent(indent + 1);
+
+        DType type = meta->type;
+
+        if ((type & TYPE_INT) != 0) {
+            printf("\"default\":%" DINT_PRINTF_d "\n",
+                   meta->defaultValue.integerValue);
+        } else if ((type & TYPE_FLOAT) != 0) {
+            printf("\"default\":%g\n", meta->defaultValue.floatValue);
+        } else if ((type & TYPE_STRING) != 0) {
+            const char *str = meta->defaultValue.stringValue;
+
+            if (str) {
+                printf("\"default\":\"%s\"\n", str);
+            } else {
+                printf("\"default\":\"\"\n");
+            }
+        } else if ((type & TYPE_BOOL) != 0) {
+            printf("\"default\":%s\n",
+                   (meta->defaultValue.booleanValue) ? "true" : "false");
+        } else {
+            printf("\"default\":\"unknown\"\n");
+        }
+    }
+
+    print_indent(indent);
+    printf("}");
+    if (!last) {
+        printf(",");
+    }
+    printf("\n");
+}
+
+static void print_definition(size_t indent, const NodeDefinition *def,
+                             bool last) {
+    print_indent(indent);
+    printf("{\n");
+
+    print_indent(indent + 1);
+    printf("\"name\":\"%s\",\n", def->name);
+
+    print_indent(indent + 1);
+    printf("\"description\":\"%s\",\n", def->description);
+
+    print_indent(indent + 1);
+    printf("\"inputs\": [\n");
+
+    const size_t numInputs = d_definition_num_inputs(def);
+    for (size_t i = 0; i < numInputs; i++) {
+        print_socket(indent + 2, def->sockets + i, true, i == numInputs - 1);
+    }
+
+    print_indent(indent + 1);
+    printf("],\n");
+
+    print_indent(indent + 1);
+    printf("\"outputs\": [\n");
+
+    const size_t numOutputs = d_definition_num_outputs(def);
+    for (size_t i = numInputs; i < numInputs + numOutputs; i++) {
+        print_socket(indent + 2, def->sockets + i, false,
+                     i == numInputs + numOutputs - 1);
+    }
+
+    print_indent(indent + 1);
+    printf("],\n");
+
+    print_indent(indent + 1);
+    printf("\"infiniteInputs\":\"%s\"\n",
+           (def->infiniteInputs) ? "true" : "false");
+
+    print_indent(indent);
+    printf("}");
+    if (!last) {
+        printf(",");
+    }
+    printf("\n");
+}
+
+/**
+ * \fn void d_core_dump_json()
+ * \brief Dump the core functions and subroutines to `stdout` in JSON format.
+ */
+void d_core_dump_json() {
+    printf("{\n");
+
+    size_t indent = 1;
+
+    size_t numFunctions   = 0;
+    size_t numSubroutines = 0;
+
+    for (size_t i = 0; i < NUM_CORE_FUNCTIONS; i++) {
+        const NodeDefinition *def = CORE_FUNC_DEFINITIONS + i;
+
+        if (d_is_execution_definition(def)) {
+            numSubroutines++;
+        } else {
+            numFunctions++;
+        }
+    }
+
+    print_indent(indent);
+    printf("\"functions\": [\n");
+
+    size_t numFuncsPrinted = 0;
+    for (size_t i = 0; i < NUM_CORE_FUNCTIONS; i++) {
+        const NodeDefinition *def = CORE_FUNC_DEFINITIONS + i;
+
+        if (!d_is_execution_definition(def)) {
+            print_definition(indent + 2, def,
+                             numFuncsPrinted == numFunctions - 1);
+            numFuncsPrinted++;
+        }
+    }
+
+    print_indent(indent);
+    printf("],\n");
+
+    print_indent(indent);
+    printf("\"subroutines\": [\n");
+
+    size_t numSubsPrinted = 0;
+    for (size_t i = 0; i < NUM_CORE_FUNCTIONS; i++) {
+        const NodeDefinition *def = CORE_FUNC_DEFINITIONS + i;
+
+        if (d_is_execution_definition(def)) {
+            print_definition(indent + 2, def,
+                             numSubsPrinted == numSubroutines - 1);
+            numSubsPrinted++;
+        }
+    }
+
+    print_indent(indent);
+    printf("]\n");
+
+    printf("}\n");
 }

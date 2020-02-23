@@ -105,4 +105,10 @@ d_core_get_definition(const CoreFunction core);
  */
 DECISION_API const CoreFunction d_core_find_name(const char *name);
 
+/**
+ * \fn void d_core_dump_json()
+ * \brief Dump the core functions and subroutines to `stdout` in JSON format.
+ */
+DECISION_API void d_core_dump_json();
+
 #endif // DCORE_H

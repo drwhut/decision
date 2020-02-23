@@ -16,24 +16,34 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install doxygen
+          sudo apt-get install build-essential cmake doxygen
           sudo pip3 install -U sphinx sphinx_rtd_theme breathe
       - name: Copy files from master branch
         run: |
-          git checkout origin/master -- docs/ Doxyfile src/
+          git checkout origin/master -- CMakeLists.txt docs/ Doxyfile src/
+      - name: Create CMake project
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+      - name: Build Decision
+        run: |
+          cd build
+          make
+      - name: Generate core reference
+        run: |
+          build/decision --export-core > docs/user/core.json
       - name: Run Doxygen
         run: |
           doxygen Doxyfile
       - name: Build the developer manual
         run: |
-          pushd docs/developer
+          cd docs/developer
           make html
-          popd
       - name: Build the user manual
         run: |
-          pushd docs/user
+          cd docs/user
           make html
-          popd
       - name: Move the built documentation
         run: |
           mkdir -p developer user
@@ -41,7 +51,7 @@ jobs:
           cp -R docs/user/build/html/* user/
       - name: Cleanup
         run: |
-          rm -R docs/ Doxyfile src/
+          rm -R CMakeLists.txt docs/ Doxyfile src/
       - name: Commit if there are changes
         run: |
           git config user.email "drwhut@gmail.com"
