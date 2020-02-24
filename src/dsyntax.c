@@ -757,7 +757,7 @@ static SyntaxResult propertyStatement(SyntaxContext *context) {
         d_syntax_create_node(STX_propertyStatement, NULL, context->lineNum);
     out.success = true;
 
-    VERBOSE(5, "ENTER\propertyStatement\tWITH\t%i\n",
+    VERBOSE(5, "ENTER\tpropertyStatement\tWITH\t%i\n",
             context->currentToken->type);
 
     if (context->currentToken->type == TK_LPROPERTY) {
