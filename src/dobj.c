@@ -19,6 +19,7 @@
 #include "dobj.h"
 
 #include "dcfunc.h"
+#include "decision.h"
 #include "derror.h"
 #include "dmalloc.h"
 #include "dsheet.h"
@@ -465,6 +466,11 @@ const char *d_obj_generate(Sheet *sheet, size_t *size) {
     write_string_n(&writer, "D64", 3);
 #endif // DECISION_32
 
+    // Add the current version of Decision.
+    write_byte(&writer, DECISION_VERSION_MAJOR);
+    write_byte(&writer, DECISION_VERSION_MINOR);
+    write_byte(&writer, DECISION_VERSION_PATCH);
+
     // .text
     // If no bytecode has been compiled, don't bother putting anything here.
     if (sheet->_textSize > 0) {
@@ -669,6 +675,40 @@ Sheet *d_obj_load(const char *obj, size_t size, const char *filePath,
         return out;
     }
 #endif // DECISION_32
+
+    // Load this object file's Decision version.
+    unsigned char major = read_byte(&reader);
+    unsigned char minor = read_byte(&reader);
+    unsigned char patch = read_byte(&reader);
+
+    // Is this version in the past or in the future?
+    short cmp = 0;
+
+    if (major > DECISION_VERSION_MAJOR) {
+        cmp = 1;
+    } else if (major < DECISION_VERSION_MAJOR) {
+        cmp = -1;
+    } else {
+        if (minor > DECISION_VERSION_MINOR) {
+            cmp = 1;
+        } else if (minor < DECISION_VERSION_MINOR) {
+            cmp = -1;
+        } else {
+            if (patch > DECISION_VERSION_PATCH) {
+                cmp = 1;
+            } else if (patch < DECISION_VERSION_PATCH) {
+                cmp = -1;
+            }
+        }
+    }
+
+    // If the object file was written in the future, warn the user that things
+    // are very likely going to break.
+    if (cmp > 0) {
+        printf("Warning: %s was compiled with a future version of Decision "
+               "(%hhi.%hhi.%hhi)\n",
+               filePath, major, minor, patch);
+    }
 
     // .text
     if (reader_test_string_n(&reader, ".text", 5)) {
