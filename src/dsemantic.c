@@ -855,73 +855,74 @@ static void scan_property(Sheet *sheet, const char *propertyName,
     bool argListMallocd          = false;
 
     if (node->sibling != NULL) {
-        // STX_propertyCall
+        // STX_listOfPropertyArguments
         node = node->sibling;
 
-        if (node->child != NULL) {
-            // STX_listOfPropertyArguments
-            node = node->child;
+        // STX_propertyArgument
+        SyntaxNode *argParentNode = node->child;
 
-            // STX_propertyArgument
-            SyntaxNode *argParentNode = node->child;
+        const size_t numArgs = d_syntax_get_num_children(node);
 
-            const size_t numArgs = d_syntax_get_num_children(node);
+        if (numArgs > 0) {
+            argList.numArgs = numArgs;
+            argList.args    = d_calloc(numArgs, sizeof(PropertyArgument));
+            argListMallocd  = true;
 
-            if (numArgs > 0) {
-                argList.numArgs = numArgs;
-                argList.args    = d_calloc(numArgs, sizeof(PropertyArgument));
-                argListMallocd  = true;
+            for (size_t i = 0; i < numArgs; i++) {
+                SyntaxNode *argNode = argParentNode->child;
 
-                for (size_t i = 0; i < numArgs; i++) {
-                    SyntaxNode *argNode = argParentNode->child;
+                SyntaxDefinition definition = argNode->definition;
 
-                    SyntaxDefinition definition = argNode->definition;
+                PropertyArgument arg;
+                arg.type      = definition;
+                arg.data.name = NULL;
 
-                    PropertyArgument arg;
-                    arg.type      = definition;
-                    arg.data.name = NULL;
-
-                    switch (definition) {
-                        case STX_TOKEN:;
-                            if (argNode->info->type == TK_NAME)
-                                arg.data.name = argNode->info->data.stringValue;
-                            break;
-                        case STX_literal:;
-                            // STX_TOKEN
-                            SyntaxNode *literalNode = argNode->child;
-                            arg.data.literal        = literalNode->info;
-                            break;
-                        case STX_dataType:;
-                            // STX_dataType
-                            SyntaxNode *dataTypeNode = argNode->child;
-                            arg.data.dataType =
-                                TYPE_FROM_LEX(dataTypeNode->info->type);
-                            break;
-                        default:
-                            d_error_compiler_push("Property arguments "
-                                                  "must be either a "
-                                                  "name, literal or data "
-                                                  "type.",
-                                                  sheet->filePath, lineNum,
-                                                  true);
-                            break;
-                    }
-
-                    argList.args[i] = arg;
-
-                    argParentNode = argParentNode->sibling;
+                switch (definition) {
+                    case STX_TOKEN:;
+                        if (argNode->info->type == TK_NAME)
+                            arg.data.name = argNode->info->data.stringValue;
+                        break;
+                    case STX_literal:;
+                        // STX_TOKEN
+                        SyntaxNode *literalNode = argNode->child;
+                        arg.data.literal        = literalNode->info;
+                        break;
+                    case STX_dataType:;
+                        // STX_dataType
+                        SyntaxNode *dataTypeNode = argNode->child;
+                        arg.data.dataType =
+                            TYPE_FROM_LEX(dataTypeNode->info->type);
+                        break;
+                    default:
+                        d_error_compiler_push("Property arguments must be "
+                                              "either a name, literal or data "
+                                              "type.",
+                                              sheet->filePath, lineNum, true);
+                        break;
                 }
+
+                argList.args[i] = arg;
+
+                argParentNode = argParentNode->sibling;
             }
         }
     }
 
+    // clang-format off
+
     // What is the name of the property?
     IF_PROPERTY(Variable)
-    else IF_PROPERTY(Include) else IF_PROPERTY(Function) else IF_PROPERTY(
-        Subroutine) else IF_PROPERTY(FunctionInput) else IF_PROPERTY(FunctionOutput) else {
+    else IF_PROPERTY(Include)
+    else IF_PROPERTY(Function)
+    else IF_PROPERTY(Subroutine)
+    else IF_PROPERTY(FunctionInput)
+    else IF_PROPERTY(FunctionOutput)
+    else {
         ERROR_COMPILER(sheet->filePath, lineNum, true,
                        "Unknown property name %s", propertyName);
     }
+
+    // clang-format on
 
     if (argListMallocd) {
         free(argList.args);
@@ -948,34 +949,28 @@ void d_semantic_scan_properties(Sheet *sheet, SyntaxNode *root) {
 
         if (node != NULL) {
             // And work our way down to the individual elements.
-            // STX_propertyExpression
+
+            // STX_TOKEN
             node = node->child;
-
             if (node != NULL) {
-                // STX_TOKEN
-                node = node->child;
+                // Get the name of the property.
+                LexToken *nodeInfo = node->info;
 
-                if (node != NULL) {
-                    // Get the name of the property.
-                    LexToken *nodeInfo = node->info;
+                if (nodeInfo != NULL) {
+                    if (nodeInfo->type == TK_NAME) {
 
-                    if (nodeInfo != NULL) {
-                        if (nodeInfo->type == TK_NAME) {
-                            const char *propertyName =
-                                nodeInfo->data.stringValue;
-                            size_t lineNum = node->onLineNum;
+                        const char *propertyName = nodeInfo->data.stringValue;
+                        size_t lineNum           = node->onLineNum;
 
-                            VERBOSE(
-                                5,
+                        VERBOSE(5,
                                 "- Checking property named %s on line %zu...\n",
                                 propertyName, lineNum);
 
-                            scan_property(sheet, propertyName, node, lineNum);
+                        scan_property(sheet, propertyName, node, lineNum);
 
-                            // Once we've scanned the property, there's no need
-                            // to store the name of the property anymore.
-                            free((char *)propertyName);
-                        }
+                        // Once we've scanned the property, there is no need to
+                        // store the name of the property anymore!
+                        free((char *)propertyName);
                     }
                 }
             }
@@ -991,8 +986,8 @@ void d_semantic_scan_properties(Sheet *sheet, SyntaxNode *root) {
 }
 
 /*
-    const char* get_first_arg_name(SyntaxNode* callNode)
-    If possible, get the name of a function from the STX_call node's
+    const char* get_first_arg_name(SyntaxNode* argListNode)
+    If possible, get the name of a function from the STX_listOfArguments node's
     first argument.
     This is mostly used to find the function we're returning from in a
     Return function.
@@ -1002,27 +997,21 @@ void d_semantic_scan_properties(Sheet *sheet, SyntaxNode *root) {
 
     SyntaxNode* callNode: A pointer to a syntax node of type STX_call.
 */
-static const char *get_first_arg_name(SyntaxNode *callNode) {
-    SyntaxNode *nameNode = callNode;
+static const char *get_first_arg_name(SyntaxNode *argListNode) {
+    SyntaxNode *nameNode = argListNode;
 
+    // STX_argument
+    nameNode = nameNode->child;
     if (nameNode != NULL) {
-        // STX_listOfArguments
+        // STX_TOKEN (TK_NAME)
         nameNode = nameNode->child;
         if (nameNode != NULL) {
-            // STX_argument
-            nameNode = nameNode->child;
-            if (nameNode != NULL) {
-                // STX_TOKEN (TK_NAME)
-                nameNode = nameNode->child;
-                if (nameNode != NULL) {
-                    LexToken *nameToken = nameNode->info;
-                    if (nameToken != NULL) {
-                        if (nameToken->type == TK_NAME) {
-                            const char *name = nameToken->data.stringValue;
+            LexToken *nameToken = nameNode->info;
+            if (nameToken != NULL) {
+                if (nameToken->type == TK_NAME) {
+                    const char *name = nameToken->data.stringValue;
 
-                            return name;
-                        }
-                    }
+                    return name;
                 }
             }
         }
@@ -1044,10 +1033,10 @@ typedef struct _lineSocketPair {
 
 /* A helper function for d_semantic_scan_nodes */
 static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
-                      NameDefinition nameDefinition, SyntaxNode *expr,
-                      SyntaxNode *node, size_t lineNum,
-                      LineSocketPair **knownLines, size_t *knownLinesCapacity,
-                      size_t *numKnownLines, LineSocketPair **unknownLines,
+                      NameDefinition nameDefinition, SyntaxNode *nameNode,
+                      size_t lineNum, LineSocketPair **knownLines,
+                      size_t *knownLinesCapacity, size_t *numKnownLines,
+                      LineSocketPair **unknownLines,
                       size_t *unknownLinesCapacity, size_t *numUnknownLines) {
     size_t numInputs   = d_definition_num_inputs(nodeDef);
     size_t _numOutputs = d_definition_num_outputs(nodeDef);
@@ -1110,11 +1099,27 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
     SyntaxSearchResult inputArgs;
     inputArgs.numOccurances = 0;
 
-    // STX_call
-    node = node->sibling;
+    // STX_listOfArguments
+    SyntaxNode *argListNode = NULL;
 
-    if (node != NULL) {
-        inputArgs = d_syntax_get_all_nodes_with(node, STX_argument, false);
+    // STX_listOfLineIdentifiers
+    SyntaxNode *lineListNode = NULL;
+
+    if (nameNode->sibling != NULL) {
+        if (nameNode->sibling->definition == STX_listOfArguments) {
+            argListNode = nameNode->sibling;
+        } else {
+            lineListNode = nameNode->sibling;
+        }
+
+        if (nameNode->sibling->sibling != NULL) {
+            lineListNode = nameNode->sibling->sibling;
+        }
+    }
+
+    if (argListNode != NULL) {
+        inputArgs =
+            d_syntax_get_all_nodes_with(argListNode, STX_argument, false);
 
         // If the number of inputs we got was bigger than what we expected,
         // resize the type and literal arrays in the node.
@@ -1332,19 +1337,16 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
 
     size_t defNumOutputs = d_definition_num_outputs(nodeDef);
 
-    // STX_listOfLineIdentifier
-    node = expr->sibling;
-
-    if (node != NULL) {
+    if (lineListNode != NULL) {
         SyntaxNode *leaf    = NULL;
         LexToken *leafToken = NULL;
 
         // STX_lineIdentifier
-        node = node->child;
+        SyntaxNode *lineNode = lineListNode->child;
 
         // Go through all of the children of the
         // STX_listOfLineIdentifier
-        while (node != NULL) {
+        while (lineNode != NULL) {
             if (inputArgs.numOccurances > 0 && (nodeDef->numSockets == 0)) {
                 ERROR_COMPILER(sheet->filePath, lineNum, true,
                                "Node %s is defined to have no sockets",
@@ -1370,7 +1372,7 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
             numOutputs++;
 
             // STX_TOKEN
-            leaf = node->child;
+            leaf = lineNode->child;
 
             if (leaf != NULL) {
                 leafToken = leaf->info;
@@ -1393,7 +1395,7 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
                 }
             }
 
-            node = node->sibling;
+            lineNode = lineNode->sibling;
         }
     }
 
@@ -1453,12 +1455,9 @@ void d_semantic_scan_nodes(Sheet *sheet, SyntaxNode *root) {
         SyntaxNode *node = statementSearchResults.occurances[statementIndex];
 
         // And work our way down to the individual elements.
-        // STX_expression
-        // We need this one to get to the outputs.
-        SyntaxNode *expr = node->child;
 
         // STX_TOKEN
-        node = expr->child;
+        node = node->child;
 
         // Get the name of the node.
         LexToken *nodeInfo = node->info;
@@ -1473,7 +1472,13 @@ void d_semantic_scan_nodes(Sheet *sheet, SyntaxNode *root) {
 
                 // What if the first argument is something like a function name
                 // for Return? We need to let get_node_properties know if so.
-                const char *funcName = get_first_arg_name(node->sibling);
+                const char *funcName = NULL;
+
+                if (node->sibling != NULL) {
+                    if (node->sibling->definition == STX_listOfArguments) {
+                        funcName = get_first_arg_name(node->sibling);
+                    }
+                }
 
                 // A variable that tells us exactly where this node's definition
                 // comes from, so we can link to it later.
@@ -1484,8 +1489,8 @@ void d_semantic_scan_nodes(Sheet *sheet, SyntaxNode *root) {
                     sheet, nodeName, lineNum, funcName, &nameDefinition);
 
                 if (nodeDef != NULL) {
-                    scan_node(sheet, nodeDef, nameDefinition, expr, node,
-                              lineNum, &knownLineDefinitions,
+                    scan_node(sheet, nodeDef, nameDefinition, node, lineNum,
+                              &knownLineDefinitions,
                               &knownLineDefinitionsCapacity,
                               &numKnownLineDefinitions, &unknownLineDefinitions,
                               &unknownLineDefinitionsCapacity,

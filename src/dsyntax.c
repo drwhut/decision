@@ -573,7 +573,7 @@ static SyntaxResult listOfArguments(SyntaxContext *context) {
 
         // This will be similar to the list of line identifiers.
         while (context->currentToken->type == TK_COMMA) {
-            nextToken(&out);
+            nextToken(context);
 
             arg = argument(context);
 
@@ -611,7 +611,7 @@ static SyntaxResult listOfPropertyArguments(SyntaxContext *context) {
 
         // This will be similar to the list of line identifiers.
         while (context->currentToken->type == TK_COMMA) {
-            nextToken(&out);
+            nextToken(context);
 
             arg = propertyArgument(context);
 
