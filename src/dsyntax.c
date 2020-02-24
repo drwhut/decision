@@ -344,6 +344,9 @@ static SyntaxResult lineIdentifier(SyntaxContext *context) {
     out.node = d_syntax_create_node(STX_lineIdentifier, NULL, context->lineNum);
     out.success = true;
 
+    VERBOSE(5, "ENTER\tlineIdentifier\tWITH\t%i\n",
+            context->currentToken->type);
+
     if (context->currentToken->type == TK_LINE) {
         nextToken(context);
 
@@ -377,6 +380,9 @@ static SyntaxResult listOfLineIdentifier(SyntaxContext *context) {
     out.node =
         d_syntax_create_node(STX_listOfLineIdentifier, NULL, context->lineNum);
     out.success = true;
+
+    VERBOSE(5, "ENTER\tlistOfLineIdentifier\tWITH\t%i\n",
+            context->currentToken->type);
 
     if (context->currentToken->type == TK_LINE) {
 
@@ -430,6 +436,8 @@ static SyntaxResult dataType(SyntaxContext *context) {
     out.node    = d_syntax_create_node(STX_dataType, NULL, context->lineNum);
     out.success = true;
 
+    VERBOSE(5, "ENTER\tdataType\tWITH\t%i\n", context->currentToken->type);
+
     if (is_data_type(context->currentToken->type)) {
         SyntaxNode *type = d_syntax_create_node(
             STX_TOKEN, context->currentToken, context->lineNum);
@@ -456,6 +464,8 @@ static SyntaxResult literal(SyntaxContext *context) {
     out.node    = d_syntax_create_node(STX_literal, NULL, context->lineNum);
     out.success = true;
 
+    VERBOSE(5, "ENTER\tliteral\tWITH\t%i\n", context->currentToken->type);
+
     if (is_literal(context->currentToken->type)) {
         SyntaxNode *literal = d_syntax_create_node(
             STX_TOKEN, context->currentToken, context->lineNum);
@@ -479,6 +489,8 @@ static SyntaxResult argument(SyntaxContext *context) {
     SyntaxResult out;
     out.node    = d_syntax_create_node(STX_argument, NULL, context->lineNum);
     out.success = true;
+
+    VERBOSE(5, "ENTER\targument\tWITH\t%i\n", context->currentToken->type);
 
     if (context->currentToken->type == TK_NAME) {
         SyntaxNode *name = d_syntax_create_node(
@@ -524,6 +536,9 @@ static SyntaxResult propertyArgument(SyntaxContext *context) {
         d_syntax_create_node(STX_propertyArgument, NULL, context->lineNum);
     out.success = true;
 
+    VERBOSE(5, "ENTER\tpropertyArgument\tWITH\t%i\n",
+            context->currentToken->type);
+
     if (context->currentToken->type == TK_NAME) {
         SyntaxNode *name = d_syntax_create_node(
             STX_TOKEN, context->currentToken, context->lineNum);
@@ -565,6 +580,9 @@ static SyntaxResult listOfArguments(SyntaxContext *context) {
         d_syntax_create_node(STX_listOfArguments, NULL, context->lineNum);
     out.success = true;
 
+    VERBOSE(5, "ENTER\tlistOfArguments\tWITH\t%i\n",
+            context->currentToken->type);
+
     SyntaxResult arg = argument(context);
 
     if (arg.success) {
@@ -602,6 +620,9 @@ static SyntaxResult listOfPropertyArguments(SyntaxContext *context) {
     out.node    = d_syntax_create_node(STX_listOfPropertyArguments, NULL,
                                     context->lineNum);
     out.success = true;
+
+    VERBOSE(5, "ENTER\tlistOfPropertyArguments\tWITH\t%i\n",
+            context->currentToken->type);
 
     SyntaxResult arg = propertyArgument(context);
 
@@ -664,6 +685,8 @@ static SyntaxResult statement(SyntaxContext *context) {
     SyntaxResult out;
     out.node    = d_syntax_create_node(STX_statement, NULL, context->lineNum);
     out.success = true;
+
+    VERBOSE(5, "ENTER\tstatement\tWITH\t%i\n", context->currentToken->type);
 
     if (context->currentToken->type == TK_NAME) {
         nextToken(context);
@@ -729,6 +752,9 @@ static SyntaxResult propertyStatement(SyntaxContext *context) {
     out.node =
         d_syntax_create_node(STX_propertyStatement, NULL, context->lineNum);
     out.success = true;
+
+    VERBOSE(5, "ENTER\propertyStatement\tWITH\t%i\n",
+            context->currentToken->type);
 
     if (context->currentToken->type == TK_LPROPERTY) {
         nextToken(context);
@@ -802,6 +828,8 @@ static SyntaxResult program(SyntaxContext *context) {
     SyntaxResult out;
     out.node    = d_syntax_create_node(STX_program, NULL, context->lineNum);
     out.success = true;
+
+    VERBOSE(5, "ENTER\tprogram\tWITH\t%i\n", context->currentToken->type);
 
     // If there are end-of-statements here, then ignore all of them.
     eos(context);
