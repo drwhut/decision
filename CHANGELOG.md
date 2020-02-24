@@ -39,6 +39,13 @@ and descriptions which are accessible via the C API.
   return addresses (previously stored in the call stack), as well as saved
   frame pointers.
 
+### Object Files
+
+* Compiled object files (.dco) now store the version of Decision that created
+them. The compiler now checks to see if an object file was made with a future
+version of Decision, and will check in future releases for incompatible
+versions.
+
 ## The C API
 
 * C functions are now stored in sheets, rather than in a global list.
