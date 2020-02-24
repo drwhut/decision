@@ -19,6 +19,7 @@
 #include "dasm.h"
 #include "dcfg.h"
 #include "dcore.h"
+#include "ddebug.h"
 #include "decision.h"
 #include "dmalloc.h"
 #include "dsheet.h"
@@ -88,7 +89,41 @@ static void print_help() {
 /* Macro to help check an argument in main(). */
 #define ARG(test) strcmp(arg, #test) == 0
 
+// TEMP
+void onNodeActivated(Sheet *sheet, size_t nodeIndex) {
+    printf("Node %zu activated!\n", nodeIndex);
+}
+
 int main(int argc, char *argv[]) {
+
+    // TEMP
+    Sheet *sheet = d_load_string(
+        "Start~#1\nAdd(5, 7)~#2\nMultiply(#2, 2)~#3\nPrint(#1, #3)\n", NULL,
+        NULL);
+    
+    d_sheet_dump(sheet);
+    d_asm_dump_all(sheet);
+
+    InsNodeInfo insNode[] = {
+        {1, 1},
+        {5, 2},
+        {7, 3}
+    };
+
+    DebugInfo debugInfo;
+    debugInfo.insNodeInfoList = insNode;
+    debugInfo.insNodeInfoSize = 3;
+    
+    DebugSession session = d_debug_create_session(sheet, &onNodeActivated);
+
+    d_debug_continue_session(&session);
+
+    d_debug_stop_session(&session);
+
+    d_sheet_free(sheet);
+
+    return 0;
+    /*
     char *filePath   = NULL;
     bool compile     = false;
     bool disassemble = false;
@@ -242,4 +277,5 @@ int main(int argc, char *argv[]) {
         print_help();
         return 1;
     }
+    */
 }
