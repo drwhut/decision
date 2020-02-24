@@ -34,13 +34,35 @@
  */
 DebugSession d_debug_create_session(Sheet *sheet,
                                     OnNodeActivated onNodeActivated) {
+    // Set up the VM that will run the sheet.
+    DVM vm = d_vm_create();
+
+    // TODO: What if the sheet doesn't have a Start node?
+    vm.pc     = sheet->_text + sheet->_main;
+    vm.halted = false;
+
     DebugSession out;
 
-    out.vm               = d_vm_create();
+    out.vm               = vm;
     out.sheet            = sheet;
     out.onNodedActivated = onNodeActivated;
 
     return out;
+}
+
+/**
+ * \fn static InsNodeInfo *at_ins(DebugInfo debugInfo, size_t ins)
+ * \brief Given an instruction, return the node information about it.
+ *
+ * \return A pointer to the node info at that instruction, NULL if there is no
+ * info at that instruction.
+ *
+ * \param debugInfo The debug info to query.
+ * \param ins The instruction to query.
+ */
+static InsNodeInfo *at_ins(DebugInfo debugInfo, size_t ins) {
+    // TEMP
+    return debugInfo.insNodeInfoList;
 }
 
 /**
@@ -51,10 +73,27 @@ DebugSession d_debug_create_session(Sheet *sheet,
  * \param session The session to continue.
  */
 void d_debug_continue_session(DebugSession *session) {
-    // TEMP
-    if (session->onNodedActivated) {
-        session->onNodedActivated(session->sheet, 0);
+    DVM *vm = &(session->vm);
+
+    // This will be very similar to d_vm_run.
+    while (!vm->halted) {
+
+        // Get the instruction index relative to the sheet.
+        size_t ins = vm->pc - session->sheet->_text;
+
+        // Is this instruction entering a new node?
+        if (session->onNodedActivated) {
+            InsNodeInfo *nodeInfo = at_ins(session->sheet->_debugInfo, ins);
+            if (nodeInfo) {
+                session->onNodedActivated(session->sheet, nodeInfo->node);
+            }
+        }
+
+        d_vm_parse_ins_at_pc(vm);
+        d_vm_inc_pc(vm);
     }
+
+    // TODO: Have a way of knowing if the VM errored.
 }
 
 /**

@@ -113,6 +113,8 @@ int main(int argc, char *argv[]) {
     DebugInfo debugInfo;
     debugInfo.insNodeInfoList = insNode;
     debugInfo.insNodeInfoSize = 3;
+
+    sheet->_debugInfo = debugInfo;
     
     DebugSession session = d_debug_create_session(sheet, &onNodeActivated);
 

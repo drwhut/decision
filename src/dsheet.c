@@ -316,6 +316,7 @@ Sheet *d_sheet_create(const char *filePath) {
     sheet->_textSize        = 0;
     sheet->_data            = NULL;
     sheet->_dataSize        = 0;
+    sheet->_debugInfo       = NO_DEBUG_INFO;
     sheet->_link            = d_link_new_meta_list();
     sheet->_insLinkList     = NULL;
     sheet->_insLinkListSize = 0;

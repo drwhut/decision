@@ -26,6 +26,7 @@
 
 #include "dcfg.h"
 #include "dcfunc.h"
+#include "ddebug.h"
 #include "dgraph.h"
 #include "dlink.h"
 #include <stdbool.h>
@@ -127,6 +128,8 @@ typedef struct _sheet {
     size_t _textSize;
     char *_data;
     size_t _dataSize;
+
+    DebugInfo _debugInfo;
 
     LinkMetaList _link;
     InstructionToLink *_insLinkList;
