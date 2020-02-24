@@ -394,7 +394,7 @@ static SyntaxResult listOfLineIdentifier(SyntaxContext *context) {
 
             // Great, we got at least one line identifier! Now, as long as the
             // current token is a comma, a line identifier should follow.
-            while (context->currentToken->type = TK_COMMA) {
+            while (context->currentToken->type == TK_COMMA) {
                 nextToken(context);
 
                 identifier = lineIdentifier(context);
@@ -689,6 +689,10 @@ static SyntaxResult statement(SyntaxContext *context) {
     VERBOSE(5, "ENTER\tstatement\tWITH\t%i\n", context->currentToken->type);
 
     if (context->currentToken->type == TK_NAME) {
+        SyntaxNode *name = d_syntax_create_node(
+            STX_TOKEN, context->currentToken, context->lineNum);
+        d_syntax_add_child(out.node, name);
+
         nextToken(context);
 
         if (context->currentToken->type == TK_LBRACKET) {
@@ -767,6 +771,8 @@ static SyntaxResult propertyStatement(SyntaxContext *context) {
             nextToken(context);
 
             if (context->currentToken->type == TK_LBRACKET) {
+                nextToken(context);
+
                 if (is_property_argument(context->currentToken->type)) {
                     SyntaxResult argList = listOfPropertyArguments(context);
 
@@ -781,13 +787,6 @@ static SyntaxResult propertyStatement(SyntaxContext *context) {
 
                 if (context->currentToken->type == TK_RBRACKET) {
                     nextToken(context);
-
-                    if (!eos(context)) {
-                        syntax_error("Expected end-of-statement (\\n, ;) after "
-                                     "the property statement",
-                                     context);
-                        fail_definition(&out);
-                    }
                 } else {
                     syntax_error("Expected list of property arguments to end "
                                  "with a right bracket",
@@ -798,6 +797,13 @@ static SyntaxResult propertyStatement(SyntaxContext *context) {
 
             if (context->currentToken->type == TK_RPROPERTY) {
                 nextToken(context);
+
+                if (!eos(context)) {
+                    syntax_error("Expected end-of-statement (\\n, ;) after the "
+                                 "property statement",
+                                 context);
+                    fail_definition(&out);
+                }
             } else {
                 syntax_error("Expected property statement to end with a right "
                              "squared bracket (])",
