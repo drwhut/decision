@@ -38,6 +38,8 @@ reference in JSON format.
   which reads the JSON and displays the core reference automatically.
 * Integers as inputs to bitwise operators is now supported.
 * Booleans as inputs to `Equal` and `NotEqual` is now supported.
+* Syntax Analysis has been optimised to check the next token ahead before
+dedicating itself to a syntax definition.
 
 # Decision v0.2.0 - 16th January 2020
 
