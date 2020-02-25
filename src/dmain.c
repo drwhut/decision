@@ -94,29 +94,36 @@ void onNodeActivated(Sheet *sheet, size_t nodeIndex) {
     printf("Node %zu activated!\n", nodeIndex);
 }
 
+void onExecutionWireActivated(Sheet *sheet, Wire wire) {
+    printf("Execution wire activated! (%zu, %zu) -> (%zu, %zu)\n",
+           wire.socketFrom.nodeIndex, wire.socketFrom.socketIndex,
+           wire.socketTo.nodeIndex, wire.socketTo.socketIndex);
+}
+
 int main(int argc, char *argv[]) {
 
     // TEMP
     Sheet *sheet = d_load_string(
         "Start~#1\nAdd(5, 7)~#2\nMultiply(#2, 2)~#3\nPrint(#1, #3)\n", NULL,
         NULL);
-    
+
     d_sheet_dump(sheet);
     d_asm_dump_all(sheet);
 
-    InsNodeInfo insNode[] = {
-        {1, 1},
-        {5, 2},
-        {7, 3}
-    };
+    InsNodeInfo insNode[] = {{1, 1}, {5, 2}, {7, 3}};
+
+    InsExecInfo insExec[] = {{7, 0}};
 
     DebugInfo debugInfo;
     debugInfo.insNodeInfoList = insNode;
     debugInfo.insNodeInfoSize = 3;
+    debugInfo.insExecInfoList = insExec;
+    debugInfo.insExecInfoSize = 1;
 
     sheet->_debugInfo = debugInfo;
-    
-    DebugSession session = d_debug_create_session(sheet, &onNodeActivated);
+
+    DebugSession session = d_debug_create_session(sheet, &onNodeActivated,
+                                                  &onExecutionWireActivated);
 
     d_debug_continue_session(&session);
 

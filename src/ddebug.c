@@ -31,9 +31,13 @@
  * \param onNodeActivated A pointer to a function that is called when a
  * debuggable node is activated during the session. If NULL, the function is
  * not called.
+ * \param onExecutionWireActivated A pointer to a function that is called when
+ * an execution wire is activated during the session. If NULL, the function is
+ * not called.
  */
-DebugSession d_debug_create_session(Sheet *sheet,
-                                    OnNodeActivated onNodeActivated) {
+DebugSession
+d_debug_create_session(Sheet *sheet, OnNodeActivated onNodeActivated,
+                       OnExecutionWireActivated onExecutionWireActivated) {
     // Set up the VM that will run the sheet.
     DVM vm = d_vm_create();
 
@@ -43,15 +47,16 @@ DebugSession d_debug_create_session(Sheet *sheet,
 
     DebugSession out;
 
-    out.vm               = vm;
-    out.sheet            = sheet;
-    out.onNodedActivated = onNodeActivated;
+    out.vm                       = vm;
+    out.sheet                    = sheet;
+    out.onNodedActivated         = onNodeActivated;
+    out.onExecutionWireActivated = onExecutionWireActivated;
 
     return out;
 }
 
 /**
- * \fn static InsNodeInfo *at_ins(DebugInfo debugInfo, size_t ins)
+ * \fn static InsNodeInfo *node_at_ins(DebugInfo debugInfo, size_t ins)
  * \brief Given an instruction, return the node information about it.
  *
  * \return A pointer to the node info at that instruction, NULL if there is no
@@ -60,11 +65,14 @@ DebugSession d_debug_create_session(Sheet *sheet,
  * \param debugInfo The debug info to query.
  * \param ins The instruction to query.
  */
-static InsNodeInfo *at_ins(DebugInfo debugInfo, size_t ins) {
+static InsNodeInfo *node_at_ins(DebugInfo debugInfo, size_t ins) {
     // NOTE: The list of InsNodeInfo should be in order of instructions.
+    if (debugInfo.insNodeInfoList == NULL) {
+        return NULL;
+    }
 
-    int left = 0;
-    int right = debugInfo.insNodeInfoSize - 1;
+    int left   = 0;
+    int right  = debugInfo.insNodeInfoSize - 1;
     int middle = (left + right) / 2;
 
     while (left <= right) {
@@ -81,6 +89,45 @@ static InsNodeInfo *at_ins(DebugInfo debugInfo, size_t ins) {
 
     if (debugInfo.insNodeInfoList[middle].ins == ins) {
         return debugInfo.insNodeInfoList + middle;
+    } else {
+        return NULL;
+    }
+}
+
+/**
+ * \fn static InsExecInfo *exec_at_ins(DebugInfo debugInfo, size_t ins)
+ * \brief Given an instruction, return the execution wire information about it.
+ * 
+ * \return A pointer to the execution wire info at that instruction, NULL if
+ * there is no info at that instruction.
+ * 
+ * \param debugInfo The debug info to query.
+ * \param ins The instruction to query.
+ */
+static InsExecInfo *exec_at_ins(DebugInfo debugInfo, size_t ins) {
+    // NOTE: The list of InsExecInfo should be in order of instructions.
+    if (debugInfo.insExecInfoList == NULL) {
+        return NULL;
+    }
+
+    int left   = 0;
+    int right  = debugInfo.insExecInfoSize - 1;
+    int middle = (left + right) / 2;
+
+    while (left <= right) {
+        middle = (left + right) / 2;
+
+        if (ins > debugInfo.insExecInfoList[middle].ins) {
+            left = middle + 1;
+        } else if (ins < debugInfo.insExecInfoList[middle].ins) {
+            right = middle - 1;
+        } else {
+            break;
+        }
+    }
+
+    if (debugInfo.insExecInfoList[middle].ins == ins) {
+        return debugInfo.insExecInfoList + middle;
     } else {
         return NULL;
     }
@@ -104,9 +151,21 @@ void d_debug_continue_session(DebugSession *session) {
 
         // Is this instruction entering a new node?
         if (session->onNodedActivated) {
-            InsNodeInfo *nodeInfo = at_ins(session->sheet->_debugInfo, ins);
+            InsNodeInfo *nodeInfo =
+                node_at_ins(session->sheet->_debugInfo, ins);
             if (nodeInfo) {
                 session->onNodedActivated(session->sheet, nodeInfo->node);
+            }
+        }
+
+        // Does this instruction activate an execution wire?
+        if (session->onExecutionWireActivated) {
+            InsExecInfo *execInfo =
+                exec_at_ins(session->sheet->_debugInfo, ins);
+            if (execInfo) {
+                session->onExecutionWireActivated(
+                    session->sheet,
+                    session->sheet->graph.wires[execInfo->execWire]);
             }
         }
 

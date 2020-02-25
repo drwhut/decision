@@ -25,6 +25,7 @@
 #define DDEBUG_H
 
 #include "dcfg.h"
+#include "dgraph.h"
 #include "dvm.h"
 
 #include <stddef.h>
@@ -48,6 +49,17 @@ typedef struct _insNodeInfo {
 } InsNodeInfo;
 
 /**
+ * \struct _insExecInfo
+ * \brief Describes when an execution wire gets activated in bytecode.
+ *
+ * \typedef struct _insExecInfo InsExecInfo
+ */
+typedef struct _insExecInfo {
+    size_t ins;
+    size_t execWire;
+} InsExecInfo;
+
+/**
  * \struct _debugInfo
  * \brief A collection of info used for debugging.
  *
@@ -56,6 +68,9 @@ typedef struct _insNodeInfo {
 typedef struct _debugInfo {
     InsNodeInfo *insNodeInfoList;
     size_t insNodeInfoSize;
+
+    InsExecInfo *insExecInfoList;
+    size_t insExecInfoSize;
 } DebugInfo;
 
 /**
@@ -74,6 +89,13 @@ typedef struct _debugInfo {
 typedef void (*OnNodeActivated)(struct _sheet *sheet, size_t nodeIndex);
 
 /**
+ * \typedef void (*OnExecutionWireActivated)(Sheet *sheet, Wire wire)
+ * \brief Called when an execution wire is activated during a debugging session.
+ */
+typedef void (*OnExecutionWireActivated)(struct _sheet *sheet,
+                                         Wire wire);
+
+/**
  * \struct _debugSession
  * \brief A struct which keeps track of a debugging session.
  *
@@ -85,6 +107,7 @@ typedef struct _debugSession {
     struct _sheet *sheet;
 
     OnNodeActivated onNodedActivated;
+    OnExecutionWireActivated onExecutionWireActivated;
 } DebugSession;
 
 /*
@@ -102,9 +125,13 @@ typedef struct _debugSession {
  * \param onNodeActivated A pointer to a function that is called when a
  * debuggable node is activated during the session. If NULL, the function is
  * not called.
+ * \param onExecutionWireActivated A pointer to a function that is called when
+ * an execution wire is activated during the session. If NULL, the function is
+ * not called.
  */
 DECISION_API DebugSession
-d_debug_create_session(struct _sheet *sheet, OnNodeActivated onNodeActivated);
+d_debug_create_session(struct _sheet *sheet, OnNodeActivated onNodeActivated,
+                       OnExecutionWireActivated onExecutionWireActivated);
 
 /**
  * \fn void d_debug_continue_session(DebugSession *session)
@@ -119,7 +146,7 @@ DECISION_API void d_debug_continue_session(DebugSession *session);
  * \fn void d_debug_stop_session(DebugSession *session)
  * \brief Stop a debugging session, freeing all of the memory malloc'd by the
  * session. The session should not be used afterwards.
- * 
+ *
  * \param session The session to stop.
  */
 DECISION_API void d_debug_stop_session(DebugSession *session);
