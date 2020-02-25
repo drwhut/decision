@@ -411,6 +411,15 @@ BCode d_push_variable(BuildContext *context, size_t nodeIndex) {
     bool wasDuplicate = false;
     d_add_link_to_ins(context, &out, 0, meta, &metaIndexInList, &wasDuplicate);
 
+    // Set the first instruction to represent activating the node.
+    if (context->debug) {
+        InsNodeInfo varNodeInfo;
+        varNodeInfo.ins  = 0;
+        varNodeInfo.node = nodeIndex;
+
+        d_debug_add_node_info(&(out.debugInfo), varNodeInfo);
+    }
+
     return out;
 }
 
@@ -954,6 +963,15 @@ BCode d_generate_call(BuildContext *context, size_t nodeIndex) {
     LinkMeta meta = d_link_new_meta(linkType, nodeDef->name, metaData);
     d_add_link_to_ins(context, &call, 0, meta, &_dummyMeta, &_dummyBool);
 
+    // Set the call instruction to represent activating the node.
+    if (context->debug) {
+        InsNodeInfo callNodeInfo;
+        callNodeInfo.ins  = 0;
+        callNodeInfo.node = nodeIndex;
+
+        d_debug_add_node_info(&(call.debugInfo), callNodeInfo);
+    }
+
     d_concat_bytecode(&out, &call);
     d_free_bytecode(&call);
 
@@ -1052,6 +1070,15 @@ BCode d_generate_return(BuildContext *context, size_t returnNodeIndex) {
         d_bytecode_set_byte(ret, 1, (char)numReturns);
         d_concat_bytecode(&out, &ret);
         d_free_bytecode(&ret);
+    }
+
+    // Set the first instruction to represent activating the node.
+    if (context->debug) {
+        InsNodeInfo returnNodeInfo;
+        returnNodeInfo.ins  = 0;
+        returnNodeInfo.node = returnNodeIndex;
+
+        d_debug_add_node_info(&(out.debugInfo), returnNodeInfo);
     }
 
     return out;
