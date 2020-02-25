@@ -115,22 +115,6 @@ int main(int argc, char *argv[]) {
     d_sheet_dump(sheet);
     d_asm_dump_all(sheet);
 
-    InsValueInfo insValue[] = {{5, 1, 0}, {7, 3, 0}};
-
-    InsExecInfo insExec[] = {{7, 0}};
-
-    InsNodeInfo insNode[] = {{1, 1}, {5, 2}, {7, 3}};
-
-    DebugInfo debugInfo;
-    debugInfo.insValueInfoList = insValue;
-    debugInfo.insValueInfoSize = 2;
-    debugInfo.insExecInfoList  = insExec;
-    debugInfo.insExecInfoSize  = 1;
-    debugInfo.insNodeInfoList  = insNode;
-    debugInfo.insNodeInfoSize  = 3;
-
-    sheet->_debugInfo = debugInfo;
-
     DebugSession session = d_debug_create_session(
         sheet, &onWireValue, &onExecutionWire, &onNodeActivated);
 
