@@ -129,7 +129,7 @@ endif(COMPILER_SHARED)
 
 # Show warnings!
 if(MSVC)
-    target_compile_options(decision PRIVATE "-W4")
+    target_compile_options(decision PRIVATE /W4)
 else(MSVC)
-    target_compile_options(decision PRIVATE "-Wall")
+    target_compile_options(decision PRIVATE -Wall -Wextra -pedantic)
 endif(MSVC)
