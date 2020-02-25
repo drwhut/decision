@@ -21,6 +21,19 @@
 #include "dsheet.h"
 
 /**
+ * \fn static bool debug_info_empty(DebugInfo debugInfo)
+ * \brief Check if there is no debug info.
+ *
+ * \return If there is no debugging info.
+ *
+ * \param debugInfo The debug info to check for emptiness.
+ */
+static bool debug_info_empty(DebugInfo debugInfo) {
+    return (debugInfo.insValueInfoSize == 0 && debugInfo.insExecInfoSize == 0 &&
+            debugInfo.insNodeInfoSize == 0);
+}
+
+/**
  * \fn DebugSession d_debug_create_session(Sheet *sheet,
  *                                         OnWireValue onWireValues,
  *                                         OnExecutionWire onExecutionWire,
@@ -44,6 +57,12 @@
 DebugSession d_debug_create_session(Sheet *sheet, OnWireValue onWireValue,
                                     OnExecutionWire onExecutionWire,
                                     OnNodeActivated onNodeActivated) {
+    // Warn the user if the sheet does not have any debug info.
+    if (debug_info_empty(sheet->_debugInfo)) {
+        printf("Warning: %s does not contain debug information\n",
+               sheet->filePath);
+    }
+
     // Set up the VM that will run the sheet.
     DVM vm = d_vm_create();
 
