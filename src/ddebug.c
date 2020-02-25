@@ -18,9 +18,12 @@
 
 #include "ddebug.h"
 
+#include "dmalloc.h"
 #include "dsheet.h"
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 /**
  * \fn void d_debug_add_node_info(DebugInfo *debugInfo, InsNodeInfo nodeInfo)
@@ -63,16 +66,21 @@ void d_debug_add_node_info(DebugInfo *debugInfo, InsNodeInfo nodeInfo) {
             middle++;
         }
 
-        debugInfo->insNodeInfoSize++;
-        debugInfo->insNodeInfoList =
-            d_realloc(debugInfo->insNodeInfoList,
-                      debugInfo->insNodeInfoSize * sizeof(InsNodeInfo));
+        // We can't enter two nodes with the same instruction!
+        // If this node info has the same instruction, replace the entry in the
+        // list.
+        if (nodeInfo.ins != debugInfo->insNodeInfoList[middle].ins) {
+            debugInfo->insNodeInfoSize++;
+            debugInfo->insNodeInfoList =
+                d_realloc(debugInfo->insNodeInfoList,
+                          debugInfo->insNodeInfoSize * sizeof(InsNodeInfo));
 
-        if (middle < (int)debugInfo->insNodeInfoSize - 1) {
-            memmove(debugInfo->insNodeInfoList + middle + 1,
-                    debugInfo->insNodeInfoList + middle,
-                    (debugInfo->insNodeInfoSize - middle - 1) *
-                        sizeof(InsNodeInfo));
+            if (middle < (int)debugInfo->insNodeInfoSize - 1) {
+                memmove(debugInfo->insNodeInfoList + middle + 1,
+                        debugInfo->insNodeInfoList + middle,
+                        (debugInfo->insNodeInfoSize - middle - 1) *
+                            sizeof(InsNodeInfo));
+            }
         }
 
         debugInfo->insNodeInfoList[middle] = nodeInfo;
@@ -118,8 +126,7 @@ static bool debug_info_empty(DebugInfo debugInfo) {
  * \fn DebugSession d_debug_create_session(Sheet *sheet,
  *                                         OnWireValue onWireValues,
  *                                         OnExecutionWire onExecutionWire,
- *                                         OnNodeActivated onNodeActivated
- *                                         )
+ *                                         OnNodeActivated onNodeActivated)
  * \brief Create a debugging session.
  *
  * \return A debugging session in it's starting state.

@@ -2261,6 +2261,8 @@ void d_codegen_compile(Sheet *sheet, bool debug) {
     // Only put the debugging information in if we generated it.
     if (debug) {
         sheet->_debugInfo = text.debugInfo;
+    } else {
+        d_debug_free_info(&(text.debugInfo));
     }
 
     // Put the link metadata into the sheet.

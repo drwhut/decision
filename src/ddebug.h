@@ -162,8 +162,7 @@ DECISION_API void d_debug_free_info(DebugInfo *debugInfo);
  * \fn DebugSession d_debug_create_session(Sheet *sheet,
  *                                         OnWireValue onWireValues,
  *                                         OnExecutionWire onExecutionWire,
- *                                         OnNodeActivated onNodeActivated
- *                                         )
+ *                                         OnNodeActivated onNodeActivated)
  * \brief Create a debugging session.
  *
  * \return A debugging session in it's starting state.

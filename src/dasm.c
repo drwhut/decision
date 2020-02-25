@@ -178,6 +178,40 @@ void d_concat_bytecode(BCode *base, BCode *after) {
             base->linkListSize = totalLinkSize;
         }
 
+        // Add the after debug into to the before debug info, and correct the
+        // instructions along the way.
+        DebugInfo afterDebugInfo = after->debugInfo;
+
+        if (afterDebugInfo.insValueInfoList != NULL && afterDebugInfo.insValueInfoSize > 0) {
+            for (size_t i = 0; i < afterDebugInfo.insValueInfoSize; i++) {
+                InsValueInfo valueInfo = afterDebugInfo.insValueInfoList[i];
+
+                valueInfo.ins += base->size;
+
+                // d_debug_add_value_info(&(base->debugInfo), valueInfo);
+            }
+        }
+
+        if (afterDebugInfo.insExecInfoList != NULL && afterDebugInfo.insExecInfoSize > 0) {
+            for (size_t i = 0; i < afterDebugInfo.insExecInfoSize; i++) {
+                InsExecInfo execInfo = afterDebugInfo.insExecInfoList[i];
+
+                execInfo.ins += base->size;
+
+                // d_debug_add_exec_info(&(base->debugInfo), execInfo);
+            }
+        }
+
+        if (afterDebugInfo.insNodeInfoList != NULL && afterDebugInfo.insNodeInfoSize > 0) {
+            for (size_t i = 0; i < afterDebugInfo.insNodeInfoSize; i++) {
+                InsNodeInfo nodeInfo = afterDebugInfo.insNodeInfoList[i];
+
+                nodeInfo.ins += base->size;
+
+                d_debug_add_node_info(&(base->debugInfo), nodeInfo);
+            }
+        }
+
         base->size = totalSize;
     }
 }
