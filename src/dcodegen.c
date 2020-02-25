@@ -2073,6 +2073,16 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
             // bytecode after this node's bytecode.
             nextCode =
                 d_generate_execution_node(context, nextNodeIndex, retAtEnd);
+
+            // Say the first instruction of this bytecode represents activating
+            // the execution wire.
+            if (context->debug) {
+                InsExecInfo execInfo;
+                execInfo.ins      = 0;
+                execInfo.execWire = wireIndex;
+
+                d_debug_add_exec_info(&(nextCode.debugInfo), execInfo);
+            }
         }
     }
 
@@ -2122,6 +2132,16 @@ BCode d_generate_start(BuildContext *context, size_t startNodeIndex) {
             BCode exe =
                 d_generate_execution_node(context, socket.nodeIndex, true);
 
+            // Say that the first instruction in this bytecode represents
+            // activating the execution socket.
+            if (context->debug) {
+                InsExecInfo execInfo;
+                execInfo.ins      = 0;
+                execInfo.execWire = wireIndex;
+
+                d_debug_add_exec_info(&(exe.debugInfo), execInfo);
+            }
+
             d_concat_bytecode(&out, &exe);
             d_free_bytecode(&exe);
         }
@@ -2170,6 +2190,16 @@ BCode d_generate_function(BuildContext *context, SheetFunction func) {
 
                 BCode exe =
                     d_generate_execution_node(context, socket.nodeIndex, true);
+
+                // Say that the first instruction in this bytecode represents
+                // activating the execution wire after the Define node.
+                if (context->debug) {
+                    InsExecInfo execInfo;
+                    execInfo.ins      = 0;
+                    execInfo.execWire = wireIndex;
+
+                    d_debug_add_exec_info(&(exe.debugInfo), execInfo);
+                }
 
                 d_concat_bytecode(&out, &exe);
                 d_free_bytecode(&exe);

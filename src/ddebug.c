@@ -25,6 +25,129 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* TODO: Find a way to combine the next 3 functions. */
+
+/**
+ * \fn void d_debug_add_value_info(DebugInfo *debugInfo, InsValueInfo valueInfo)
+ * \brief Add value information to a list of debug information.
+ *
+ * \param debugInfo The debug info to add the value info to.
+ * \param valueInfo The value info to add.
+ */
+void d_debug_add_value_info(DebugInfo *debugInfo, InsValueInfo valueInfo) {
+    if (debugInfo == NULL) {
+        return;
+    }
+
+    // NOTE: The list of InsValueInfo should be in order of instructions.
+    // NOTE: This is very similar to add_edge in dgraph.c, since that has to
+    // add wires in a sorted list.
+    if (debugInfo->insValueInfoList == NULL) {
+        debugInfo->insValueInfoSize    = 1;
+        debugInfo->insValueInfoList    = d_malloc(sizeof(InsValueInfo));
+        *(debugInfo->insValueInfoList) = valueInfo;
+    } else {
+        // Use binary insertion, since the list should be sorted!
+        int left   = 0;
+        int right  = (int)debugInfo->insValueInfoSize - 1;
+        int middle = (left + right) / 2;
+
+        while (left <= right) {
+            middle = (left + right) / 2;
+
+            if (valueInfo.ins > debugInfo->insValueInfoList[middle].ins) {
+                left = middle + 1;
+            } else if (valueInfo.ins <
+                       debugInfo->insValueInfoList[middle].ins) {
+                right = middle - 1;
+            } else {
+                break;
+            }
+        }
+
+        if (valueInfo.ins > debugInfo->insValueInfoList[middle].ins) {
+            middle++;
+        }
+
+        // Even if two entries point to the same instruction, that's fine.
+        debugInfo->insValueInfoSize++;
+        debugInfo->insValueInfoList =
+            d_realloc(debugInfo->insValueInfoList,
+                      debugInfo->insValueInfoSize * sizeof(InsValueInfo));
+
+        if (middle < (int)debugInfo->insValueInfoSize - 1) {
+            memmove(debugInfo->insValueInfoList + middle + 1,
+                    debugInfo->insValueInfoList + middle,
+                    (debugInfo->insValueInfoSize - middle - 1) *
+                        sizeof(InsValueInfo));
+        }
+
+        debugInfo->insValueInfoList[middle] = valueInfo;
+    }
+}
+
+/**
+ * \fn void d_debug_add_exec_info(DebugInfo *debugInfo, InsExecInfo execInfo)
+ * \brief Add execution information to a list of debug information.
+ *
+ * \param debugInfo The debug into to add the execution info to.
+ * \param execInfo The execution info to add.
+ */
+void d_debug_add_exec_info(DebugInfo *debugInfo, InsExecInfo execInfo) {
+    if (debugInfo == NULL) {
+        return;
+    }
+
+    // NOTE: The list of InsExecInfo should be in order of instructions.
+    // NOTE: This is very similar to add_edge in dgraph.c, since that has to
+    // add wires in a sorted list.
+    if (debugInfo->insExecInfoList == NULL) {
+        debugInfo->insExecInfoSize    = 1;
+        debugInfo->insExecInfoList    = d_malloc(sizeof(InsExecInfo));
+        *(debugInfo->insExecInfoList) = execInfo;
+    } else {
+        // Use binary insertion, since the list should be sorted!
+        int left   = 0;
+        int right  = (int)debugInfo->insExecInfoSize - 1;
+        int middle = (left + right) / 2;
+
+        while (left <= right) {
+            middle = (left + right) / 2;
+
+            if (execInfo.ins > debugInfo->insExecInfoList[middle].ins) {
+                left = middle + 1;
+            } else if (execInfo.ins < debugInfo->insExecInfoList[middle].ins) {
+                right = middle - 1;
+            } else {
+                break;
+            }
+        }
+
+        if (execInfo.ins > debugInfo->insExecInfoList[middle].ins) {
+            middle++;
+        }
+
+        // We can't activate two execution wires with the same instruction!
+        // If this node info has the same instruction, replace the entry in the
+        // list.
+        if (execInfo.ins != debugInfo->insExecInfoList[middle].ins) {
+            debugInfo->insExecInfoSize++;
+            debugInfo->insExecInfoList =
+                d_realloc(debugInfo->insExecInfoList,
+                          debugInfo->insExecInfoSize * sizeof(InsExecInfo));
+
+            if (middle < (int)debugInfo->insExecInfoSize - 1) {
+                memmove(debugInfo->insExecInfoList + middle + 1,
+                        debugInfo->insExecInfoList + middle,
+                        (debugInfo->insExecInfoSize - middle - 1) *
+                            sizeof(InsExecInfo));
+            }
+        }
+
+        debugInfo->insExecInfoList[middle] = execInfo;
+    }
+}
+
 /**
  * \fn void d_debug_add_node_info(DebugInfo *debugInfo, InsNodeInfo nodeInfo)
  * \brief Add node information to a list of debug information.

@@ -141,9 +141,29 @@ typedef struct _debugSession {
 */
 
 /**
+ * \fn void d_debug_add_value_info(DebugInfo *debugInfo, InsValueInfo valueInfo)
+ * \brief Add value information to a list of debug information.
+ *
+ * \param debugInfo The debug info to add the value info to.
+ * \param valueInfo The value info to add.
+ */
+DECISION_API void d_debug_add_value_info(DebugInfo *debugInfo,
+                                         InsValueInfo valueInfo);
+
+/**
+ * \fn void d_debug_add_exec_info(DebugInfo *debugInfo, InsExecInfo execInfo)
+ * \brief Add execution information to a list of debug information.
+ *
+ * \param debugInfo The debug into to add the execution info to.
+ * \param execInfo The execution info to add.
+ */
+DECISION_API void d_debug_add_exec_info(DebugInfo *debugInfo,
+                                        InsExecInfo execInfo);
+
+/**
  * \fn void d_debug_add_node_info(DebugInfo *debugInfo, InsNodeInfo nodeInfo)
  * \brief Add node information to a list of debug information.
- * 
+ *
  * \param debugInfo The debug info to add the node info to.
  * \param nodeInfo The node info to add.
  */
@@ -153,7 +173,7 @@ DECISION_API void d_debug_add_node_info(DebugInfo *debugInfo,
 /**
  * \fn void d_debug_dump_info(DebugInfo debugInfo)
  * \brief Dump the debugging information to `stdout`.
- * 
+ *
  * \param debugInfo The debugging info to dump.
  */
 DECISION_API void d_debug_dump_info(DebugInfo debugInfo);

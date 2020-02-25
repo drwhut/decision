@@ -188,7 +188,7 @@ void d_concat_bytecode(BCode *base, BCode *after) {
 
                 valueInfo.ins += base->size;
 
-                // d_debug_add_value_info(&(base->debugInfo), valueInfo);
+                d_debug_add_value_info(&(base->debugInfo), valueInfo);
             }
         }
 
@@ -198,7 +198,7 @@ void d_concat_bytecode(BCode *base, BCode *after) {
 
                 execInfo.ins += base->size;
 
-                // d_debug_add_exec_info(&(base->debugInfo), execInfo);
+                d_debug_add_exec_info(&(base->debugInfo), execInfo);
             }
         }
 
