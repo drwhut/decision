@@ -130,7 +130,8 @@ void d_debug_add_exec_info(DebugInfo *debugInfo, InsExecInfo execInfo) {
         // We can't activate two execution wires with the same instruction!
         // If this node info has the same instruction, replace the entry in the
         // list.
-        if (execInfo.ins != debugInfo->insExecInfoList[middle].ins) {
+        if (middle >= (int)debugInfo->insExecInfoSize ||
+            execInfo.ins != debugInfo->insExecInfoList[middle].ins) {
             debugInfo->insExecInfoSize++;
             debugInfo->insExecInfoList =
                 d_realloc(debugInfo->insExecInfoList,
@@ -192,7 +193,8 @@ void d_debug_add_node_info(DebugInfo *debugInfo, InsNodeInfo nodeInfo) {
         // We can't enter two nodes with the same instruction!
         // If this node info has the same instruction, replace the entry in the
         // list.
-        if (nodeInfo.ins != debugInfo->insNodeInfoList[middle].ins) {
+        if (middle >= (int)debugInfo->insNodeInfoSize ||
+            nodeInfo.ins != debugInfo->insNodeInfoList[middle].ins) {
             debugInfo->insNodeInfoSize++;
             debugInfo->insNodeInfoList =
                 d_realloc(debugInfo->insNodeInfoList,
