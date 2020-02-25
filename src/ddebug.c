@@ -20,6 +20,8 @@
 
 #include "dsheet.h"
 
+#include <stdio.h>
+
 /**
  * \fn static bool debug_info_empty(DebugInfo debugInfo)
  * \brief Check if there is no debug info.
