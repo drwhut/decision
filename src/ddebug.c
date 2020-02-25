@@ -88,6 +88,56 @@ void d_debug_add_node_info(DebugInfo *debugInfo, InsNodeInfo nodeInfo) {
 }
 
 /**
+ * \fn void d_debug_dump_info(DebugInfo debugInfo)
+ * \brief Dump the debugging information to `stdout`.
+ *
+ * \param debugInfo The debugging info to dump.
+ */
+void d_debug_dump_info(DebugInfo debugInfo) {
+    printf("DEBUG INFO DUMP\n");
+
+    if (debugInfo.insValueInfoList != NULL && debugInfo.insValueInfoSize > 0) {
+        printf("Value info:\n");
+
+        for (size_t i = 0; i < debugInfo.insValueInfoSize; i++) {
+            InsValueInfo valueInfo = debugInfo.insValueInfoList[i];
+
+            printf("* Ins %zx transfers value @ index %d in stack over wire "
+                   "%zu.\n",
+                   valueInfo.ins, valueInfo.stackIndex, valueInfo.valueWire);
+        }
+
+        printf("\n");
+    }
+
+    if (debugInfo.insExecInfoList != NULL && debugInfo.insExecInfoSize > 0) {
+        printf("Execution info:\n");
+
+        for (size_t i = 0; i < debugInfo.insExecInfoSize; i++) {
+            InsExecInfo execInfo = debugInfo.insExecInfoList[i];
+
+            printf("* Ins %zx activates execution wire %zu.\n", execInfo.ins,
+                   execInfo.execWire);
+        }
+
+        printf("\n");
+    }
+
+    if (debugInfo.insNodeInfoList != NULL && debugInfo.insNodeInfoSize > 0) {
+        printf("Node info:\n");
+
+        for (size_t i = 0; i < debugInfo.insNodeInfoSize; i++) {
+            InsNodeInfo nodeInfo = debugInfo.insNodeInfoList[i];
+
+            printf("* Ins %zx activates node %zu.\n", nodeInfo.ins,
+                   nodeInfo.node);
+        }
+
+        printf("\n");
+    }
+}
+
+/**
  * \fn void d_debug_free_info(DebugInfo *debugInfo)
  * \brief Free debugging information.
  *

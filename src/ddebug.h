@@ -151,6 +151,14 @@ DECISION_API void d_debug_add_node_info(DebugInfo *debugInfo,
                                         InsNodeInfo nodeInfo);
 
 /**
+ * \fn void d_debug_dump_info(DebugInfo debugInfo)
+ * \brief Dump the debugging information to `stdout`.
+ * 
+ * \param debugInfo The debugging info to dump.
+ */
+DECISION_API void d_debug_dump_info(DebugInfo debugInfo);
+
+/**
  * \fn void d_debug_free_info(DebugInfo *debugInfo)
  * \brief Free debugging information.
  *

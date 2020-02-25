@@ -309,6 +309,15 @@ Sheet *d_load_string(const char *source, const char *name,
 
                 VERBOSE(1, "--- STAGE 6: Linking...\n")
                 d_link_sheet(sheet);
+
+                // Dump the compiled content.
+                if (VERBOSE_LEVEL >= 3) {
+                    d_asm_dump_all(sheet);
+
+                    if (opts.debug) {
+                        d_debug_dump_info(sheet->_debugInfo);
+                    }
+                }
             }
 
             // Only free the tree if syntax analysis was successful, as

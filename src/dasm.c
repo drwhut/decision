@@ -548,4 +548,6 @@ void d_asm_dump_all(Sheet *sheet) {
 
     printf("\n.incl:\n");
     d_asm_incl_dump(sheet->includes, sheet->numIncludes);
+
+    printf("\n");
 }

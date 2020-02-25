@@ -700,7 +700,7 @@ void d_graph_dump(Graph graph) {
             NodeSocket from = wire.socketFrom;
             NodeSocket to   = wire.socketTo;
 
-            printf("Node %zu Socket %zu\t->\tNode %zu Socket %zu\n",
+            printf("%zu: Node %zu Socket %zu\t->\tNode %zu Socket %zu\n", i,
                    from.nodeIndex, from.socketIndex, to.nodeIndex,
                    to.socketIndex);
         }

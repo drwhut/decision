@@ -117,6 +117,7 @@ int main(int argc, char *argv[]) {
 
     d_sheet_dump(sheet);
     d_asm_dump_all(sheet);
+    d_debug_dump_info(sheet->_debugInfo);
 
     DebugSession session = d_debug_create_session(
         sheet, &onWireValue, &onExecutionWire, &onNodeActivated);
