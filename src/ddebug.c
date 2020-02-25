@@ -239,8 +239,12 @@ void d_debug_dump_info(DebugInfo debugInfo) {
         for (size_t i = 0; i < debugInfo.insExecInfoSize; i++) {
             InsExecInfo execInfo = debugInfo.insExecInfoList[i];
 
-            printf("* Ins %zx activates execution wire %zu.\n", execInfo.ins,
-                   execInfo.execWire);
+            printf("* Ins %zx activates execution wire (Node %zu Socket %zu) "
+                   "-> (Node %zu Socket %zu).\n",
+                   execInfo.ins, execInfo.execWire.socketFrom.nodeIndex,
+                   execInfo.execWire.socketFrom.socketIndex,
+                   execInfo.execWire.socketTo.nodeIndex,
+                   execInfo.execWire.socketTo.socketIndex);
         }
 
         printf("\n");
@@ -482,7 +486,7 @@ void d_debug_continue_session(DebugSession *session) {
             InsValueInfo *valueInfo =
                 value_at_ins(session->sheet->_debugInfo, ins);
             if (valueInfo) {
-                Wire wire = session->sheet->graph.wires[valueInfo->valueWire];
+                Wire wire = valueInfo->valueWire;
                 const SocketMeta meta =
                     d_get_socket_meta(session->sheet->graph, wire.socketFrom);
                 DType type    = meta.type;
@@ -511,8 +515,7 @@ void d_debug_continue_session(DebugSession *session) {
             InsExecInfo *execInfo =
                 exec_at_ins(session->sheet->_debugInfo, ins);
             if (execInfo) {
-                Wire wire = session->sheet->graph.wires[execInfo->execWire];
-                session->onExecutionWire(session->sheet, wire);
+                session->onExecutionWire(session->sheet, execInfo->execWire);
             }
         }
 

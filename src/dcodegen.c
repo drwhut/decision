@@ -2079,7 +2079,7 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
             if (context->debug) {
                 InsExecInfo execInfo;
                 execInfo.ins      = 0;
-                execInfo.execWire = wireIndex;
+                execInfo.execWire = context->graph.wires[wireIndex];
 
                 d_debug_add_exec_info(&(nextCode.debugInfo), execInfo);
             }
@@ -2137,7 +2137,7 @@ BCode d_generate_start(BuildContext *context, size_t startNodeIndex) {
             if (context->debug) {
                 InsExecInfo execInfo;
                 execInfo.ins      = 0;
-                execInfo.execWire = wireIndex;
+                execInfo.execWire = context->graph.wires[wireIndex];
 
                 d_debug_add_exec_info(&(exe.debugInfo), execInfo);
             }
@@ -2196,7 +2196,7 @@ BCode d_generate_function(BuildContext *context, SheetFunction func) {
                 if (context->debug) {
                     InsExecInfo execInfo;
                     execInfo.ins      = 0;
-                    execInfo.execWire = wireIndex;
+                    execInfo.execWire = context->graph.wires[wireIndex];
 
                     d_debug_add_exec_info(&(exe.debugInfo), execInfo);
                 }

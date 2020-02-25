@@ -47,7 +47,7 @@ struct _sheet;
  */
 typedef struct _insValueInfo {
     size_t ins;
-    size_t valueWire;
+    Wire valueWire;
     int stackIndex;
 } InsValueInfo;
 
@@ -59,7 +59,7 @@ typedef struct _insValueInfo {
  */
 typedef struct _insExecInfo {
     size_t ins;
-    size_t execWire;
+    Wire execWire;
 } InsExecInfo;
 
 /**
