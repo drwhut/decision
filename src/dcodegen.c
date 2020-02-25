@@ -2133,13 +2133,14 @@ BCode d_generate_function(BuildContext *context, SheetFunction func) {
 }
 
 /**
- * \fn void d_codegen_compile(Sheet *sheet)
+ * \fn void d_codegen_compile(Sheet *sheet, bool debug)
  * \brief Given that Semantic Analysis has taken place, generate the bytecode
  * for a given sheet.
  *
  * \param sheet The sheet to generate the bytecode for.
+ * \param debug If true, we include debug information as well.
  */
-void d_codegen_compile(Sheet *sheet) {
+void d_codegen_compile(Sheet *sheet, bool debug) {
 
     BCode text = (BCode){NULL, 0};
 

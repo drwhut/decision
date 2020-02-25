@@ -295,10 +295,17 @@ Sheet *d_load_string(const char *source, const char *name,
             // Compile only if there were no errors.
             if (!hasErrors) {
                 VERBOSE(1, "--- STAGE 4: Generating bytecode...\n")
-                d_codegen_compile(sheet);
+                d_codegen_compile(sheet, opts.debug);
 
-                VERBOSE(1, "--- STAGE 5: Optimising bytecode...\n")
-                d_optimize_all(sheet);
+                // Do not optimise the bytecode if we are debugging!
+                if (opts.debug) {
+                    VERBOSE(
+                        5,
+                        "--- Skipping optimisation, compiling in debug mode.\n")
+                } else {
+                    VERBOSE(1, "--- STAGE 5: Optimising bytecode...\n")
+                    d_optimize_all(sheet);
+                }
 
                 VERBOSE(1, "--- STAGE 6: Linking...\n")
                 d_link_sheet(sheet);
