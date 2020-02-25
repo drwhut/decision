@@ -61,8 +61,29 @@ DebugSession d_debug_create_session(Sheet *sheet,
  * \param ins The instruction to query.
  */
 static InsNodeInfo *at_ins(DebugInfo debugInfo, size_t ins) {
-    // TEMP
-    return debugInfo.insNodeInfoList;
+    // NOTE: The list of InsNodeInfo should be in order of instructions.
+
+    int left = 0;
+    int right = debugInfo.insNodeInfoSize - 1;
+    int middle = (left + right) / 2;
+
+    while (left <= right) {
+        middle = (left + right) / 2;
+
+        if (ins > debugInfo.insNodeInfoList[middle].ins) {
+            left = middle + 1;
+        } else if (ins < debugInfo.insNodeInfoList[middle].ins) {
+            right = middle - 1;
+        } else {
+            break;
+        }
+    }
+
+    if (debugInfo.insNodeInfoList[middle].ins == ins) {
+        return debugInfo.insNodeInfoList + middle;
+    } else {
+        return NULL;
+    }
 }
 
 /**
