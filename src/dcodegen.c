@@ -443,7 +443,7 @@ BCode d_push_input(BuildContext *context, NodeSocket socket, bool forceFloat) {
             "%zd...\n",
             socket.socketIndex, socket.nodeIndex);
 
-    BCode out = {NULL, 0};
+    BCode out = d_malloc_bytecode(0);
 
     if (d_is_input_socket(context->graph, socket) &&
         meta.type != TYPE_EXECUTION) {
@@ -578,7 +578,7 @@ BCode d_push_node_inputs(BuildContext *context, size_t nodeIndex, bool order,
     NodeSocket socket;
     socket.nodeIndex = nodeIndex;
 
-    BCode out = {NULL, 0};
+    BCode out = d_malloc_bytecode(0);
 
     int start = numInputs - 1;
     int end   = 0;
@@ -727,8 +727,8 @@ BCode d_generate_operator(BuildContext *context, size_t nodeIndex, DIns opcode,
 
     VERBOSE(5, "Generate bytecode for operator %s...\n", nodeDef->name);
 
-    BCode out       = {NULL, 0};
-    BCode subaction = {NULL, 0};
+    BCode out       = d_malloc_bytecode(0);
+    BCode subaction = d_malloc_bytecode(0);
 
     NodeSocket socket;
     socket.nodeIndex = nodeIndex;
@@ -1025,7 +1025,7 @@ BCode d_push_argument(BuildContext *context, NodeSocket socket) {
     VERBOSE(5, "Generating bytecode for argument socket #%zd in node #%zd...\n",
             socket.socketIndex, socket.nodeIndex);
 
-    BCode out = {NULL, 0};
+    BCode out = d_malloc_bytecode(0);
 
     if (!d_is_input_socket(context->graph, socket)) {
 
@@ -1068,7 +1068,7 @@ BCode d_generate_return(BuildContext *context, size_t returnNodeIndex) {
 
     VERBOSE(5, "Generating bytecode to return from %s...\n", funcDef.name);
 
-    BCode out = {NULL, 0};
+    BCode out = d_malloc_bytecode(0);
 
     size_t numReturns = d_definition_num_outputs(&funcDef);
 
@@ -1122,7 +1122,7 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
     VERBOSE(5, "- Generating bytecode for non-execution node %s...\n",
             nodeDef->name);
 
-    BCode out = {NULL, 0};
+    BCode out = d_malloc_bytecode(0);
 
     NodeSocket socket;
     socket.nodeIndex = nodeIndex;
@@ -1167,7 +1167,7 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
         // Next, get the bytecode for the true input.
         NodeSocket trueSocket  = socket;
         trueSocket.socketIndex = 1;
-        BCode trueCode         = {NULL, 0};
+        BCode trueCode         = d_malloc_bytecode(0);
 
         if (!boolIsLiteral || boolLiteralValue) {
             trueCode = d_push_input(context, trueSocket, false);
@@ -1181,7 +1181,7 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
         // Finally, get the bytecode for the false input.
         NodeSocket falseSocket  = socket;
         falseSocket.socketIndex = 2;
-        BCode falseCode         = {NULL, 0};
+        BCode falseCode         = d_malloc_bytecode(0);
 
         if (!boolIsLiteral || !boolLiteralValue) {
             falseCode = d_push_input(context, falseSocket, false);
@@ -1192,7 +1192,7 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
         // Get what the final stack top will be, and get the other bytecode to
         // push as many times as needed to make up the difference.
         int finalStackTop = stackTopFalse;
-        BCode pushn       = {NULL, 0};
+        BCode pushn       = d_malloc_bytecode(0);
 
         if (stackTopTrue > stackTopFalse) {
             finalStackTop = stackTopTrue;
@@ -1302,7 +1302,7 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
             d_free_bytecode(&trueCode);
         }
     } else {
-        BCode action = {NULL, 0};
+        BCode action = d_malloc_bytecode(0);
 
         if ((int)coreFunc >= 0) {
             // Generate bytecode depending on the core function.
@@ -1493,7 +1493,7 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
     }
 
     int stackTopBefore = context->stackTop;
-    BCode out          = {NULL, 0};
+    BCode out          = d_malloc_bytecode(0);
 
     // Usually we will want to pop all of the stack that got us the input,
     // but sometimes we need to keep things on the stack.
@@ -1513,7 +1513,7 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
         // the top of the stack.
         out = d_push_node_inputs(context, nodeIndex, false, false, forceFloats);
 
-        BCode action = {NULL, 0};
+        BCode action = d_malloc_bytecode(0);
 
         int stackTopAfterInputs = context->stackTop;
 
@@ -1549,7 +1549,7 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
                 // Bytecode for the comparison between the index and stop value.
                 // NOTE: We want this to push 1 if we want to exit the loop,
                 // and 0 if we want to stay in it!
-                BCode cmp = {NULL, 0};
+                BCode cmp = d_malloc_bytecode(0);
 
                 if (isStepImmediate) {
                     DIns cmpOp;
@@ -1637,7 +1637,7 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
                 NodeSocket loopSocket  = socket;
                 loopSocket.socketIndex = 4;
 
-                BCode loopAfterJump = {NULL, 0};
+                BCode loopAfterJump = d_malloc_bytecode(0);
 
                 wireIndex = d_wire_find_first(context->graph, loopSocket);
 
@@ -1987,7 +1987,7 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
                 // TODO: What if there isn't a connecting node?
                 wireIndex = d_wire_find_first(context->graph, socket);
 
-                BCode trueCode = {NULL, 0};
+                BCode trueCode = d_malloc_bytecode(0);
 
                 if (IS_WIRE_FROM(context->graph, wireIndex, socket)) {
                     NodeSocket connectedTo =
@@ -2106,7 +2106,7 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
     }
 
     // Now, we generate the bytecode for the next execution node.
-    BCode nextCode = {NULL, 0};
+    BCode nextCode = d_malloc_bytecode(0);
 
     const size_t numInputs = d_node_num_inputs(context->graph, nodeIndex);
 

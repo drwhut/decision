@@ -40,7 +40,12 @@
 BCode d_malloc_bytecode(size_t size) {
     BCode out;
 
-    out.code = d_calloc(size, sizeof(char));
+    if (size > 0) {
+        out.code = d_calloc(size, sizeof(char));
+    } else {
+        out.code = NULL;
+    }
+    
     out.size = size;
 
     out.linkList     = NULL;
