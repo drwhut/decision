@@ -284,7 +284,7 @@ Sheet *d_load_string(const char *source, const char *name,
                 d_syntax_dump_tree(root);
 
             VERBOSE(1, "--- STAGE 3: Checking semantics...\n")
-            d_semantic_scan(sheet, root);
+            d_semantic_scan(sheet, root, opts.debug);
             if (VERBOSE_LEVEL >= 2)
                 d_sheet_dump(sheet);
 

@@ -208,7 +208,8 @@ void d_sheet_add_include(Sheet *sheet, Sheet *include) {
 
 /**
  * \fn Sheet *d_sheet_add_include_from_path(Sheet *sheet,
- *                                          const char *includePath)
+ *                                          const char *includePath,
+ *                                          bool debugInclude)
  * \brief Add a reference to another sheet to the current sheet, which can be
  * used to get extra functionality.
  *
@@ -217,8 +218,11 @@ void d_sheet_add_include(Sheet *sheet, Sheet *include) {
  * \param sheet The sheet to add the include to.
  * \param includePath The path from sheet to the sheet being included.
  * Note that this should be equivalent to the argument of the Include property.
+ * \param debugInclude If we can compile the included sheet in debug mode,
+ * do so if set to true.
  */
-Sheet *d_sheet_add_include_from_path(Sheet *sheet, const char *includePath) {
+Sheet *d_sheet_add_include_from_path(Sheet *sheet, const char *includePath,
+                                     bool debugInclude) {
     Sheet *includeSheet = NULL;
 
     // TODO: Implement standard library paths as well.
@@ -244,6 +248,9 @@ Sheet *d_sheet_add_include_from_path(Sheet *sheet, const char *includePath) {
         }
     }
 
+    CompileOptions opts = DEFAULT_COMPILE_OPTIONS;
+    opts.debug          = debugInclude;
+
     if ((int)lastSeperator >= 0) {
         // Concatenate the dir string (with the NULL inserted) with the contents
         // of the literal string.
@@ -253,12 +260,12 @@ Sheet *d_sheet_add_include_from_path(Sheet *sheet, const char *includePath) {
 
         strcat(dir, includePath);
 
-        includeSheet = d_load_file((const char *)dir, NULL);
+        includeSheet = d_load_file((const char *)dir, &opts);
     }
     // If there isn't either character, we don't need to worry about
     // changing the directory.
     else {
-        includeSheet = d_load_file(includePath, NULL);
+        includeSheet = d_load_file(includePath, &opts);
     }
 
     d_sheet_add_include(sheet, includeSheet);

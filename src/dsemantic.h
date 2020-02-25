@@ -51,13 +51,16 @@
 */
 
 /**
- * \fn void d_semantic_scan_properties(Sheet *sheet, SyntaxNode *root)
+ * \fn void d_semantic_scan_properties(Sheet *sheet, SyntaxNode *root,
+ *                                     bool debugIncluded)
  * \brief Sets the properties of the sheet, given the syntax tree.
  *
  * \param sheet A pointer to the sheet where we want to set the properties.
  * \param root The root node of the syntax tree.
+ * \param debugIncluded If true, compile included sheets in debug mode.
  */
-DECISION_API void d_semantic_scan_properties(Sheet *sheet, SyntaxNode *root);
+DECISION_API void d_semantic_scan_properties(Sheet *sheet, SyntaxNode *root,
+                                             bool debugIncluded);
 
 /**
  * \fn void d_semantic_scan_nodes(Sheet *sheet, SyntaxNode *root)
@@ -99,12 +102,14 @@ DECISION_API void d_semantic_reduce_types(Sheet *sheet);
 DECISION_API void d_semantic_detect_loops(Sheet *sheet);
 
 /**
- * \fn void d_semantic_scan(Sheet *sheet, SyntaxNode *root)
+ * \fn void d_semantic_scan(Sheet *sheet, SyntaxNode *root, bool debugIncluded)
  * \brief Perform Semantic Analysis on a syntax tree.
  *
  * \param sheet The sheet to put everything into.
  * \param root The *valid* syntax tree to scan everything from.
+ * \param debugIncluded If true, compile any included sheets in debug mode.
  */
-DECISION_API void d_semantic_scan(Sheet *sheet, SyntaxNode *root);
+DECISION_API void d_semantic_scan(Sheet *sheet, SyntaxNode *root,
+                                  bool debugIncluded);
 
 #endif // DSEMANTIC_H
