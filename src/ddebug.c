@@ -22,25 +22,28 @@
 
 /**
  * \fn DebugSession d_debug_create_session(Sheet *sheet,
- *                                         OnNodeActivated onNodeActivated,
+ *                                         OnWireValue onWireValues,
  *                                         OnExecutionWire onExecutionWire,
- *                                         OnWireValue onWireValue)
+ *                                         OnNodeActivated onNodeActivated
+ *                                         )
  * \brief Create a debugging session.
  *
  * \return A debugging session in it's starting state.
  *
  * \param sheet The sheet to debug.
- * \param onNodeActivated A pointer to a function that is called when a
- * debuggable node is activated during the session. If NULL, the function is
- * not called.
+ * \param onWireValues A pointer to a function that is called when a value
+ * is transfered over a wire during the session. If NULL, the function is not
+ * called.
  * \param onExecutionWire A pointer to a function that is called when an
  * execution wire is activated during the session. If NULL, the function is
  * not called.
+ * \param onNodeActivated A pointer to a function that is called when a
+ * debuggable node is activated during the session. If NULL, the function is
+ * not called.
  */
-DebugSession d_debug_create_session(Sheet *sheet,
-                                    OnNodeActivated onNodeActivated,
+DebugSession d_debug_create_session(Sheet *sheet, OnWireValue onWireValue,
                                     OnExecutionWire onExecutionWire,
-                                    OnWireValue onWireValue) {
+                                    OnNodeActivated onNodeActivated) {
     // Set up the VM that will run the sheet.
     DVM vm = d_vm_create();
 
@@ -62,39 +65,39 @@ DebugSession d_debug_create_session(Sheet *sheet,
 /* TODO: Think of a way to combine the next 3 functions. */
 
 /**
- * \fn static InsNodeInfo *node_at_ins(DebugInfo debugInfo, size_t ins)
- * \brief Given an instruction, return the node information about it.
+ * \fn static InsValueInfo *value_at_ins(DebugInfo debugInfo, size_t ins)
+ * \brief Given an instruction, return the value wire information about it.
  *
- * \return A pointer to the node info at that instruction, NULL if there is no
- * info at that instruction.
+ * \return A pointer to the value wire info at that instruction, NULL if there
+ * is no info at that instruction.
  *
  * \param debugInfo The debug info to query.
  * \param ins The instruction to query.
  */
-static InsNodeInfo *node_at_ins(DebugInfo debugInfo, size_t ins) {
-    // NOTE: The list of InsNodeInfo should be in order of instructions.
-    if (debugInfo.insNodeInfoList == NULL) {
+static InsValueInfo *value_at_ins(DebugInfo debugInfo, size_t ins) {
+    // NOTE: The list of InsValueInfo should be in order of instructions.
+    if (debugInfo.insValueInfoList == NULL) {
         return NULL;
     }
 
     int left   = 0;
-    int right  = debugInfo.insNodeInfoSize - 1;
+    int right  = debugInfo.insValueInfoSize - 1;
     int middle = (left + right) / 2;
 
     while (left <= right) {
         middle = (left + right) / 2;
 
-        if (ins > debugInfo.insNodeInfoList[middle].ins) {
+        if (ins > debugInfo.insValueInfoList[middle].ins) {
             left = middle + 1;
-        } else if (ins < debugInfo.insNodeInfoList[middle].ins) {
+        } else if (ins < debugInfo.insValueInfoList[middle].ins) {
             right = middle - 1;
         } else {
             break;
         }
     }
 
-    if (debugInfo.insNodeInfoList[middle].ins == ins) {
-        return debugInfo.insNodeInfoList + middle;
+    if (debugInfo.insValueInfoList[middle].ins == ins) {
+        return debugInfo.insValueInfoList + middle;
     } else {
         return NULL;
     }
@@ -140,39 +143,39 @@ static InsExecInfo *exec_at_ins(DebugInfo debugInfo, size_t ins) {
 }
 
 /**
- * \fn static InsValueInfo *value_at_ins(DebugInfo debugInfo, size_t ins)
- * \brief Given an instruction, return the value wire information about it.
+ * \fn static InsNodeInfo *node_at_ins(DebugInfo debugInfo, size_t ins)
+ * \brief Given an instruction, return the node information about it.
  *
- * \return A pointer to the value wire info at that instruction, NULL if there
- * is no info at that instruction.
+ * \return A pointer to the node info at that instruction, NULL if there is no
+ * info at that instruction.
  *
  * \param debugInfo The debug info to query.
  * \param ins The instruction to query.
  */
-static InsValueInfo *value_at_ins(DebugInfo debugInfo, size_t ins) {
-    // NOTE: The list of InsValueInfo should be in order of instructions.
-    if (debugInfo.insValueInfoList == NULL) {
+static InsNodeInfo *node_at_ins(DebugInfo debugInfo, size_t ins) {
+    // NOTE: The list of InsNodeInfo should be in order of instructions.
+    if (debugInfo.insNodeInfoList == NULL) {
         return NULL;
     }
 
     int left   = 0;
-    int right  = debugInfo.insValueInfoSize - 1;
+    int right  = debugInfo.insNodeInfoSize - 1;
     int middle = (left + right) / 2;
 
     while (left <= right) {
         middle = (left + right) / 2;
 
-        if (ins > debugInfo.insValueInfoList[middle].ins) {
+        if (ins > debugInfo.insNodeInfoList[middle].ins) {
             left = middle + 1;
-        } else if (ins < debugInfo.insValueInfoList[middle].ins) {
+        } else if (ins < debugInfo.insNodeInfoList[middle].ins) {
             right = middle - 1;
         } else {
             break;
         }
     }
 
-    if (debugInfo.insValueInfoList[middle].ins == ins) {
-        return debugInfo.insValueInfoList + middle;
+    if (debugInfo.insNodeInfoList[middle].ins == ins) {
+        return debugInfo.insNodeInfoList + middle;
     } else {
         return NULL;
     }
@@ -194,27 +197,6 @@ void d_debug_continue_session(DebugSession *session) {
         // Get the instruction index relative to the sheet.
         size_t ins = vm->pc - session->sheet->_text;
 
-        // TODO: Swap the order of these to be more intuitive!
-
-        // Is this instruction entering a new node?
-        if (session->onNodedActivated) {
-            InsNodeInfo *nodeInfo =
-                node_at_ins(session->sheet->_debugInfo, ins);
-            if (nodeInfo) {
-                session->onNodedActivated(session->sheet, nodeInfo->node);
-            }
-        }
-
-        // Does this instruction activate an execution wire?
-        if (session->onExecutionWire) {
-            InsExecInfo *execInfo =
-                exec_at_ins(session->sheet->_debugInfo, ins);
-            if (execInfo) {
-                Wire wire = session->sheet->graph.wires[execInfo->execWire];
-                session->onExecutionWire(session->sheet, wire);
-            }
-        }
-
         // Does this instruction transfer a value over a wire?
         if (session->onWireValue) {
             InsValueInfo *valueInfo =
@@ -230,14 +212,36 @@ void d_debug_continue_session(DebugSession *session) {
                     value.integerValue =
                         d_vm_get(&(session->vm), valueInfo->stackIndex);
                 } else if (type == TYPE_FLOAT) {
-                    value.floatValue = d_vm_get_float(&(session->vm), valueInfo->stackIndex);
+                    value.floatValue =
+                        d_vm_get_float(&(session->vm), valueInfo->stackIndex);
                 } else if (type == TYPE_STRING) {
-                    value.stringValue = d_vm_get_ptr(&(session->vm), valueInfo->stackIndex);
+                    value.stringValue =
+                        d_vm_get_ptr(&(session->vm), valueInfo->stackIndex);
                 } else if (type == TYPE_BOOL) {
-                    value.booleanValue = d_vm_get(&(session->vm), valueInfo->stackIndex);
+                    value.booleanValue =
+                        d_vm_get(&(session->vm), valueInfo->stackIndex);
                 }
 
                 session->onWireValue(session->sheet, wire, type, value);
+            }
+        }
+
+        // Does this instruction activate an execution wire?
+        if (session->onExecutionWire) {
+            InsExecInfo *execInfo =
+                exec_at_ins(session->sheet->_debugInfo, ins);
+            if (execInfo) {
+                Wire wire = session->sheet->graph.wires[execInfo->execWire];
+                session->onExecutionWire(session->sheet, wire);
+            }
+        }
+
+        // Is this instruction entering a new node?
+        if (session->onNodedActivated) {
+            InsNodeInfo *nodeInfo =
+                node_at_ins(session->sheet->_debugInfo, ins);
+            if (nodeInfo) {
+                session->onNodedActivated(session->sheet, nodeInfo->node);
             }
         }
 

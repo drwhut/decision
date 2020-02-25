@@ -40,15 +40,16 @@
 struct _sheet;
 
 /**
- * \struct _insNodeInfo
- * \brief Describes when a node "starts" in bytecode.
+ * \struct _insValueInfo
+ * \brief Describes when a value wire has a value in bytecode.
  *
- * \typedef struct _insNodeInfo InsNodeInfo
+ * \typedef struct _insValueInfo InsValueInfo
  */
-typedef struct _insNodeInfo {
+typedef struct _insValueInfo {
     size_t ins;
-    size_t node;
-} InsNodeInfo;
+    size_t valueWire;
+    int stackIndex;
+} InsValueInfo;
 
 /**
  * \struct _insExecInfo
@@ -62,16 +63,15 @@ typedef struct _insExecInfo {
 } InsExecInfo;
 
 /**
- * \struct _insValueInfo
- * \brief Describes when a value wire has a value in bytecode.
+ * \struct _insNodeInfo
+ * \brief Describes when a node "starts" in bytecode.
  *
- * \typedef struct _insValueInfo InsValueInfo
+ * \typedef struct _insNodeInfo InsNodeInfo
  */
-typedef struct _insValueInfo {
+typedef struct _insNodeInfo {
     size_t ins;
-    size_t valueWire;
-    int stackIndex;
-} InsValueInfo;
+    size_t node;
+} InsNodeInfo;
 
 /**
  * \struct _debugInfo
@@ -80,14 +80,14 @@ typedef struct _insValueInfo {
  * \typedef struct _debugInfo DebugInfo
  */
 typedef struct _debugInfo {
-    InsNodeInfo *insNodeInfoList;
-    size_t insNodeInfoSize;
+    InsValueInfo *insValueInfoList;
+    size_t insValueInfoSize;
 
     InsExecInfo *insExecInfoList;
     size_t insExecInfoSize;
 
-    InsValueInfo *insValueInfoList;
-    size_t insValueInfoSize;
+    InsNodeInfo *insNodeInfoList;
+    size_t insNodeInfoSize;
 } DebugInfo;
 
 /**
@@ -100,10 +100,13 @@ typedef struct _debugInfo {
     }
 
 /**
- * \typedef void (*OnNodeActivated)(Sheet *sheet, size_t nodeIndex)
- * \brief Called when a node is activated during a debugging session.
+ * \typedef void (*OnWireValue)(Sheet *sheet, Wire wire, DType type,
+ *                              LexData value)
+ * \brief Called when a value is transfered over a wire during a debugging
+ * session.
  */
-typedef void (*OnNodeActivated)(struct _sheet *sheet, size_t nodeIndex);
+typedef void (*OnWireValue)(struct _sheet *sheet, Wire wire, DType type,
+                            LexData value);
 
 /**
  * \typedef void (*OnExecutionWire)(Sheet *sheet, Wire wire)
@@ -112,13 +115,10 @@ typedef void (*OnNodeActivated)(struct _sheet *sheet, size_t nodeIndex);
 typedef void (*OnExecutionWire)(struct _sheet *sheet, Wire wire);
 
 /**
- * \typedef void (*OnWireValue)(Sheet *sheet, Wire wire, DType type,
- *                              LexData value)
- * \brief Called when a value is transfered over a wire during a debugging
- * session.
+ * \typedef void (*OnNodeActivated)(Sheet *sheet, size_t nodeIndex)
+ * \brief Called when a node is activated during a debugging session.
  */
-typedef void (*OnWireValue)(struct _sheet *sheet, Wire wire, DType type,
-                            LexData value);
+typedef void (*OnNodeActivated)(struct _sheet *sheet, size_t nodeIndex);
 
 /**
  * \struct _debugSession
@@ -131,9 +131,9 @@ typedef struct _debugSession {
 
     struct _sheet *sheet;
 
-    OnNodeActivated onNodedActivated;
-    OnExecutionWire onExecutionWire;
     OnWireValue onWireValue;
+    OnExecutionWire onExecutionWire;
+    OnNodeActivated onNodedActivated;
 } DebugSession;
 
 /*
@@ -142,24 +142,28 @@ typedef struct _debugSession {
 
 /**
  * \fn DebugSession d_debug_create_session(Sheet *sheet,
- *                                         OnNodeActivated onNodeActivated,
+ *                                         OnWireValue onWireValues,
  *                                         OnExecutionWire onExecutionWire,
- *                                         OnWireValue onWireValue)
+ *                                         OnNodeActivated onNodeActivated
+ *                                         )
  * \brief Create a debugging session.
  *
  * \return A debugging session in it's starting state.
  *
  * \param sheet The sheet to debug.
- * \param onNodeActivated A pointer to a function that is called when a
- * debuggable node is activated during the session. If NULL, the function is
- * not called.
+ * \param onWireValues A pointer to a function that is called when a value
+ * is transfered over a wire during the session. If NULL, the function is not
+ * called.
  * \param onExecutionWire A pointer to a function that is called when an
  * execution wire is activated during the session. If NULL, the function is
  * not called.
+ * \param onNodeActivated A pointer to a function that is called when a
+ * debuggable node is activated during the session. If NULL, the function is
+ * not called.
  */
 DECISION_API DebugSession d_debug_create_session(
-    struct _sheet *sheet, OnNodeActivated onNodeActivated,
-    OnExecutionWire onExecutionWire, OnWireValue onWireValue);
+    struct _sheet *sheet, OnWireValue onWireValue,
+    OnExecutionWire onExecutionWire, OnNodeActivated onNodeActivated);
 
 /**
  * \fn void d_debug_continue_session(DebugSession *session)
