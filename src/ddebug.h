@@ -96,7 +96,7 @@ typedef struct _debugInfo {
  */
 #define NO_DEBUG_INFO \
     (DebugInfo) {     \
-        NULL, 0       \
+        NULL, 0, NULL, 0, NULL, 0       \
     }
 
 /**

@@ -1733,8 +1733,8 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
 
             case CORE_IF_THEN:
             case CORE_IF_THEN_ELSE:;
-                BCode thenBranch = (BCode){NULL, 0};
-                BCode elseBranch = (BCode){NULL, 0};
+                BCode thenBranch = d_malloc_bytecode(0);
+                BCode elseBranch = d_malloc_bytecode(0);
 
                 int initStackTop = context->stackTop;
 
@@ -1854,7 +1854,7 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
                 // stack!
                 context->stackTop--;
 
-                BCode conAtEndElse = (BCode){NULL, 0};
+                BCode conAtEndElse = d_malloc_bytecode(0);
 
                 if (!optimizeJmpToEnd) {
                     conAtEndElse = d_bytecode_ins(OP_JRFI);
@@ -2238,7 +2238,7 @@ BCode d_generate_function(BuildContext *context, SheetFunction func) {
     context->stackTop = d_definition_num_inputs(&(func.functionDefinition));
 
     if (d_is_subroutine(func)) {
-        if (func.defineNodeIndex >= 0) {
+        if (func.numDefineNodes == 1) {
             VERBOSE(5, "-- Generating bytecode for subroutine %s...\n",
                     func.functionDefinition.name);
 
@@ -2281,7 +2281,7 @@ BCode d_generate_function(BuildContext *context, SheetFunction func) {
         // node.
         size_t returnNode = func.lastReturnNodeIndex;
 
-        if (returnNode >= 0) {
+        if (func.numReturnNodes == 1) {
             // Now we recursively generate the bytecode for the inputs
             // of the Return node, so the final Return values are
             // calculated.
@@ -2305,7 +2305,7 @@ BCode d_generate_function(BuildContext *context, SheetFunction func) {
  */
 void d_codegen_compile(Sheet *sheet, bool debug) {
 
-    BCode text = (BCode){NULL, 0};
+    BCode text = d_malloc_bytecode(0);
 
     // Create a context object for the build.
     BuildContext context;

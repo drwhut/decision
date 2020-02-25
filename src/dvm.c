@@ -689,7 +689,7 @@ size_t d_vm_top(DVM *vm) {
 */
 
 /**
- * \fn const unsigned char d_vm_ins_size(DIns opcode)
+ * \fn unsigned char d_vm_ins_size(DIns opcode)
  * \brief Given an opcode, get the total size of the instruction involving that
  * opcode in bytes.
  *
@@ -697,11 +697,11 @@ size_t d_vm_top(DVM *vm) {
  *
  * \param opcode The opcode to query.
  */
-const unsigned char d_vm_ins_size(DIns opcode) {
+unsigned char d_vm_ins_size(DIns opcode) {
     if (opcode >= NUM_OPCODES)
         return 0;
 
-    return VM_INS_SIZE[opcode];
+    return (const unsigned char)VM_INS_SIZE[opcode];
 }
 
 /**

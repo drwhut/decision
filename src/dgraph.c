@@ -259,7 +259,7 @@ bool d_is_input_socket(Graph graph, NodeSocket socket) {
 }
 
 /**
- * \fn const SocketMeta d_get_socket_meta(Graph graph, NodeSocket nodeSocket)
+ * \fn SocketMeta d_get_socket_meta(Graph graph, NodeSocket nodeSocket)
  * \brief Get the metadata of a node's socket.
  *
  * \return The socket's metadata.
@@ -267,7 +267,7 @@ bool d_is_input_socket(Graph graph, NodeSocket socket) {
  * \param graph The graph the socket belongs to.
  * \param nodeSocket The socket to get the metadata for.
  */
-const SocketMeta d_get_socket_meta(Graph graph, NodeSocket nodeSocket) {
+SocketMeta d_get_socket_meta(Graph graph, NodeSocket nodeSocket) {
     if (!d_is_node_socket_valid(graph, nodeSocket)) {
         const SocketMeta meta = {NULL, NULL, TYPE_NONE, {0}};
         return meta;

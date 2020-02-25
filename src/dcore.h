@@ -95,7 +95,7 @@ DECISION_API const struct _nodeDefinition *
 d_core_get_definition(const CoreFunction core);
 
 /**
- * \fn const CoreFunction d_core_find_name(const char *name)
+ * \fn CoreFunction d_core_find_name(const char *name)
  * \brief Given the name of the core function, get the CoreFunction.
  *
  * \return The corresponding CoreFunction. Value is -1 if the name doesn't
@@ -103,7 +103,7 @@ d_core_get_definition(const CoreFunction core);
  *
  * \param name The name to query.
  */
-DECISION_API const CoreFunction d_core_find_name(const char *name);
+DECISION_API CoreFunction d_core_find_name(const char *name);
 
 /**
  * \fn void d_core_dump_json()
