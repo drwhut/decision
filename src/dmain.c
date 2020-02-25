@@ -107,10 +107,13 @@ void onNodeActivated(Sheet *sheet, size_t nodeIndex) {
 
 int main(int argc, char *argv[]) {
 
+    CompileOptions options = DEFAULT_COMPILE_OPTIONS;
+    options.debug          = true;
+
     // TEMP
     Sheet *sheet = d_load_string(
         "Start~#1\nAdd(5, 7)~#2\nMultiply(#2, 2)~#3\nPrint(#1, #3)\n", NULL,
-        NULL);
+        &options);
 
     d_sheet_dump(sheet);
     d_asm_dump_all(sheet);

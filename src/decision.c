@@ -251,7 +251,7 @@ Sheet *d_load_string(const char *source, const char *name,
     Sheet *sheet = d_sheet_create(name);
 
     // By default, have no initial includes, and don't compile in debug mode.
-    CompileOptions opts = {NULL, false};
+    CompileOptions opts = DEFAULT_COMPILE_OPTIONS;
 
     if (options != NULL) {
         opts = *options;

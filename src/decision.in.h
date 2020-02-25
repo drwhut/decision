@@ -116,6 +116,12 @@ typedef struct _compileOptions {
                               ///< information, and thus cannot be debugged.
 } CompileOptions;
 
+/**
+ * \def DEFAULT_COMPILE_OPTIONS
+ * \brief The default compile options.
+ */
+#define DEFAULT_COMPILE_OPTIONS (CompileOptions){NULL, false}
+
 /*
 === FUNCTIONS =============================================
 */
