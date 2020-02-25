@@ -78,6 +78,8 @@ reference in JSON format.
 library (which is either static or shared, static by default, see
 [README.md](README.md) for more details), and link the executable to that
 library. This has reduced the compile time significantly.
+  * Compiler warnings have also been set to maximum on both the executable and
+  the library that is built.
 * Syntax Analysis has been optimised to check the next token ahead before
 dedicating itself to a syntax definition.
 * Nodes now reference their definitions, which reduces data redundancy.

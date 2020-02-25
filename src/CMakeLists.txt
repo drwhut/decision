@@ -91,6 +91,13 @@ install(TARGETS decision DESTINATION bin)
 # Set where the header files should be installed.
 install(FILES ${HDRS} DESTINATION include/decision)
 
+# Show warnings for the main executable!
+if(MSVC)
+    target_compile_options(decision PRIVATE /W4)
+else(MSVC)
+    target_compile_options(decision PRIVATE -Wall -Wextra -pedantic)
+endif(MSVC)
+
 # The library.
 if(COMPILER_SHARED)
     add_library(decisionLibShared SHARED ${SRCS})
@@ -107,6 +114,13 @@ if(COMPILER_SHARED)
     else(MSVC)
         set_target_properties(decisionLibShared PROPERTIES OUTPUT_NAME decision)
     endif(MSVC)
+
+    # Show warnings for the library!
+    if(MSVC)
+        target_compile_options(decisionLibShared PRIVATE /W4)
+    else(MSVC)
+        target_compile_options(decisionLibShared PRIVATE -Wall -Wextra -pedantic)
+    endif(MSVC)
 else(COMPILER_SHARED)
     add_library(decisionLibStatic STATIC ${SRCS})
 
@@ -122,14 +136,16 @@ else(COMPILER_SHARED)
     else(MSVC)
         set_target_properties(decisionLibStatic PROPERTIES OUTPUT_NAME decision)
     endif(MSVC)
+
+    # Show warnings for the library!
+    if(MSVC)
+        target_compile_options(decisionLibStatic PRIVATE /W4)
+    else(MSVC)
+        target_compile_options(decisionLibStatic PRIVATE -Wall -Wextra -pedantic)
+    endif(MSVC)
 endif(COMPILER_SHARED)
 
 # Export symbols for debugging on Linux.
-# target_compile_options(decision PRIVATE "-g")
-
-# Show warnings!
-if(MSVC)
-    target_compile_options(decision PRIVATE /W4)
-else(MSVC)
-    target_compile_options(decision PRIVATE -Wall -Wextra -pedantic)
-endif(MSVC)
+# target_compile_options(decision PRIVATE -g)
+# target_compile_options(decisionLibStatic PRIVATE -g)
+# target_compile_options(decisionLibShared PRIVATE -g)
