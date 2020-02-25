@@ -1076,25 +1076,30 @@ BCode d_generate_return(BuildContext *context, size_t returnNodeIndex) {
         numReturns--;
     }
 
-    if (numReturns == 0) {
-        out = d_bytecode_ins(OP_RET);
-    } else {
+    if (numReturns > 0) {
         out = d_push_node_inputs(context, returnNodeIndex, false, false, false);
-
-        BCode ret = d_bytecode_ins(OP_RETN);
-        d_bytecode_set_byte(ret, 1, (char)numReturns);
-        d_concat_bytecode(&out, &ret);
-        d_free_bytecode(&ret);
     }
 
-    // Set the first instruction to represent activating the node.
+    BCode ret;
+
+    if (numReturns == 0) {
+        ret = d_bytecode_ins(OP_RET);
+    } else {
+        ret = d_bytecode_ins(OP_RETN);
+        d_bytecode_set_byte(ret, 1, (char)numReturns);
+    }
+
+    // Set the return instruction to represent activating the return node.
     if (context->debug) {
         InsNodeInfo returnNodeInfo;
         returnNodeInfo.ins  = 0;
         returnNodeInfo.node = returnNodeIndex;
 
-        d_debug_add_node_info(&(out.debugInfo), returnNodeInfo);
+        d_debug_add_node_info(&(ret.debugInfo), returnNodeInfo);
     }
+
+    d_concat_bytecode(&out, &ret);
+    d_free_bytecode(&ret);
 
     return out;
 }

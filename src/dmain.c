@@ -92,7 +92,10 @@ static void print_help() {
 // TEMP
 
 void onWireValue(Sheet *sheet, Wire wire, DType type, LexData value) {
-    printf("Value %d!\n", value.integerValue);
+    printf("Value %d transfered from (%zu, %zu) to (%zu, %zu)!\n",
+           value.integerValue, wire.socketFrom.nodeIndex,
+           wire.socketFrom.socketIndex, wire.socketTo.nodeIndex,
+           wire.socketTo.socketIndex);
 }
 
 void onExecutionWire(Sheet *sheet, Wire wire) {
@@ -111,9 +114,7 @@ int main(int argc, char *argv[]) {
     options.debug          = true;
 
     // TEMP
-    Sheet *sheet = d_load_string(
-        "Start~#1\nAdd(5, 7)~#2\nMultiply(#2, 2)~#3\nPrint(#1, #3)\n", NULL,
-        &options);
+    Sheet *sheet = d_load_file("../../tests/examples/factorial.dc", &options);
 
     d_sheet_dump(sheet);
     d_asm_dump_all(sheet);
