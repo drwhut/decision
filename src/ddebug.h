@@ -141,6 +141,24 @@ typedef struct _debugSession {
 */
 
 /**
+ * \fn void d_debug_add_node_info(DebugInfo *debugInfo, InsNodeInfo nodeInfo)
+ * \brief Add node information to a list of debug information.
+ * 
+ * \param debugInfo The debug info to add the node info to.
+ * \param nodeInfo The node info to add.
+ */
+DECISION_API void d_debug_add_node_info(DebugInfo *debugInfo,
+                                        InsNodeInfo nodeInfo);
+
+/**
+ * \fn void d_debug_free_info(DebugInfo *debugInfo)
+ * \brief Free debugging information.
+ *
+ * \param debugInfo The debugging info to free.
+ */
+DECISION_API void d_debug_free_info(DebugInfo *debugInfo);
+
+/**
  * \fn DebugSession d_debug_create_session(Sheet *sheet,
  *                                         OnWireValue onWireValues,
  *                                         OnExecutionWire onExecutionWire,

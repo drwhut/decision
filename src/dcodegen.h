@@ -27,6 +27,7 @@
 
 #include "dasm.h"
 #include "dcfg.h"
+#include "ddebug.h"
 #include "dlink.h"
 #include "dsheet.h"
 #include "dvm.h"
@@ -54,6 +55,8 @@ typedef struct _buildContext {
 
     char *dataSection;      ///< The data section being built up.
     size_t dataSectionSize; ///< The size of the data section.
+
+    bool debug;          ///< Do we want to build up debugging information?
 } BuildContext;
 
 /*

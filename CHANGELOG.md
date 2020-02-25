@@ -62,6 +62,7 @@ from freeing the sheet when they are freed.
   * Finding the definitions of names has been moved to `dname.c` and `dname.h`.
   * Decision object files now have their own set of source files, `dobj.c` and
   `dobj.h`, and the code has been revamped to be less error-prone.
+* Removed `d_insert_bytecode`, as it is no longer used.
 * Removed all calls to "safe" Visual C++ functions, due to considerations of
 standardisation.
 

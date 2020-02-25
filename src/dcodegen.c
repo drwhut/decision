@@ -2154,6 +2154,8 @@ void d_codegen_compile(Sheet *sheet, bool debug) {
     context.dataSection     = NULL;
     context.dataSectionSize = 0;
 
+    context.debug = debug; // So we don't waste time generating debug info.
+
     // Start off by allocating space for the variables defined in the sheet.
     for (size_t i = 0; i < sheet->numVariables; i++) {
         SheetVariable *var       = sheet->variables + i;
@@ -2255,6 +2257,11 @@ void d_codegen_compile(Sheet *sheet, bool debug) {
     // Put the data section into the sheet.
     sheet->_data     = context.dataSection;
     sheet->_dataSize = context.dataSectionSize;
+
+    // Only put the debugging information in if we generated it.
+    if (debug) {
+        sheet->_debugInfo = text.debugInfo;
+    }
 
     // Put the link metadata into the sheet.
     sheet->_link = context.linkMetaList;

@@ -23,6 +23,85 @@
 #include <stdio.h>
 
 /**
+ * \fn void d_debug_add_node_info(DebugInfo *debugInfo, InsNodeInfo nodeInfo)
+ * \brief Add node information to a list of debug information.
+ *
+ * \param debugInfo The debug info to add the node info to.
+ * \param nodeInfo The node info to add.
+ */
+void d_debug_add_node_info(DebugInfo *debugInfo, InsNodeInfo nodeInfo) {
+    if (debugInfo == NULL) {
+        return;
+    }
+
+    // NOTE: The list of InsNodeInfo should be in order of instructions.
+    // NOTE: This is very similar to add_edge in dgraph.c, since that has to
+    // add wires in a sorted list.
+    if (debugInfo->insNodeInfoList == NULL) {
+        debugInfo->insNodeInfoSize    = 1;
+        debugInfo->insNodeInfoList    = d_malloc(sizeof(InsNodeInfo));
+        *(debugInfo->insNodeInfoList) = nodeInfo;
+    } else {
+        // Use binary insertion, since the list should be sorted!
+        int left   = 0;
+        int right  = (int)debugInfo->insNodeInfoSize - 1;
+        int middle = (left + right) / 2;
+
+        while (left <= right) {
+            middle = (left + right) / 2;
+
+            if (nodeInfo.ins > debugInfo->insNodeInfoList[middle].ins) {
+                left = middle + 1;
+            } else if (nodeInfo.ins < debugInfo->insNodeInfoList[middle].ins) {
+                right = middle - 1;
+            } else {
+                break;
+            }
+        }
+
+        if (nodeInfo.ins > debugInfo->insNodeInfoList[middle].ins) {
+            middle++;
+        }
+
+        debugInfo->insNodeInfoSize++;
+        debugInfo->insNodeInfoList =
+            d_realloc(debugInfo->insNodeInfoList,
+                      debugInfo->insNodeInfoSize * sizeof(InsNodeInfo));
+
+        if (middle < (int)debugInfo->insNodeInfoSize - 1) {
+            memmove(debugInfo->insNodeInfoList + middle + 1,
+                    debugInfo->insNodeInfoList + middle,
+                    (debugInfo->insNodeInfoSize - middle - 1) *
+                        sizeof(InsNodeInfo));
+        }
+
+        debugInfo->insNodeInfoList[middle] = nodeInfo;
+    }
+}
+
+/**
+ * \fn void d_debug_free_info(DebugInfo *debugInfo)
+ * \brief Free debugging information.
+ *
+ * \param debugInfo The debugging info to free.
+ */
+void d_debug_free_info(DebugInfo *debugInfo) {
+    if (debugInfo->insValueInfoList != NULL) {
+        free(debugInfo->insValueInfoList);
+    }
+
+    if (debugInfo->insExecInfoList != NULL) {
+        free(debugInfo->insExecInfoList);
+    }
+
+    if (debugInfo->insNodeInfoList != NULL) {
+        free(debugInfo->insNodeInfoList);
+    }
+
+    *debugInfo = NO_DEBUG_INFO;
+}
+
+/**
  * \fn static bool debug_info_empty(DebugInfo debugInfo)
  * \brief Check if there is no debug info.
  *

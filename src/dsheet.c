@@ -445,6 +445,8 @@ void d_sheet_free(Sheet *sheet) {
             sheet->_dataSize = 0;
         }
 
+        d_debug_free_info(&(sheet->_debugInfo));
+
         d_link_free_list(&(sheet->_link));
 
         if (sheet->_insLinkList != NULL) {
