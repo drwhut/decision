@@ -22,7 +22,9 @@
 
 /**
  * \fn DebugSession d_debug_create_session(Sheet *sheet,
- *                                         OnNodeActivated onNodeActivated)
+ *                                         OnNodeActivated onNodeActivated,
+ *                                         OnExecutionWire onExecutionWire,
+ *                                         OnWireValue onWireValue)
  * \brief Create a debugging session.
  *
  * \return A debugging session in it's starting state.
@@ -31,13 +33,14 @@
  * \param onNodeActivated A pointer to a function that is called when a
  * debuggable node is activated during the session. If NULL, the function is
  * not called.
- * \param onExecutionWireActivated A pointer to a function that is called when
- * an execution wire is activated during the session. If NULL, the function is
+ * \param onExecutionWire A pointer to a function that is called when an
+ * execution wire is activated during the session. If NULL, the function is
  * not called.
  */
-DebugSession
-d_debug_create_session(Sheet *sheet, OnNodeActivated onNodeActivated,
-                       OnExecutionWireActivated onExecutionWireActivated) {
+DebugSession d_debug_create_session(Sheet *sheet,
+                                    OnNodeActivated onNodeActivated,
+                                    OnExecutionWire onExecutionWire,
+                                    OnWireValue onWireValue) {
     // Set up the VM that will run the sheet.
     DVM vm = d_vm_create();
 
@@ -47,13 +50,16 @@ d_debug_create_session(Sheet *sheet, OnNodeActivated onNodeActivated,
 
     DebugSession out;
 
-    out.vm                       = vm;
-    out.sheet                    = sheet;
-    out.onNodedActivated         = onNodeActivated;
-    out.onExecutionWireActivated = onExecutionWireActivated;
+    out.vm               = vm;
+    out.sheet            = sheet;
+    out.onNodedActivated = onNodeActivated;
+    out.onExecutionWire  = onExecutionWire;
+    out.onWireValue      = onWireValue;
 
     return out;
 }
+
+/* TODO: Think of a way to combine the next 3 functions. */
 
 /**
  * \fn static InsNodeInfo *node_at_ins(DebugInfo debugInfo, size_t ins)
@@ -97,10 +103,10 @@ static InsNodeInfo *node_at_ins(DebugInfo debugInfo, size_t ins) {
 /**
  * \fn static InsExecInfo *exec_at_ins(DebugInfo debugInfo, size_t ins)
  * \brief Given an instruction, return the execution wire information about it.
- * 
+ *
  * \return A pointer to the execution wire info at that instruction, NULL if
  * there is no info at that instruction.
- * 
+ *
  * \param debugInfo The debug info to query.
  * \param ins The instruction to query.
  */
@@ -134,6 +140,45 @@ static InsExecInfo *exec_at_ins(DebugInfo debugInfo, size_t ins) {
 }
 
 /**
+ * \fn static InsValueInfo *value_at_ins(DebugInfo debugInfo, size_t ins)
+ * \brief Given an instruction, return the value wire information about it.
+ *
+ * \return A pointer to the value wire info at that instruction, NULL if there
+ * is no info at that instruction.
+ *
+ * \param debugInfo The debug info to query.
+ * \param ins The instruction to query.
+ */
+static InsValueInfo *value_at_ins(DebugInfo debugInfo, size_t ins) {
+    // NOTE: The list of InsValueInfo should be in order of instructions.
+    if (debugInfo.insValueInfoList == NULL) {
+        return NULL;
+    }
+
+    int left   = 0;
+    int right  = debugInfo.insValueInfoSize - 1;
+    int middle = (left + right) / 2;
+
+    while (left <= right) {
+        middle = (left + right) / 2;
+
+        if (ins > debugInfo.insValueInfoList[middle].ins) {
+            left = middle + 1;
+        } else if (ins < debugInfo.insValueInfoList[middle].ins) {
+            right = middle - 1;
+        } else {
+            break;
+        }
+    }
+
+    if (debugInfo.insValueInfoList[middle].ins == ins) {
+        return debugInfo.insValueInfoList + middle;
+    } else {
+        return NULL;
+    }
+}
+
+/**
  * \fn void d_debug_continue_session(DebugSession *session)
  * \brief Continue a debugging session until either a breakpoint is hit, or the
  * VM halts.
@@ -149,6 +194,8 @@ void d_debug_continue_session(DebugSession *session) {
         // Get the instruction index relative to the sheet.
         size_t ins = vm->pc - session->sheet->_text;
 
+        // TODO: Swap the order of these to be more intuitive!
+
         // Is this instruction entering a new node?
         if (session->onNodedActivated) {
             InsNodeInfo *nodeInfo =
@@ -159,13 +206,38 @@ void d_debug_continue_session(DebugSession *session) {
         }
 
         // Does this instruction activate an execution wire?
-        if (session->onExecutionWireActivated) {
+        if (session->onExecutionWire) {
             InsExecInfo *execInfo =
                 exec_at_ins(session->sheet->_debugInfo, ins);
             if (execInfo) {
-                session->onExecutionWireActivated(
-                    session->sheet,
-                    session->sheet->graph.wires[execInfo->execWire]);
+                Wire wire = session->sheet->graph.wires[execInfo->execWire];
+                session->onExecutionWire(session->sheet, wire);
+            }
+        }
+
+        // Does this instruction transfer a value over a wire?
+        if (session->onWireValue) {
+            InsValueInfo *valueInfo =
+                value_at_ins(session->sheet->_debugInfo, ins);
+            if (valueInfo) {
+                Wire wire = session->sheet->graph.wires[valueInfo->valueWire];
+                const SocketMeta meta =
+                    d_get_socket_meta(session->sheet->graph, wire.socketFrom);
+                DType type    = meta.type;
+                LexData value = {0};
+
+                if (type == TYPE_INT) {
+                    value.integerValue =
+                        d_vm_get(&(session->vm), valueInfo->stackIndex);
+                } else if (type == TYPE_FLOAT) {
+                    value.floatValue = d_vm_get_float(&(session->vm), valueInfo->stackIndex);
+                } else if (type == TYPE_STRING) {
+                    value.stringValue = d_vm_get_ptr(&(session->vm), valueInfo->stackIndex);
+                } else if (type == TYPE_BOOL) {
+                    value.booleanValue = d_vm_get(&(session->vm), valueInfo->stackIndex);
+                }
+
+                session->onWireValue(session->sheet, wire, type, value);
             }
         }
 

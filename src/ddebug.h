@@ -26,6 +26,8 @@
 
 #include "dcfg.h"
 #include "dgraph.h"
+#include "dlex.h"
+#include "dtype.h"
 #include "dvm.h"
 
 #include <stddef.h>
@@ -60,6 +62,18 @@ typedef struct _insExecInfo {
 } InsExecInfo;
 
 /**
+ * \struct _insValueInfo
+ * \brief Describes when a value wire has a value in bytecode.
+ *
+ * \typedef struct _insValueInfo InsValueInfo
+ */
+typedef struct _insValueInfo {
+    size_t ins;
+    size_t valueWire;
+    int stackIndex;
+} InsValueInfo;
+
+/**
  * \struct _debugInfo
  * \brief A collection of info used for debugging.
  *
@@ -71,6 +85,9 @@ typedef struct _debugInfo {
 
     InsExecInfo *insExecInfoList;
     size_t insExecInfoSize;
+
+    InsValueInfo *insValueInfoList;
+    size_t insValueInfoSize;
 } DebugInfo;
 
 /**
@@ -89,11 +106,19 @@ typedef struct _debugInfo {
 typedef void (*OnNodeActivated)(struct _sheet *sheet, size_t nodeIndex);
 
 /**
- * \typedef void (*OnExecutionWireActivated)(Sheet *sheet, Wire wire)
+ * \typedef void (*OnExecutionWire)(Sheet *sheet, Wire wire)
  * \brief Called when an execution wire is activated during a debugging session.
  */
-typedef void (*OnExecutionWireActivated)(struct _sheet *sheet,
-                                         Wire wire);
+typedef void (*OnExecutionWire)(struct _sheet *sheet, Wire wire);
+
+/**
+ * \typedef void (*OnWireValue)(Sheet *sheet, Wire wire, DType type,
+ *                              LexData value)
+ * \brief Called when a value is transfered over a wire during a debugging
+ * session.
+ */
+typedef void (*OnWireValue)(struct _sheet *sheet, Wire wire, DType type,
+                            LexData value);
 
 /**
  * \struct _debugSession
@@ -107,7 +132,8 @@ typedef struct _debugSession {
     struct _sheet *sheet;
 
     OnNodeActivated onNodedActivated;
-    OnExecutionWireActivated onExecutionWireActivated;
+    OnExecutionWire onExecutionWire;
+    OnWireValue onWireValue;
 } DebugSession;
 
 /*
@@ -116,7 +142,9 @@ typedef struct _debugSession {
 
 /**
  * \fn DebugSession d_debug_create_session(Sheet *sheet,
- *                                         OnNodeActivated onNodeActivated)
+ *                                         OnNodeActivated onNodeActivated,
+ *                                         OnExecutionWire onExecutionWire,
+ *                                         OnWireValue onWireValue)
  * \brief Create a debugging session.
  *
  * \return A debugging session in it's starting state.
@@ -125,13 +153,13 @@ typedef struct _debugSession {
  * \param onNodeActivated A pointer to a function that is called when a
  * debuggable node is activated during the session. If NULL, the function is
  * not called.
- * \param onExecutionWireActivated A pointer to a function that is called when
- * an execution wire is activated during the session. If NULL, the function is
+ * \param onExecutionWire A pointer to a function that is called when an
+ * execution wire is activated during the session. If NULL, the function is
  * not called.
  */
-DECISION_API DebugSession
-d_debug_create_session(struct _sheet *sheet, OnNodeActivated onNodeActivated,
-                       OnExecutionWireActivated onExecutionWireActivated);
+DECISION_API DebugSession d_debug_create_session(
+    struct _sheet *sheet, OnNodeActivated onNodeActivated,
+    OnExecutionWire onExecutionWire, OnWireValue onWireValue);
 
 /**
  * \fn void d_debug_continue_session(DebugSession *session)

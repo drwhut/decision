@@ -94,10 +94,14 @@ void onNodeActivated(Sheet *sheet, size_t nodeIndex) {
     printf("Node %zu activated!\n", nodeIndex);
 }
 
-void onExecutionWireActivated(Sheet *sheet, Wire wire) {
+void onExecutionWire(Sheet *sheet, Wire wire) {
     printf("Execution wire activated! (%zu, %zu) -> (%zu, %zu)\n",
            wire.socketFrom.nodeIndex, wire.socketFrom.socketIndex,
            wire.socketTo.nodeIndex, wire.socketTo.socketIndex);
+}
+
+void onWireValue(Sheet *sheet, Wire wire, DType type, LexData value) {
+    printf("Value %d!\n", value.integerValue);
 }
 
 int main(int argc, char *argv[]) {
@@ -114,16 +118,20 @@ int main(int argc, char *argv[]) {
 
     InsExecInfo insExec[] = {{7, 0}};
 
+    InsValueInfo insValue[] = {{5, 1, 0}, {7, 3, 0}};
+
     DebugInfo debugInfo;
-    debugInfo.insNodeInfoList = insNode;
-    debugInfo.insNodeInfoSize = 3;
-    debugInfo.insExecInfoList = insExec;
-    debugInfo.insExecInfoSize = 1;
+    debugInfo.insNodeInfoList  = insNode;
+    debugInfo.insNodeInfoSize  = 3;
+    debugInfo.insExecInfoList  = insExec;
+    debugInfo.insExecInfoSize  = 1;
+    debugInfo.insValueInfoList = insValue;
+    debugInfo.insValueInfoSize = 2;
 
     sheet->_debugInfo = debugInfo;
 
-    DebugSession session = d_debug_create_session(sheet, &onNodeActivated,
-                                                  &onExecutionWireActivated);
+    DebugSession session = d_debug_create_session(
+        sheet, &onNodeActivated, &onExecutionWire, &onWireValue);
 
     d_debug_continue_session(&session);
 
