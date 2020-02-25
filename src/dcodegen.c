@@ -1648,6 +1648,17 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
 
                     loopAfterJump = d_generate_execution_node(
                         context, firstNodeIndex, false);
+
+                    // Say the first instruction of this bytecode activates the
+                    // execution wire between the For node and this node.
+                    if (context->debug) {
+                        InsExecInfo forExecInfo;
+                        forExecInfo.ins      = 0;
+                        forExecInfo.execWire = context->graph.wires[wireIndex];
+
+                        d_debug_add_exec_info(&(loopAfterJump.debugInfo),
+                                              forExecInfo);
+                    }
                 }
 
                 // Pop back to the index value.
@@ -1740,6 +1751,17 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
 
                     thenBranch = d_generate_execution_node(
                         context, firstNodeIndex, false);
+
+                    // Say the first instruction in this bytecode activates the
+                    // execution wire.
+                    if (context->debug) {
+                        InsExecInfo thenExecInfo;
+                        thenExecInfo.ins      = 0;
+                        thenExecInfo.execWire = context->graph.wires[wireIndex];
+
+                        d_debug_add_exec_info(&(thenBranch.debugInfo),
+                                              thenExecInfo);
+                    }
                 }
 
                 int thenTopDiff = context->stackTop - initStackTop;
@@ -1759,6 +1781,18 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
 
                         elseBranch = d_generate_execution_node(
                             context, firstNodeIndex, false);
+
+                        // Say the first instruction in this bytecode activates
+                        // the execution wire.
+                        if (context->debug) {
+                            InsExecInfo elseExecInfo;
+                            elseExecInfo.ins = 0;
+                            elseExecInfo.execWire =
+                                context->graph.wires[wireIndex];
+
+                            d_debug_add_exec_info(&(elseBranch.debugInfo),
+                                                  elseExecInfo);
+                        }
                     }
                 }
 
@@ -1965,6 +1999,18 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
                     context->stackTop--;
                     trueCode = d_generate_execution_node(context,
                                                          firstNodeIndex, false);
+
+                    // Say the first instruction of this bytecode activates the
+                    // execution wire between the While node and this node.
+                    if (context->debug) {
+                        InsExecInfo whileExecInfo;
+                        whileExecInfo.ins = 0;
+                        whileExecInfo.execWire =
+                            context->graph.wires[wireIndex];
+
+                        d_debug_add_exec_info(&(trueCode.debugInfo),
+                                              whileExecInfo);
+                    }
                 }
 
                 // After the loop has executed, we want to pop from the stack
