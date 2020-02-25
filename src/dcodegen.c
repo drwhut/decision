@@ -526,6 +526,21 @@ BCode d_push_input(BuildContext *context, NodeSocket socket, bool forceFloat) {
 
                 set_stack_index(context, socket, inputIndex);
             }
+
+            // Say that the first instruction after this bytecode represents
+            // sending the value over the wire (in the other direction).
+            if (context->debug) {
+                Wire forward;
+                forward.socketFrom = connSocket;
+                forward.socketTo   = socket;
+
+                InsValueInfo valueInfo;
+                valueInfo.ins        = out.size;
+                valueInfo.valueWire  = forward;
+                valueInfo.stackIndex = 0;
+
+                d_debug_add_value_info(&(out.debugInfo), valueInfo);
+            }
         }
     }
 

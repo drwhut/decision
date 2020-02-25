@@ -226,8 +226,12 @@ void d_debug_dump_info(DebugInfo debugInfo) {
             InsValueInfo valueInfo = debugInfo.insValueInfoList[i];
 
             printf("* Ins %zx transfers value @ index %d in stack over wire "
-                   "%zu.\n",
-                   valueInfo.ins, valueInfo.stackIndex, valueInfo.valueWire);
+                   "(Node %zu Socket %zu) -> (Node %zu Socket %zu).\n",
+                   valueInfo.ins, valueInfo.stackIndex,
+                   valueInfo.valueWire.socketFrom.nodeIndex,
+                   valueInfo.valueWire.socketFrom.socketIndex,
+                   valueInfo.valueWire.socketTo.nodeIndex,
+                   valueInfo.valueWire.socketTo.socketIndex);
         }
 
         printf("\n");
