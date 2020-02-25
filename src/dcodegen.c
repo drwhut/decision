@@ -746,6 +746,16 @@ BCode d_generate_operator(BuildContext *context, size_t nodeIndex, DIns opcode,
         d_free_bytecode(&subaction);
     }
 
+    // Say that the first instruction after the known inputs is the activation
+    // of this node.
+    if (context->debug) {
+        InsNodeInfo opNodeInfo;
+        opNodeInfo.ins  = out.size;
+        opNodeInfo.node = nodeIndex;
+
+        d_debug_add_node_info(&(out.debugInfo), opNodeInfo);
+    }
+
     DIns nonImmediateOpcode = (convertFloat) ? fopcode : opcode;
 
     while (socket.socketIndex < numInputs) {
@@ -831,6 +841,16 @@ BCode d_generate_comparator(BuildContext *context, size_t nodeIndex,
     }
 
     BCode out = d_push_node_inputs(context, nodeIndex, false, false, isFloat);
+
+    // Say that the first instruction after the inputs is the activation of
+    // this node.
+    if (context->debug) {
+        InsNodeInfo cmpNodeInfo;
+        cmpNodeInfo.ins  = out.size;
+        cmpNodeInfo.node = nodeIndex;
+
+        d_debug_add_node_info(&(out.debugInfo), cmpNodeInfo);
+    }
 
     if (isString) {
         // The SYS_STRCMP syscall will be used here.
@@ -1213,6 +1233,16 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
 
             BCode jumpToCode = d_bytecode_ins(OP_JRCONFI);
             d_bytecode_set_fimmediate(jumpToCode, 1, jmpAmt);
+
+            // Say that the first instruction after the boolean input is the
+            // activation of this node.
+            if (context->debug) {
+                InsNodeInfo ternaryNodeInfo;
+                ternaryNodeInfo.ins  = 0;
+                ternaryNodeInfo.node = nodeIndex;
+
+                d_debug_add_node_info(&(jumpToCode.debugInfo), ternaryNodeInfo);
+            }
 
             d_concat_bytecode(&out, &jumpToCode);
             d_free_bytecode(&jumpToCode);
@@ -1938,6 +1968,16 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
 
             default:
                 break;
+        }
+
+        // Say that the first instruction in action is when the execution node
+        // gets activated.
+        if (context->debug) {
+            InsNodeInfo execNodeInfo;
+            execNodeInfo.ins  = 0;
+            execNodeInfo.node = nodeIndex;
+
+            d_debug_add_node_info(&(action.debugInfo), execNodeInfo);
         }
 
         d_concat_bytecode(&out, &action);
