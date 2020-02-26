@@ -974,12 +974,25 @@ BCode d_generate_call(BuildContext *context, size_t nodeIndex) {
     LinkMeta meta = d_link_new_meta(linkType, nodeDef->name, metaData);
     d_add_link_to_ins(context, &call, 0, meta, &_dummyMeta, &_dummyBool);
 
-    // Set the call instruction to represent activating the node.
+    // Set the call instruction to represent activating the node, and calling.
     if (context->debug) {
         InsNodeInfo callNodeInfo;
         callNodeInfo.node = nodeIndex;
 
         d_debug_add_node_info(&(call.debugInfo), 0, callNodeInfo);
+
+        InsCallInfo callInfo;
+        callInfo.sheet = nameDef.sheet;
+        callInfo.isC   = (nameDef.type == NAME_CFUNCTION);
+
+        if (callInfo.isC) {
+            callInfo.funcDef = &(nameDef.definition.cFunction->definition);
+        } else {
+            callInfo.funcDef =
+                &(nameDef.definition.function->functionDefinition);
+        }
+
+        d_debug_add_call_info(&(call.debugInfo), 0, callInfo);
     }
 
     d_concat_bytecode(&out, &call);
@@ -1084,7 +1097,8 @@ BCode d_generate_return(BuildContext *context, size_t returnNodeIndex) {
         d_bytecode_set_byte(ret, 1, (char)numReturns);
     }
 
-    // Set the return instruction to represent activating the return node.
+    // Set the return instruction to represent activating the return node, and
+    // returning.
     if (context->debug) {
         InsNodeInfo returnNodeInfo;
         returnNodeInfo.node = returnNodeIndex;
@@ -1281,7 +1295,8 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
                 InsNodeInfo ternaryNodeInfo;
                 ternaryNodeInfo.node = nodeIndex;
 
-                d_debug_add_node_info(&(jumpToCode.debugInfo), 0, ternaryNodeInfo);
+                d_debug_add_node_info(&(jumpToCode.debugInfo), 0,
+                                      ternaryNodeInfo);
             }
 
             d_concat_bytecode(&out, &jumpToCode);

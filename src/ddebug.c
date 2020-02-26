@@ -139,6 +139,24 @@ void d_debug_add_node_info(DebugInfo *debugInfo, size_t ins,
 }
 
 /**
+ * \fn void d_debug_add_call_info(DebugInfo *debugInfo, size_t ins,
+ *                                InsCallInfo callInfo)
+ * \brief Add call information to a list of debug information.
+ *
+ * \param debugInfo The debug info to add the call info to.
+ * \param callInfo The call info to add.
+ */
+void d_debug_add_call_info(DebugInfo *debugInfo, size_t ins,
+                           InsCallInfo callInfo) {
+    InsDebugInfo insInfo;
+    insInfo.ins           = ins;
+    insInfo.infoType      = INFO_CALL;
+    insInfo.info.callInfo = callInfo;
+
+    add_ins_info(debugInfo, insInfo);
+}
+
+/**
  * \fn void d_debug_dump_info(DebugInfo debugInfo)
  * \brief Dump the debugging information to `stdout`.
  *
@@ -167,9 +185,7 @@ void d_debug_dump_info(DebugInfo debugInfo) {
             }
         }
 
-        printf("\n");
-
-        printf("Execution info:\n");
+        printf("\nExecution info:\n");
 
         for (size_t i = 0; i < debugInfo.debugInfoSize; i++) {
             InsDebugInfo insInfo = debugInfo.debugInfoList[i];
@@ -187,9 +203,7 @@ void d_debug_dump_info(DebugInfo debugInfo) {
             }
         }
 
-        printf("\n");
-
-        printf("Node info:\n");
+        printf("\nNode info:\n");
 
         for (size_t i = 0; i < debugInfo.debugInfoSize; i++) {
             InsDebugInfo insInfo = debugInfo.debugInfoList[i];
@@ -199,6 +213,19 @@ void d_debug_dump_info(DebugInfo debugInfo) {
 
                 printf("* Ins %zx activates node %zu.\n", insInfo.ins,
                        nodeInfo.node);
+            }
+        }
+
+        printf("\nCall info:\n");
+
+        for (size_t i = 0; i < debugInfo.debugInfoSize; i++) {
+            InsDebugInfo insInfo = debugInfo.debugInfoList[i];
+
+            if (insInfo.infoType == INFO_CALL) {
+                InsCallInfo callInfo = insInfo.info.callInfo;
+
+                printf("* Ins %zx calls %s defined in %s.\n", insInfo.ins,
+                       callInfo.funcDef->name, callInfo.sheet->filePath);
             }
         }
 
@@ -428,6 +455,36 @@ void d_debug_continue_session(DebugSession *session) {
                     nodeIndex++;
                 }
             }
+        }
+
+        // Is this instruction calling a function?
+        if (agenda.onCall) {
+            int callIndex = info_at_ins(debugInfo, ins, INFO_CALL);
+
+            if (callIndex >= 0) {
+                while (debugInfo.debugInfoList[callIndex].ins == ins &&
+                       callIndex < (int)debugInfo.debugInfoSize) {
+
+                    if (debugInfo.debugInfoList[callIndex].infoType ==
+                        INFO_CALL) {
+
+                        InsCallInfo callInfo =
+                            debugInfo.debugInfoList[callIndex].info.callInfo;
+
+                        agenda.onCall(callInfo.sheet, callInfo.funcDef,
+                                      callInfo.isC);
+                    }
+
+                    callIndex++;
+                }
+            }
+        }
+
+        // Is this instruction a return?
+        DIns opcode = *(vm->pc);
+
+        if ((opcode == OP_RET || opcode == OP_RETN) && agenda.onReturn) {
+            agenda.onReturn();
         }
 
         d_vm_parse_ins_at_pc(vm);

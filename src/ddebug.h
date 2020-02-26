@@ -252,6 +252,17 @@ DECISION_API void d_debug_add_node_info(DebugInfo *debugInfo, size_t ins,
                                         InsNodeInfo nodeInfo);
 
 /**
+ * \fn void d_debug_add_call_info(DebugInfo *debugInfo, size_t ins,
+ *                                InsCallInfo callInfo)
+ * \brief Add call information to a list of debug information.
+ * 
+ * \param debugInfo The debug info to add the call info to.
+ * \param callInfo The call info to add.
+ */
+DECISION_API void d_debug_add_call_info(DebugInfo *debugInfo, size_t ins,
+                                        InsCallInfo callInfo);
+
+/**
  * \fn void d_debug_dump_info(DebugInfo debugInfo)
  * \brief Dump the debugging information to `stdout`.
  *

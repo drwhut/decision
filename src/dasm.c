@@ -203,6 +203,9 @@ void d_concat_bytecode(BCode *base, BCode *after) {
                 } else if (debugInfo.infoType == INFO_NODE) {
                     InsNodeInfo nodeInfo = debugInfo.info.nodeInfo;
                     d_debug_add_node_info(&(base->debugInfo), ins, nodeInfo);
+                } else if (debugInfo.infoType == INFO_CALL) {
+                    InsCallInfo callInfo = debugInfo.info.callInfo;
+                    d_debug_add_call_info(&(base->debugInfo), ins, callInfo);
                 }
             }
         }
