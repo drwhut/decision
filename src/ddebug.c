@@ -552,6 +552,7 @@ bool d_debug_continue_session(DebugSession *session) {
                 case OP_CALLRH:
                 case OP_CALLRF:
                     session->sheetStack[session->stackPtr].numInternalCalls++;
+                    break;
                 default:
                     break;
             }

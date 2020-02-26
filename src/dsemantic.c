@@ -1694,9 +1694,36 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
             // If we know our output needs to be a Float, set it now. (Except if
             // it is a divide.)
             if (coreFunc != CORE_DIVIDE) {
+                DType confirmedType = (hasFloatInput) ? TYPE_FLOAT : TYPE_INT;
                 sheet->graph.nodes[outputSocket.nodeIndex]
-                    .reducedTypes[outputSocket.socketIndex] =
-                    (hasFloatInput) ? TYPE_FLOAT : TYPE_INT;
+                    .reducedTypes[outputSocket.socketIndex] = confirmedType;
+
+                // Now we need to check if the type we just set is incompatible
+                // with any of the connections.
+                int wireIndex = d_wire_find_first(sheet->graph, outputSocket);
+
+                while (IS_WIRE_FROM(sheet->graph, wireIndex, outputSocket)) {
+                    NodeSocket connSocket =
+                        sheet->graph.wires[wireIndex].socketTo;
+                    SocketMeta meta =
+                        d_get_socket_meta(sheet->graph, connSocket);
+
+                    if ((confirmedType & meta.type) == 0) {
+                        Node node = sheet->graph.nodes[nodeIndex];
+                        Node connNode =
+                            sheet->graph.nodes[connSocket.nodeIndex];
+
+                        ERROR_COMPILER(
+                            sheet->filePath, node.lineNum, true,
+                            "Output socket of %s node has reduced type to %s, "
+                            "which is incompatible with the connected socket "
+                            "in %s, which has type %s",
+                            node.definition->name, d_type_name(confirmedType),
+                            connNode.definition->name, d_type_name(meta.type));
+                    }
+
+                    wireIndex++;
+                }
             }
 
             // If we've gotten all of our inputs reduced, we can say we are

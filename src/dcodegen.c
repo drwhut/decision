@@ -686,7 +686,7 @@ BCode d_push_node_inputs(BuildContext *context, size_t nodeIndex, bool order,
                     d_concat_bytecode(&out, &get);
                     d_free_bytecode(&get);
 
-                    set_stack_index(context, socket, context->stackTop);
+                    set_stack_index(context, socket, ++context->stackTop);
                 }
             }
 
@@ -1682,7 +1682,7 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
 
                 context->stackTop = stackTopBeforeLoop;
 
-                // Get the step value, and add it on to the index value.v
+                // Get the step value, and add it on to the index value.
                 bool addImmediate = false;
                 DIns addOp;
 

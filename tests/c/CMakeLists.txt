@@ -46,6 +46,9 @@ include_directories(${PROJECT_SOURCE_DIR}/src)
 add_executable(TestCFromDecision c_from_decision.c)
 link_with_decision(TestCFromDecision)
 
+add_executable(TestDebugging debugging.c)
+link_with_decision(TestDebugging)
+
 add_executable(TestDecisionFiles decision_files.c)
 link_with_decision(TestDecisionFiles)
 

@@ -65,6 +65,7 @@ from freeing the sheet when they are freed.
   you to provide node and wire breakpoints.
   * You can then run debug sessions, which essentially simulates running the
   Decision VM.
+  * A C test has been added to test this functionality.
 
 ## Refactoring
 
@@ -99,6 +100,11 @@ dedicating itself to a syntax definition.
 * Wires are stored in an ordered list, rather than as direct pointers, to
 reduce the number of memory allocations and to remove the potential for
 dangling pointers.
+
+## Bug Fixes
+
+* Fixed a bug where reduced types were no longer compatible with their
+connected sockets, but the compiler didn't throw an error.
 
 # Decision v0.2.0 - 16th January 2020
 
