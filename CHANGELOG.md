@@ -54,6 +54,18 @@ loaded before any compilation happens.
 * Sheets now have an `allowFree` property that stops sheets that include it
 from freeing the sheet when they are freed.
 
+## Debugging
+
+* The ability to debug Decision sheets has now been added, and can be done
+  through the C API (see [ddebug.h](src/ddebug.h)).
+  * If compiling in debug mode, code generation will store information about
+  instructions in the bytecode, and optimisation will no longer occur.
+  * You can provide agendas to debugging sessions, which allows you to give
+  function pointers which are called when certain events happen, and also allows
+  you to provide node and wire breakpoints.
+  * You can then run debug sessions, which essentially simulates running the
+  Decision VM.
+
 ## Refactoring
 
 * Split large source files into smaller ones to improve code readability.
