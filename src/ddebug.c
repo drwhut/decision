@@ -359,19 +359,23 @@ static int info_at_ins(DebugInfo debugInfo, size_t ins, InsInfoType type) {
 }
 
 /**
- * \fn void d_debug_continue_session(DebugSession *session)
+ * \fn bool d_debug_continue_session(DebugSession *session)
  * \brief Continue a debugging session until either a breakpoint is hit, or the
  * VM halts.
  *
+ * \return True if the debugger hit a breakpoint, false if the VM halted.
+ *
  * \param session The session to continue.
  */
-void d_debug_continue_session(DebugSession *session) {
+bool d_debug_continue_session(DebugSession *session) {
     DVM *vm = &(session->vm);
 
     DebugAgenda agenda = session->agenda;
 
+    bool breakpointHit = false;
+
     // This will be very similar to d_vm_run.
-    while (!vm->halted) {
+    while (!vm->halted && !breakpointHit) {
 
         // Get the current sheet from the sheet stack.
         Sheet *sheet = session->sheetStack[session->stackPtr].sheet;
@@ -384,72 +388,122 @@ void d_debug_continue_session(DebugSession *session) {
         DebugInfo debugInfo = sheet->_debugInfo;
 
         // Does this instruction transfer a value over a wire?
-        if (agenda.onWireValue) {
-            int valueIndex = info_at_ins(debugInfo, ins, INFO_VALUE);
+        int valueIndex = info_at_ins(debugInfo, ins, INFO_VALUE);
 
-            if (valueIndex >= 0) {
-                // If the index is valid, keep going through each of the items
-                // with the same instruction in case there are more.
-                while (valueIndex < (int)debugInfo.debugInfoSize &&
-                       debugInfo.debugInfoList[valueIndex].ins == ins) {
+        if (valueIndex >= 0) {
+            // If the index is valid, keep going through each of the items
+            // with the same instruction in case there are more.
+            while (valueIndex < (int)debugInfo.debugInfoSize &&
+                   debugInfo.debugInfoList[valueIndex].ins == ins) {
 
-                    if (debugInfo.debugInfoList[valueIndex].infoType ==
-                        INFO_VALUE) {
+                if (debugInfo.debugInfoList[valueIndex].infoType ==
+                    INFO_VALUE) {
 
-                        InsValueInfo valueInfo =
-                            debugInfo.debugInfoList[valueIndex].info.valueInfo;
+                    InsValueInfo valueInfo =
+                        debugInfo.debugInfoList[valueIndex].info.valueInfo;
 
-                        Wire wire = valueInfo.valueWire;
-                        const SocketMeta meta =
-                            d_get_socket_meta(sheet->graph, wire.socketFrom);
-                        DType type    = meta.type;
-                        LexData value = {0};
+                    Wire wire = valueInfo.valueWire;
+                    const SocketMeta meta =
+                        d_get_socket_meta(sheet->graph, wire.socketFrom);
+                    DType type    = meta.type;
+                    LexData value = {0};
 
-                        if (type == TYPE_INT) {
-                            value.integerValue =
-                                d_vm_get(&(session->vm), valueInfo.stackIndex);
-                        } else if (type == TYPE_FLOAT) {
-                            value.floatValue = d_vm_get_float(
-                                &(session->vm), valueInfo.stackIndex);
-                        } else if (type == TYPE_STRING) {
-                            value.stringValue = d_vm_get_ptr(
-                                &(session->vm), valueInfo.stackIndex);
-                        } else if (type == TYPE_BOOL) {
-                            value.booleanValue =
-                                d_vm_get(&(session->vm), valueInfo.stackIndex);
-                        }
+                    if (type == TYPE_INT) {
+                        value.integerValue =
+                            d_vm_get(&(session->vm), valueInfo.stackIndex);
+                    } else if (type == TYPE_FLOAT) {
+                        value.floatValue = d_vm_get_float(&(session->vm),
+                                                          valueInfo.stackIndex);
+                    } else if (type == TYPE_STRING) {
+                        value.stringValue =
+                            d_vm_get_ptr(&(session->vm), valueInfo.stackIndex);
+                    } else if (type == TYPE_BOOL) {
+                        value.booleanValue =
+                            d_vm_get(&(session->vm), valueInfo.stackIndex);
+                    }
 
+                    if (agenda.onWireValue) {
                         agenda.onWireValue(sheet, wire, type, value);
                     }
 
-                    valueIndex++;
+                    if (agenda.wireBreakpoints != NULL) {
+                        DebugWireBreakpoint *wireBreakpoint =
+                            agenda.wireBreakpoints;
+
+                        while (wireBreakpoint->sheet != NULL) {
+                            if (d_wire_cmp(wire, wireBreakpoint->wire) == 0) {
+                                if (agenda.onWireBreakpoint) {
+                                    agenda.onWireBreakpoint(sheet, wire);
+                                }
+
+                                breakpointHit = true;
+                            }
+
+                            wireBreakpoint++;
+                        }
+                    }
                 }
+
+                valueIndex++;
             }
         }
 
         // Does this instruction activate an execution wire?
-        if (agenda.onExecutionWire) {
-            int execIndex = info_at_ins(debugInfo, ins, INFO_EXEC);
+        int execIndex = info_at_ins(debugInfo, ins, INFO_EXEC);
 
-            if (execIndex >= 0) {
+        if (execIndex >= 0) {
 
-                InsExecInfo execInfo =
-                    debugInfo.debugInfoList[execIndex].info.execInfo;
+            InsExecInfo execInfo =
+                debugInfo.debugInfoList[execIndex].info.execInfo;
 
+            if (agenda.onExecutionWire) {
                 agenda.onExecutionWire(sheet, execInfo.execWire);
+            }
+
+            if (agenda.wireBreakpoints != NULL) {
+                DebugWireBreakpoint *wireBreakpoint = agenda.wireBreakpoints;
+
+                while (wireBreakpoint->sheet != NULL) {
+                    if (d_wire_cmp(execInfo.execWire, wireBreakpoint->wire) ==
+                        0) {
+                        if (agenda.onWireBreakpoint) {
+                            agenda.onWireBreakpoint(sheet, execInfo.execWire);
+                        }
+
+                        breakpointHit = true;
+                    }
+
+                    wireBreakpoint++;
+                }
             }
         }
 
         // Is this instruction entering a new node?
-        if (agenda.onNodedActivated) {
-            int nodeIndex = info_at_ins(debugInfo, ins, INFO_NODE);
+        int nodeIndex = info_at_ins(debugInfo, ins, INFO_NODE);
 
-            if (nodeIndex >= 0) {
+        if (nodeIndex >= 0) {
 
-                InsNodeInfo nodeInfo =
-                    debugInfo.debugInfoList[nodeIndex].info.nodeInfo;
+            InsNodeInfo nodeInfo =
+                debugInfo.debugInfoList[nodeIndex].info.nodeInfo;
 
+            if (agenda.onNodedActivated) {
                 agenda.onNodedActivated(sheet, nodeInfo.node);
+            }
+
+            if (agenda.nodeBreakpoints != NULL) {
+                DebugNodeBreakpoint *nodeBreakpoint = agenda.nodeBreakpoints;
+
+                while (nodeBreakpoint->sheet != NULL) {
+                    if (nodeInfo.node == nodeBreakpoint->nodeIndex) {
+                        if (agenda.onNodeBreakpoint) {
+                            agenda.onNodeBreakpoint(sheet, nodeInfo.node);
+
+                            breakpointHit = true;
+                        }
+                    }
+
+                    nodeBreakpoint++;
+                }
             }
         }
 
@@ -469,7 +523,7 @@ void d_debug_continue_session(DebugSession *session) {
                 if (session->stackPtr >= DEBUG_SHEET_STACK_SIZE) {
                     printf(
                         "Error: The debugger has hit the sheet stack limit\n");
-                    return;
+                    return false;
                 }
 
                 DebugStackEntry newEntry;
@@ -523,6 +577,7 @@ void d_debug_continue_session(DebugSession *session) {
     }
 
     // TODO: Have a way of knowing if the VM errored.
+    return breakpointHit;
 }
 
 /**

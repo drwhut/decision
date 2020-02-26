@@ -180,9 +180,46 @@ typedef void (*OnCall)(struct _sheet *sheet,
 typedef void (*OnReturn)();
 
 /**
+ * \typedef void (*OnNodeBreakpoint)(Sheet *sheet, size_t nodeIndex)
+ * \brief Called when a node breakpoint is hit.
+ */
+typedef void (*OnNodeBreakpoint)(struct _sheet *sheet, size_t nodeIndex);
+
+/**
+ * \typedef void (*OnWireBreakpoint)(Sheet *sheet, Wire wire)
+ * \brief Called when a wire breakpoint is hit.
+ */
+typedef void (*OnWireBreakpoint)(struct _sheet *sheet, Wire wire);
+
+/**
+ * \struct _debugNodeBreakpoint
+ * \brief Describes a node breakpoint.
+ *
+ * \typedef struct _debugNodeBreakpoint DebugNodeBreakpoint
+ */
+typedef struct _debugNodeBreakpoint {
+    struct _sheet *sheet;
+    size_t nodeIndex;
+} DebugNodeBreakpoint;
+
+/**
+ * \struct _debugWireBreakpoint
+ * \brief Describes a wire breakpoint.
+ *
+ * \typedef struct _debugWireBreakpoint DebugWireBreakpoint
+ */
+typedef struct _debugWireBreakpoint {
+    struct _sheet *sheet;
+    Wire wire;
+} DebugWireBreakpoint;
+
+/**
  * \struct _debugAgenda
  * \brief Describes the "agenda" of how a debugging session should handle
  * certain events.
+ *
+ * **NOTE:** The breakpoint arrays can themselves be NULL, but if they aren't,
+ * they should be terminated with an entry with a NULL sheet pointer.
  *
  * \typedef struct _debugAgenda DebugAgenda
  */
@@ -192,15 +229,20 @@ typedef struct _debugAgenda {
     OnNodeActivated onNodedActivated;
     OnCall onCall;
     OnReturn onReturn;
+    OnNodeBreakpoint onNodeBreakpoint;
+    OnWireBreakpoint onWireBreakpoint;
+
+    DebugNodeBreakpoint *nodeBreakpoints;
+    DebugWireBreakpoint *wireBreakpoints;
 } DebugAgenda;
 
 /**
  * \def NO_AGENDA
  * \brief An empty agenda, i.e. nothing will happen when debugging.
  */
-#define NO_AGENDA                    \
-    (DebugAgenda) {                  \
-        NULL, NULL, NULL, NULL, NULL \
+#define NO_AGENDA                                            \
+    (DebugAgenda) {                                          \
+        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL \
     }
 
 /**
@@ -318,13 +360,15 @@ DECISION_API DebugSession d_debug_create_session(struct _sheet *sheet,
                                                  DebugAgenda agenda);
 
 /**
- * \fn void d_debug_continue_session(DebugSession *session)
+ * \fn bool d_debug_continue_session(DebugSession *session)
  * \brief Continue a debugging session until either a breakpoint is hit, or the
  * VM halts.
  *
+ * \return True if the debugger hit a breakpoint, false if the VM halted.
+ *
  * \param session The session to continue.
  */
-DECISION_API void d_debug_continue_session(DebugSession *session);
+DECISION_API bool d_debug_continue_session(DebugSession *session);
 
 /**
  * \fn void d_debug_stop_session(DebugSession *session)

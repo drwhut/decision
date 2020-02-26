@@ -116,17 +116,38 @@ void onReturn() {
     printf("Returning!\n");
 }
 
+void onNodeBreakpoint(Sheet *sheet, size_t nodeIndex) {
+    printf("NODE BREAKPOINT: %zu\n", nodeIndex);
+}
+
+void onWireBreakpoint(Sheet *sheet, Wire wire) {
+    printf("WIRE BREAKPOINT: (%zu, %zu) -> (%zu, %zu)\n",
+           wire.socketFrom.nodeIndex, wire.socketFrom.socketIndex,
+           wire.socketTo.nodeIndex, wire.socketTo.socketIndex);
+}
+
 int main(int argc, char *argv[]) {
 
     CompileOptions options = DEFAULT_COMPILE_OPTIONS;
     options.debug          = true;
 
     // TEMP
-    Sheet *sheet = d_load_file("../../tests/include/main_compiled.dc", &options);
+    Sheet *sheet =
+        d_load_file("../../tests/examples/factorial.dc", &options);
 
     d_sheet_dump(sheet);
     d_asm_dump_all(sheet);
     d_debug_dump_info(sheet->_debugInfo);
+
+    DebugNodeBreakpoint nodeBreaks[] = {
+        {sheet, 16},
+        {NULL, 0}
+    };
+
+    DebugWireBreakpoint wireBreaks[] = {
+        {sheet, {{5, 3}, {6, 1}}},
+        {NULL, {{0, 0}, {0, 0}}}
+    };
 
     DebugAgenda agenda      = NO_AGENDA;
     agenda.onWireValue      = &onWireValue;
@@ -134,10 +155,17 @@ int main(int argc, char *argv[]) {
     agenda.onNodedActivated = &onNodeActivated;
     agenda.onCall           = &onCall;
     agenda.onReturn         = &onReturn;
+    agenda.onNodeBreakpoint = &onNodeBreakpoint;
+    agenda.onWireBreakpoint = &onWireBreakpoint;
+
+    agenda.nodeBreakpoints = nodeBreaks;
+    agenda.wireBreakpoints = wireBreaks;
 
     DebugSession session = d_debug_create_session(sheet, agenda);
 
-    d_debug_continue_session(&session);
+    while (d_debug_continue_session(&session)) {
+        printf("BREAKPOINT HIT!\n");
+    }
 
     d_debug_stop_session(&session);
 
