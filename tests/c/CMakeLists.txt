@@ -63,6 +63,7 @@ link_with_decision(TestDecisionStrings)
 
 # Defining the CMake tests.
 add_test(NAME TestCFromDecision COMMAND TestCFromDecision)
+add_test(NAME TestDebugging COMMAND TestDebugging)
 add_test(NAME TestDecisionFiles COMMAND TestDecisionFiles)
 add_test(NAME TestDecisionFromC COMMAND TestDecisionFromC)
 add_test(NAME TestDecisionObjects COMMAND TestDecisionObjects)
