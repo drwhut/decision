@@ -337,51 +337,6 @@ static int info_at_ins(DebugInfo debugInfo, size_t ins, InsInfoType type) {
 }
 
 /**
- * \fn static int value_at_ins(DebugInfo debugInfo, size_t ins)
- * \brief Given an instruction, return the first index with value wire
- * information about it.
- *
- * \return An index to the value wire info at that instruction, -1 if there
- * is no info at that instruction.
- *
- * \param debugInfo The debug info to query.
- * \param ins The instruction to query.
- */
-static int value_at_ins(DebugInfo debugInfo, size_t ins) {
-    return info_at_ins(debugInfo, ins, INFO_VALUE);
-}
-
-/**
- * \fn static int exec_at_ins(DebugInfo debugInfo, size_t ins)
- * \brief Given an instruction, return the first index with execution wire
- * information about it.
- *
- * \return An index to the execution wire info at that instruction, -1 if
- * there is no info at that instruction.
- *
- * \param debugInfo The debug info to query.
- * \param ins The instruction to query.
- */
-static int exec_at_ins(DebugInfo debugInfo, size_t ins) {
-    return info_at_ins(debugInfo, ins, INFO_EXEC);
-}
-
-/**
- * \fn static int node_at_ins(DebugInfo debugInfo, size_t ins)
- * \brief Given an instruction, return the first index with node information
- * about it.
- *
- * \return An index to the node info at that instruction, -1 if there is no
- * information at that instruction.
- *
- * \param debugInfo The debug info to query.
- * \param ins The instruction to query.
- */
-static int node_at_ins(DebugInfo debugInfo, size_t ins) {
-    return info_at_ins(debugInfo, ins, INFO_NODE);
-}
-
-/**
  * \fn void d_debug_continue_session(DebugSession *session)
  * \brief Continue a debugging session until either a breakpoint is hit, or the
  * VM halts.
@@ -401,7 +356,7 @@ void d_debug_continue_session(DebugSession *session) {
 
         // Does this instruction transfer a value over a wire?
         if (session->onWireValue) {
-            int valueIndex = value_at_ins(debugInfo, ins);
+            int valueIndex = info_at_ins(debugInfo, ins, INFO_VALUE);
 
             if (valueIndex >= 0) {
                 // If the index is valid, keep going through each of the items
@@ -445,7 +400,7 @@ void d_debug_continue_session(DebugSession *session) {
 
         // Does this instruction activate an execution wire?
         if (session->onExecutionWire) {
-            int execIndex = exec_at_ins(debugInfo, ins);
+            int execIndex = info_at_ins(debugInfo, ins, INFO_EXEC);
 
             if (execIndex >= 0) {
                 while (debugInfo.debugInfoList[execIndex].ins == ins &&
@@ -468,7 +423,7 @@ void d_debug_continue_session(DebugSession *session) {
 
         // Is this instruction entering a new node?
         if (session->onNodedActivated) {
-            int nodeIndex = node_at_ins(debugInfo, ins);
+            int nodeIndex = info_at_ins(debugInfo, ins, INFO_NODE);
 
             if (nodeIndex >= 0) {
                 while (debugInfo.debugInfoList[nodeIndex].ins == ins &&
