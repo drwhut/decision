@@ -25,191 +25,117 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* TODO: Find a way to combine the next 3 functions. */
+/**
+ * \fn static void add_ins_info(DebugInfo *debugInfo, InsDebugInfo insInfo)
+ * \brief Add instruction debugging information to a collection of debug
+ * information such that it is sorted in ascending order of instruction
+ * indexes.
+ *
+ * \param debugInfo The collection of debugging info to add to.
+ * \param insInfo The instruction information to add.
+ */
+static void add_ins_info(DebugInfo *debugInfo, InsDebugInfo insInfo) {
+    if (debugInfo == NULL) {
+        return;
+    }
+
+    /// The list is being sorted in ascending order of instruction, so we need
+    // to insert it into the correct position.
+    // NOTE: This will be very similar to add_edge in dgraph.c
+    if (debugInfo->debugInfoList == NULL) {
+        debugInfo->debugInfoSize    = 1;
+        debugInfo->debugInfoList    = d_malloc(sizeof(InsDebugInfo));
+        *(debugInfo->debugInfoList) = insInfo;
+    } else {
+        // Use binary insertion, since the list should be sorted!
+        int left   = 0;
+        int right  = (int)debugInfo->debugInfoSize - 1;
+        int middle = (left + right) / 2;
+
+        while (left <= right) {
+            middle = (left + right) / 2;
+
+            if (insInfo.ins > debugInfo->debugInfoList[middle].ins) {
+                left = middle + 1;
+            } else if (insInfo.ins < debugInfo->debugInfoList[middle].ins) {
+                right = middle - 1;
+            } else {
+                break;
+            }
+        }
+
+        if (insInfo.ins > debugInfo->debugInfoList[middle].ins) {
+            middle++;
+        }
+
+        debugInfo->debugInfoSize++;
+        debugInfo->debugInfoList =
+            d_realloc(debugInfo->debugInfoList,
+                      debugInfo->debugInfoSize * sizeof(InsDebugInfo));
+
+        if (middle < (int)debugInfo->debugInfoSize - 1) {
+            memmove(debugInfo->debugInfoList + middle + 1,
+                    debugInfo->debugInfoList + middle,
+                    (debugInfo->debugInfoSize - middle - 1) *
+                        sizeof(InsDebugInfo));
+        }
+
+        debugInfo->debugInfoList[middle] = insInfo;
+    }
+}
 
 /**
- * \fn void d_debug_add_value_info(DebugInfo *debugInfo, InsValueInfo valueInfo)
+ * \fn void d_debug_add_value_info(DebugInfo *debugInfo, size_t ins,
+ *                                 InsValueInfo valueInfo)
  * \brief Add value information to a list of debug information.
  *
  * \param debugInfo The debug info to add the value info to.
  * \param valueInfo The value info to add.
  */
-void d_debug_add_value_info(DebugInfo *debugInfo, InsValueInfo valueInfo) {
-    if (debugInfo == NULL) {
-        return;
-    }
+void d_debug_add_value_info(DebugInfo *debugInfo, size_t ins,
+                            InsValueInfo valueInfo) {
+    InsDebugInfo insInfo;
+    insInfo.ins            = ins;
+    insInfo.infoType       = INFO_VALUE;
+    insInfo.info.valueInfo = valueInfo;
 
-    // NOTE: The list of InsValueInfo should be in order of instructions.
-    // NOTE: This is very similar to add_edge in dgraph.c, since that has to
-    // add wires in a sorted list.
-    if (debugInfo->insValueInfoList == NULL) {
-        debugInfo->insValueInfoSize    = 1;
-        debugInfo->insValueInfoList    = d_malloc(sizeof(InsValueInfo));
-        *(debugInfo->insValueInfoList) = valueInfo;
-    } else {
-        // Use binary insertion, since the list should be sorted!
-        int left   = 0;
-        int right  = (int)debugInfo->insValueInfoSize - 1;
-        int middle = (left + right) / 2;
-
-        while (left <= right) {
-            middle = (left + right) / 2;
-
-            if (valueInfo.ins > debugInfo->insValueInfoList[middle].ins) {
-                left = middle + 1;
-            } else if (valueInfo.ins <
-                       debugInfo->insValueInfoList[middle].ins) {
-                right = middle - 1;
-            } else {
-                break;
-            }
-        }
-
-        if (valueInfo.ins > debugInfo->insValueInfoList[middle].ins) {
-            middle++;
-        }
-
-        // Even if two entries point to the same instruction, that's fine.
-        debugInfo->insValueInfoSize++;
-        debugInfo->insValueInfoList =
-            d_realloc(debugInfo->insValueInfoList,
-                      debugInfo->insValueInfoSize * sizeof(InsValueInfo));
-
-        if (middle < (int)debugInfo->insValueInfoSize - 1) {
-            memmove(debugInfo->insValueInfoList + middle + 1,
-                    debugInfo->insValueInfoList + middle,
-                    (debugInfo->insValueInfoSize - middle - 1) *
-                        sizeof(InsValueInfo));
-        }
-
-        debugInfo->insValueInfoList[middle] = valueInfo;
-    }
+    add_ins_info(debugInfo, insInfo);
 }
 
 /**
- * \fn void d_debug_add_exec_info(DebugInfo *debugInfo, InsExecInfo execInfo)
+ * \fn void d_debug_add_exec_info(DebugInfo *debugInfo, size_t ins,
+ *                                InsExecInfo execInfo)
  * \brief Add execution information to a list of debug information.
  *
  * \param debugInfo The debug into to add the execution info to.
  * \param execInfo The execution info to add.
  */
-void d_debug_add_exec_info(DebugInfo *debugInfo, InsExecInfo execInfo) {
-    if (debugInfo == NULL) {
-        return;
-    }
+void d_debug_add_exec_info(DebugInfo *debugInfo, size_t ins,
+                           InsExecInfo execInfo) {
+    InsDebugInfo insInfo;
+    insInfo.ins           = ins;
+    insInfo.infoType      = INFO_EXEC;
+    insInfo.info.execInfo = execInfo;
 
-    // NOTE: The list of InsExecInfo should be in order of instructions.
-    // NOTE: This is very similar to add_edge in dgraph.c, since that has to
-    // add wires in a sorted list.
-    if (debugInfo->insExecInfoList == NULL) {
-        debugInfo->insExecInfoSize    = 1;
-        debugInfo->insExecInfoList    = d_malloc(sizeof(InsExecInfo));
-        *(debugInfo->insExecInfoList) = execInfo;
-    } else {
-        // Use binary insertion, since the list should be sorted!
-        int left   = 0;
-        int right  = (int)debugInfo->insExecInfoSize - 1;
-        int middle = (left + right) / 2;
-
-        while (left <= right) {
-            middle = (left + right) / 2;
-
-            if (execInfo.ins > debugInfo->insExecInfoList[middle].ins) {
-                left = middle + 1;
-            } else if (execInfo.ins < debugInfo->insExecInfoList[middle].ins) {
-                right = middle - 1;
-            } else {
-                break;
-            }
-        }
-
-        if (execInfo.ins > debugInfo->insExecInfoList[middle].ins) {
-            middle++;
-        }
-
-        // We can't activate two execution wires with the same instruction!
-        // If this node info has the same instruction, replace the entry in the
-        // list.
-        if (middle >= (int)debugInfo->insExecInfoSize ||
-            execInfo.ins != debugInfo->insExecInfoList[middle].ins) {
-            debugInfo->insExecInfoSize++;
-            debugInfo->insExecInfoList =
-                d_realloc(debugInfo->insExecInfoList,
-                          debugInfo->insExecInfoSize * sizeof(InsExecInfo));
-
-            if (middle < (int)debugInfo->insExecInfoSize - 1) {
-                memmove(debugInfo->insExecInfoList + middle + 1,
-                        debugInfo->insExecInfoList + middle,
-                        (debugInfo->insExecInfoSize - middle - 1) *
-                            sizeof(InsExecInfo));
-            }
-        }
-
-        debugInfo->insExecInfoList[middle] = execInfo;
-    }
+    add_ins_info(debugInfo, insInfo);
 }
 
 /**
- * \fn void d_debug_add_node_info(DebugInfo *debugInfo, InsNodeInfo nodeInfo)
+ * \fn void d_debug_add_node_info(DebugInfo *debugInfo, size_t ins,
+ *                                InsNodeInfo nodeInfo)
  * \brief Add node information to a list of debug information.
  *
  * \param debugInfo The debug info to add the node info to.
  * \param nodeInfo The node info to add.
  */
-void d_debug_add_node_info(DebugInfo *debugInfo, InsNodeInfo nodeInfo) {
-    if (debugInfo == NULL) {
-        return;
-    }
+void d_debug_add_node_info(DebugInfo *debugInfo, size_t ins,
+                           InsNodeInfo nodeInfo) {
+    InsDebugInfo insInfo;
+    insInfo.ins           = ins;
+    insInfo.infoType      = INFO_NODE;
+    insInfo.info.nodeInfo = nodeInfo;
 
-    // NOTE: The list of InsNodeInfo should be in order of instructions.
-    // NOTE: This is very similar to add_edge in dgraph.c, since that has to
-    // add wires in a sorted list.
-    if (debugInfo->insNodeInfoList == NULL) {
-        debugInfo->insNodeInfoSize    = 1;
-        debugInfo->insNodeInfoList    = d_malloc(sizeof(InsNodeInfo));
-        *(debugInfo->insNodeInfoList) = nodeInfo;
-    } else {
-        // Use binary insertion, since the list should be sorted!
-        int left   = 0;
-        int right  = (int)debugInfo->insNodeInfoSize - 1;
-        int middle = (left + right) / 2;
-
-        while (left <= right) {
-            middle = (left + right) / 2;
-
-            if (nodeInfo.ins > debugInfo->insNodeInfoList[middle].ins) {
-                left = middle + 1;
-            } else if (nodeInfo.ins < debugInfo->insNodeInfoList[middle].ins) {
-                right = middle - 1;
-            } else {
-                break;
-            }
-        }
-
-        if (nodeInfo.ins > debugInfo->insNodeInfoList[middle].ins) {
-            middle++;
-        }
-
-        // We can't enter two nodes with the same instruction!
-        // If this node info has the same instruction, replace the entry in the
-        // list.
-        if (middle >= (int)debugInfo->insNodeInfoSize ||
-            nodeInfo.ins != debugInfo->insNodeInfoList[middle].ins) {
-            debugInfo->insNodeInfoSize++;
-            debugInfo->insNodeInfoList =
-                d_realloc(debugInfo->insNodeInfoList,
-                          debugInfo->insNodeInfoSize * sizeof(InsNodeInfo));
-
-            if (middle < (int)debugInfo->insNodeInfoSize - 1) {
-                memmove(debugInfo->insNodeInfoList + middle + 1,
-                        debugInfo->insNodeInfoList + middle,
-                        (debugInfo->insNodeInfoSize - middle - 1) *
-                            sizeof(InsNodeInfo));
-            }
-        }
-
-        debugInfo->insNodeInfoList[middle] = nodeInfo;
-    }
+    add_ins_info(debugInfo, insInfo);
 }
 
 /**
@@ -221,49 +147,59 @@ void d_debug_add_node_info(DebugInfo *debugInfo, InsNodeInfo nodeInfo) {
 void d_debug_dump_info(DebugInfo debugInfo) {
     printf("DEBUG INFO DUMP\n");
 
-    if (debugInfo.insValueInfoList != NULL && debugInfo.insValueInfoSize > 0) {
+    if (debugInfo.debugInfoList != NULL && debugInfo.debugInfoSize > 0) {
         printf("Value info:\n");
 
-        for (size_t i = 0; i < debugInfo.insValueInfoSize; i++) {
-            InsValueInfo valueInfo = debugInfo.insValueInfoList[i];
+        for (size_t i = 0; i < debugInfo.debugInfoSize; i++) {
+            InsDebugInfo insInfo = debugInfo.debugInfoList[i];
 
-            printf("* Ins %zx transfers value @ index %d in stack over wire "
-                   "(Node %zu Socket %zu) -> (Node %zu Socket %zu).\n",
-                   valueInfo.ins, valueInfo.stackIndex,
-                   valueInfo.valueWire.socketFrom.nodeIndex,
-                   valueInfo.valueWire.socketFrom.socketIndex,
-                   valueInfo.valueWire.socketTo.nodeIndex,
-                   valueInfo.valueWire.socketTo.socketIndex);
+            if (insInfo.infoType == INFO_VALUE) {
+                InsValueInfo valueInfo = insInfo.info.valueInfo;
+
+                printf(
+                    "* Ins %zx transfers value @ index %d in stack over wire "
+                    "(Node %zu Socket %zu) -> (Node %zu Socket %zu).\n",
+                    insInfo.ins, valueInfo.stackIndex,
+                    valueInfo.valueWire.socketFrom.nodeIndex,
+                    valueInfo.valueWire.socketFrom.socketIndex,
+                    valueInfo.valueWire.socketTo.nodeIndex,
+                    valueInfo.valueWire.socketTo.socketIndex);
+            }
         }
 
         printf("\n");
-    }
 
-    if (debugInfo.insExecInfoList != NULL && debugInfo.insExecInfoSize > 0) {
         printf("Execution info:\n");
 
-        for (size_t i = 0; i < debugInfo.insExecInfoSize; i++) {
-            InsExecInfo execInfo = debugInfo.insExecInfoList[i];
+        for (size_t i = 0; i < debugInfo.debugInfoSize; i++) {
+            InsDebugInfo insInfo = debugInfo.debugInfoList[i];
 
-            printf("* Ins %zx activates execution wire (Node %zu Socket %zu) "
-                   "-> (Node %zu Socket %zu).\n",
-                   execInfo.ins, execInfo.execWire.socketFrom.nodeIndex,
-                   execInfo.execWire.socketFrom.socketIndex,
-                   execInfo.execWire.socketTo.nodeIndex,
-                   execInfo.execWire.socketTo.socketIndex);
+            if (insInfo.infoType == INFO_EXEC) {
+                InsExecInfo execInfo = insInfo.info.execInfo;
+
+                printf(
+                    "* Ins %zx activates execution wire (Node %zu Socket %zu) "
+                    "-> (Node %zu Socket %zu).\n",
+                    insInfo.ins, execInfo.execWire.socketFrom.nodeIndex,
+                    execInfo.execWire.socketFrom.socketIndex,
+                    execInfo.execWire.socketTo.nodeIndex,
+                    execInfo.execWire.socketTo.socketIndex);
+            }
         }
 
         printf("\n");
-    }
 
-    if (debugInfo.insNodeInfoList != NULL && debugInfo.insNodeInfoSize > 0) {
         printf("Node info:\n");
 
-        for (size_t i = 0; i < debugInfo.insNodeInfoSize; i++) {
-            InsNodeInfo nodeInfo = debugInfo.insNodeInfoList[i];
+        for (size_t i = 0; i < debugInfo.debugInfoSize; i++) {
+            InsDebugInfo insInfo = debugInfo.debugInfoList[i];
 
-            printf("* Ins %zx activates node %zu.\n", nodeInfo.ins,
-                   nodeInfo.node);
+            if (insInfo.infoType == INFO_NODE) {
+                InsNodeInfo nodeInfo = insInfo.info.nodeInfo;
+
+                printf("* Ins %zx activates node %zu.\n", insInfo.ins,
+                       nodeInfo.node);
+            }
         }
 
         printf("\n");
@@ -277,32 +213,11 @@ void d_debug_dump_info(DebugInfo debugInfo) {
  * \param debugInfo The debugging info to free.
  */
 void d_debug_free_info(DebugInfo *debugInfo) {
-    if (debugInfo->insValueInfoList != NULL) {
-        free(debugInfo->insValueInfoList);
-    }
-
-    if (debugInfo->insExecInfoList != NULL) {
-        free(debugInfo->insExecInfoList);
-    }
-
-    if (debugInfo->insNodeInfoList != NULL) {
-        free(debugInfo->insNodeInfoList);
+    if (debugInfo->debugInfoList != NULL) {
+        free(debugInfo->debugInfoList);
     }
 
     *debugInfo = NO_DEBUG_INFO;
-}
-
-/**
- * \fn static bool debug_info_empty(DebugInfo debugInfo)
- * \brief Check if there is no debug info.
- *
- * \return If there is no debugging info.
- *
- * \param debugInfo The debug info to check for emptiness.
- */
-static bool debug_info_empty(DebugInfo debugInfo) {
-    return (debugInfo.insValueInfoSize == 0 && debugInfo.insExecInfoSize == 0 &&
-            debugInfo.insNodeInfoSize == 0);
 }
 
 /**
@@ -329,7 +244,7 @@ DebugSession d_debug_create_session(Sheet *sheet, OnWireValue onWireValue,
                                     OnExecutionWire onExecutionWire,
                                     OnNodeActivated onNodeActivated) {
     // Warn the user if the sheet does not have any debug info.
-    if (debug_info_empty(sheet->_debugInfo)) {
+    if (sheet->_debugInfo.debugInfoSize == 0) {
         printf("Warning: %s does not contain debug information\n",
                sheet->filePath);
     }
@@ -352,123 +267,118 @@ DebugSession d_debug_create_session(Sheet *sheet, OnWireValue onWireValue,
     return out;
 }
 
-/* TODO: Think of a way to combine the next 3 functions. */
+/**
+ * \fn static int info_at_ins(DebugInfo debugInfo, size_t ins, InsInfoType type)
+ * \brief Given an instruction, and the type of debug info you want, return
+ * the index of first instance of that information.
+ *
+ * \return The index of to the information at that instruction, -1 if there is
+ * no information of the given type at that instruction.
+ *
+ * \param debugInfo The debug info to query.
+ * \param ins The instruction to query.
+ * \param type The type of information to query.
+ */
+static int info_at_ins(DebugInfo debugInfo, size_t ins, InsInfoType type) {
+    // NOTE: The list of InsValueInfo should be in order of instructions.
+    if (debugInfo.debugInfoList == NULL || debugInfo.debugInfoSize == 0) {
+        return -1;
+    }
+
+    int left   = 0;
+    int right  = debugInfo.debugInfoSize - 1;
+    int middle = (left + right) / 2;
+
+    while (left <= right) {
+        middle = (left + right) / 2;
+
+        if (ins > debugInfo.debugInfoList[middle].ins) {
+            left = middle + 1;
+        } else if (ins < debugInfo.debugInfoList[middle].ins) {
+            right = middle - 1;
+        } else {
+            break;
+        }
+    }
+
+    if (debugInfo.debugInfoList[middle].ins == ins) {
+        // We've found SOME information at the instruction, but we want to find
+        // the first instance of the same type of information.
+
+        // Go to the start of the list of info with the same instruction.
+        while (debugInfo.debugInfoList[middle].ins == ins) {
+            middle--;
+
+            if (middle < 0) {
+                break;
+            }
+        }
+
+        middle++;
+
+        // Go through the info until we find one with our type.
+        while (debugInfo.debugInfoList[middle].ins == ins) {
+            if (debugInfo.debugInfoList[middle].infoType == type) {
+                return middle;
+            }
+
+            middle++;
+
+            if (middle >= (int)debugInfo.debugInfoSize) {
+                break;
+            }
+        }
+
+        // If we don't find any with our type, welp...
+        return -1;
+    } else {
+        return -1;
+    }
+}
 
 /**
- * \fn static InsValueInfo *value_at_ins(DebugInfo debugInfo, size_t ins)
- * \brief Given an instruction, return the value wire information about it.
+ * \fn static int value_at_ins(DebugInfo debugInfo, size_t ins)
+ * \brief Given an instruction, return the first index with value wire
+ * information about it.
  *
- * \return A pointer to the value wire info at that instruction, NULL if there
+ * \return An index to the value wire info at that instruction, -1 if there
  * is no info at that instruction.
  *
  * \param debugInfo The debug info to query.
  * \param ins The instruction to query.
  */
-static InsValueInfo *value_at_ins(DebugInfo debugInfo, size_t ins) {
-    // NOTE: The list of InsValueInfo should be in order of instructions.
-    if (debugInfo.insValueInfoList == NULL) {
-        return NULL;
-    }
-
-    int left   = 0;
-    int right  = debugInfo.insValueInfoSize - 1;
-    int middle = (left + right) / 2;
-
-    while (left <= right) {
-        middle = (left + right) / 2;
-
-        if (ins > debugInfo.insValueInfoList[middle].ins) {
-            left = middle + 1;
-        } else if (ins < debugInfo.insValueInfoList[middle].ins) {
-            right = middle - 1;
-        } else {
-            break;
-        }
-    }
-
-    if (debugInfo.insValueInfoList[middle].ins == ins) {
-        return debugInfo.insValueInfoList + middle;
-    } else {
-        return NULL;
-    }
+static int value_at_ins(DebugInfo debugInfo, size_t ins) {
+    return info_at_ins(debugInfo, ins, INFO_VALUE);
 }
 
 /**
- * \fn static InsExecInfo *exec_at_ins(DebugInfo debugInfo, size_t ins)
- * \brief Given an instruction, return the execution wire information about it.
+ * \fn static int exec_at_ins(DebugInfo debugInfo, size_t ins)
+ * \brief Given an instruction, return the first index with execution wire
+ * information about it.
  *
- * \return A pointer to the execution wire info at that instruction, NULL if
+ * \return An index to the execution wire info at that instruction, -1 if
  * there is no info at that instruction.
  *
  * \param debugInfo The debug info to query.
  * \param ins The instruction to query.
  */
-static InsExecInfo *exec_at_ins(DebugInfo debugInfo, size_t ins) {
-    // NOTE: The list of InsExecInfo should be in order of instructions.
-    if (debugInfo.insExecInfoList == NULL) {
-        return NULL;
-    }
-
-    int left   = 0;
-    int right  = debugInfo.insExecInfoSize - 1;
-    int middle = (left + right) / 2;
-
-    while (left <= right) {
-        middle = (left + right) / 2;
-
-        if (ins > debugInfo.insExecInfoList[middle].ins) {
-            left = middle + 1;
-        } else if (ins < debugInfo.insExecInfoList[middle].ins) {
-            right = middle - 1;
-        } else {
-            break;
-        }
-    }
-
-    if (debugInfo.insExecInfoList[middle].ins == ins) {
-        return debugInfo.insExecInfoList + middle;
-    } else {
-        return NULL;
-    }
+static int exec_at_ins(DebugInfo debugInfo, size_t ins) {
+    return info_at_ins(debugInfo, ins, INFO_EXEC);
 }
 
 /**
- * \fn static InsNodeInfo *node_at_ins(DebugInfo debugInfo, size_t ins)
- * \brief Given an instruction, return the node information about it.
+ * \fn static int node_at_ins(DebugInfo debugInfo, size_t ins)
+ * \brief Given an instruction, return the first index with node information
+ * about it.
  *
- * \return A pointer to the node info at that instruction, NULL if there is no
- * info at that instruction.
+ * \return An index to the node info at that instruction, -1 if there is no
+ * information at that instruction.
  *
  * \param debugInfo The debug info to query.
  * \param ins The instruction to query.
  */
-static InsNodeInfo *node_at_ins(DebugInfo debugInfo, size_t ins) {
-    // NOTE: The list of InsNodeInfo should be in order of instructions.
-    if (debugInfo.insNodeInfoList == NULL) {
-        return NULL;
-    }
-
-    int left   = 0;
-    int right  = debugInfo.insNodeInfoSize - 1;
-    int middle = (left + right) / 2;
-
-    while (left <= right) {
-        middle = (left + right) / 2;
-
-        if (ins > debugInfo.insNodeInfoList[middle].ins) {
-            left = middle + 1;
-        } else if (ins < debugInfo.insNodeInfoList[middle].ins) {
-            right = middle - 1;
-        } else {
-            break;
-        }
-    }
-
-    if (debugInfo.insNodeInfoList[middle].ins == ins) {
-        return debugInfo.insNodeInfoList + middle;
-    } else {
-        return NULL;
-    }
+static int node_at_ins(DebugInfo debugInfo, size_t ins) {
+    return info_at_ins(debugInfo, ins, INFO_NODE);
 }
 
 /**
@@ -487,50 +397,95 @@ void d_debug_continue_session(DebugSession *session) {
         // Get the instruction index relative to the sheet.
         size_t ins = vm->pc - session->sheet->_text;
 
+        DebugInfo debugInfo = session->sheet->_debugInfo;
+
         // Does this instruction transfer a value over a wire?
         if (session->onWireValue) {
-            InsValueInfo *valueInfo =
-                value_at_ins(session->sheet->_debugInfo, ins);
-            if (valueInfo) {
-                Wire wire = valueInfo->valueWire;
-                const SocketMeta meta =
-                    d_get_socket_meta(session->sheet->graph, wire.socketFrom);
-                DType type    = meta.type;
-                LexData value = {0};
+            int valueIndex = value_at_ins(debugInfo, ins);
 
-                if (type == TYPE_INT) {
-                    value.integerValue =
-                        d_vm_get(&(session->vm), valueInfo->stackIndex);
-                } else if (type == TYPE_FLOAT) {
-                    value.floatValue =
-                        d_vm_get_float(&(session->vm), valueInfo->stackIndex);
-                } else if (type == TYPE_STRING) {
-                    value.stringValue =
-                        d_vm_get_ptr(&(session->vm), valueInfo->stackIndex);
-                } else if (type == TYPE_BOOL) {
-                    value.booleanValue =
-                        d_vm_get(&(session->vm), valueInfo->stackIndex);
+            if (valueIndex >= 0) {
+                // If the index is valid, keep going through each of the items
+                // with the same instruction in case there are more.
+                while (debugInfo.debugInfoList[valueIndex].ins == ins &&
+                       valueIndex < (int)debugInfo.debugInfoSize) {
+
+                    if (debugInfo.debugInfoList[valueIndex].infoType ==
+                        INFO_VALUE) {
+
+                        InsValueInfo valueInfo =
+                            debugInfo.debugInfoList[valueIndex].info.valueInfo;
+
+                        Wire wire             = valueInfo.valueWire;
+                        const SocketMeta meta = d_get_socket_meta(
+                            session->sheet->graph, wire.socketFrom);
+                        DType type    = meta.type;
+                        LexData value = {0};
+
+                        if (type == TYPE_INT) {
+                            value.integerValue =
+                                d_vm_get(&(session->vm), valueInfo.stackIndex);
+                        } else if (type == TYPE_FLOAT) {
+                            value.floatValue = d_vm_get_float(
+                                &(session->vm), valueInfo.stackIndex);
+                        } else if (type == TYPE_STRING) {
+                            value.stringValue = d_vm_get_ptr(
+                                &(session->vm), valueInfo.stackIndex);
+                        } else if (type == TYPE_BOOL) {
+                            value.booleanValue =
+                                d_vm_get(&(session->vm), valueInfo.stackIndex);
+                        }
+
+                        session->onWireValue(session->sheet, wire, type, value);
+                    }
+
+                    valueIndex++;
                 }
-
-                session->onWireValue(session->sheet, wire, type, value);
             }
         }
 
         // Does this instruction activate an execution wire?
         if (session->onExecutionWire) {
-            InsExecInfo *execInfo =
-                exec_at_ins(session->sheet->_debugInfo, ins);
-            if (execInfo) {
-                session->onExecutionWire(session->sheet, execInfo->execWire);
+            int execIndex = exec_at_ins(debugInfo, ins);
+
+            if (execIndex >= 0) {
+                while (debugInfo.debugInfoList[execIndex].ins == ins &&
+                       execIndex < (int)debugInfo.debugInfoSize) {
+
+                    if (debugInfo.debugInfoList[execIndex].infoType ==
+                        INFO_EXEC) {
+
+                        InsExecInfo execInfo =
+                            debugInfo.debugInfoList[execIndex].info.execInfo;
+
+                        session->onExecutionWire(session->sheet,
+                                                 execInfo.execWire);
+                    }
+
+                    execIndex++;
+                }
             }
         }
 
         // Is this instruction entering a new node?
         if (session->onNodedActivated) {
-            InsNodeInfo *nodeInfo =
-                node_at_ins(session->sheet->_debugInfo, ins);
-            if (nodeInfo) {
-                session->onNodedActivated(session->sheet, nodeInfo->node);
+            int nodeIndex = node_at_ins(debugInfo, ins);
+
+            if (nodeIndex >= 0) {
+                while (debugInfo.debugInfoList[nodeIndex].ins == ins &&
+                       nodeIndex < (int)debugInfo.debugInfoSize) {
+
+                    if (debugInfo.debugInfoList[nodeIndex].infoType ==
+                        INFO_NODE) {
+
+                        InsNodeInfo nodeInfo =
+                            debugInfo.debugInfoList[nodeIndex].info.nodeInfo;
+
+                        session->onNodedActivated(session->sheet,
+                                                  nodeInfo.node);
+                    }
+
+                    nodeIndex++;
+                }
             }
         }
 

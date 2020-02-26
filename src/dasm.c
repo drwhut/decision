@@ -45,7 +45,7 @@ BCode d_malloc_bytecode(size_t size) {
     } else {
         out.code = NULL;
     }
-    
+
     out.size = size;
 
     out.linkList     = NULL;
@@ -187,33 +187,23 @@ void d_concat_bytecode(BCode *base, BCode *after) {
         // instructions along the way.
         DebugInfo afterDebugInfo = after->debugInfo;
 
-        if (afterDebugInfo.insValueInfoList != NULL && afterDebugInfo.insValueInfoSize > 0) {
-            for (size_t i = 0; i < afterDebugInfo.insValueInfoSize; i++) {
-                InsValueInfo valueInfo = afterDebugInfo.insValueInfoList[i];
+        if (afterDebugInfo.debugInfoList != NULL &&
+            afterDebugInfo.debugInfoSize > 0) {
+            for (size_t i = 0; i < afterDebugInfo.debugInfoSize; i++) {
+                InsDebugInfo debugInfo = afterDebugInfo.debugInfoList[i];
 
-                valueInfo.ins += base->size;
+                size_t ins = debugInfo.ins + base->size;
 
-                d_debug_add_value_info(&(base->debugInfo), valueInfo);
-            }
-        }
-
-        if (afterDebugInfo.insExecInfoList != NULL && afterDebugInfo.insExecInfoSize > 0) {
-            for (size_t i = 0; i < afterDebugInfo.insExecInfoSize; i++) {
-                InsExecInfo execInfo = afterDebugInfo.insExecInfoList[i];
-
-                execInfo.ins += base->size;
-
-                d_debug_add_exec_info(&(base->debugInfo), execInfo);
-            }
-        }
-
-        if (afterDebugInfo.insNodeInfoList != NULL && afterDebugInfo.insNodeInfoSize > 0) {
-            for (size_t i = 0; i < afterDebugInfo.insNodeInfoSize; i++) {
-                InsNodeInfo nodeInfo = afterDebugInfo.insNodeInfoList[i];
-
-                nodeInfo.ins += base->size;
-
-                d_debug_add_node_info(&(base->debugInfo), nodeInfo);
+                if (debugInfo.infoType == INFO_VALUE) {
+                    InsValueInfo valueInfo = debugInfo.info.valueInfo;
+                    d_debug_add_value_info(&(base->debugInfo), ins, valueInfo);
+                } else if (debugInfo.infoType == INFO_EXEC) {
+                    InsExecInfo execInfo = debugInfo.info.execInfo;
+                    d_debug_add_exec_info(&(base->debugInfo), ins, execInfo);
+                } else if (debugInfo.infoType == INFO_NODE) {
+                    InsNodeInfo nodeInfo = debugInfo.info.nodeInfo;
+                    d_debug_add_node_info(&(base->debugInfo), ins, nodeInfo);
+                }
             }
         }
 

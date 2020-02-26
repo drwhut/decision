@@ -46,7 +46,6 @@ struct _sheet;
  * \typedef struct _insValueInfo InsValueInfo
  */
 typedef struct _insValueInfo {
-    size_t ins;
     Wire valueWire;
     int stackIndex;
 } InsValueInfo;
@@ -58,7 +57,6 @@ typedef struct _insValueInfo {
  * \typedef struct _insExecInfo InsExecInfo
  */
 typedef struct _insExecInfo {
-    size_t ins;
     Wire execWire;
 } InsExecInfo;
 
@@ -69,9 +67,41 @@ typedef struct _insExecInfo {
  * \typedef struct _insNodeInfo InsNodeInfo
  */
 typedef struct _insNodeInfo {
-    size_t ins;
     size_t node;
 } InsNodeInfo;
+
+/**
+ * \enum _insInfoType
+ * \brief The different kinds of information debugging can store and output.
+ *
+ * \typedef enum _insInfoType InsInfoType
+ */
+typedef enum _insInfoType { INFO_VALUE, INFO_EXEC, INFO_NODE } InsInfoType;
+
+/**
+ * \union _insInfoCollection
+ * \brief A union collection of all the different kinds of debug information
+ * that can be stored.
+ *
+ * \typedef union _insInfoCollection InsInfoCollection
+ */
+typedef union _insInfoCollection {
+    InsValueInfo valueInfo;
+    InsExecInfo execInfo;
+    InsNodeInfo nodeInfo;
+} InsInfoCollection;
+
+/**
+ * \struct _insDebugInfo
+ * \brief Describes what an instruction does.
+ *
+ * \typedef struct _insDebugInfo InsDebugInfo
+ */
+typedef struct _insDebugInfo {
+    InsInfoCollection info;
+    size_t ins;
+    InsInfoType infoType;
+} InsDebugInfo;
 
 /**
  * \struct _debugInfo
@@ -80,14 +110,8 @@ typedef struct _insNodeInfo {
  * \typedef struct _debugInfo DebugInfo
  */
 typedef struct _debugInfo {
-    InsValueInfo *insValueInfoList;
-    size_t insValueInfoSize;
-
-    InsExecInfo *insExecInfoList;
-    size_t insExecInfoSize;
-
-    InsNodeInfo *insNodeInfoList;
-    size_t insNodeInfoSize;
+    InsDebugInfo *debugInfoList;
+    size_t debugInfoSize;
 } DebugInfo;
 
 /**
@@ -96,7 +120,7 @@ typedef struct _debugInfo {
  */
 #define NO_DEBUG_INFO \
     (DebugInfo) {     \
-        NULL, 0, NULL, 0, NULL, 0       \
+        NULL, 0       \
     }
 
 /**
@@ -141,33 +165,36 @@ typedef struct _debugSession {
 */
 
 /**
- * \fn void d_debug_add_value_info(DebugInfo *debugInfo, InsValueInfo valueInfo)
+ * \fn void d_debug_add_value_info(DebugInfo *debugInfo, size_t ins,
+ *                                 InsValueInfo valueInfo)
  * \brief Add value information to a list of debug information.
  *
  * \param debugInfo The debug info to add the value info to.
  * \param valueInfo The value info to add.
  */
-DECISION_API void d_debug_add_value_info(DebugInfo *debugInfo,
+DECISION_API void d_debug_add_value_info(DebugInfo *debugInfo, size_t ins,
                                          InsValueInfo valueInfo);
 
 /**
- * \fn void d_debug_add_exec_info(DebugInfo *debugInfo, InsExecInfo execInfo)
+ * \fn void d_debug_add_exec_info(DebugInfo *debugInfo, size_t ins,
+ *                                InsExecInfo execInfo)
  * \brief Add execution information to a list of debug information.
  *
  * \param debugInfo The debug into to add the execution info to.
  * \param execInfo The execution info to add.
  */
-DECISION_API void d_debug_add_exec_info(DebugInfo *debugInfo,
+DECISION_API void d_debug_add_exec_info(DebugInfo *debugInfo, size_t ins,
                                         InsExecInfo execInfo);
 
 /**
- * \fn void d_debug_add_node_info(DebugInfo *debugInfo, InsNodeInfo nodeInfo)
+ * \fn void d_debug_add_node_info(DebugInfo *debugInfo, size_t ins,
+ *                                InsNodeInfo nodeInfo)
  * \brief Add node information to a list of debug information.
  *
  * \param debugInfo The debug info to add the node info to.
  * \param nodeInfo The node info to add.
  */
-DECISION_API void d_debug_add_node_info(DebugInfo *debugInfo,
+DECISION_API void d_debug_add_node_info(DebugInfo *debugInfo, size_t ins,
                                         InsNodeInfo nodeInfo);
 
 /**

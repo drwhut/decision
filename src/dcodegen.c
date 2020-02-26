@@ -414,10 +414,9 @@ BCode d_push_variable(BuildContext *context, size_t nodeIndex) {
     // Set the first instruction to represent activating the node.
     if (context->debug) {
         InsNodeInfo varNodeInfo;
-        varNodeInfo.ins  = 0;
         varNodeInfo.node = nodeIndex;
 
-        d_debug_add_node_info(&(out.debugInfo), varNodeInfo);
+        d_debug_add_node_info(&(out.debugInfo), 0, varNodeInfo);
     }
 
     return out;
@@ -535,11 +534,10 @@ BCode d_push_input(BuildContext *context, NodeSocket socket, bool forceFloat) {
                 forward.socketTo   = socket;
 
                 InsValueInfo valueInfo;
-                valueInfo.ins        = out.size;
                 valueInfo.valueWire  = forward;
                 valueInfo.stackIndex = 0;
 
-                d_debug_add_value_info(&(out.debugInfo), valueInfo);
+                d_debug_add_value_info(&(out.debugInfo), out.size, valueInfo);
             }
         }
     }
@@ -774,10 +772,9 @@ BCode d_generate_operator(BuildContext *context, size_t nodeIndex, DIns opcode,
     // of this node.
     if (context->debug) {
         InsNodeInfo opNodeInfo;
-        opNodeInfo.ins  = out.size;
         opNodeInfo.node = nodeIndex;
 
-        d_debug_add_node_info(&(out.debugInfo), opNodeInfo);
+        d_debug_add_node_info(&(out.debugInfo), out.size, opNodeInfo);
     }
 
     DIns nonImmediateOpcode = (convertFloat) ? fopcode : opcode;
@@ -870,10 +867,9 @@ BCode d_generate_comparator(BuildContext *context, size_t nodeIndex,
     // this node.
     if (context->debug) {
         InsNodeInfo cmpNodeInfo;
-        cmpNodeInfo.ins  = out.size;
         cmpNodeInfo.node = nodeIndex;
 
-        d_debug_add_node_info(&(out.debugInfo), cmpNodeInfo);
+        d_debug_add_node_info(&(out.debugInfo), out.size, cmpNodeInfo);
     }
 
     if (isString) {
@@ -981,10 +977,9 @@ BCode d_generate_call(BuildContext *context, size_t nodeIndex) {
     // Set the call instruction to represent activating the node.
     if (context->debug) {
         InsNodeInfo callNodeInfo;
-        callNodeInfo.ins  = 0;
         callNodeInfo.node = nodeIndex;
 
-        d_debug_add_node_info(&(call.debugInfo), callNodeInfo);
+        d_debug_add_node_info(&(call.debugInfo), 0, callNodeInfo);
     }
 
     d_concat_bytecode(&out, &call);
@@ -1092,10 +1087,9 @@ BCode d_generate_return(BuildContext *context, size_t returnNodeIndex) {
     // Set the return instruction to represent activating the return node.
     if (context->debug) {
         InsNodeInfo returnNodeInfo;
-        returnNodeInfo.ins  = 0;
         returnNodeInfo.node = returnNodeIndex;
 
-        d_debug_add_node_info(&(ret.debugInfo), returnNodeInfo);
+        d_debug_add_node_info(&(ret.debugInfo), 0, returnNodeInfo);
     }
 
     d_concat_bytecode(&out, &ret);
@@ -1285,10 +1279,9 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
             // activation of this node.
             if (context->debug) {
                 InsNodeInfo ternaryNodeInfo;
-                ternaryNodeInfo.ins  = 0;
                 ternaryNodeInfo.node = nodeIndex;
 
-                d_debug_add_node_info(&(jumpToCode.debugInfo), ternaryNodeInfo);
+                d_debug_add_node_info(&(jumpToCode.debugInfo), 0, ternaryNodeInfo);
             }
 
             d_concat_bytecode(&out, &jumpToCode);
@@ -1653,10 +1646,9 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
                     // execution wire between the For node and this node.
                     if (context->debug) {
                         InsExecInfo forExecInfo;
-                        forExecInfo.ins      = 0;
                         forExecInfo.execWire = context->graph.wires[wireIndex];
 
-                        d_debug_add_exec_info(&(loopAfterJump.debugInfo),
+                        d_debug_add_exec_info(&(loopAfterJump.debugInfo), 0,
                                               forExecInfo);
                     }
                 }
@@ -1756,10 +1748,9 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
                     // execution wire.
                     if (context->debug) {
                         InsExecInfo thenExecInfo;
-                        thenExecInfo.ins      = 0;
                         thenExecInfo.execWire = context->graph.wires[wireIndex];
 
-                        d_debug_add_exec_info(&(thenBranch.debugInfo),
+                        d_debug_add_exec_info(&(thenBranch.debugInfo), 0,
                                               thenExecInfo);
                     }
                 }
@@ -1786,11 +1777,10 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
                         // the execution wire.
                         if (context->debug) {
                             InsExecInfo elseExecInfo;
-                            elseExecInfo.ins = 0;
                             elseExecInfo.execWire =
                                 context->graph.wires[wireIndex];
 
-                            d_debug_add_exec_info(&(elseBranch.debugInfo),
+                            d_debug_add_exec_info(&(elseBranch.debugInfo), 0,
                                                   elseExecInfo);
                         }
                     }
@@ -2004,11 +1994,10 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
                     // execution wire between the While node and this node.
                     if (context->debug) {
                         InsExecInfo whileExecInfo;
-                        whileExecInfo.ins = 0;
                         whileExecInfo.execWire =
                             context->graph.wires[wireIndex];
 
-                        d_debug_add_exec_info(&(trueCode.debugInfo),
+                        d_debug_add_exec_info(&(trueCode.debugInfo), 0,
                                               whileExecInfo);
                     }
                 }
@@ -2067,10 +2056,9 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
         // gets activated.
         if (context->debug) {
             InsNodeInfo execNodeInfo;
-            execNodeInfo.ins  = 0;
             execNodeInfo.node = nodeIndex;
 
-            d_debug_add_node_info(&(action.debugInfo), execNodeInfo);
+            d_debug_add_node_info(&(action.debugInfo), 0, execNodeInfo);
         }
 
         d_concat_bytecode(&out, &action);
@@ -2144,10 +2132,9 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
             // the execution wire.
             if (context->debug) {
                 InsExecInfo execInfo;
-                execInfo.ins      = 0;
                 execInfo.execWire = context->graph.wires[wireIndex];
 
-                d_debug_add_exec_info(&(nextCode.debugInfo), execInfo);
+                d_debug_add_exec_info(&(nextCode.debugInfo), 0, execInfo);
             }
         }
     }
@@ -2202,10 +2189,9 @@ BCode d_generate_start(BuildContext *context, size_t startNodeIndex) {
             // activating the execution socket.
             if (context->debug) {
                 InsExecInfo execInfo;
-                execInfo.ins      = 0;
                 execInfo.execWire = context->graph.wires[wireIndex];
 
-                d_debug_add_exec_info(&(exe.debugInfo), execInfo);
+                d_debug_add_exec_info(&(exe.debugInfo), 0, execInfo);
             }
 
             d_concat_bytecode(&out, &exe);
@@ -2261,10 +2247,9 @@ BCode d_generate_function(BuildContext *context, SheetFunction func) {
                 // activating the execution wire after the Define node.
                 if (context->debug) {
                     InsExecInfo execInfo;
-                    execInfo.ins      = 0;
                     execInfo.execWire = context->graph.wires[wireIndex];
 
-                    d_debug_add_exec_info(&(exe.debugInfo), execInfo);
+                    d_debug_add_exec_info(&(exe.debugInfo), 0, execInfo);
                 }
 
                 d_concat_bytecode(&out, &exe);
