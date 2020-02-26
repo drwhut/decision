@@ -407,10 +407,10 @@ int d_wire_find_first(Graph graph, NodeSocket socket) {
            socket.socketIndex == wire.socketFrom.socketIndex) {
         middle--;
 
-        wire = graph.wires[middle];
-
         if (middle < 0) {
             break;
+        } else {
+            wire = graph.wires[middle];
         }
     }
 

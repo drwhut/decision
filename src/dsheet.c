@@ -358,6 +358,10 @@ void d_sheet_free(Sheet *sheet) {
             for (size_t i = 0; i < sheet->numVariables; i++) {
                 SheetVariable var = sheet->variables[i];
 
+                // Free the variable name and definition.
+                free((char *)var.variableMeta.name);
+                free((char *)var.variableMeta.description);
+
                 // Free the getter definition.
                 d_definition_free(var.getterDefinition, false);
             }
