@@ -38,6 +38,7 @@ and descriptions which are accessible via the C API.
   arguments and return values (previously stored in the general stack), saved
   return addresses (previously stored in the call stack), as well as saved
   frame pointers.
+* Now produces a runtime error if a division by 0 is attempted.
 
 ### Object Files
 

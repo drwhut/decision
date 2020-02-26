@@ -1181,23 +1181,43 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             break;
 
         case OP_DIV:;
-            OP_2_1(/)
+            if (VM_GET_STACK(vm, -1) == 0) {
+                d_vm_runtime_error(vm, "Division by 0");
+            } else {
+                OP_2_1(/)
+            }
             break;
 
         case OP_DIVF:;
-            OP_2_1_F(/)
+            if (VM_GET_STACK_FLOAT(vm, -1) == 0.0) {
+                d_vm_runtime_error(vm, "Division by 0");
+            } else {
+                OP_2_1_F(/)
+            }
             break;
 
         case OP_DIVBI:;
-            OP_1_1_I(/, GET_BIMMEDIATE)
+            if (GET_BIMMEDIATE(1) == 0) {
+                d_vm_runtime_error(vm, "Division by 0");
+            } else {
+                OP_1_1_I(/, GET_BIMMEDIATE)
+            }
             break;
 
         case OP_DIVHI:;
-            OP_1_1_I(/, GET_HIMMEDIATE)
+            if (GET_HIMMEDIATE(1) == 0) {
+                d_vm_runtime_error(vm, "Division by 0");
+            } else {
+                OP_1_1_I(/, GET_HIMMEDIATE)
+            }
             break;
 
         case OP_DIVFI:;
-            OP_1_1_I(/, GET_FIMMEDIATE)
+            if (GET_FIMMEDIATE(1) == 0) {
+                d_vm_runtime_error(vm, "Division by 0");
+            } else {
+                OP_1_1_I(/, GET_FIMMEDIATE)
+            }
             break;
 
         case OP_GET:;
