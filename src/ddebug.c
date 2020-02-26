@@ -375,8 +375,8 @@ void d_debug_continue_session(DebugSession *session) {
             if (valueIndex >= 0) {
                 // If the index is valid, keep going through each of the items
                 // with the same instruction in case there are more.
-                while (debugInfo.debugInfoList[valueIndex].ins == ins &&
-                       valueIndex < (int)debugInfo.debugInfoSize) {
+                while (valueIndex < (int)debugInfo.debugInfoSize &&
+                       debugInfo.debugInfoList[valueIndex].ins == ins) {
 
                     if (debugInfo.debugInfoList[valueIndex].infoType ==
                         INFO_VALUE) {
@@ -417,8 +417,8 @@ void d_debug_continue_session(DebugSession *session) {
             int execIndex = info_at_ins(debugInfo, ins, INFO_EXEC);
 
             if (execIndex >= 0) {
-                while (debugInfo.debugInfoList[execIndex].ins == ins &&
-                       execIndex < (int)debugInfo.debugInfoSize) {
+                while (execIndex < (int)debugInfo.debugInfoSize &&
+                       debugInfo.debugInfoList[execIndex].ins == ins) {
 
                     if (debugInfo.debugInfoList[execIndex].infoType ==
                         INFO_EXEC) {
@@ -440,8 +440,8 @@ void d_debug_continue_session(DebugSession *session) {
             int nodeIndex = info_at_ins(debugInfo, ins, INFO_NODE);
 
             if (nodeIndex >= 0) {
-                while (debugInfo.debugInfoList[nodeIndex].ins == ins &&
-                       nodeIndex < (int)debugInfo.debugInfoSize) {
+                while (nodeIndex < (int)debugInfo.debugInfoSize &&
+                       debugInfo.debugInfoList[nodeIndex].ins == ins) {
 
                     if (debugInfo.debugInfoList[nodeIndex].infoType ==
                         INFO_NODE) {
@@ -462,8 +462,8 @@ void d_debug_continue_session(DebugSession *session) {
             int callIndex = info_at_ins(debugInfo, ins, INFO_CALL);
 
             if (callIndex >= 0) {
-                while (debugInfo.debugInfoList[callIndex].ins == ins &&
-                       callIndex < (int)debugInfo.debugInfoSize) {
+                while (callIndex < (int)debugInfo.debugInfoSize &&
+                       debugInfo.debugInfoList[callIndex].ins == ins) {
 
                     if (debugInfo.debugInfoList[callIndex].infoType ==
                         INFO_CALL) {
