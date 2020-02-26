@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
     options.debug          = true;
 
     // TEMP
-    Sheet *sheet = d_load_file("../../tests/examples/factorial.dc", &options);
+    Sheet *sheet = d_load_file("../../tests/include/main_compiled.dc", &options);
 
     d_sheet_dump(sheet);
     d_asm_dump_all(sheet);

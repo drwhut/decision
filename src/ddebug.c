@@ -376,6 +376,8 @@ void d_debug_continue_session(DebugSession *session) {
         // Get the current sheet from the sheet stack.
         Sheet *sheet = session->sheetStack[session->stackPtr].sheet;
 
+        bool inDebuggableSheet = (sheet->_debugInfo.debugInfoSize > 0);
+
         // Get the instruction index relative to the sheet.
         size_t ins = vm->pc - sheet->_text;
 
@@ -451,6 +453,8 @@ void d_debug_continue_session(DebugSession *session) {
             }
         }
 
+        DIns opcode = *(vm->pc);
+
         // Is this instruction calling a function?
         int callIndex = info_at_ins(debugInfo, ins, INFO_CALL);
 
@@ -480,11 +484,26 @@ void d_debug_continue_session(DebugSession *session) {
             if (agenda.onCall) {
                 agenda.onCall(callInfo.sheet, callInfo.funcDef, callInfo.isC);
             }
+        } else if (!inDebuggableSheet) {
+            // If we're not in a debuggable sheet, it won't have call info in
+            // it. But in order for us to track returns correctly, we still
+            // need to know when it calls.
+            switch (opcode) {
+                case OP_CALL:
+                case OP_CALLC:
+                case OP_CALLCI:
+                case OP_CALLI:
+                case OP_CALLR:
+                case OP_CALLRB:
+                case OP_CALLRH:
+                case OP_CALLRF:
+                    session->sheetStack[session->stackPtr].numInternalCalls++;
+                default:
+                    break;
+            }
         }
 
         // Is this instruction a return?
-        DIns opcode = *(vm->pc);
-
         if (opcode == OP_RET || opcode == OP_RETN) {
             // If there have been no internal calls in this sheet, we're going
             // back to the previous sheet.
