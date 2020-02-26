@@ -841,7 +841,7 @@ static SyntaxResult program(SyntaxContext *context) {
     eos(context);
 
     // If there's nothing left... then... yeah, can't do much.
-    if (context->currentToken->type == -1) {
+    if ((int)context->currentToken->type == -1) {
         return out;
     }
 
@@ -871,7 +871,7 @@ static SyntaxResult program(SyntaxContext *context) {
     }
 
     // This SHOULD be the end of the token stream.
-    if (out.success && context->currentToken->type != -1) {
+    if (out.success && (int)context->currentToken->type != -1) {
         syntax_error("Expected statement to start with a name or a left square "
                      "bracket ([) for a property",
                      context);

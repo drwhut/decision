@@ -248,7 +248,7 @@ void d_link_self(Sheet *sheet) {
 
                 // Firstly, we need to find where the variable pointer is
                 // stored in data.
-                LinkMeta varMeta = (LinkMeta){0, NULL, 0};
+                LinkMeta varMeta = (LinkMeta){0, NULL, 0, NULL};
                 bool varFound    = false;
                 for (size_t i = 0; i < sheet->_link.size; i++) {
                     varMeta = sheet->_link.list[i];

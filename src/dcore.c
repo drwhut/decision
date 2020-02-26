@@ -203,7 +203,7 @@ const NodeDefinition *d_core_get_definition(const CoreFunction core) {
 }
 
 /**
- * \fn const CoreFunction d_core_find_name(const char *name)
+ * \fn CoreFunction d_core_find_name(const char *name)
  * \brief Given the name of the core function, get the CoreFunction.
  *
  * \return The corresponding CoreFunction. Value is -1 if the name doesn't
@@ -211,7 +211,7 @@ const NodeDefinition *d_core_get_definition(const CoreFunction core) {
  *
  * \param name The name to query.
  */
-const CoreFunction d_core_find_name(const char *name) {
+CoreFunction d_core_find_name(const char *name) {
     // Since the core functions are in alphabetical order,
     // we can use binary search!
 
@@ -231,7 +231,7 @@ const CoreFunction d_core_find_name(const char *name) {
         } else if (cmp > 0) {
             left = middle + 1;
         } else
-            return middle;
+            return (const CoreFunction)middle;
     }
 
     return -1;

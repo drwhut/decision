@@ -411,6 +411,14 @@ BCode d_push_variable(BuildContext *context, size_t nodeIndex) {
     bool wasDuplicate = false;
     d_add_link_to_ins(context, &out, 0, meta, &metaIndexInList, &wasDuplicate);
 
+    // Set the first instruction to represent activating the node.
+    if (context->debug) {
+        InsNodeInfo varNodeInfo;
+        varNodeInfo.node = nodeIndex;
+
+        d_debug_add_node_info(&(out.debugInfo), 0, varNodeInfo);
+    }
+
     return out;
 }
 
@@ -434,7 +442,7 @@ BCode d_push_input(BuildContext *context, NodeSocket socket, bool forceFloat) {
             "%zd...\n",
             socket.socketIndex, socket.nodeIndex);
 
-    BCode out = {NULL, 0};
+    BCode out = d_malloc_bytecode(0);
 
     if (d_is_input_socket(context->graph, socket) &&
         meta.type != TYPE_EXECUTION) {
@@ -517,6 +525,20 @@ BCode d_push_input(BuildContext *context, NodeSocket socket, bool forceFloat) {
 
                 set_stack_index(context, socket, inputIndex);
             }
+
+            // Say that the first instruction after this bytecode represents
+            // sending the value over the wire (in the other direction).
+            if (context->debug) {
+                Wire forward;
+                forward.socketFrom = connSocket;
+                forward.socketTo   = socket;
+
+                InsValueInfo valueInfo;
+                valueInfo.valueWire  = forward;
+                valueInfo.stackIndex = 0;
+
+                d_debug_add_value_info(&(out.debugInfo), out.size, valueInfo);
+            }
         }
     }
 
@@ -554,7 +576,7 @@ BCode d_push_node_inputs(BuildContext *context, size_t nodeIndex, bool order,
     NodeSocket socket;
     socket.nodeIndex = nodeIndex;
 
-    BCode out = {NULL, 0};
+    BCode out = d_malloc_bytecode(0);
 
     int start = numInputs - 1;
     int end   = 0;
@@ -664,7 +686,7 @@ BCode d_push_node_inputs(BuildContext *context, size_t nodeIndex, bool order,
                     d_concat_bytecode(&out, &get);
                     d_free_bytecode(&get);
 
-                    set_stack_index(context, socket, context->stackTop);
+                    set_stack_index(context, socket, ++context->stackTop);
                 }
             }
 
@@ -703,8 +725,8 @@ BCode d_generate_operator(BuildContext *context, size_t nodeIndex, DIns opcode,
 
     VERBOSE(5, "Generate bytecode for operator %s...\n", nodeDef->name);
 
-    BCode out       = {NULL, 0};
-    BCode subaction = {NULL, 0};
+    BCode out       = d_malloc_bytecode(0);
+    BCode subaction = d_malloc_bytecode(0);
 
     NodeSocket socket;
     socket.nodeIndex = nodeIndex;
@@ -744,6 +766,15 @@ BCode d_generate_operator(BuildContext *context, size_t nodeIndex, DIns opcode,
         subaction = d_push_literal(context, socket, convertFloat);
         d_concat_bytecode(&out, &subaction);
         d_free_bytecode(&subaction);
+    }
+
+    // Say that the first instruction after the known inputs is the activation
+    // of this node.
+    if (context->debug) {
+        InsNodeInfo opNodeInfo;
+        opNodeInfo.node = nodeIndex;
+
+        d_debug_add_node_info(&(out.debugInfo), out.size, opNodeInfo);
     }
 
     DIns nonImmediateOpcode = (convertFloat) ? fopcode : opcode;
@@ -831,6 +862,15 @@ BCode d_generate_comparator(BuildContext *context, size_t nodeIndex,
     }
 
     BCode out = d_push_node_inputs(context, nodeIndex, false, false, isFloat);
+
+    // Say that the first instruction after the inputs is the activation of
+    // this node.
+    if (context->debug) {
+        InsNodeInfo cmpNodeInfo;
+        cmpNodeInfo.node = nodeIndex;
+
+        d_debug_add_node_info(&(out.debugInfo), out.size, cmpNodeInfo);
+    }
 
     if (isString) {
         // The SYS_STRCMP syscall will be used here.
@@ -934,6 +974,27 @@ BCode d_generate_call(BuildContext *context, size_t nodeIndex) {
     LinkMeta meta = d_link_new_meta(linkType, nodeDef->name, metaData);
     d_add_link_to_ins(context, &call, 0, meta, &_dummyMeta, &_dummyBool);
 
+    // Set the call instruction to represent activating the node, and calling.
+    if (context->debug) {
+        InsNodeInfo callNodeInfo;
+        callNodeInfo.node = nodeIndex;
+
+        d_debug_add_node_info(&(call.debugInfo), 0, callNodeInfo);
+
+        InsCallInfo callInfo;
+        callInfo.sheet = nameDef.sheet;
+        callInfo.isC   = (nameDef.type == NAME_CFUNCTION);
+
+        if (callInfo.isC) {
+            callInfo.funcDef = &(nameDef.definition.cFunction->definition);
+        } else {
+            callInfo.funcDef =
+                &(nameDef.definition.function->functionDefinition);
+        }
+
+        d_debug_add_call_info(&(call.debugInfo), 0, callInfo);
+    }
+
     d_concat_bytecode(&out, &call);
     d_free_bytecode(&call);
 
@@ -972,7 +1033,7 @@ BCode d_push_argument(BuildContext *context, NodeSocket socket) {
     VERBOSE(5, "Generating bytecode for argument socket #%zd in node #%zd...\n",
             socket.socketIndex, socket.nodeIndex);
 
-    BCode out = {NULL, 0};
+    BCode out = d_malloc_bytecode(0);
 
     if (!d_is_input_socket(context->graph, socket)) {
 
@@ -1015,7 +1076,7 @@ BCode d_generate_return(BuildContext *context, size_t returnNodeIndex) {
 
     VERBOSE(5, "Generating bytecode to return from %s...\n", funcDef.name);
 
-    BCode out = {NULL, 0};
+    BCode out = d_malloc_bytecode(0);
 
     size_t numReturns = d_definition_num_outputs(&funcDef);
 
@@ -1023,16 +1084,30 @@ BCode d_generate_return(BuildContext *context, size_t returnNodeIndex) {
         numReturns--;
     }
 
-    if (numReturns == 0) {
-        out = d_bytecode_ins(OP_RET);
-    } else {
+    if (numReturns > 0) {
         out = d_push_node_inputs(context, returnNodeIndex, false, false, false);
-
-        BCode ret = d_bytecode_ins(OP_RETN);
-        d_bytecode_set_byte(ret, 1, (char)numReturns);
-        d_concat_bytecode(&out, &ret);
-        d_free_bytecode(&ret);
     }
+
+    BCode ret;
+
+    if (numReturns == 0) {
+        ret = d_bytecode_ins(OP_RET);
+    } else {
+        ret = d_bytecode_ins(OP_RETN);
+        d_bytecode_set_byte(ret, 1, (char)numReturns);
+    }
+
+    // Set the return instruction to represent activating the return node, and
+    // returning.
+    if (context->debug) {
+        InsNodeInfo returnNodeInfo;
+        returnNodeInfo.node = returnNodeIndex;
+
+        d_debug_add_node_info(&(ret.debugInfo), 0, returnNodeInfo);
+    }
+
+    d_concat_bytecode(&out, &ret);
+    d_free_bytecode(&ret);
 
     return out;
 }
@@ -1055,7 +1130,7 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
     VERBOSE(5, "- Generating bytecode for non-execution node %s...\n",
             nodeDef->name);
 
-    BCode out = {NULL, 0};
+    BCode out = d_malloc_bytecode(0);
 
     NodeSocket socket;
     socket.nodeIndex = nodeIndex;
@@ -1100,7 +1175,7 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
         // Next, get the bytecode for the true input.
         NodeSocket trueSocket  = socket;
         trueSocket.socketIndex = 1;
-        BCode trueCode         = {NULL, 0};
+        BCode trueCode         = d_malloc_bytecode(0);
 
         if (!boolIsLiteral || boolLiteralValue) {
             trueCode = d_push_input(context, trueSocket, false);
@@ -1114,7 +1189,7 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
         // Finally, get the bytecode for the false input.
         NodeSocket falseSocket  = socket;
         falseSocket.socketIndex = 2;
-        BCode falseCode         = {NULL, 0};
+        BCode falseCode         = d_malloc_bytecode(0);
 
         if (!boolIsLiteral || !boolLiteralValue) {
             falseCode = d_push_input(context, falseSocket, false);
@@ -1125,7 +1200,7 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
         // Get what the final stack top will be, and get the other bytecode to
         // push as many times as needed to make up the difference.
         int finalStackTop = stackTopFalse;
-        BCode pushn       = {NULL, 0};
+        BCode pushn       = d_malloc_bytecode(0);
 
         if (stackTopTrue > stackTopFalse) {
             finalStackTop = stackTopTrue;
@@ -1214,6 +1289,16 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
             BCode jumpToCode = d_bytecode_ins(OP_JRCONFI);
             d_bytecode_set_fimmediate(jumpToCode, 1, jmpAmt);
 
+            // Say that the first instruction after the boolean input is the
+            // activation of this node.
+            if (context->debug) {
+                InsNodeInfo ternaryNodeInfo;
+                ternaryNodeInfo.node = nodeIndex;
+
+                d_debug_add_node_info(&(jumpToCode.debugInfo), 0,
+                                      ternaryNodeInfo);
+            }
+
             d_concat_bytecode(&out, &jumpToCode);
             d_free_bytecode(&jumpToCode);
 
@@ -1225,7 +1310,7 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
             d_free_bytecode(&trueCode);
         }
     } else {
-        BCode action = {NULL, 0};
+        BCode action = d_malloc_bytecode(0);
 
         if ((int)coreFunc >= 0) {
             // Generate bytecode depending on the core function.
@@ -1416,7 +1501,7 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
     }
 
     int stackTopBefore = context->stackTop;
-    BCode out          = {NULL, 0};
+    BCode out          = d_malloc_bytecode(0);
 
     // Usually we will want to pop all of the stack that got us the input,
     // but sometimes we need to keep things on the stack.
@@ -1436,7 +1521,7 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
         // the top of the stack.
         out = d_push_node_inputs(context, nodeIndex, false, false, forceFloats);
 
-        BCode action = {NULL, 0};
+        BCode action = d_malloc_bytecode(0);
 
         int stackTopAfterInputs = context->stackTop;
 
@@ -1472,7 +1557,7 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
                 // Bytecode for the comparison between the index and stop value.
                 // NOTE: We want this to push 1 if we want to exit the loop,
                 // and 0 if we want to stay in it!
-                BCode cmp = {NULL, 0};
+                BCode cmp = d_malloc_bytecode(0);
 
                 if (isStepImmediate) {
                     DIns cmpOp;
@@ -1560,7 +1645,7 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
                 NodeSocket loopSocket  = socket;
                 loopSocket.socketIndex = 4;
 
-                BCode loopAfterJump = {NULL, 0};
+                BCode loopAfterJump = d_malloc_bytecode(0);
 
                 wireIndex = d_wire_find_first(context->graph, loopSocket);
 
@@ -1571,6 +1656,16 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
 
                     loopAfterJump = d_generate_execution_node(
                         context, firstNodeIndex, false);
+
+                    // Say the first instruction of this bytecode activates the
+                    // execution wire between the For node and this node.
+                    if (context->debug) {
+                        InsExecInfo forExecInfo;
+                        forExecInfo.execWire = context->graph.wires[wireIndex];
+
+                        d_debug_add_exec_info(&(loopAfterJump.debugInfo), 0,
+                                              forExecInfo);
+                    }
                 }
 
                 // Pop back to the index value.
@@ -1587,7 +1682,7 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
 
                 context->stackTop = stackTopBeforeLoop;
 
-                // Get the step value, and add it on to the index value.v
+                // Get the step value, and add it on to the index value.
                 bool addImmediate = false;
                 DIns addOp;
 
@@ -1645,8 +1740,8 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
 
             case CORE_IF_THEN:
             case CORE_IF_THEN_ELSE:;
-                BCode thenBranch = (BCode){NULL, 0};
-                BCode elseBranch = (BCode){NULL, 0};
+                BCode thenBranch = d_malloc_bytecode(0);
+                BCode elseBranch = d_malloc_bytecode(0);
 
                 int initStackTop = context->stackTop;
 
@@ -1663,6 +1758,16 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
 
                     thenBranch = d_generate_execution_node(
                         context, firstNodeIndex, false);
+
+                    // Say the first instruction in this bytecode activates the
+                    // execution wire.
+                    if (context->debug) {
+                        InsExecInfo thenExecInfo;
+                        thenExecInfo.execWire = context->graph.wires[wireIndex];
+
+                        d_debug_add_exec_info(&(thenBranch.debugInfo), 0,
+                                              thenExecInfo);
+                    }
                 }
 
                 int thenTopDiff = context->stackTop - initStackTop;
@@ -1682,6 +1787,17 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
 
                         elseBranch = d_generate_execution_node(
                             context, firstNodeIndex, false);
+
+                        // Say the first instruction in this bytecode activates
+                        // the execution wire.
+                        if (context->debug) {
+                            InsExecInfo elseExecInfo;
+                            elseExecInfo.execWire =
+                                context->graph.wires[wireIndex];
+
+                            d_debug_add_exec_info(&(elseBranch.debugInfo), 0,
+                                                  elseExecInfo);
+                        }
                     }
                 }
 
@@ -1743,7 +1859,7 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
                 // stack!
                 context->stackTop--;
 
-                BCode conAtEndElse = (BCode){NULL, 0};
+                BCode conAtEndElse = d_malloc_bytecode(0);
 
                 if (!optimizeJmpToEnd) {
                     conAtEndElse = d_bytecode_ins(OP_JRFI);
@@ -1876,7 +1992,7 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
                 // TODO: What if there isn't a connecting node?
                 wireIndex = d_wire_find_first(context->graph, socket);
 
-                BCode trueCode = {NULL, 0};
+                BCode trueCode = d_malloc_bytecode(0);
 
                 if (IS_WIRE_FROM(context->graph, wireIndex, socket)) {
                     NodeSocket connectedTo =
@@ -1888,6 +2004,17 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
                     context->stackTop--;
                     trueCode = d_generate_execution_node(context,
                                                          firstNodeIndex, false);
+
+                    // Say the first instruction of this bytecode activates the
+                    // execution wire between the While node and this node.
+                    if (context->debug) {
+                        InsExecInfo whileExecInfo;
+                        whileExecInfo.execWire =
+                            context->graph.wires[wireIndex];
+
+                        d_debug_add_exec_info(&(trueCode.debugInfo), 0,
+                                              whileExecInfo);
+                    }
                 }
 
                 // After the loop has executed, we want to pop from the stack
@@ -1940,6 +2067,15 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
                 break;
         }
 
+        // Say that the first instruction in action is when the execution node
+        // gets activated.
+        if (context->debug) {
+            InsNodeInfo execNodeInfo;
+            execNodeInfo.node = nodeIndex;
+
+            d_debug_add_node_info(&(action.debugInfo), 0, execNodeInfo);
+        }
+
         d_concat_bytecode(&out, &action);
         d_free_bytecode(&action);
     }
@@ -1973,7 +2109,7 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
     }
 
     // Now, we generate the bytecode for the next execution node.
-    BCode nextCode = {NULL, 0};
+    BCode nextCode = d_malloc_bytecode(0);
 
     const size_t numInputs = d_node_num_inputs(context->graph, nodeIndex);
 
@@ -2006,6 +2142,15 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
             // bytecode after this node's bytecode.
             nextCode =
                 d_generate_execution_node(context, nextNodeIndex, retAtEnd);
+
+            // Say the first instruction of this bytecode represents activating
+            // the execution wire.
+            if (context->debug) {
+                InsExecInfo execInfo;
+                execInfo.execWire = context->graph.wires[wireIndex];
+
+                d_debug_add_exec_info(&(nextCode.debugInfo), 0, execInfo);
+            }
         }
     }
 
@@ -2055,6 +2200,15 @@ BCode d_generate_start(BuildContext *context, size_t startNodeIndex) {
             BCode exe =
                 d_generate_execution_node(context, socket.nodeIndex, true);
 
+            // Say that the first instruction in this bytecode represents
+            // activating the execution socket.
+            if (context->debug) {
+                InsExecInfo execInfo;
+                execInfo.execWire = context->graph.wires[wireIndex];
+
+                d_debug_add_exec_info(&(exe.debugInfo), 0, execInfo);
+            }
+
             d_concat_bytecode(&out, &exe);
             d_free_bytecode(&exe);
         }
@@ -2085,7 +2239,7 @@ BCode d_generate_function(BuildContext *context, SheetFunction func) {
     context->stackTop = d_definition_num_inputs(&(func.functionDefinition));
 
     if (d_is_subroutine(func)) {
-        if (func.defineNodeIndex >= 0) {
+        if (func.numDefineNodes == 1) {
             VERBOSE(5, "-- Generating bytecode for subroutine %s...\n",
                     func.functionDefinition.name);
 
@@ -2104,6 +2258,15 @@ BCode d_generate_function(BuildContext *context, SheetFunction func) {
                 BCode exe =
                     d_generate_execution_node(context, socket.nodeIndex, true);
 
+                // Say that the first instruction in this bytecode represents
+                // activating the execution wire after the Define node.
+                if (context->debug) {
+                    InsExecInfo execInfo;
+                    execInfo.execWire = context->graph.wires[wireIndex];
+
+                    d_debug_add_exec_info(&(exe.debugInfo), 0, execInfo);
+                }
+
                 d_concat_bytecode(&out, &exe);
                 d_free_bytecode(&exe);
             }
@@ -2118,7 +2281,7 @@ BCode d_generate_function(BuildContext *context, SheetFunction func) {
         // node.
         size_t returnNode = func.lastReturnNodeIndex;
 
-        if (returnNode >= 0) {
+        if (func.numReturnNodes == 1) {
             // Now we recursively generate the bytecode for the inputs
             // of the Return node, so the final Return values are
             // calculated.
@@ -2133,15 +2296,16 @@ BCode d_generate_function(BuildContext *context, SheetFunction func) {
 }
 
 /**
- * \fn void d_codegen_compile(Sheet *sheet)
+ * \fn void d_codegen_compile(Sheet *sheet, bool debug)
  * \brief Given that Semantic Analysis has taken place, generate the bytecode
  * for a given sheet.
  *
  * \param sheet The sheet to generate the bytecode for.
+ * \param debug If true, we include debug information as well.
  */
-void d_codegen_compile(Sheet *sheet) {
+void d_codegen_compile(Sheet *sheet, bool debug) {
 
-    BCode text = (BCode){NULL, 0};
+    BCode text = d_malloc_bytecode(0);
 
     // Create a context object for the build.
     BuildContext context;
@@ -2152,6 +2316,8 @@ void d_codegen_compile(Sheet *sheet) {
 
     context.dataSection     = NULL;
     context.dataSectionSize = 0;
+
+    context.debug = debug; // So we don't waste time generating debug info.
 
     // Start off by allocating space for the variables defined in the sheet.
     for (size_t i = 0; i < sheet->numVariables; i++) {
@@ -2254,6 +2420,13 @@ void d_codegen_compile(Sheet *sheet) {
     // Put the data section into the sheet.
     sheet->_data     = context.dataSection;
     sheet->_dataSize = context.dataSectionSize;
+
+    // Only put the debugging information in if we generated it.
+    if (debug) {
+        sheet->_debugInfo = text.debugInfo;
+    } else {
+        d_debug_free_info(&(text.debugInfo));
+    }
 
     // Put the link metadata into the sheet.
     sheet->_link = context.linkMetaList;

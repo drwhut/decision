@@ -40,11 +40,18 @@
 BCode d_malloc_bytecode(size_t size) {
     BCode out;
 
-    out.code = d_calloc(size, sizeof(char));
+    if (size > 0) {
+        out.code = d_calloc(size, sizeof(char));
+    } else {
+        out.code = NULL;
+    }
+
     out.size = size;
 
     out.linkList     = NULL;
     out.linkListSize = 0;
+
+    out.debugInfo = NO_DEBUG_INFO;
 
     return out;
 }
@@ -122,6 +129,8 @@ void d_free_bytecode(BCode *bcode) {
     bcode->size         = 0;
     bcode->linkList     = NULL;
     bcode->linkListSize = 0;
+
+    d_debug_free_info(&(bcode->debugInfo));
 }
 
 /**
@@ -174,122 +183,34 @@ void d_concat_bytecode(BCode *base, BCode *after) {
             base->linkListSize = totalLinkSize;
         }
 
+        // Add the after debug into to the before debug info, and correct the
+        // instructions along the way.
+        DebugInfo afterDebugInfo = after->debugInfo;
+
+        if (afterDebugInfo.debugInfoList != NULL &&
+            afterDebugInfo.debugInfoSize > 0) {
+            for (size_t i = 0; i < afterDebugInfo.debugInfoSize; i++) {
+                InsDebugInfo debugInfo = afterDebugInfo.debugInfoList[i];
+
+                size_t ins = debugInfo.ins + base->size;
+
+                if (debugInfo.infoType == INFO_VALUE) {
+                    InsValueInfo valueInfo = debugInfo.info.valueInfo;
+                    d_debug_add_value_info(&(base->debugInfo), ins, valueInfo);
+                } else if (debugInfo.infoType == INFO_EXEC) {
+                    InsExecInfo execInfo = debugInfo.info.execInfo;
+                    d_debug_add_exec_info(&(base->debugInfo), ins, execInfo);
+                } else if (debugInfo.infoType == INFO_NODE) {
+                    InsNodeInfo nodeInfo = debugInfo.info.nodeInfo;
+                    d_debug_add_node_info(&(base->debugInfo), ins, nodeInfo);
+                } else if (debugInfo.infoType == INFO_CALL) {
+                    InsCallInfo callInfo = debugInfo.info.callInfo;
+                    d_debug_add_call_info(&(base->debugInfo), ins, callInfo);
+                }
+            }
+        }
+
         base->size = totalSize;
-    }
-}
-
-/**
- * \fn void d_insert_bytecode(BCode *base, BCode *insertCode,
- *                            size_t insertIndex)
- * \brief Insert some bytecode into another set of bytecode at a particular
- * point.
- *
- * This is a modification of d_optimize_remove_bytecode()
- *
- * \param base The bytecode to insert into.
- * \param insertCode The bytecode to insert.
- * \param insertIndex The index to insert indexCode into base, i.e. when the
- * operation is complete, this index will contain the start of insertCode.
- */
-void d_insert_bytecode(BCode *base, BCode *insertCode, size_t insertIndex) {
-    if (insertCode->size > 0) {
-        // Resize the base bytecode.
-        if (base->code != NULL && base->size > 0) {
-            base->code =
-                d_realloc(base->code, base->size + insertCode->size);
-        } else {
-            base->code = d_calloc(insertCode->size, sizeof(char));
-        }
-
-        // Move everything at and after the index in the base bytecode along to
-        // make room for the new bytecode.
-        char *moveFrom = base->code + insertIndex;
-        char *moveTo   = moveFrom + insertCode->size;
-        memmove(moveTo, moveFrom, base->size - insertIndex);
-
-        // Copy the new bytecode into the correct position.
-        memcpy(moveFrom, insertCode->code, insertCode->size);
-
-        // Set the new size of the base bytecode.
-        base->size = base->size + insertCode->size;
-
-        // By doing this we may have made some instructions that use relative
-        // addressing overshoot or undershoot. We need to fix those
-        // instructions.
-        for (size_t i = 0; i < base->size;) {
-            DIns opcode = base->code[i];
-
-            // Remember in code generation we only work with full immediates.
-            if (opcode == OP_CALLRF || opcode == OP_JRFI ||
-                opcode == OP_JRCONFI) {
-
-                fimmediate_t *jmpPtr = (fimmediate_t *)(base->code + i + 1);
-                fimmediate_t jmpAmt  = *jmpPtr;
-
-                // TODO: Deal with the case that it jumped INTO the inserted
-                // region.
-
-                // If the instruction was going backwards, and it was after the
-                // inserted region, we may have a problem.
-                if (i >= insertIndex + insertCode->size && jmpAmt < 0) {
-                    // Did it jump over the inserted region?
-                    if (i - insertCode->size + jmpAmt < insertIndex) {
-                        // Then fix the jump amount.
-                        jmpAmt  = jmpAmt - (fimmediate_t)insertCode->size;
-                        *jmpPtr = jmpAmt;
-                    }
-                }
-
-                // If the instruction was going forwards, and it was before the
-                // inserted region, we may have a problem.
-                else if (i < insertIndex && jmpAmt > 0) {
-                    // Did it jump over the inserted region?
-                    if (i + jmpAmt >= insertIndex + insertCode->size) {
-                        // Then fix the jump amount.
-                        jmpAmt  = jmpAmt + (fimmediate_t)insertCode->size;
-                        *jmpPtr = jmpAmt;
-                    }
-                }
-            }
-
-            i += d_vm_ins_size(opcode);
-        }
-
-        // Next, we need to fix the original InstructionToLinks before adding
-        // the new ones in, otherwise we won't know which is which.
-        for (size_t i = 0; i < base->linkListSize; i++) {
-            size_t insIndex = base->linkList[i].ins;
-
-            if (insIndex >= insertIndex) {
-                base->linkList[i].ins = insIndex + insertCode->size;
-            }
-        }
-
-        // Next, we'll insert the InstructionToLinks from the inserted bytecode,
-        // but we need to remember to modify their instruction indexes, since
-        // they will have changed.
-        if (insertCode->linkListSize > 0) {
-            if (base->linkList != NULL && base->linkListSize > 0) {
-                base->linkList =
-                    d_realloc(base->linkList,
-                              (base->linkListSize + insertCode->linkListSize) *
-                                  sizeof(InstructionToLink));
-            } else {
-                base->linkList = d_calloc(insertCode->linkListSize,
-                                          sizeof(InstructionToLink));
-            }
-
-            for (size_t i = 0; i < insertCode->linkListSize; i++) {
-                InstructionToLink itl = insertCode->linkList[i];
-                itl.ins               = itl.ins + insertIndex;
-
-                // linkListSize hasn't changed yet!
-                base->linkList[base->linkListSize + i] = itl;
-            }
-
-            // I spoke too soon...
-            base->linkListSize = base->linkListSize + insertCode->linkListSize;
-        }
     }
 }
 
@@ -625,4 +546,6 @@ void d_asm_dump_all(Sheet *sheet) {
 
     printf("\n.incl:\n");
     d_asm_incl_dump(sheet->includes, sheet->numIncludes);
+
+    printf("\n");
 }

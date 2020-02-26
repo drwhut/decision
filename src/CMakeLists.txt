@@ -21,6 +21,7 @@ dasm.c
 dcfunc.c
 dcodegen.c
 dcore.c
+ddebug.c
 decision.c
 derror.c
 dgraph.c
@@ -43,6 +44,7 @@ dcfg.h
 dcfunc.h
 dcodegen.h
 dcore.h
+ddebug.h
 decision.h
 derror.h
 dgraph.h

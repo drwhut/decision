@@ -46,6 +46,9 @@ include_directories(${PROJECT_SOURCE_DIR}/src)
 add_executable(TestCFromDecision c_from_decision.c)
 link_with_decision(TestCFromDecision)
 
+add_executable(TestDebugging debugging.c)
+link_with_decision(TestDebugging)
+
 add_executable(TestDecisionFiles decision_files.c)
 link_with_decision(TestDecisionFiles)
 
@@ -60,6 +63,7 @@ link_with_decision(TestDecisionStrings)
 
 # Defining the CMake tests.
 add_test(NAME TestCFromDecision COMMAND TestCFromDecision)
+add_test(NAME TestDebugging COMMAND TestDebugging)
 add_test(NAME TestDecisionFiles COMMAND TestDecisionFiles)
 add_test(NAME TestDecisionFromC COMMAND TestDecisionFromC)
 add_test(NAME TestDecisionObjects COMMAND TestDecisionObjects)

@@ -107,6 +107,9 @@ int main() {
     Sheet *includeList[] = {NULL, NULL};
     includeList[0]       = library;
 
+    CompileOptions options = DEFAULT_COMPILE_OPTIONS;
+    options.includes       = includeList;
+
     char *src = "Start~#1\n"
                 "Half(100.125)~#2\n"
                 "Print(#1, #2)~#3\n"
@@ -120,7 +123,7 @@ int main() {
 
     // d_run_string
     START_CAPTURE_STDOUT()
-    d_run_string(src, NULL, includeList);
+    d_run_string(src, NULL, &options);
     STOP_CAPTURE_STDOUT()
     ASSERT_CAPTURED_STDOUT(answer)
 
@@ -131,16 +134,16 @@ int main() {
 
     // d_run_file
     START_CAPTURE_STDOUT()
-    d_run_file("main.dc", includeList);
+    d_run_file("main.dc", &options);
     STOP_CAPTURE_STDOUT()
     ASSERT_CAPTURED_STDOUT(answer)
 
     // d_compile_string
-    d_compile_string(src, "main.dco", includeList);
+    d_compile_string(src, "main.dco", &options);
 
     // d_run_file
     START_CAPTURE_STDOUT()
-    d_run_file("main.dco", includeList);
+    d_run_file("main.dco", &options);
     STOP_CAPTURE_STDOUT()
     ASSERT_CAPTURED_STDOUT(answer)
 

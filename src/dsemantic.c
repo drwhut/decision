@@ -283,7 +283,8 @@ static void add_property_Variable(Sheet *sheet, size_t lineNum,
 }
 
 static void add_property_Include(Sheet *sheet, size_t lineNum,
-                                 PropertyArgumentList argList) {
+                                 PropertyArgumentList argList,
+                                 bool debugInclude) {
     if (argList.numArgs == 1) {
         PropertyArgument arg = argList.args[0];
 
@@ -296,7 +297,7 @@ static void add_property_Include(Sheet *sheet, size_t lineNum,
                 LexToken *token = arg.data.literal;
 
                 Sheet *includedSheet = d_sheet_add_include_from_path(
-                    sheet, token->data.stringValue);
+                    sheet, token->data.stringValue, debugInclude);
 
                 if (includedSheet->hasErrors) {
                     ERROR_COMPILER(sheet->filePath, lineNum, true,
@@ -848,7 +849,8 @@ static void add_property_FunctionOutput(Sheet *sheet, size_t lineNum,
 
 /* A helper function for d_semantic_scan_properties */
 static void scan_property(Sheet *sheet, const char *propertyName,
-                          SyntaxNode *node, size_t lineNum) {
+                          SyntaxNode *node, size_t lineNum,
+                          bool debugIncluded) {
     // Now we have the property name, we can get the
     // arguments.
     PropertyArgumentList argList = (PropertyArgumentList){NULL, 0};
@@ -912,12 +914,14 @@ static void scan_property(Sheet *sheet, const char *propertyName,
 
     // What is the name of the property?
     IF_PROPERTY(Variable)
-    else IF_PROPERTY(Include)
     else IF_PROPERTY(Function)
     else IF_PROPERTY(Subroutine)
     else IF_PROPERTY(FunctionInput)
     else IF_PROPERTY(FunctionOutput)
-    else {
+    // Include needs to know if we want to debug included sheets!
+    else if (strcmp(propertyName, "Include") == 0) {
+        add_property_Include(sheet, lineNum, argList, debugIncluded);
+    } else {
         ERROR_COMPILER(sheet->filePath, lineNum, true,
                        "Unknown property name %s", propertyName);
     }
@@ -930,13 +934,16 @@ static void scan_property(Sheet *sheet, const char *propertyName,
 }
 
 /**
- * \fn void d_semantic_scan_properties(Sheet *sheet, SyntaxNode *root)
+ * \fn void d_semantic_scan_properties(Sheet *sheet, SyntaxNode *root,
+ *                                     bool debugIncluded)
  * \brief Sets the properties of the sheet, given the syntax tree.
  *
  * \param sheet A pointer to the sheet where we want to set the properties.
  * \param root The root node of the syntax tree.
+ * \param debugIncluded If true, compile included sheets in debug mode.
  */
-void d_semantic_scan_properties(Sheet *sheet, SyntaxNode *root) {
+void d_semantic_scan_properties(Sheet *sheet, SyntaxNode *root,
+                                bool debugIncluded) {
     // Firstly, get all Property Statements from the syntax tree.
     SyntaxSearchResult propertySearchResults =
         d_syntax_get_all_nodes_with(root, STX_propertyStatement, false);
@@ -966,7 +973,8 @@ void d_semantic_scan_properties(Sheet *sheet, SyntaxNode *root) {
                                 "- Checking property named %s on line %zu...\n",
                                 propertyName, lineNum);
 
-                        scan_property(sheet, propertyName, node, lineNum);
+                        scan_property(sheet, propertyName, node, lineNum,
+                                      debugIncluded);
 
                         // Once we've scanned the property, there is no need to
                         // store the name of the property anymore!
@@ -1686,9 +1694,36 @@ static void reduce_core_node(Sheet *sheet, const CoreFunction coreFunc,
             // If we know our output needs to be a Float, set it now. (Except if
             // it is a divide.)
             if (coreFunc != CORE_DIVIDE) {
+                DType confirmedType = (hasFloatInput) ? TYPE_FLOAT : TYPE_INT;
                 sheet->graph.nodes[outputSocket.nodeIndex]
-                    .reducedTypes[outputSocket.socketIndex] =
-                    (hasFloatInput) ? TYPE_FLOAT : TYPE_INT;
+                    .reducedTypes[outputSocket.socketIndex] = confirmedType;
+
+                // Now we need to check if the type we just set is incompatible
+                // with any of the connections.
+                int wireIndex = d_wire_find_first(sheet->graph, outputSocket);
+
+                while (IS_WIRE_FROM(sheet->graph, wireIndex, outputSocket)) {
+                    NodeSocket connSocket =
+                        sheet->graph.wires[wireIndex].socketTo;
+                    SocketMeta meta =
+                        d_get_socket_meta(sheet->graph, connSocket);
+
+                    if ((confirmedType & meta.type) == 0) {
+                        Node node = sheet->graph.nodes[nodeIndex];
+                        Node connNode =
+                            sheet->graph.nodes[connSocket.nodeIndex];
+
+                        ERROR_COMPILER(
+                            sheet->filePath, node.lineNum, true,
+                            "Output socket of %s node has reduced type to %s, "
+                            "which is incompatible with the connected socket "
+                            "in %s, which has type %s",
+                            node.definition->name, d_type_name(confirmedType),
+                            connNode.definition->name, d_type_name(meta.type));
+                    }
+
+                    wireIndex++;
+                }
             }
 
             // If we've gotten all of our inputs reduced, we can say we are
@@ -2245,15 +2280,16 @@ void d_semantic_detect_loops(Sheet *sheet) {
 }
 
 /**
- * \fn void d_semantic_scan(Sheet *sheet, SyntaxNode *root)
+ * \fn void d_semantic_scan(Sheet *sheet, SyntaxNode *root, bool debugIncluded)
  * \brief Perform Semantic Analysis on a syntax tree.
  *
  * \param sheet The sheet to put everything into.
  * \param root The *valid* syntax tree to scan everything from.
+ * \param debugIncluded If true, compile any included sheets in debug mode.
  */
-void d_semantic_scan(Sheet *sheet, SyntaxNode *root) {
+void d_semantic_scan(Sheet *sheet, SyntaxNode *root, bool debugIncluded) {
     VERBOSE(1, "-- Scanning properties...\n")
-    d_semantic_scan_properties(sheet, root);
+    d_semantic_scan_properties(sheet, root, debugIncluded);
 
     VERBOSE(1, "-- Scanning nodes...\n")
     d_semantic_scan_nodes(sheet, root);

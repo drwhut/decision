@@ -25,6 +25,7 @@
 #define DASM_H
 
 #include "dcfg.h"
+#include "ddebug.h"
 #include "dlink.h"
 #include "dvm.h"
 
@@ -53,6 +54,8 @@ typedef struct _bcode {
     struct _insToLink *linkList; ///< An array of instructions that will need
                                  ///< to be linked.
     size_t linkListSize;         ///< The size of the `linkList` array.
+
+    DebugInfo debugInfo;
 } BCode;
 
 /*
@@ -126,22 +129,6 @@ DECISION_API void d_free_bytecode(BCode *bcode);
  * \param after The bytecode to append. Not changed.
  */
 DECISION_API void d_concat_bytecode(BCode *base, BCode *after);
-
-/**
- * \fn void d_insert_bytecode(BCode *base, BCode *insertCode,
- *                            size_t insertIndex)
- * \brief Insert some bytecode into another set of bytecode at a particular
- * point.
- *
- * This is a modification of d_optimize_remove_bytecode()
- *
- * \param base The bytecode to insert into.
- * \param insertCode The bytecode to insert.
- * \param insertIndex The index to insert indexCode into base, i.e. when the
- * operation is complete, this index will contain the start of insertCode.
- */
-DECISION_API void d_insert_bytecode(BCode *base, BCode *insertCode,
-                                    size_t insertIndex);
 
 /*
 === FUNCTIONS =============================================

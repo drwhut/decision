@@ -677,9 +677,9 @@ Sheet *d_obj_load(const char *obj, size_t size, const char *filePath,
 #endif // DECISION_32
 
     // Load this object file's Decision version.
-    unsigned char major = read_byte(&reader);
-    unsigned char minor = read_byte(&reader);
-    unsigned char patch = read_byte(&reader);
+    short major = read_byte(&reader);
+    short minor = read_byte(&reader);
+    short patch = read_byte(&reader);
 
     // Is this version in the past or in the future?
     short cmp = 0;
@@ -910,7 +910,7 @@ Sheet *d_obj_load(const char *obj, size_t size, const char *filePath,
             }
 
             if (!inIncludes) {
-                Sheet *include = d_sheet_add_include_from_path(out, path);
+                Sheet *include = d_sheet_add_include_from_path(out, path, false);
 
                 if (include->hasErrors) {
                     ERROR_COMPILER(out->filePath, 0, true,

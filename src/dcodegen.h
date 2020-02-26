@@ -27,6 +27,7 @@
 
 #include "dasm.h"
 #include "dcfg.h"
+#include "ddebug.h"
 #include "dlink.h"
 #include "dsheet.h"
 #include "dvm.h"
@@ -54,6 +55,8 @@ typedef struct _buildContext {
 
     char *dataSection;      ///< The data section being built up.
     size_t dataSectionSize; ///< The size of the data section.
+
+    bool debug;          ///< Do we want to build up debugging information?
 } BuildContext;
 
 /*
@@ -352,12 +355,13 @@ DECISION_API BCode d_generate_function(BuildContext *context,
                                        SheetFunction func);
 
 /**
- * \fn void d_codegen_compile(Sheet *sheet)
+ * \fn void d_codegen_compile(Sheet *sheet, bool debug)
  * \brief Given that Semantic Analysis has taken place, generate the bytecode
  * for a given sheet.
  *
  * \param sheet The sheet to generate the bytecode for.
+ * \param debug If true, we include debug information as well.
  */
-DECISION_API void d_codegen_compile(Sheet *sheet);
+DECISION_API void d_codegen_compile(Sheet *sheet, bool debug);
 
 #endif // DCODEGEN_H

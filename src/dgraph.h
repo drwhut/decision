@@ -281,7 +281,7 @@ DECISION_API bool d_is_node_socket_valid(Graph graph, NodeSocket socket);
 DECISION_API bool d_is_input_socket(Graph graph, NodeSocket socket);
 
 /**
- * \fn const SocketMeta d_get_socket_meta(Graph graph, NodeSocket nodeSocket)
+ * \fn SocketMeta d_get_socket_meta(Graph graph, NodeSocket nodeSocket)
  * \brief Get the metadata of a node's socket.
  *
  * \return The socket's metadata.
@@ -289,8 +289,7 @@ DECISION_API bool d_is_input_socket(Graph graph, NodeSocket socket);
  * \param graph The graph the socket belongs to.
  * \param nodeSocket The socket to get the metadata for.
  */
-DECISION_API const SocketMeta d_get_socket_meta(Graph graph,
-                                                NodeSocket nodeSocket);
+DECISION_API SocketMeta d_get_socket_meta(Graph graph, NodeSocket nodeSocket);
 
 /**
  * \fn short d_wire_cmp(Wire wire1, Wire wire2)

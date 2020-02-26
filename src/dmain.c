@@ -19,6 +19,7 @@
 #include "dasm.h"
 #include "dcfg.h"
 #include "dcore.h"
+#include "ddebug.h"
 #include "decision.h"
 #include "dmalloc.h"
 #include "dsheet.h"
@@ -89,6 +90,7 @@ static void print_help() {
 #define ARG(test) strcmp(arg, #test) == 0
 
 int main(int argc, char *argv[]) {
+
     char *filePath   = NULL;
     bool compile     = false;
     bool disassemble = false;

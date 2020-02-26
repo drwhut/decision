@@ -519,7 +519,7 @@ DECISION_API size_t d_vm_top(DVM *vm);
 */
 
 /**
- * \fn const unsigned char d_vm_ins_size(DIns opcode)
+ * \fn unsigned char d_vm_ins_size(DIns opcode)
  * \brief Given an opcode, get the total size of the instruction involving that
  * opcode in bytes.
  *
@@ -527,7 +527,7 @@ DECISION_API size_t d_vm_top(DVM *vm);
  *
  * \param opcode The opcode to query.
  */
-DECISION_API const unsigned char d_vm_ins_size(DIns opcode);
+DECISION_API unsigned char d_vm_ins_size(DIns opcode);
 
 /**
  * \fn DVM d_vm_create()

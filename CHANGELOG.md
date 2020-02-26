@@ -55,6 +55,19 @@ loaded before any compilation happens.
 * Sheets now have an `allowFree` property that stops sheets that include it
 from freeing the sheet when they are freed.
 
+## Debugging
+
+* The ability to debug Decision sheets has now been added, and can be done
+  through the C API (see [ddebug.h](src/ddebug.h)).
+  * If compiling in debug mode, code generation will store information about
+  instructions in the bytecode, and optimisation will no longer occur.
+  * You can provide agendas to debugging sessions, which allows you to give
+  function pointers which are called when certain events happen, and also allows
+  you to provide node and wire breakpoints.
+  * You can then run debug sessions, which essentially simulates running the
+  Decision VM.
+  * A C test has been added to test this functionality.
+
 ## Refactoring
 
 * Split large source files into smaller ones to improve code readability.
@@ -63,6 +76,7 @@ from freeing the sheet when they are freed.
   * Finding the definitions of names has been moved to `dname.c` and `dname.h`.
   * Decision object files now have their own set of source files, `dobj.c` and
   `dobj.h`, and the code has been revamped to be less error-prone.
+* Removed `d_insert_bytecode`, as it is no longer used.
 * Removed all calls to "safe" Visual C++ functions, due to considerations of
 standardisation.
 
@@ -87,6 +101,11 @@ dedicating itself to a syntax definition.
 * Wires are stored in an ordered list, rather than as direct pointers, to
 reduce the number of memory allocations and to remove the potential for
 dangling pointers.
+
+## Bug Fixes
+
+* Fixed a bug where reduced types were no longer compatible with their
+connected sockets, but the compiler didn't throw an error.
 
 # Decision v0.2.0 - 16th January 2020
 

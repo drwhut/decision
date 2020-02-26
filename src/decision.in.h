@@ -97,6 +97,31 @@ struct _sheet;
 /* A forward declaration of the DVM struct from dvm.h */
 struct _DVM;
 
+/**
+ * \struct _compileOptions
+ * \brief A set of options for when a sheet is compiled.
+ * 
+ * By default, there are no initial includes, and the sheet is not compiled in
+ * debug mode.
+ * 
+ * \typedef struct _compileOptions CompileOptions
+ */
+typedef struct _compileOptions {
+    struct _sheet **includes; ///< A NULL-terminated array. Can itself be NULL
+                              ///< to signify no initial includes.
+    bool debug;               ///< Compiles sheets with debug information.
+                              ///< This allows for debugging the sheets,
+                              ///< but sheets are not longer optimised.
+                              ///< Note that compiled sheets do not store debug
+                              ///< information, and thus cannot be debugged.
+} CompileOptions;
+
+/**
+ * \def DEFAULT_COMPILE_OPTIONS
+ * \brief The default compile options.
+ */
+#define DEFAULT_COMPILE_OPTIONS (CompileOptions){NULL, false}
+
 /*
 === FUNCTIONS =============================================
 */
@@ -130,7 +155,7 @@ DECISION_API bool d_run_function(struct _DVM *vm, struct _sheet *sheet,
 
 /**
  * \fn Sheet *d_load_string(const char *source, const char *name,
- *                          Sheet **includes)
+ *                          CompileOptions *options)
  * \brief Take Decision source code and compile it into bytecode, but do not
  * run it.
  *
@@ -138,14 +163,15 @@ DECISION_API bool d_run_function(struct _DVM *vm, struct _sheet *sheet,
  *
  * \param source The source code to compile.
  * \param name The name of the sheet. If NULL, it is set to `"source"`.
- * \param includes A NULL-terminated list of initially included sheets.
- * Can be NULL.
+ * \param options A set of compile options. If NULL, the default settings are
+ * used.
  */
 DECISION_API struct _sheet *d_load_string(const char *source, const char *name,
-                                          struct _sheet **includes);
+                                          CompileOptions *options);
 
 /**
- * \fn bool d_run_string(const char *source, const char *name, Sheet **includes)
+ * \fn bool d_run_string(const char *source, const char *name,
+ *                       CompileOptions *options)
  * \brief Take Decision source code and compile it into bytecode. If it
  * compiled successfully, run it in the virtual machine.
  *
@@ -153,15 +179,15 @@ DECISION_API struct _sheet *d_load_string(const char *source, const char *name,
  *
  * \param source The source code the compile.
  * \param name The name of the sheet. If `NULL`, it is set to `"source"`.
- * \param includes A NULL-terminated list of initially included sheets.
- * Can be NULL.
+ * \param options A set of compile options. If NULL, the default settings are
+ * used.
  */
 DECISION_API bool d_run_string(const char *source, const char *name,
-                               struct _sheet **includes);
+                               CompileOptions *options);
 
 /**
  * \fn bool d_compile_string(const char *source, const char *filePath,
- *                           Sheet **includes)
+ *                           CompileOptions *options)
  * \brief Take Decision source code and compile it into bytecode. Then save
  * it into a binary file if it compiled successfully.
  *
@@ -169,43 +195,43 @@ DECISION_API bool d_run_string(const char *source, const char *name,
  *
  * \param source The source code to compile.
  * \param filePath Where to write the object file to.
- * \param includes A NULL-terminated list of initially included sheets.
- * Can be NULL.
+ * \param options A set of compile options. If NULL, the default settings are
+ * used.
  */
 DECISION_API bool d_compile_string(const char *source, const char *filePath,
-                                   struct _sheet **includes);
+                                   CompileOptions *options);
 
 /**
- * \fn Sheet *d_load_source_file(const char *filePath, Sheet **includes)
+ * \fn Sheet *d_load_source_file(const char *filePath, CompileOptions *options)
  * \brief Take Decision source code from a file and compile it into bytecode,
  * but do not run it.
  *
  * \return A malloc'd sheet containing all of the compilation info.
  *
  * \param filePath The file path of the source file to compile.
- * \param includes A NULL-terminated list of initially included sheets.
- * Can be NULL.
+ * \param options A set of compile options. If NULL, the default settings are
+ * used.
  */
 DECISION_API struct _sheet *d_load_source_file(const char *filePath,
-                                               struct _sheet **includes);
+                                               CompileOptions *options);
 
 /**
- * \fn bool d_run_source_file(const char *filePath, Sheet **includes)
+ * \fn bool d_run_source_file(const char *filePath, CompileOptions *options)
  * \brief Take Decision source code in a file and compile it into bytecode. If
  * it compiled successfully, run it in the virtual machine.
  *
  * \return If the code compiled/ran without any errors.
  *
  * \param filePath The file path of the source file to compile.
- * \param includes A NULL-terminated list of initially included sheets.
- * Can be NULL.
+ * \param options A set of compile options. If NULL, the default settings are
+ * used.
  */
 DECISION_API bool d_run_source_file(const char *filePath,
-                                    struct _sheet **includes);
+                                    CompileOptions *options);
 
 /**
  * \fn bool d_compile_file(const char *filePathIn, const char *filePathOut
- *                         Sheet **includes)
+ *                         CompileOptions *options)
  * \brief Take Decision source code from a file and compile it into bytecode.
  * If it compiled successfully, save it into a binary file.
  *
@@ -213,39 +239,39 @@ DECISION_API bool d_run_source_file(const char *filePath,
  *
  * \param filePathIn The file path of the source file to compile.
  * \param filePathOut Where to write the object file to.
- * \param includes A NULL-terminated list of initially included sheets.
- * Can be NULL.
+ * \param options A set of compile options. If NULL, the default settings are
+ * used.
  */
 DECISION_API bool d_compile_file(const char *filePathIn,
                                  const char *filePathOut,
-                                 struct _sheet **includes);
+                                 CompileOptions *options);
 
 /**
- * \fn Sheet *d_load_object_file(const char *filePath, Sheet **includes)
+ * \fn Sheet *d_load_object_file(const char *filePath, CompileOptions *options)
  * \brief Take a Decision object file and load it into memory.
  *
  * \return A malloc'd sheet object containing all of the compilation info.
  *
  * \param filePath The file path of the object file.
- * \param includes A NULL-terminated list of initially included sheets.
- * Can be NULL.
+ * \param options A set of compile options. If NULL, the default settings are
+ * used. The debug setting is ignored, as object files cannot be debugged.
  */
 DECISION_API struct _sheet *d_load_object_file(const char *filePath,
-                                               struct _sheet **includes);
+                                               CompileOptions *options);
 
 /**
- * \fn bool d_run_object_file(const char *filePath, Sheet **includes)
+ * \fn bool d_run_object_file(const char *filePath, CompileOptions *options)
  * \brief Take a Decision object file, load it into memory, and run it in the
  * virtual machine.
  *
  * \return If the code ran without any errors.
  *
  * \param filePath The file path of the object file.
- * \param includes A NULL-terminated list of initially included sheets.
- * Can be NULL.
+ * \param options A set of compile options. If NULL, the default settings are
+ * used. The debug setting is ignored, as object files cannot be debugged.
  */
 DECISION_API bool d_run_object_file(const char *filePath,
-                                    struct _sheet **includes);
+                                    CompileOptions *options);
 
 /**
  * \fn short d_is_object_file(const char *filePath)
@@ -260,30 +286,30 @@ DECISION_API bool d_run_object_file(const char *filePath,
 DECISION_API short d_is_object_file(const char *filePath);
 
 /**
- * \fn Sheet *d_load_file(const char *filePath, Sheet **includes)
+ * \fn Sheet *d_load_file(const char *filePath, CompileOptions *options)
  * \brief Take a Decision file, decide whether it is a source or an object file
  * based on its contents, and load it into memory.
  *
  * \return A malloc'd sheet object containing all of the compilation info.
  *
  * \param filePath The file path of the file to load.
- * \param includes A NULL-terminated list of initially included sheets.
- * Can be NULL.
+ * \param options A set of compile options. If NULL, the default settings are
+ * used.
  */
 DECISION_API struct _sheet *d_load_file(const char *filePath,
-                                        struct _sheet **includes);
+                                        CompileOptions *options);
 
 /**
- * \fn bool d_run_file(const char *filePath, Sheet **includes)
+ * \fn bool d_run_file(const char *filePath, CompileOptions *options)
  * \brief Take a Decision file, decide whether it is a source or an object file
  * based on its contents, and run it in the virtual machine.
  *
  * \return If the code compiled/ran without any errors.
  *
  * \param filePath The file path of the file to load.
- * \param includes A NULL-terminated list of initially included sheets.
- * Can be NULL.
+ * \param options A set of compile options. If NULL, the default settings are
+ * used.
  */
-DECISION_API bool d_run_file(const char *filePath, struct _sheet **includes);
+DECISION_API bool d_run_file(const char *filePath, CompileOptions *options);
 
 #endif // DECISION_H
