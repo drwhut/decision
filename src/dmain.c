@@ -89,90 +89,8 @@ static void print_help() {
 /* Macro to help check an argument in main(). */
 #define ARG(test) strcmp(arg, #test) == 0
 
-// TEMP
-
-void onWireValue(Sheet *sheet, Wire wire, DType type, LexData value) {
-    printf("Value %d transfered from (%zu, %zu) to (%zu, %zu)!\n",
-           value.integerValue, wire.socketFrom.nodeIndex,
-           wire.socketFrom.socketIndex, wire.socketTo.nodeIndex,
-           wire.socketTo.socketIndex);
-}
-
-void onExecutionWire(Sheet *sheet, Wire wire) {
-    printf("Execution wire activated! (%zu, %zu) -> (%zu, %zu)\n",
-           wire.socketFrom.nodeIndex, wire.socketFrom.socketIndex,
-           wire.socketTo.nodeIndex, wire.socketTo.socketIndex);
-}
-
-void onNodeActivated(Sheet *sheet, size_t nodeIndex) {
-    printf("Node %zu activated!\n", nodeIndex);
-}
-
-void onCall(Sheet *sheet, const NodeDefinition *funcDef, bool isC) {
-    printf("Calling %s!\n", funcDef->name);
-}
-
-void onReturn() {
-    printf("Returning!\n");
-}
-
-void onNodeBreakpoint(Sheet *sheet, size_t nodeIndex) {
-    printf("NODE BREAKPOINT: %zu\n", nodeIndex);
-}
-
-void onWireBreakpoint(Sheet *sheet, Wire wire) {
-    printf("WIRE BREAKPOINT: (%zu, %zu) -> (%zu, %zu)\n",
-           wire.socketFrom.nodeIndex, wire.socketFrom.socketIndex,
-           wire.socketTo.nodeIndex, wire.socketTo.socketIndex);
-}
-
 int main(int argc, char *argv[]) {
 
-    CompileOptions options = DEFAULT_COMPILE_OPTIONS;
-    options.debug          = true;
-
-    // TEMP
-    Sheet *sheet =
-        d_load_file("../../tests/examples/factorial.dc", &options);
-
-    d_sheet_dump(sheet);
-    d_asm_dump_all(sheet);
-    d_debug_dump_info(sheet->_debugInfo);
-
-    DebugNodeBreakpoint nodeBreaks[] = {
-        {sheet, 16},
-        {NULL, 0}
-    };
-
-    DebugWireBreakpoint wireBreaks[] = {
-        {sheet, {{5, 3}, {6, 1}}},
-        {NULL, {{0, 0}, {0, 0}}}
-    };
-
-    DebugAgenda agenda      = NO_AGENDA;
-    agenda.onWireValue      = &onWireValue;
-    agenda.onExecutionWire  = &onExecutionWire;
-    agenda.onNodedActivated = &onNodeActivated;
-    agenda.onCall           = &onCall;
-    agenda.onReturn         = &onReturn;
-    agenda.onNodeBreakpoint = &onNodeBreakpoint;
-    agenda.onWireBreakpoint = &onWireBreakpoint;
-
-    agenda.nodeBreakpoints = nodeBreaks;
-    agenda.wireBreakpoints = wireBreaks;
-
-    DebugSession session = d_debug_create_session(sheet, agenda);
-
-    while (d_debug_continue_session(&session)) {
-        printf("BREAKPOINT HIT!\n");
-    }
-
-    d_debug_stop_session(&session);
-
-    d_sheet_free(sheet);
-
-    return 0;
-    /*
     char *filePath   = NULL;
     bool compile     = false;
     bool disassemble = false;
@@ -326,5 +244,4 @@ int main(int argc, char *argv[]) {
         print_help();
         return 1;
     }
-    */
 }
