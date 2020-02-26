@@ -39,6 +39,9 @@
 /* Forward declaration of the Sheet struct from dsheet.h */
 struct _sheet;
 
+/* Forward declaration of the NodeDefinition struct from dgraph.h */
+struct _nodeDefinition;
+
 /**
  * \struct _insValueInfo
  * \brief Describes when a value wire has a value in bytecode.
@@ -71,12 +74,29 @@ typedef struct _insNodeInfo {
 } InsNodeInfo;
 
 /**
+ * \struct _insCallInfo
+ * \brief Describes a call in bytecode.
+ *
+ * \typedef struct _insCallInfo InsCallInfo
+ */
+typedef struct _insCallInfo {
+    struct _sheet *sheet;
+    const struct _nodeDefinition *funcDef;
+    bool isC;
+} InsCallInfo;
+
+/**
  * \enum _insInfoType
  * \brief The different kinds of information debugging can store and output.
  *
  * \typedef enum _insInfoType InsInfoType
  */
-typedef enum _insInfoType { INFO_VALUE, INFO_EXEC, INFO_NODE } InsInfoType;
+typedef enum _insInfoType {
+    INFO_VALUE,
+    INFO_EXEC,
+    INFO_NODE,
+    INFO_CALL
+} InsInfoType;
 
 /**
  * \union _insInfoCollection
@@ -89,6 +109,7 @@ typedef union _insInfoCollection {
     InsValueInfo valueInfo;
     InsExecInfo execInfo;
     InsNodeInfo nodeInfo;
+    InsCallInfo callInfo;
 } InsInfoCollection;
 
 /**
@@ -145,6 +166,41 @@ typedef void (*OnExecutionWire)(struct _sheet *sheet, Wire wire);
 typedef void (*OnNodeActivated)(struct _sheet *sheet, size_t nodeIndex);
 
 /**
+ * \typedef void (*OnCall)(Sheet *sheet, const NodeDefinition *funcDef,
+ *                         bool isC)
+ * \brief Called when a call occurs during a debugging session.
+ */
+typedef void (*OnCall)(struct _sheet *sheet,
+                       const struct _nodeDefinition *funcDef, bool isC);
+
+/**
+ * \typedef void (*OnReturn)()
+ * \brief Called when a return occurs during a debugging session.
+ */
+typedef void (*OnReturn)();
+
+/**
+ * \struct _debugAgenda
+ * \brief Describes the "agenda" of how a debugging session should handle
+ * certain events.
+ *
+ * \typedef struct _debugAgenda DebugAgenda
+ */
+typedef struct _debugAgenda {
+    OnWireValue onWireValue;
+    OnExecutionWire onExecutionWire;
+    OnNodeActivated onNodedActivated;
+    OnCall onCall;
+    OnReturn onReturn;
+} DebugAgenda;
+
+/**
+ * \def NO_AGENDA
+ * \brief An empty agenda, i.e. nothing will happen when debugging.
+ */
+#define NO_AGENDA (DebugAgenda){NULL, NULL, NULL, NULL, NULL}
+
+/**
  * \struct _debugSession
  * \brief A struct which keeps track of a debugging session.
  *
@@ -153,11 +209,9 @@ typedef void (*OnNodeActivated)(struct _sheet *sheet, size_t nodeIndex);
 typedef struct _debugSession {
     DVM vm;
 
-    struct _sheet *sheet;
+    DebugAgenda agenda;
 
-    OnWireValue onWireValue;
-    OnExecutionWire onExecutionWire;
-    OnNodeActivated onNodedActivated;
+    struct _sheet *sheet;
 } DebugSession;
 
 /*
@@ -214,28 +268,16 @@ DECISION_API void d_debug_dump_info(DebugInfo debugInfo);
 DECISION_API void d_debug_free_info(DebugInfo *debugInfo);
 
 /**
- * \fn DebugSession d_debug_create_session(Sheet *sheet,
- *                                         OnWireValue onWireValues,
- *                                         OnExecutionWire onExecutionWire,
- *                                         OnNodeActivated onNodeActivated)
+ * \fn DebugSession d_debug_create_session(Sheet *sheet, DebugAgenda agenda)
  * \brief Create a debugging session.
  *
  * \return A debugging session in it's starting state.
  *
  * \param sheet The sheet to debug.
- * \param onWireValues A pointer to a function that is called when a value
- * is transfered over a wire during the session. If NULL, the function is not
- * called.
- * \param onExecutionWire A pointer to a function that is called when an
- * execution wire is activated during the session. If NULL, the function is
- * not called.
- * \param onNodeActivated A pointer to a function that is called when a
- * debuggable node is activated during the session. If NULL, the function is
- * not called.
+ * \param agenda The agenda the session should use.
  */
-DECISION_API DebugSession d_debug_create_session(
-    struct _sheet *sheet, OnWireValue onWireValue,
-    OnExecutionWire onExecutionWire, OnNodeActivated onNodeActivated);
+DECISION_API DebugSession d_debug_create_session(struct _sheet *sheet,
+                                                 DebugAgenda agenda);
 
 /**
  * \fn void d_debug_continue_session(DebugSession *session)

@@ -108,6 +108,14 @@ void onNodeActivated(Sheet *sheet, size_t nodeIndex) {
     printf("Node %zu activated!\n", nodeIndex);
 }
 
+void onCall(Sheet *sheet, const NodeDefinition *funcDef, bool isC) {
+    printf("Calling %s!\n", funcDef->name);
+}
+
+void onReturn() {
+    printf("Returning!\n");
+}
+
 int main(int argc, char *argv[]) {
 
     CompileOptions options = DEFAULT_COMPILE_OPTIONS;
@@ -120,8 +128,14 @@ int main(int argc, char *argv[]) {
     d_asm_dump_all(sheet);
     d_debug_dump_info(sheet->_debugInfo);
 
-    DebugSession session = d_debug_create_session(
-        sheet, &onWireValue, &onExecutionWire, &onNodeActivated);
+    DebugAgenda agenda      = NO_AGENDA;
+    agenda.onWireValue      = &onWireValue;
+    agenda.onExecutionWire  = &onExecutionWire;
+    agenda.onNodedActivated = &onNodeActivated;
+    agenda.onCall           = &onCall;
+    agenda.onReturn         = &onReturn;
+
+    DebugSession session = d_debug_create_session(sheet, agenda);
 
     d_debug_continue_session(&session);
 

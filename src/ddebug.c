@@ -221,28 +221,15 @@ void d_debug_free_info(DebugInfo *debugInfo) {
 }
 
 /**
- * \fn DebugSession d_debug_create_session(Sheet *sheet,
- *                                         OnWireValue onWireValues,
- *                                         OnExecutionWire onExecutionWire,
- *                                         OnNodeActivated onNodeActivated)
+ * \fn DebugSession d_debug_create_session(Sheet *sheet, DebugAgenda agenda)
  * \brief Create a debugging session.
  *
  * \return A debugging session in it's starting state.
  *
  * \param sheet The sheet to debug.
- * \param onWireValues A pointer to a function that is called when a value
- * is transfered over a wire during the session. If NULL, the function is not
- * called.
- * \param onExecutionWire A pointer to a function that is called when an
- * execution wire is activated during the session. If NULL, the function is
- * not called.
- * \param onNodeActivated A pointer to a function that is called when a
- * debuggable node is activated during the session. If NULL, the function is
- * not called.
+ * \param agenda The agenda the session should use.
  */
-DebugSession d_debug_create_session(Sheet *sheet, OnWireValue onWireValue,
-                                    OnExecutionWire onExecutionWire,
-                                    OnNodeActivated onNodeActivated) {
+DebugSession d_debug_create_session(Sheet *sheet, DebugAgenda agenda) {
     // Warn the user if the sheet does not have any debug info.
     if (sheet->_debugInfo.debugInfoSize == 0) {
         printf("Warning: %s does not contain debug information\n",
@@ -258,11 +245,9 @@ DebugSession d_debug_create_session(Sheet *sheet, OnWireValue onWireValue,
 
     DebugSession out;
 
-    out.vm               = vm;
-    out.sheet            = sheet;
-    out.onNodedActivated = onNodeActivated;
-    out.onExecutionWire  = onExecutionWire;
-    out.onWireValue      = onWireValue;
+    out.vm     = vm;
+    out.sheet  = sheet;
+    out.agenda = agenda;
 
     return out;
 }
@@ -346,6 +331,8 @@ static int info_at_ins(DebugInfo debugInfo, size_t ins, InsInfoType type) {
 void d_debug_continue_session(DebugSession *session) {
     DVM *vm = &(session->vm);
 
+    DebugAgenda agenda = session->agenda;
+
     // This will be very similar to d_vm_run.
     while (!vm->halted) {
 
@@ -355,7 +342,7 @@ void d_debug_continue_session(DebugSession *session) {
         DebugInfo debugInfo = session->sheet->_debugInfo;
 
         // Does this instruction transfer a value over a wire?
-        if (session->onWireValue) {
+        if (agenda.onWireValue) {
             int valueIndex = info_at_ins(debugInfo, ins, INFO_VALUE);
 
             if (valueIndex >= 0) {
@@ -390,7 +377,7 @@ void d_debug_continue_session(DebugSession *session) {
                                 d_vm_get(&(session->vm), valueInfo.stackIndex);
                         }
 
-                        session->onWireValue(session->sheet, wire, type, value);
+                        agenda.onWireValue(session->sheet, wire, type, value);
                     }
 
                     valueIndex++;
@@ -399,7 +386,7 @@ void d_debug_continue_session(DebugSession *session) {
         }
 
         // Does this instruction activate an execution wire?
-        if (session->onExecutionWire) {
+        if (agenda.onExecutionWire) {
             int execIndex = info_at_ins(debugInfo, ins, INFO_EXEC);
 
             if (execIndex >= 0) {
@@ -412,8 +399,8 @@ void d_debug_continue_session(DebugSession *session) {
                         InsExecInfo execInfo =
                             debugInfo.debugInfoList[execIndex].info.execInfo;
 
-                        session->onExecutionWire(session->sheet,
-                                                 execInfo.execWire);
+                        agenda.onExecutionWire(session->sheet,
+                                               execInfo.execWire);
                     }
 
                     execIndex++;
@@ -422,7 +409,7 @@ void d_debug_continue_session(DebugSession *session) {
         }
 
         // Is this instruction entering a new node?
-        if (session->onNodedActivated) {
+        if (agenda.onNodedActivated) {
             int nodeIndex = info_at_ins(debugInfo, ins, INFO_NODE);
 
             if (nodeIndex >= 0) {
@@ -435,8 +422,7 @@ void d_debug_continue_session(DebugSession *session) {
                         InsNodeInfo nodeInfo =
                             debugInfo.debugInfoList[nodeIndex].info.nodeInfo;
 
-                        session->onNodedActivated(session->sheet,
-                                                  nodeInfo.node);
+                        agenda.onNodedActivated(session->sheet, nodeInfo.node);
                     }
 
                     nodeIndex++;
@@ -464,6 +450,6 @@ void d_debug_stop_session(DebugSession *session) {
     }
 
     d_vm_free(&(session->vm));
-    session->sheet            = NULL;
-    session->onNodedActivated = NULL;
+    session->sheet  = NULL;
+    session->agenda = NO_AGENDA;
 }
