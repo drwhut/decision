@@ -272,8 +272,18 @@ DebugSession d_debug_create_session(Sheet *sheet, DebugAgenda agenda) {
 
     DebugSession out;
 
+    // Zero-fill the sheet stack.
+    memset(out.sheetStack, 0, DEBUG_SHEET_STACK_SIZE * sizeof(DebugStackEntry));
+
+    // Set the first element to be the sheet we've been given.
+    DebugStackEntry firstSheet;
+    firstSheet.sheet            = sheet;
+    firstSheet.numInternalCalls = 0;
+
+    out.sheetStack[0] = firstSheet;
+    out.stackPtr      = 0;
+
     out.vm     = vm;
-    out.sheet  = sheet;
     out.agenda = agenda;
 
     return out;
@@ -363,10 +373,13 @@ void d_debug_continue_session(DebugSession *session) {
     // This will be very similar to d_vm_run.
     while (!vm->halted) {
 
-        // Get the instruction index relative to the sheet.
-        size_t ins = vm->pc - session->sheet->_text;
+        // Get the current sheet from the sheet stack.
+        Sheet *sheet = session->sheetStack[session->stackPtr].sheet;
 
-        DebugInfo debugInfo = session->sheet->_debugInfo;
+        // Get the instruction index relative to the sheet.
+        size_t ins = vm->pc - sheet->_text;
+
+        DebugInfo debugInfo = sheet->_debugInfo;
 
         // Does this instruction transfer a value over a wire?
         if (agenda.onWireValue) {
@@ -384,9 +397,9 @@ void d_debug_continue_session(DebugSession *session) {
                         InsValueInfo valueInfo =
                             debugInfo.debugInfoList[valueIndex].info.valueInfo;
 
-                        Wire wire             = valueInfo.valueWire;
-                        const SocketMeta meta = d_get_socket_meta(
-                            session->sheet->graph, wire.socketFrom);
+                        Wire wire = valueInfo.valueWire;
+                        const SocketMeta meta =
+                            d_get_socket_meta(sheet->graph, wire.socketFrom);
                         DType type    = meta.type;
                         LexData value = {0};
 
@@ -404,7 +417,7 @@ void d_debug_continue_session(DebugSession *session) {
                                 d_vm_get(&(session->vm), valueInfo.stackIndex);
                         }
 
-                        agenda.onWireValue(session->sheet, wire, type, value);
+                        agenda.onWireValue(sheet, wire, type, value);
                     }
 
                     valueIndex++;
@@ -417,21 +430,11 @@ void d_debug_continue_session(DebugSession *session) {
             int execIndex = info_at_ins(debugInfo, ins, INFO_EXEC);
 
             if (execIndex >= 0) {
-                while (execIndex < (int)debugInfo.debugInfoSize &&
-                       debugInfo.debugInfoList[execIndex].ins == ins) {
 
-                    if (debugInfo.debugInfoList[execIndex].infoType ==
-                        INFO_EXEC) {
+                InsExecInfo execInfo =
+                    debugInfo.debugInfoList[execIndex].info.execInfo;
 
-                        InsExecInfo execInfo =
-                            debugInfo.debugInfoList[execIndex].info.execInfo;
-
-                        agenda.onExecutionWire(session->sheet,
-                                               execInfo.execWire);
-                    }
-
-                    execIndex++;
-                }
+                agenda.onExecutionWire(sheet, execInfo.execWire);
             }
         }
 
@@ -440,51 +443,60 @@ void d_debug_continue_session(DebugSession *session) {
             int nodeIndex = info_at_ins(debugInfo, ins, INFO_NODE);
 
             if (nodeIndex >= 0) {
-                while (nodeIndex < (int)debugInfo.debugInfoSize &&
-                       debugInfo.debugInfoList[nodeIndex].ins == ins) {
 
-                    if (debugInfo.debugInfoList[nodeIndex].infoType ==
-                        INFO_NODE) {
+                InsNodeInfo nodeInfo =
+                    debugInfo.debugInfoList[nodeIndex].info.nodeInfo;
 
-                        InsNodeInfo nodeInfo =
-                            debugInfo.debugInfoList[nodeIndex].info.nodeInfo;
-
-                        agenda.onNodedActivated(session->sheet, nodeInfo.node);
-                    }
-
-                    nodeIndex++;
-                }
+                agenda.onNodedActivated(sheet, nodeInfo.node);
             }
         }
 
         // Is this instruction calling a function?
-        if (agenda.onCall) {
-            int callIndex = info_at_ins(debugInfo, ins, INFO_CALL);
+        int callIndex = info_at_ins(debugInfo, ins, INFO_CALL);
 
-            if (callIndex >= 0) {
-                while (callIndex < (int)debugInfo.debugInfoSize &&
-                       debugInfo.debugInfoList[callIndex].ins == ins) {
+        if (callIndex >= 0) {
 
-                    if (debugInfo.debugInfoList[callIndex].infoType ==
-                        INFO_CALL) {
+            InsCallInfo callInfo =
+                debugInfo.debugInfoList[callIndex].info.callInfo;
 
-                        InsCallInfo callInfo =
-                            debugInfo.debugInfoList[callIndex].info.callInfo;
-
-                        agenda.onCall(callInfo.sheet, callInfo.funcDef,
-                                      callInfo.isC);
-                    }
-
-                    callIndex++;
+            // If the sheet the function belongs to is not the sheet we're
+            // currently on, push it to the stack.
+            if (callInfo.sheet != sheet) {
+                if (session->stackPtr >= DEBUG_SHEET_STACK_SIZE) {
+                    printf(
+                        "Error: The debugger has hit the sheet stack limit\n");
+                    return;
                 }
+
+                DebugStackEntry newEntry;
+                newEntry.sheet            = callInfo.sheet;
+                newEntry.numInternalCalls = 0;
+
+                session->sheetStack[++session->stackPtr] = newEntry;
+            } else {
+                session->sheetStack[session->stackPtr].numInternalCalls++;
+            }
+
+            if (agenda.onCall) {
+                agenda.onCall(callInfo.sheet, callInfo.funcDef, callInfo.isC);
             }
         }
 
         // Is this instruction a return?
         DIns opcode = *(vm->pc);
 
-        if ((opcode == OP_RET || opcode == OP_RETN) && agenda.onReturn) {
-            agenda.onReturn();
+        if (opcode == OP_RET || opcode == OP_RETN) {
+            // If there have been no internal calls in this sheet, we're going
+            // back to the previous sheet.
+            if (session->sheetStack[session->stackPtr].numInternalCalls == 0) {
+                session->stackPtr--;
+            } else {
+                session->sheetStack[session->stackPtr].numInternalCalls--;
+            }
+
+            if (agenda.onReturn) {
+                agenda.onReturn();
+            }
         }
 
         d_vm_parse_ins_at_pc(vm);
@@ -506,7 +518,9 @@ void d_debug_stop_session(DebugSession *session) {
         return;
     }
 
+    memset(session->sheetStack, 0,
+           DEBUG_SHEET_STACK_SIZE * sizeof(DebugStackEntry));
+    session->stackPtr = -1;
     d_vm_free(&(session->vm));
-    session->sheet  = NULL;
     session->agenda = NO_AGENDA;
 }

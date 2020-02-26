@@ -198,20 +198,47 @@ typedef struct _debugAgenda {
  * \def NO_AGENDA
  * \brief An empty agenda, i.e. nothing will happen when debugging.
  */
-#define NO_AGENDA (DebugAgenda){NULL, NULL, NULL, NULL, NULL}
+#define NO_AGENDA                    \
+    (DebugAgenda) {                  \
+        NULL, NULL, NULL, NULL, NULL \
+    }
+
+/**
+ * \def DEBUG_SHEET_STACK_SIZE
+ * \brief The size of a sheet stack in a debugging session. Since the stack is
+ * not dynamically allocated, this number should be just above the realistic
+ * number of sheet "hops".
+ */
+#define DEBUG_SHEET_STACK_SIZE 64
+
+/**
+ * \struct _debugStackEntry
+ * \brief Describes an entry in the debugging session's stack.
+ *
+ * \typedef struct _debugStackEntry DebugStackEntry
+ */
+typedef struct _debugStackEntry {
+    struct _sheet *sheet;
+    size_t numInternalCalls;
+} DebugStackEntry;
 
 /**
  * \struct _debugSession
  * \brief A struct which keeps track of a debugging session.
  *
+ * **NOTE:** A sheet is pushed to the sheet stack if and only if the sheet has
+ * changed. If a function is called that is defined in the same sheet, this
+ * doesn't count.
+ *
  * \typedef struct _debugSession DebugSession
  */
 typedef struct _debugSession {
-    DVM vm;
+    DebugStackEntry sheetStack[DEBUG_SHEET_STACK_SIZE];
 
+    DVM vm;
     DebugAgenda agenda;
 
-    struct _sheet *sheet;
+    int stackPtr;
 } DebugSession;
 
 /*
@@ -255,7 +282,7 @@ DECISION_API void d_debug_add_node_info(DebugInfo *debugInfo, size_t ins,
  * \fn void d_debug_add_call_info(DebugInfo *debugInfo, size_t ins,
  *                                InsCallInfo callInfo)
  * \brief Add call information to a list of debug information.
- * 
+ *
  * \param debugInfo The debug info to add the call info to.
  * \param callInfo The call info to add.
  */
