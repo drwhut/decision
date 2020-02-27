@@ -522,7 +522,7 @@ bool d_debug_continue_session(DebugSession *session) {
             if (callInfo.sheet != sheet) {
                 if (session->stackPtr >= DEBUG_SHEET_STACK_SIZE) {
                     printf(
-                        "Error: The debugger has hit the sheet stack limit\n");
+                        "Fatal: The debugger has hit the sheet stack limit\n");
                     return false;
                 }
 

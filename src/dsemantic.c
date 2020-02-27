@@ -283,7 +283,7 @@ static void add_property_Variable(Sheet *sheet, size_t lineNum,
 }
 
 static void add_property_Include(Sheet *sheet, size_t lineNum,
-                                 PropertyArgumentList argList,
+                                 PropertyArgumentList argList, Sheet **priors,
                                  bool debugInclude) {
     if (argList.numArgs == 1) {
         PropertyArgument arg = argList.args[0];
@@ -297,7 +297,7 @@ static void add_property_Include(Sheet *sheet, size_t lineNum,
                 LexToken *token = arg.data.literal;
 
                 Sheet *includedSheet = d_sheet_add_include_from_path(
-                    sheet, token->data.stringValue, debugInclude);
+                    sheet, token->data.stringValue, priors, debugInclude);
 
                 if (includedSheet->hasErrors) {
                     ERROR_COMPILER(sheet->filePath, lineNum, true,
@@ -849,7 +849,7 @@ static void add_property_FunctionOutput(Sheet *sheet, size_t lineNum,
 
 /* A helper function for d_semantic_scan_properties */
 static void scan_property(Sheet *sheet, const char *propertyName,
-                          SyntaxNode *node, size_t lineNum,
+                          SyntaxNode *node, size_t lineNum, Sheet **priors,
                           bool debugIncluded) {
     // Now we have the property name, we can get the
     // arguments.
@@ -918,9 +918,10 @@ static void scan_property(Sheet *sheet, const char *propertyName,
     else IF_PROPERTY(Subroutine)
     else IF_PROPERTY(FunctionInput)
     else IF_PROPERTY(FunctionOutput)
-    // Include needs to know if we want to debug included sheets!
+    // Include needs to know the prior sheets and if we want to debug included
+    // sheets!
     else if (strcmp(propertyName, "Include") == 0) {
-        add_property_Include(sheet, lineNum, argList, debugIncluded);
+        add_property_Include(sheet, lineNum, argList, priors, debugIncluded);
     } else {
         ERROR_COMPILER(sheet->filePath, lineNum, true,
                        "Unknown property name %s", propertyName);
@@ -935,14 +936,16 @@ static void scan_property(Sheet *sheet, const char *propertyName,
 
 /**
  * \fn void d_semantic_scan_properties(Sheet *sheet, SyntaxNode *root,
- *                                     bool debugIncluded)
+ *                                     Sheet **priors, bool debugIncluded)
  * \brief Sets the properties of the sheet, given the syntax tree.
  *
  * \param sheet A pointer to the sheet where we want to set the properties.
  * \param root The root node of the syntax tree.
+ * \param priors A NULL-terminated list of sheets that, if included, will
+ * produce an error.
  * \param debugIncluded If true, compile included sheets in debug mode.
  */
-void d_semantic_scan_properties(Sheet *sheet, SyntaxNode *root,
+void d_semantic_scan_properties(Sheet *sheet, SyntaxNode *root, Sheet **priors,
                                 bool debugIncluded) {
     // Firstly, get all Property Statements from the syntax tree.
     SyntaxSearchResult propertySearchResults =
@@ -974,7 +977,7 @@ void d_semantic_scan_properties(Sheet *sheet, SyntaxNode *root,
                                 propertyName, lineNum);
 
                         scan_property(sheet, propertyName, node, lineNum,
-                                      debugIncluded);
+                                      priors, debugIncluded);
 
                         // Once we've scanned the property, there is no need to
                         // store the name of the property anymore!
@@ -2280,16 +2283,20 @@ void d_semantic_detect_loops(Sheet *sheet) {
 }
 
 /**
- * \fn void d_semantic_scan(Sheet *sheet, SyntaxNode *root, bool debugIncluded)
+ * \fn void d_semantic_scan(Sheet *sheet, SyntaxNode *root, Sheet **priors,
+ *                          bool debugIncluded)
  * \brief Perform Semantic Analysis on a syntax tree.
  *
  * \param sheet The sheet to put everything into.
  * \param root The *valid* syntax tree to scan everything from.
+ * \param priors A NULL-terminated list of sheets that, if included, will
+ * produce an error. This is to prevent circular includes.
  * \param debugIncluded If true, compile any included sheets in debug mode.
  */
-void d_semantic_scan(Sheet *sheet, SyntaxNode *root, bool debugIncluded) {
+void d_semantic_scan(Sheet *sheet, SyntaxNode *root, Sheet **priors,
+                     bool debugIncluded) {
     VERBOSE(1, "-- Scanning properties...\n")
-    d_semantic_scan_properties(sheet, root, debugIncluded);
+    d_semantic_scan_properties(sheet, root, priors, debugIncluded);
 
     VERBOSE(1, "-- Scanning nodes...\n")
     d_semantic_scan_nodes(sheet, root);

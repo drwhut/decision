@@ -209,6 +209,7 @@ void d_sheet_add_include(Sheet *sheet, Sheet *include) {
 /**
  * \fn Sheet *d_sheet_add_include_from_path(Sheet *sheet,
  *                                          const char *includePath,
+ *                                          Sheet **priors,
  *                                          bool debugInclude)
  * \brief Add a reference to another sheet to the current sheet, which can be
  * used to get extra functionality.
@@ -218,13 +219,13 @@ void d_sheet_add_include(Sheet *sheet, Sheet *include) {
  * \param sheet The sheet to add the include to.
  * \param includePath The path from sheet to the sheet being included.
  * Note that this should be equivalent to the argument of the Include property.
+ * \param priors A NULL-terminated list of sheets that, if included, will throw
+ * an error. This is to prevent circular includes.
  * \param debugInclude If we can compile the included sheet in debug mode,
  * do so if set to true.
  */
 Sheet *d_sheet_add_include_from_path(Sheet *sheet, const char *includePath,
-                                     bool debugInclude) {
-    Sheet *includeSheet = NULL;
-
+                                     Sheet **priors, bool debugInclude) {
     // TODO: Implement standard library paths as well.
 
     // If the current sheet was accessed from a different directory,
@@ -248,8 +249,9 @@ Sheet *d_sheet_add_include_from_path(Sheet *sheet, const char *includePath,
         }
     }
 
-    CompileOptions opts = DEFAULT_COMPILE_OPTIONS;
-    opts.debug          = debugInclude;
+    // If there isn't either character, we don't need to worry about
+    // changing the directory.
+    char *finalPath = includePath;
 
     if ((int)lastSeperator >= 0) {
         // Concatenate the dir string (with the NULL inserted) with the contents
@@ -260,17 +262,55 @@ Sheet *d_sheet_add_include_from_path(Sheet *sheet, const char *includePath,
 
         strcat(dir, includePath);
 
-        includeSheet = d_load_file((const char *)dir, &opts);
+        finalPath = dir;
     }
-    // If there isn't either character, we don't need to worry about
-    // changing the directory.
-    else {
-        includeSheet = d_load_file(includePath, &opts);
+
+    // We need to check if this path is the path of any of the prior sheets.
+    // This way, we can check if we're about to enter a circular include cycle.
+    if (priors != NULL) {
+        Sheet **prior = priors;
+
+        while (*prior) {
+            if (strcmp((*prior)->filePath, finalPath) == 0) {
+                printf("Fatal: Circular include detected from sheet %s\n",
+                       finalPath);
+                Sheet *sheet     = d_sheet_create(finalPath);
+                sheet->hasErrors = true;
+                return sheet;
+            }
+
+            prior++;
+        }
     }
+
+    CompileOptions opts = DEFAULT_COMPILE_OPTIONS;
+    opts.debug          = debugInclude;
+
+    // Add the current sheet to the list of priors when compiling the next
+    // sheet.
+
+    // The length of the priors list.
+    size_t lenPriors = 0;
+
+    if (priors != NULL) {
+        Sheet **p = priors;
+        while (*p) {
+            lenPriors++;
+            p++;
+        }
+    }
+
+    Sheet **newPriors = d_calloc((lenPriors + 2), sizeof(Sheet **));
+    memcpy(newPriors, priors, lenPriors * sizeof(Sheet **));
+    *(newPriors + lenPriors) = sheet;
+
+    opts.priors = newPriors;
+
+    Sheet *includeSheet = d_load_file(finalPath, &opts);
 
     d_sheet_add_include(sheet, includeSheet);
 
-    free(dir);
+    free(newPriors);
 
     // Set the includePath property of the included sheet, as we need to save
     // that value, instead of the directory, for if we run the sheet including
@@ -280,6 +320,8 @@ Sheet *d_sheet_add_include_from_path(Sheet *sheet, const char *includePath,
     memcpy(cpyIncludePath, includePath, includePathLen + 1);
 
     includeSheet->includePath = (const char *)cpyIncludePath;
+
+    free(dir);
 
     return includeSheet;
 }

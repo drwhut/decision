@@ -618,8 +618,8 @@ const char *d_obj_generate(Sheet *sheet, size_t *size) {
 }
 
 /**
- * \fn Sheet *d_obj_load(const char *obj, size_t size,
- *                              const char *filePath, Sheet **includes)
+ * \fn Sheet *d_obj_load(const char *obj, size_t size, const char *filePath,
+ *                       Sheet **includes, Sheet **priors)
  * \brief Given a binary object string, create a malloc'd Sheet structure from
  * it.
  *
@@ -632,9 +632,11 @@ const char *d_obj_generate(Sheet *sheet, size_t *size) {
  * \param filePath Where the object file the object string came from is located.
  * \param includes A NULL-terminated list of initially included sheets.
  * Can be NULL.
+ * \param priors A NULL-terminates list of sheets that, if included, will throw
+ * an error. Can be NULL.
  */
 Sheet *d_obj_load(const char *obj, size_t size, const char *filePath,
-                  Sheet **includes) {
+                  Sheet **includes, Sheet **priors) {
     Sheet *out       = d_sheet_create(filePath);
     out->_isCompiled = true;
 
@@ -910,7 +912,8 @@ Sheet *d_obj_load(const char *obj, size_t size, const char *filePath,
             }
 
             if (!inIncludes) {
-                Sheet *include = d_sheet_add_include_from_path(out, path, false);
+                Sheet *include =
+                    d_sheet_add_include_from_path(out, path, priors, false);
 
                 if (include->hasErrors) {
                     ERROR_COMPILER(out->filePath, 0, true,
