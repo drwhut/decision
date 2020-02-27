@@ -38,6 +38,7 @@ typedef struct _objReader {
     const char *obj;  ///< The object file contents.
     const size_t len; ///< The length of the object file.
     size_t ptr;       ///< The current "pointer".
+    bool error;
 } ObjectReader;
 
 /**
@@ -67,6 +68,24 @@ typedef struct _indexList {
 */
 
 /**
+ * \fn static bool test_ahead(ObjectReader *reader, size_t n)
+ * \brief Check if we can read n bytes ahead of where we are currently reading.
+ *
+ * \return True if we can, false otherwise.
+ *
+ * \param reader The reader to query.
+ * \param n The number of bytes to read ahead.
+ */
+static bool test_ahead(ObjectReader *reader, size_t n) {
+    if (reader->ptr + n > reader->len) {
+        reader->error = true;
+        return false;
+    }
+
+    return true;
+}
+
+/**
  * \fn static bool reader_test_string_n(ObjectReader *reader, const char *str,
  *                                      size_t n)
  * \brief Check if there is a specific length-n string at the current position.
@@ -85,7 +104,7 @@ static bool reader_test_string_n(ObjectReader *reader, const char *str,
         return false;
     }
 
-    if (reader->ptr + n > reader->len) {
+    if (!test_ahead(reader, n)) {
         return false;
     }
 
@@ -106,6 +125,10 @@ static bool reader_test_string_n(ObjectReader *reader, const char *str,
  * \param reader The reader to read from.
  */
 static char read_byte(ObjectReader *reader) {
+    if (!test_ahead(reader, 1)) {
+        return 0;
+    }
+
     char out = *(reader->obj + reader->ptr);
     reader->ptr++;
     return out;
@@ -121,6 +144,10 @@ static char read_byte(ObjectReader *reader) {
  * \param n The number of bytes to read.
  */
 static char *read_string_n(ObjectReader *reader, size_t n) {
+    if (!test_ahead(reader, n)) {
+        return NULL;
+    }
+
     char *out = d_calloc(n, sizeof(char));
     memcpy(out, reader->obj + reader->ptr, n);
     reader->ptr += n;
@@ -138,6 +165,11 @@ static char *read_string_n(ObjectReader *reader, size_t n) {
  */
 static char *read_string(ObjectReader *reader) {
     size_t nameLen = strlen(reader->obj + reader->ptr);
+
+    if (!test_ahead(reader, nameLen)) {
+        return NULL;
+    }
+
     return read_string_n(reader, nameLen + 1);
 }
 
@@ -150,6 +182,10 @@ static char *read_string(ObjectReader *reader) {
  * \param reader The reader to read from.
  */
 static duint read_uinteger(ObjectReader *reader) {
+    if (!test_ahead(reader, sizeof(duint))) {
+        return 0;
+    }
+
     duint out = *(duint *)(reader->obj + reader->ptr);
     reader->ptr += sizeof(duint);
     return out;
@@ -652,7 +688,7 @@ Sheet *d_obj_load(const char *obj, size_t size, const char *filePath,
     // TODO: Account for edianness in the instructions, and also for variables
     // in the data section.
 
-    ObjectReader reader        = {NULL, 0, 0};
+    ObjectReader reader        = {NULL, 0, 0, false};
     reader.obj                 = obj;
     *(size_t *)(&(reader.len)) = size;
 
@@ -954,6 +990,10 @@ Sheet *d_obj_load(const char *obj, size_t size, const char *filePath,
                 out->hasErrors = true;
             }
         }
+    }
+
+    if (reader.error) {
+        out->hasErrors = true;
     }
 
     return out;
