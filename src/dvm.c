@@ -962,17 +962,6 @@ void d_vm_runtime_error(DVM *vm, const char *error) {
     }
 
 /**
- * \union _ptrToC
- * \brief A union of a pointer to a C function, and the pointer value.
- *
- * \typedef union _ptrToC PtrToC
- */
-typedef union _ptrToC {
-    DecisionCFunction func;
-    intptr_t ptr;
-} PtrToC;
-
-/**
  * \fn void d_vm_parse_ins_at_pc(DVM *vm)
  * \brief Given a Decision VM, at it's current position in the program, parse
  * the instruction at that position.
@@ -1067,17 +1056,17 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
 
         case OP_CALLC:
         case OP_CALLCI:;
-            PtrToC funcPtr;
+            CFunction *cFunc;
             uint8_t numArgs;
 
             if (opcode == OP_CALLC) {
-                funcPtr.ptr = VM_GET_STACK(vm, 0);
+                cFunc = (CFunction *)VM_GET_STACK(vm, 0);
                 d_vm_popn(vm, 1);
 
                 numArgs = (uint8_t)GET_BIMMEDIATE(1);
             } else {
-                funcPtr.ptr = GET_FIMMEDIATE(1);
-                numArgs     = (uint8_t)GET_BIMMEDIATE(1 + FIMMEDIATE_SIZE);
+                cFunc   = (CFunction *)GET_FIMMEDIATE(1);
+                numArgs = (uint8_t)GET_BIMMEDIATE(1 + FIMMEDIATE_SIZE);
             }
 
             // Save the current frame pointer.
@@ -1088,7 +1077,7 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             vm->framePtr = vm->stackPtr - numArgs;
 
             // Call the C function.
-            funcPtr.func(vm);
+            cFunc->function(vm);
 
             // Restore the original frame pointer.
             vm->framePtr = savedFramePtr;
@@ -1235,7 +1224,7 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
         case OP_GETFI:;
             d_vm_push(vm, d_vm_get(vm, GET_FIMMEDIATE(1)));
             break;
-        
+
         case OP_INV:;
             *VM_GET_STACK_PTR(vm, 0) = ~VM_GET_STACK(vm, 0);
             break;

@@ -163,7 +163,7 @@ void d_link_precalculate_ptr(struct _sheet *sheet) {
                     }
                 } else if (meta->type == LINK_CFUNCTION) {
                     CFunction *cFunc = (CFunction *)meta->meta;
-                    meta->_ptr       = (char *)cFunc->function;
+                    meta->_ptr       = (char *)cFunc;
                 }
             }
         }
@@ -230,8 +230,7 @@ void d_link_self(Sheet *sheet) {
             }
             // C functions need to link to the C function pointer.
             else if (meta.type == LINK_CFUNCTION) {
-                CFunction *cFunc = (CFunction *)meta.meta;
-                d_link_replace_fimmediate(ins, (char *)cFunc->function);
+                d_link_replace_fimmediate(ins, meta._ptr);
             }
         }
 
