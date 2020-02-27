@@ -251,7 +251,7 @@ Sheet *d_sheet_add_include_from_path(Sheet *sheet, const char *includePath,
 
     // If there isn't either character, we don't need to worry about
     // changing the directory.
-    char *finalPath = includePath;
+    const char *finalPath = includePath;
 
     if ((int)lastSeperator >= 0) {
         // Concatenate the dir string (with the NULL inserted) with the contents
@@ -274,9 +274,9 @@ Sheet *d_sheet_add_include_from_path(Sheet *sheet, const char *includePath,
             if (strcmp((*prior)->filePath, finalPath) == 0) {
                 printf("Fatal: Circular include detected from sheet %s\n",
                        finalPath);
-                Sheet *sheet     = d_sheet_create(finalPath);
-                sheet->hasErrors = true;
-                return sheet;
+                Sheet *errorSheet     = d_sheet_create(finalPath);
+                errorSheet->hasErrors = true;
+                return errorSheet;
             }
 
             prior++;
