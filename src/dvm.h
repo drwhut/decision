@@ -198,15 +198,16 @@ typedef enum _dSyscall {
  * \typedef struct _DVM DVM
  */
 typedef struct _DVM {
-    char *pc;              ///< The program counter.
-    unsigned char _inc_pc; ///< How many bytes to increment the program counter.
-                           ///< This is determined automatically.
+    char *pc; ///< The program counter.
 
     dint *basePtr;  ///< A pointer to the base of the stack.
     dint *stackPtr; ///< A pointer to the top of the stack.
     dint *framePtr; ///< A pointer to the start of the stack frame.
 
     duint stackSize; ///< The current size of the stack.
+
+    unsigned char _inc_pc; ///< How many bytes to increment the program counter.
+                           ///< This is determined automatically.
 
     bool halted;       ///< The halted flag.
     bool runtimeError; ///< The runtime error flag.

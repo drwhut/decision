@@ -49,14 +49,14 @@
 typedef struct _buildContext {
     Graph graph; ///< The graph we're building for.
 
-    int stackTop; ///< Where the stack pointer is relative to the base pointer.
-
     LinkMetaList linkMetaList; ///< A list of link metadata.
 
     char *dataSection;      ///< The data section being built up.
     size_t dataSectionSize; ///< The size of the data section.
 
-    bool debug;          ///< Do we want to build up debugging information?
+    int stackTop; ///< Where the stack pointer is relative to the base pointer.
+
+    bool debug; ///< Do we want to build up debugging information?
 } BuildContext;
 
 /*

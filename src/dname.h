@@ -71,13 +71,14 @@ typedef enum _nameType {
  */
 typedef struct _nameDefinition {
     struct _sheet *sheet;
-    NameType type;
     union {
         CoreFunction coreFunc;
         struct _sheetVariable *variable;
         struct _sheetFunction *function;
         struct _cFunction *cFunction;
     } definition;
+    
+    NameType type;
 } NameDefinition;
 
 /**

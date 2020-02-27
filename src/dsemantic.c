@@ -35,8 +35,8 @@ typedef union {
 
 /* A struct for a property argument and it's data. */
 typedef struct {
-    SyntaxDefinition type;
     PropertyArgumentData data;
+    SyntaxDefinition type;
 } PropertyArgument;
 
 /* A struct for holding property arguments. */
@@ -1038,8 +1038,8 @@ static const char *get_first_arg_name(SyntaxNode *argListNode) {
  * \typedef struct _lineSocketPair LineSocketPair
  */
 typedef struct _lineSocketPair {
-    dint identifier;
     NodeSocket socket;
+    dint identifier;
 } LineSocketPair;
 
 /* A helper function for d_semantic_scan_nodes */

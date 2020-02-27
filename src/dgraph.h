@@ -101,6 +101,8 @@ typedef struct _sheetNode {
     const NodeDefinition *definition;
     size_t lineNum;
 
+    int *_stackPositions; ///< Used by Code Generation.
+
     DType *reducedTypes;     ///< Needs to be malloc'd, and have as many
                              ///< elements as sockets. Can be NULL if the types
                              ///< are the same as in *definition.
@@ -120,8 +122,6 @@ typedef struct _sheetNode {
                                    ///< Return node, this points to the
                                    ///< function. Otherwise, it points to the
                                    ///< name definition of the node.
-
-    int *_stackPositions; ///< Used by Code Generation.
 } Node;
 
 /**

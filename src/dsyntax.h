@@ -72,11 +72,11 @@ typedef enum _syntaxDefinition {
  * \typedef struct _syntaxNode SyntaxNode
  */
 typedef struct _syntaxNode {
-    SyntaxDefinition definition;
     struct _lexToken *info; ///< Only defined if `definition == STX_TOKEN`.
     struct _syntaxNode *child;
     struct _syntaxNode *sibling;
     size_t onLineNum;
+    SyntaxDefinition definition;
 } SyntaxNode;
 
 /**
@@ -86,8 +86,8 @@ typedef struct _syntaxNode {
  * \typedef struct _syntaxResult SyntaxResult
  */
 typedef struct _syntaxResult {
-    bool success;
     SyntaxNode *node;
+    bool success;
 } SyntaxResult;
 
 /**

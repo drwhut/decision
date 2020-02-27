@@ -48,14 +48,14 @@ struct _insToLink;
  * \typedef struct _bcode BCode
  */
 typedef struct _bcode {
+    DebugInfo debugInfo;
+    
     char *code;  ///< The bytecode as an array of bytes.
     size_t size; ///< The size of the bytecode in bytes.
 
     struct _insToLink *linkList; ///< An array of instructions that will need
                                  ///< to be linked.
     size_t linkListSize;         ///< The size of the `linkList` array.
-
-    DebugInfo debugInfo;
 } BCode;
 
 /*

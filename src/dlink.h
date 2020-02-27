@@ -60,7 +60,6 @@ typedef enum _linkType {
  * \typedef struct _linkMeta LinkMeta
  */
 typedef struct _linkMeta {
-    LinkType type;    ///< The type of object we are linking.
     const char *name; ///< The name of the object we are linking.
 
     void *meta; ///< A generic pointer to the metadata of the thing we are
@@ -75,6 +74,8 @@ typedef struct _linkMeta {
                 ///< index of the function in the text section instead.
                 ///< Otherwise, it is `-1`, which implies that the thing we
                 ///< want to link is in another castle... sorry, Mario.
+
+    LinkType type; ///< The type of object we are linking.
 } LinkMeta;
 
 /**

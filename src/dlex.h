@@ -147,8 +147,8 @@ typedef struct _lexToken {
  * \typedef struct _lexStream LexStream
  */
 typedef struct _lexStream {
-    size_t numTokens;
     LexToken *tokenArray;
+    size_t numTokens;
 } LexStream;
 
 /*

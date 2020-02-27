@@ -264,12 +264,12 @@ SyntaxSearchResult d_syntax_get_all_nodes_with(SyntaxNode *root,
 
 /* A structure to keep track of tokens during the syntax check. */
 typedef struct {
+    const char *currentFilePath;
     LexStream lexicalStream;
     LexToken *currentToken;
-    int tokenIndex;
     size_t numTokens;
     size_t lineNum;
-    const char *currentFilePath;
+    int tokenIndex;
 } SyntaxContext;
 
 /*

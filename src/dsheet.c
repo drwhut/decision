@@ -343,12 +343,11 @@ Sheet *d_sheet_create(const char *filePath) {
     char *cpyFilePath  = d_calloc(filePathLen + 1, sizeof(char));
     memcpy(cpyFilePath, filePath, filePathLen + 1);
 
+    sheet->graph            = EMPTY_GRAPH;
+    sheet->_debugInfo       = NO_DEBUG_INFO;
+    sheet->_link            = d_link_new_meta_list();
     sheet->filePath         = (const char *)cpyFilePath;
     sheet->includePath      = NULL;
-    sheet->hasErrors        = false;
-    sheet->allowFree        = true;
-    sheet->_isCompiled      = false;
-    sheet->_isLinked        = false;
     sheet->includes         = NULL;
     sheet->numIncludes      = 0;
     sheet->variables        = NULL;
@@ -357,18 +356,19 @@ Sheet *d_sheet_create(const char *filePath) {
     sheet->numFunctions     = 0;
     sheet->cFunctions       = NULL;
     sheet->numCFunctions    = 0;
-    sheet->graph            = EMPTY_GRAPH;
-    sheet->startNodeIndex   = -1;
-    sheet->numStarts        = 0;
     sheet->_main            = 0;
     sheet->_text            = NULL;
     sheet->_textSize        = 0;
     sheet->_data            = NULL;
     sheet->_dataSize        = 0;
-    sheet->_debugInfo       = NO_DEBUG_INFO;
-    sheet->_link            = d_link_new_meta_list();
     sheet->_insLinkList     = NULL;
     sheet->_insLinkListSize = 0;
+    sheet->numStarts        = 0;
+    sheet->startNodeIndex   = -1;
+    sheet->hasErrors        = false;
+    sheet->allowFree        = true;
+    sheet->_isCompiled      = false;
+    sheet->_isLinked        = false;
 
     return sheet;
 }

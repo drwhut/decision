@@ -59,9 +59,9 @@ typedef struct _insToLink {
  * \typedef struct _sheetVariable SheetVariable.
  */
 typedef struct _sheetVariable {
-    const SocketMeta variableMeta;
-
     const NodeDefinition getterDefinition;
+
+    const SocketMeta variableMeta;
 
     struct _sheet *sheet;
 } SheetVariable;
@@ -94,16 +94,17 @@ typedef struct _sheetFunction {
  * \typedef struct _sheet Sheet
  */
 typedef struct _sheet {
+    Graph graph; ///< Can be empty if the sheet came from a Decision object
+                 ///< file.
+
+    DebugInfo _debugInfo;
+
+    LinkMetaList _link;
+
     const char *filePath;
     const char *includePath; ///< i.e. what was the argument of the Include
                              ///< property that included this sheet. Default
                              ///< value is `NULL`.
-    bool hasErrors;
-
-    bool allowFree; ///< Allow sheets that include this sheet to free it?
-
-    bool _isCompiled;
-    bool _isLinked;
 
     struct _sheet **includes;
     size_t numIncludes;
@@ -115,12 +116,6 @@ typedef struct _sheet {
     CFunction *cFunctions;
     size_t numCFunctions;
 
-    Graph graph; ///< Can be empty if the sheet came from a Decision object
-                 ///< file.
-
-    int startNodeIndex; ///< If this value is `-1`, then no Start node exists.
-    size_t numStarts;
-
     size_t _main; ///< Points to the index of the first instruction of Start,
                   ///< *not* the `RET` instruction one before.
 
@@ -129,11 +124,18 @@ typedef struct _sheet {
     char *_data;
     size_t _dataSize;
 
-    DebugInfo _debugInfo;
-
-    LinkMetaList _link;
     InstructionToLink *_insLinkList;
     size_t _insLinkListSize;
+
+    size_t numStarts;
+    int startNodeIndex; ///< If this value is `-1`, then no Start node exists.
+
+    bool hasErrors;
+
+    bool allowFree; ///< Allow sheets that include this sheet to free it?
+
+    bool _isCompiled;
+    bool _isLinked;
 
 } Sheet;
 
