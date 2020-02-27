@@ -106,6 +106,8 @@ dangling pointers.
 
 * Fixed a bug where reduced types were no longer compatible with their
 connected sockets, but the compiler didn't throw an error.
+* Fixed a bug where a stack overflow would occur if there was a circular
+include cycle in the sheets.
 
 # Decision v0.2.0 - 16th January 2020
 
