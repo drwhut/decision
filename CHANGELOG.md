@@ -54,6 +54,9 @@ versions.
 loaded before any compilation happens.
 * Sheets now have an `allowFree` property that stops sheets that include it
 from freeing the sheet when they are freed.
+* Bytecode now stores the pointer to the `CFunction` struct containing the
+actual function pointer, rather than the function pointer itself, to conform to
+the ISO C Standard.
 
 ## Debugging
 
