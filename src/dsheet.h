@@ -194,6 +194,7 @@ DECISION_API void d_sheet_add_include(Sheet *sheet, Sheet *include);
 /**
  * \fn Sheet *d_sheet_add_include_from_path(Sheet *sheet,
  *                                          const char *includePath,
+ *                                          Sheet **priors,
  *                                          bool debugInclude)
  * \brief Add a reference to another sheet to the current sheet, which can be
  * used to get extra functionality.
@@ -203,11 +204,14 @@ DECISION_API void d_sheet_add_include(Sheet *sheet, Sheet *include);
  * \param sheet The sheet to add the include to.
  * \param includePath The path from sheet to the sheet being included.
  * Note that this should be equivalent to the argument of the Include property.
+ * \param priors A NULL-terminated list of sheets that, if included, will throw
+ * an error. This is to prevent circular includes.
  * \param debugInclude If we can compile the included sheet in debug mode,
  * do so if set to true.
  */
 DECISION_API Sheet *d_sheet_add_include_from_path(Sheet *sheet,
                                                   const char *includePath,
+                                                  Sheet **priors,
                                                   bool debugInclude);
 
 /**

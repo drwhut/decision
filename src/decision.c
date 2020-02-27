@@ -284,7 +284,7 @@ Sheet *d_load_string(const char *source, const char *name,
                 d_syntax_dump_tree(root);
 
             VERBOSE(1, "--- STAGE 3: Checking semantics...\n")
-            d_semantic_scan(sheet, root, opts.debug);
+            d_semantic_scan(sheet, root, opts.priors, opts.debug);
             if (VERBOSE_LEVEL >= 2)
                 d_sheet_dump(sheet);
 
@@ -507,8 +507,13 @@ Sheet *d_load_object_file(const char *filePath, CompileOptions *options) {
         includes = options->includes;
     }
 
+    Sheet **priors = NULL;
+    if (options != NULL) {
+        priors = options->priors;
+    }
+
     if (obj != NULL) {
-        out = d_obj_load(obj, size, filePath, includes);
+        out = d_obj_load(obj, size, filePath, includes, priors);
         free((char *)obj);
 
         out->hasErrors = d_error_report();

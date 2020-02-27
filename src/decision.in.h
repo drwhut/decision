@@ -109,6 +109,9 @@ struct _DVM;
 typedef struct _compileOptions {
     struct _sheet **includes; ///< A NULL-terminated array. Can itself be NULL
                               ///< to signify no initial includes.
+    struct _sheet **priors;   ///< A NULL-terminated array. If the sheet
+                              ///< includes a sheet already in this list,
+                              ///< an error is thrown.
     bool debug;               ///< Compiles sheets with debug information.
                               ///< This allows for debugging the sheets,
                               ///< but sheets are not longer optimised.
@@ -120,7 +123,7 @@ typedef struct _compileOptions {
  * \def DEFAULT_COMPILE_OPTIONS
  * \brief The default compile options.
  */
-#define DEFAULT_COMPILE_OPTIONS (CompileOptions){NULL, false}
+#define DEFAULT_COMPILE_OPTIONS (CompileOptions){NULL, NULL, false}
 
 /*
 === FUNCTIONS =============================================

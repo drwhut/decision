@@ -52,14 +52,17 @@
 
 /**
  * \fn void d_semantic_scan_properties(Sheet *sheet, SyntaxNode *root,
- *                                     bool debugIncluded)
+ *                                     Sheet **priors, bool debugIncluded)
  * \brief Sets the properties of the sheet, given the syntax tree.
  *
  * \param sheet A pointer to the sheet where we want to set the properties.
  * \param root The root node of the syntax tree.
+ * \param priors A NULL-terminated list of sheets that, if included, will
+ * produce an error.
  * \param debugIncluded If true, compile included sheets in debug mode.
  */
 DECISION_API void d_semantic_scan_properties(Sheet *sheet, SyntaxNode *root,
+                                             Sheet **priors,
                                              bool debugIncluded);
 
 /**
@@ -102,14 +105,17 @@ DECISION_API void d_semantic_reduce_types(Sheet *sheet);
 DECISION_API void d_semantic_detect_loops(Sheet *sheet);
 
 /**
- * \fn void d_semantic_scan(Sheet *sheet, SyntaxNode *root, bool debugIncluded)
+ * \fn void d_semantic_scan(Sheet *sheet, SyntaxNode *root, Sheet **priors,
+ *                          bool debugIncluded)
  * \brief Perform Semantic Analysis on a syntax tree.
  *
  * \param sheet The sheet to put everything into.
  * \param root The *valid* syntax tree to scan everything from.
+ * \param priors A NULL-terminated list of sheets that, if included, will
+ * produce an error. This is to prevent circular includes.
  * \param debugIncluded If true, compile any included sheets in debug mode.
  */
 DECISION_API void d_semantic_scan(Sheet *sheet, SyntaxNode *root,
-                                  bool debugIncluded);
+                                  Sheet **priors, bool debugIncluded);
 
 #endif // DSEMANTIC_H
