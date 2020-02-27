@@ -203,14 +203,18 @@ bool d_run_function(DVM *vm, Sheet *sheet, const char *funcName) {
                 AllNameDefinitions nameDefs =
                     d_get_name_definitions(sheet, funcName);
 
-                NameDefinition definition;
-                if (d_select_name_definition(funcName, nameDefs, &definition)) {
+                if (nameDefs.numDefinitions == 1) {
+                    NameDefinition definition = nameDefs.definitions[0];
                     if (definition.type == NAME_FUNCTION) {
                         Sheet *extSheet = definition.sheet;
                         return d_run_function(vm, extSheet, funcName);
                     }
-                } else {
+                } else if (nameDefs.numDefinitions == 0) {
                     printf("Fatal: Sheet %s has no function %s defined",
+                           sheet->filePath, funcName);
+                } else {
+                    printf("Fatal: Sheet %s has multiple definitions of the "
+                           "function %s defined",
                            sheet->filePath, funcName);
                 }
 

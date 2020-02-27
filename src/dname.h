@@ -111,25 +111,6 @@ DECISION_API AllNameDefinitions d_get_name_definitions(struct _sheet *sheet,
                                                        const char *name);
 
 /**
- * \fn bool d_select_name_definition(const char *name,
- *                                   AllNameDefinitions allDefinitions,
- *                                   NameDefinition *selection)
- * \brief Given a set of definitions, select the one the user intended, give
- * the name of the node.
- *
- * \return If a definition was selected.
- *
- * \param name The name that decides the definition to use.
- * \param allDefinitions The set of definitions to choose from.
- * \param selection A pointer whose value is set to the definition if it was
- * selected, i.e. if we return `true`. If `false` is returned, do not trust
- * this value.
- */
-DECISION_API bool d_select_name_definition(const char *name,
-                                           AllNameDefinitions allDefinitions,
-                                           NameDefinition *selection);
-
-/**
  * \fn void d_free_name_definitions(AllNameDefinitions *definitions)
  * \brief Free an `AllNameDefinitions` struct. It should not be used after it
  * has been freed.

@@ -179,39 +179,6 @@ AllNameDefinitions d_get_name_definitions(Sheet *sheet, const char *name) {
 }
 
 /**
- * \fn bool d_select_name_definition(const char *name,
- *                                   AllNameDefinitions allDefinitions,
- *                                   NameDefinition *selection)
- * \brief Given a set of definitions, select the one the user intended, give
- * the name of the node.
- *
- * \return If a definition was selected.
- *
- * \param name The name that decides the definition to use.
- * \param allDefinitions The set of definitions to choose from.
- * \param selection A pointer whose value is set to the definition if it was
- * selected, i.e. if we return `true`. If `false` is returned, do not trust
- * this value.
- */
-bool d_select_name_definition(const char *name,
-                              AllNameDefinitions allDefinitions,
-                              NameDefinition *selection) {
-    // TODO: Once you get around to linking other sheets, use name components
-    // to decide properly. For now, we're just picking the first one from the
-    // list.
-
-    if (allDefinitions.numDefinitions > 0) {
-        NameDefinition definition = allDefinitions.definitions[0];
-
-        *selection = definition;
-
-        return true;
-    }
-
-    return false;
-}
-
-/**
  * \fn void d_free_name_definitions(AllNameDefinitions *definitions)
  * \brief Free an `AllNameDefinitions` struct. It should not be used after it
  * has been freed.
@@ -278,8 +245,8 @@ const NodeDefinition *d_get_definition(Sheet *sheet, const char *name,
         if (funcName != NULL) {
             AllNameDefinitions funcDefinitions =
                 d_get_name_definitions(sheet, funcName);
-            if (d_select_name_definition(funcName, funcDefinitions,
-                                         &nameDefinition)) {
+            if (funcDefinitions.numDefinitions == 1) {
+                nameDefinition = funcDefinitions.definitions[0];
                 if (nameDefinition.sheet == sheet) {
                     SheetFunction *func = nameDefinition.definition.function;
                     d_free_name_definitions(&funcDefinitions);
@@ -291,10 +258,15 @@ const NodeDefinition *d_get_definition(Sheet *sheet, const char *name,
                                    "defined on the same sheet",
                                    funcName);
                 }
-            } else {
+            } else if (funcDefinitions.numDefinitions == 0) {
                 ERROR_COMPILER(sheet->filePath, lineNum, true,
                                "Return call for undefined function %s",
                                funcName);
+            } else {
+                ERROR_COMPILER(
+                    sheet->filePath, lineNum, true,
+                    "Return call for function %s defined multiple times",
+                    funcName);
             }
 
             d_free_name_definitions(&funcDefinitions);
@@ -308,8 +280,8 @@ const NodeDefinition *d_get_definition(Sheet *sheet, const char *name,
         if (funcName != NULL) {
             AllNameDefinitions funcDefinitions =
                 d_get_name_definitions(sheet, funcName);
-            if (d_select_name_definition(funcName, funcDefinitions,
-                                         &nameDefinition)) {
+            if (funcDefinitions.numDefinitions == 1) {
+                nameDefinition = funcDefinitions.definitions[0];
                 if (nameDefinition.sheet == sheet) {
                     SheetFunction *func = nameDefinition.definition.function;
                     d_free_name_definitions(&funcDefinitions);
@@ -321,10 +293,15 @@ const NodeDefinition *d_get_definition(Sheet *sheet, const char *name,
                                    "defined on the same sheet",
                                    funcName);
                 }
-            } else {
+            } else if (funcDefinitions.numDefinitions == 0) {
                 ERROR_COMPILER(sheet->filePath, lineNum, true,
                                "Define call for undefined function %s",
                                funcName);
+            } else {
+                ERROR_COMPILER(
+                    sheet->filePath, lineNum, true,
+                    "Define call for function %s defined multiple times",
+                    funcName);
             }
 
             d_free_name_definitions(&funcDefinitions);
@@ -336,7 +313,8 @@ const NodeDefinition *d_get_definition(Sheet *sheet, const char *name,
         // Let's find out if the name we're looking for exists, first.
         AllNameDefinitions nameDefinitions =
             d_get_name_definitions(sheet, name);
-        if (d_select_name_definition(name, nameDefinitions, &nameDefinition)) {
+        if (nameDefinitions.numDefinitions == 1) {
+            nameDefinition = nameDefinitions.definitions[0];
             switch (nameDefinition.type) {
                 case NAME_CORE:;
 
@@ -383,6 +361,12 @@ const NodeDefinition *d_get_definition(Sheet *sheet, const char *name,
                                           sheet->filePath, lineNum, true);
                     break;
             }
+        } else if (nameDefinitions.numDefinitions == 0) {
+            ERROR_COMPILER(sheet->filePath, lineNum, true,
+                           "Name %s is not defined", name);
+        } else {
+            ERROR_COMPILER(sheet->filePath, lineNum, true,
+                           "Name %s defined multiple times", name);
         }
 
         d_free_name_definitions(&nameDefinitions);

@@ -1278,7 +1278,7 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
                             AllNameDefinitions nameDefinitions =
                                 d_get_name_definitions(sheet, name);
 
-                            if (nameDefinitions.numDefinitions > 0) {
+                            if (nameDefinitions.numDefinitions == 1) {
                                 // Set the input socket's string
                                 // value.
                                 literals[inputIndex] = token->data;
@@ -1289,17 +1289,17 @@ static void scan_node(Sheet *sheet, const NodeDefinition *nodeDef,
                                 // core function.
                                 if (nameDefinition.definition.coreFunc ==
                                     CORE_SET) {
-                                    NameDefinition varDefinition;
 
-                                    if (d_select_name_definition(
-                                            name, nameDefinitions,
-                                            &varDefinition)) {
-                                        nameDefinition = varDefinition;
-                                    }
+                                    nameDefinition =
+                                        nameDefinitions.definitions[0];
                                 }
-                            } else {
+                            } else if (nameDefinitions.numDefinitions == 0) {
                                 ERROR_COMPILER(sheet->filePath, lineNum, true,
                                                "Name %s is not defined", name);
+                            } else {
+                                ERROR_COMPILER(
+                                    sheet->filePath, lineNum, true,
+                                    "Name %s has multiple definitions", name);
                             }
 
                             d_free_name_definitions(&nameDefinitions);
@@ -2283,56 +2283,89 @@ static bool check_for_return(Sheet *sheet, size_t nodeIndex) {
     const NodeDefinition *nodeDef =
         d_get_node_definition(sheet->graph, nodeIndex);
 
-    size_t numInputs  = d_node_num_inputs(sheet->graph, nodeIndex);
-    size_t numOutputs = d_node_num_outputs(sheet->graph, nodeIndex);
+    // IfThenElse is special, in that we can guarantee that either the then or
+    // else sockets gets activated, so we can forgive if the after socket
+    // doesn't lead to a Return node, IF the then and else sockets both lead to
+    // returns.
+    if (strcmp(nodeDef->name, "IfThenElse") == 0) {
+        bool thenReturn  = false;
+        bool elseReturn  = false;
+        bool afterReturn = false;
 
-    NodeSocket socket;
-    socket.nodeIndex = nodeIndex;
+        NodeSocket socket;
+        socket.nodeIndex = nodeIndex;
 
-    bool hasOutputExecSockets = false;
+        NodeSocket conn;
+        int wireIndex;
 
-    for (size_t i = numInputs; i < numInputs + numOutputs; i++) {
-        socket.socketIndex = i;
-        SocketMeta meta    = d_get_socket_meta(sheet->graph, socket);
+        // then
+        socket.socketIndex = 2;
+        wireIndex          = d_wire_find_first(sheet->graph, socket);
 
-        if (meta.type == TYPE_EXECUTION) {
-            hasOutputExecSockets = true;
+        if (IS_WIRE_FROM(sheet->graph, wireIndex, socket)) {
+            conn = sheet->graph.wires[wireIndex].socketTo;
 
-            // We don't mind if the For and While loops don't have returns at
-            // the end of their loops.
-            if (!((strcmp(nodeDef->name, "For") == 0 &&
-                   socket.socketIndex == 4) ||
-                  (strcmp(nodeDef->name, "While") == 0 &&
-                   socket.socketIndex == 2))) {
+            thenReturn = check_for_return(sheet, conn.nodeIndex);
+        }
 
-                int wireIndex = d_wire_find_first(sheet->graph, socket);
+        // else
+        socket.socketIndex = 3;
+        wireIndex          = d_wire_find_first(sheet->graph, socket);
 
-                if (IS_WIRE_FROM(sheet->graph, wireIndex, socket)) {
-                    NodeSocket connSocket =
-                        sheet->graph.wires[wireIndex].socketTo;
+        if (IS_WIRE_FROM(sheet->graph, wireIndex, socket)) {
+            conn = sheet->graph.wires[wireIndex].socketTo;
 
-                    if (!check_for_return(sheet, connSocket.nodeIndex)) {
-                        return false;
-                    }
-                } else if (strcmp(nodeDef->name, "IfThenElse") == 0) {
-                    // We can forgive the after socket of IfThenElse having no
-                    // execution socket, but only if both the then and else
-                    // sockets lead to return nodes.
-                    if (socket.socketIndex != 4) {
-                        return false;
-                    }
-                } else {
-                    return false;
-                }
+            elseReturn = check_for_return(sheet, conn.nodeIndex);
+        }
+
+        // after
+        socket.socketIndex = 4;
+        wireIndex          = d_wire_find_first(sheet->graph, socket);
+
+        if (IS_WIRE_FROM(sheet->graph, wireIndex, socket)) {
+            conn = sheet->graph.wires[wireIndex].socketTo;
+
+            afterReturn = check_for_return(sheet, conn.nodeIndex);
+        }
+
+        return ((thenReturn && elseReturn) || afterReturn);
+    } else {
+        size_t numInputs  = d_node_num_inputs(sheet->graph, nodeIndex);
+        size_t numOutputs = d_node_num_outputs(sheet->graph, nodeIndex);
+
+        NodeSocket lastExecSocket;
+        lastExecSocket.nodeIndex   = nodeIndex;
+        lastExecSocket.socketIndex = 0;
+
+        bool hasOutputExecSockets = false;
+
+        for (size_t i = numInputs; i < numInputs + numOutputs; i++) {
+            NodeSocket socket  = lastExecSocket;
+            socket.socketIndex = i;
+            SocketMeta meta    = d_get_socket_meta(sheet->graph, socket);
+
+            if (meta.type == TYPE_EXECUTION) {
+                hasOutputExecSockets = true;
+                lastExecSocket       = socket;
             }
         }
-    }
 
-    if (hasOutputExecSockets) {
-        return true;
-    } else {
-        // This is the end of an execution path - it HAS to be a Return node.
-        return (strcmp(nodeDef->name, "Return") == 0);
+        if (hasOutputExecSockets) {
+            // The last execution socket needs to lead to a Return node in most
+            // cases.
+            int wireIndex = d_wire_find_first(sheet->graph, lastExecSocket);
+
+            if (IS_WIRE_FROM(sheet->graph, wireIndex, lastExecSocket)) {
+                NodeSocket conn = sheet->graph.wires[wireIndex].socketTo;
+                return check_for_return(sheet, conn.nodeIndex);
+            } else {
+                return false;
+            }
+        } else {
+            // This is the end of an execution path - it HAS to be a Return
+            // node.
+            return (strcmp(nodeDef->name, "Return") == 0);
+        }
     }
 }
 
