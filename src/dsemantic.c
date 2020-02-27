@@ -2155,20 +2155,6 @@ void d_semantic_reduce_types(Sheet *sheet) {
     free(nodeReduced);
 }
 
-/*
-    void check_loop(Sheet* sheet, SheetNode* start, SheetNode** pathArray,
-   size_t pathLength) A recursive function to check if a sheet has a loop.
-
-    Returns: If a loop was found.
-
-    Sheet* sheet: In case we error, say where we errored from.
-    SheetNode* start: The recursive argument, where to start
-    checking in the sheet.
-    SheetNode** pathArray: The array to write our current path
-    to. Used to see if we visited the same node twice.
-    size_t pathLength: The length of the current path. Increases
-    by 1 each recursion.
-*/
 /**
  * \fn static void check_loop(Sheet *sheet, size_t start, size_t *pathArray,
  *                            size_t pathLength)
@@ -2283,6 +2269,101 @@ void d_semantic_detect_loops(Sheet *sheet) {
 }
 
 /**
+ * \fn static bool check_for_return(Sheet *sheet, size_t nodeIndex)
+ * \brief Check recursively if there is a Return at the ends of all execution
+ * paths.
+ *
+ * \return If there is a Return at the end of all execution paths from this
+ * node.
+ *
+ * \param sheet The sheet the node belongs to.
+ * \param nodeIndex The execution node to start checking from.
+ */
+static bool check_for_return(Sheet *sheet, size_t nodeIndex) {
+    const NodeDefinition *nodeDef =
+        d_get_node_definition(sheet->graph, nodeIndex);
+
+    size_t numInputs  = d_node_num_inputs(sheet->graph, nodeIndex);
+    size_t numOutputs = d_node_num_outputs(sheet->graph, nodeIndex);
+
+    NodeSocket socket;
+    socket.nodeIndex = nodeIndex;
+
+    bool hasOutputExecSockets = false;
+
+    for (size_t i = numInputs; i < numInputs + numOutputs; i++) {
+        socket.socketIndex = i;
+        SocketMeta meta    = d_get_socket_meta(sheet->graph, socket);
+
+        if (meta.type == TYPE_EXECUTION) {
+            hasOutputExecSockets = true;
+
+            // We don't mind if the For and While loops don't have returns at
+            // the end of their loops.
+            if (!((strcmp(nodeDef->name, "For") == 0 &&
+                   socket.socketIndex == 4) ||
+                  (strcmp(nodeDef->name, "While") == 0 &&
+                   socket.socketIndex == 2))) {
+
+                int wireIndex = d_wire_find_first(sheet->graph, socket);
+
+                if (IS_WIRE_FROM(sheet->graph, wireIndex, socket)) {
+                    NodeSocket connSocket =
+                        sheet->graph.wires[wireIndex].socketTo;
+
+                    if (!check_for_return(sheet, connSocket.nodeIndex)) {
+                        return false;
+                    }
+                } else if (strcmp(nodeDef->name, "IfThenElse") == 0) {
+                    // We can forgive the after socket of IfThenElse having no
+                    // execution socket, but only if both the then and else
+                    // sockets lead to return nodes.
+                    if (socket.socketIndex != 4) {
+                        return false;
+                    }
+                } else {
+                    return false;
+                }
+            }
+        }
+    }
+
+    if (hasOutputExecSockets) {
+        return true;
+    } else {
+        // This is the end of an execution path - it HAS to be a Return node.
+        return (strcmp(nodeDef->name, "Return") == 0);
+    }
+}
+
+/**
+ * \fn void d_semantic_check_subroutine_returns(Sheet *sheet)
+ * \brief After a sheet has been checked for loops with
+ * `d_semantic_detect_loops`, check to see if all execution paths from the
+ * Define of a subroutine end with a Return.
+ *
+ * \param sheet The sheet to check.
+ */
+void d_semantic_check_subroutine_returns(Sheet *sheet) {
+    for (size_t i = 0; i < sheet->numFunctions; i++) {
+        SheetFunction func = sheet->functions[i];
+        size_t numOutputs =
+            d_definition_num_outputs(&(func.functionDefinition));
+
+        if (d_is_subroutine(func) && numOutputs > 1) {
+            if (!check_for_return(sheet, func.defineNodeIndex)) {
+                Node node = sheet->graph.nodes[func.defineNodeIndex];
+                d_error_compiler_push(
+                    "All execution paths from a subroutine's Define node must "
+                    "end with a Return node if the subroutine has at least one "
+                    "output",
+                    sheet->filePath, node.lineNum, true);
+            }
+        }
+    }
+}
+
+/**
  * \fn void d_semantic_scan(Sheet *sheet, SyntaxNode *root, Sheet **priors,
  *                          bool debugIncluded)
  * \brief Perform Semantic Analysis on a syntax tree.
@@ -2310,4 +2391,12 @@ void d_semantic_scan(Sheet *sheet, SyntaxNode *root, Sheet **priors,
 
     VERBOSE(1, "-- Detecting loops...\n")
     d_semantic_detect_loops(sheet);
+
+    // We only want to check for missing returns if we know there are no loops.
+    if (!sheet->hasErrors) {
+        VERBOSE(
+            1,
+            "-- Checking subroutine execution paths for missing returns...\n")
+        d_semantic_check_subroutine_returns(sheet);
+    }
 }

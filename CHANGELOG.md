@@ -108,6 +108,8 @@ dangling pointers.
 connected sockets, but the compiler didn't throw an error.
 * Fixed a bug where a stack overflow would occur if there was a circular
 include cycle in the sheets.
+* Fixed a bug where the compiler would let subroutines with return values and
+without ending return nodes compile, leading to undefined values being returned.
 
 # Decision v0.2.0 - 16th January 2020
 

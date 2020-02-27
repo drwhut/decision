@@ -105,6 +105,16 @@ DECISION_API void d_semantic_reduce_types(Sheet *sheet);
 DECISION_API void d_semantic_detect_loops(Sheet *sheet);
 
 /**
+ * \fn void d_semantic_check_subroutine_returns(Sheet *sheet)
+ * \brief After a sheet has been checked for loops with
+ * `d_semantic_detect_loops`, check to see if all execution paths from the
+ * Define of a subroutine end with a Return.
+ * 
+ * \param sheet The sheet to check.
+ */
+DECISION_API void d_semantic_check_subroutine_returns(Sheet *sheet);
+
+/**
  * \fn void d_semantic_scan(Sheet *sheet, SyntaxNode *root, Sheet **priors,
  *                          bool debugIncluded)
  * \brief Perform Semantic Analysis on a syntax tree.
