@@ -36,10 +36,13 @@ You can define variables by defining a ``Variable`` property in the sheet:
    [Variable(stringVariableName, String, "Hello, world!", "... Hi?")]
    [Variable(booleanVariableName, Boolean, false, "You either like it or ya don't.")]
 
-.. note::
+Here's what each of the arguments mean:
 
-   The fourth argument of the ``Variable`` property is the description of the
-   variable, and it is optional.
+1. The first argument is the name of the variable. You'll use this name to get
+   and set the variable's value.
+2. The second argument is the data type of the variable.
+3. The third argument is the starting value of the variable.
+4. (Optional) The fourth argument is the description of the variable.
 
 .. note::
 
