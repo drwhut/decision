@@ -43,7 +43,7 @@ and outputs of the function.
 3. The data type of the input, i.e. ``Integer``, ``Float``, ...
 4. (Optional) The default value of the input. This is not used by the compiler,
    but it is used by editors.
-5. (Optional) A description of the argument.
+5. (Optional) A description of the input.
 
 ``FunctionOutput`` properties have several arguments:
 
