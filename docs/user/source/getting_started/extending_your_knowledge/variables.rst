@@ -31,16 +31,15 @@ You can define variables by defining a ``Variable`` property in the sheet:
 
 .. code-block:: decision
 
-   [Variable(integerVariableName, Integer, 420)]
-   [Variable(floatVariableName, Float, 3.14)]
-   [Variable(stringVariableName, String, "Hello, world!")]
-   [Variable(booleanVariableName, Boolean, false)]
+   [Variable(integerVariableName, Integer, 420, "Because i'm sensible...")]
+   [Variable(floatVariableName, Float, 3.14, "Yum...")]
+   [Variable(stringVariableName, String, "Hello, world!", "... Hi?")]
+   [Variable(booleanVariableName, Boolean, false, "You either like it or ya don't.")]
 
 .. note::
 
-   The third argument is the **starting value** of the variable, and it is
-   optional. If you don't give it, Decision will warn you, but it will use
-   ``0``, ``0.0``, ``NULL``, and ``false`` as the default values respectively.
+   The fourth argument of the ``Variable`` property is the description of the
+   variable, and it is optional.
 
 .. note::
 

@@ -48,7 +48,7 @@ functions, subroutines, and variables**.
    Not(#4)~#5
    Return(IsOdd, #5)
 
-   [Variable(PI, Float, 3.14159)]
+   [Variable(PI, Float, 3.14159, "You know, THAT number?")]
 
    [Subroutine(AreaOfCircle, "Print the area of a circle, given it's radius.")]
    [FunctionInput(AreaOfCircle, radius, Float, 1.0, "The radius of the circle.")]

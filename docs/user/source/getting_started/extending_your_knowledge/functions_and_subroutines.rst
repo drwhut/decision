@@ -118,7 +118,7 @@ as you need (since your flow of execution could go down different paths).
    Print(#3, #4)
    Return(CountTo, #5)
    
-   [Variable(numFactors, Integer, 0)]
+   [Variable(numFactors, Integer, 0, "Incremented every time a factor is found.")]
 
    Define(PrintFactorsOf)~#10, #11
    Set(numFactors, #10, 0)~#12
