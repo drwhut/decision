@@ -185,7 +185,7 @@ DECISION_API size_t d_definition_num_outputs(const NodeDefinition *nodeDef);
 DECISION_API bool d_is_execution_definition(const NodeDefinition *nodeDef);
 
 /**
- * \def bool d_is_node_index_valid(Graph graph, size_t nodeIndex)
+ * \fn bool d_is_node_index_valid(Graph graph, size_t nodeIndex)
  * \brief Given a graph, does a given node index exist within that graph?
  *
  * \return If the node index exists in the graph.
@@ -232,8 +232,8 @@ DECISION_API size_t d_node_num_outputs(Graph graph, size_t nodeIndex);
 DECISION_API bool d_is_execution_node(Graph graph, size_t nodeIndex);
 
 /**
- * \def bool d_is_socket_index_valid(const NodeDefinition *nodeDef,
- *                                   size_t socketIndex)
+ * \fn bool d_is_socket_index_valid(const NodeDefinition *nodeDef,
+ *                                  size_t socketIndex)
  * \brief Given a node definition, does a given socket index exist within that
  * node?
  *
@@ -247,7 +247,7 @@ DECISION_API bool d_is_socket_index_valid(const NodeDefinition *nodeDef,
 
 /**
  * \fn const NodeDefinition *d_get_node_definition(Graph graph,
- *                                                 size_t *nodeIndex)
+ *                                                 size_t nodeIndex)
  * \brief Given the index of a node, get the definition of the node.
  *
  * \return The definition of the node, or NULL if the index does not exist.
@@ -351,7 +351,7 @@ DECISION_API bool d_graph_add_wire(Graph *graph, Wire wire,
                                    const char *filePath);
 
 /**
- * \fn size_t d_graph_add_node(Sheet *sheet, Node node)
+ * \fn size_t d_graph_add_node(Graph *graph, Node node)
  * \brief Add a node to a graph.
  *
  * \return The new node index.
