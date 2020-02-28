@@ -23,7 +23,8 @@ Properties
 ==========
 
 * ``Variable`` properties must have **name** and **data type** arguments,
-  but the **default value** argument is optional.
+  but the **default value** argument and **description string literal**
+  arguments are optional.
 
   * The data type argument **cannot be vague**.
 
@@ -40,13 +41,21 @@ Properties
   * Any sheet that produces errors should also **produce errors in sheet that
     include it**.
 
-* ``Function`` properties must have a single **name argument**.
+.. note::
 
-* ``Subroutine`` properties must have a single **name argument**.
+   As of now, only the string literal argument is functional. See the
+   ``add_property_Include`` function in ``dsemantic.c``.
 
-* ``FunctionInput`` properties must have a **function name argument** and a
-  **data type argument**, but the **name argument** and the **default value
-  argument** are optional.
+* ``Function`` properties must have a **name argument**, and can have an
+  optional **description string literal argument.**
+
+* ``Subroutine`` properties must have a **name argument**, and can have an
+  optional **description string literal argument.**
+
+* ``FunctionInput`` properties must have a **function name argument**, a
+  **socket name argument**, a **data type argument**, and an optional
+  **default value argument** and an optional **description string literal
+  argument**.
 
   * The function name argument must reference a **defined** function.
 
@@ -55,17 +64,13 @@ Properties
   * The default value, if given, it's data type **must match that of the
     function input**.
 
-* ``FunctionOutput`` properties must have a **function name argument** and a
-  **data type argument**, but the **name argument** is optional.
+* ``FunctionOutput`` properties must have a **function name argument**, a
+  **socket name argument**, a **data type argument**, and an optional
+  **description string literal** argument.
 
   * The function name argument must reference a **defined** function.
 
 * You cannot create 2 functions / subroutines with the **same name**.
-
-.. note::
-
-   As of now, only the string literal argument is functional. See the
-   ``add_property_Include`` function in ``dsemantic.c``.
 
 Statements
 ==========
