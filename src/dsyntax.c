@@ -201,7 +201,7 @@ SyntaxNode *d_syntax_get_child_by_definition(SyntaxNode *parent,
  *
  * \param root The root node to search from.
  * \param definition The definition we want our found nodes to have.
- * \param traverseChildrenOfFound If we find a node that we want, should w
+ * \param traverseChildrenOfFound If we find a node that we want, should we
  * also traverse the children of that found node?
  */
 SyntaxSearchResult d_syntax_get_all_nodes_with(SyntaxNode *root,
