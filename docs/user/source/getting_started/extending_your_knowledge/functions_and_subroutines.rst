@@ -31,28 +31,40 @@ To create a function, you can use the ``Function`` property, then you can use
 the ``FunctionInput`` and ``FunctionOutput`` properties to state the inputs
 and outputs of the function.
 
+``Function`` properties have two arguments:
+
+1. The name of the function.
+2. (Optional) A description of the function.
+
+``FunctionInput`` properties have several arguments:
+
+1. The name of the function the input is for.
+2. The name of the input itself.
+3. The data type of the input, i.e. ``Integer``, ``Float``, ...
+4. (Optional) The default value of the input. This is not used by the compiler,
+   but it is used by editors.
+5. (Optional) A description of the argument.
+
+``FunctionOutput`` properties have several arguments:
+
+1. The name of the function the output is for.
+2. The name of the output itself.
+3. The data type of the output, i.e. ``String``, ``Boolean``, ...
+4. (Optional) A description of the output.
+
 For functions, you need to have one and only one ``Return`` node to return
 the output of your function. You will also need a ``Define`` node if your
 function takes any inputs, but if it doesn't, then it is not nessesary.
 
-.. note::
-
-   ``FunctionInput`` properties have 2 optional arguments: one for the name,
-   and one for the default value. As of now, neither of these values are
-   actually used.
-
-   ``FunctionOutput`` properties also have an optional argument for the name,
-   but like in ``FunctionInput``, it is not used yet.
-
 .. code-block:: decision
 
-   [Function(Double)]
-   [FunctionInput(Double, Float)]
-   [FunctionOutput(Double, Float)]
+   [Function(Double, "Doubles a given number.")]
+   [FunctionInput(Double, num, Float, 1.0, "The number to double.")]
+   [FunctionOutput(Double, doubled, Float, "The input number doubled.")]
 
-   [Function(CanLegallyDrink)]
-   [FunctionInput(CanLegallyDrink, Integer)]
-   [FunctionOutput(CanLegallyDrink, Boolean)]
+   [Function(CanLegallyDrink, "Determine if someone is allowed to drink.")]
+   [FunctionInput(CanLegallyDrink, age, Integer, 0, "The person's age.")]
+   [FunctionOutput(CanLegallyDrink, canDrink, Boolean, "If the person can drink.")]
 
    Define(Double)~#1
    Multiply(#1, 2)~#2
@@ -94,12 +106,12 @@ as you need (since your flow of execution could go down different paths).
 
 .. code-block:: decision
 
-   [Subroutine(CountTo)]
-   [FunctionInput(CountTo, Integer)]
+   [Subroutine(CountTo, "Count from 1 to a given integer.")]
+   [FunctionInput(CountTo, upTo, Integer, 10, "The number to count up to.")]
 
-   [Subroutine(PrintFactorsOf)]
-   [FunctionInput(PrintFactorsOf, Integer)]
-   [FunctionOutput(PrintFactorsOf, Integer)] > How may factors?
+   [Subroutine(PrintFactorsOf, "Print off the factors of a given number.")]
+   [FunctionInput(PrintFactorsOf, num, Integer, 1, "The number to print the factors of.")]
+   [FunctionOutput(PrintFactorsOf, numFactors, Integer, "The number of factors the number has.")]
 
    Define(CountTo)~#1, #2
    For(#1, 1, #2, 1)~#3, #4, #5
