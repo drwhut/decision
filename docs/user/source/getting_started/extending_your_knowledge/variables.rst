@@ -55,7 +55,7 @@ the variable:
 
 .. code-block:: decision
 
-   [Variable(myNum, Integer, 420)]
+   [Variable(myNum, Integer, 420, "I am REALLY sensible.")]
 
    Start~#1
    myNum~#2
