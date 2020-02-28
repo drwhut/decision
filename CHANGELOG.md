@@ -89,6 +89,8 @@ standardisation.
 reference in JSON format.
   * This is used in conjunction with an extension added to the user manual,
   which reads the JSON and displays the core reference automatically.
+* Both the user and developer manuals have been updated for changes made in
+this update.
 
 ## Optimisations
 
