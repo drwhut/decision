@@ -1,3 +1,5 @@
+# Decision v0.3.0 - 29th February 2020
+
 **NOTE:** This update changes some of the fundamental definitions of items in
 Decision, and thus will break most source files, and all object files, from
 previous Decision versions!
