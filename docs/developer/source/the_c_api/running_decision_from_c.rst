@@ -66,6 +66,14 @@ You can then run any compiled ``Sheet`` with:
        return 0;
    }
 
+.. note::
+
+   For safety, you can check to see whether a sheet has failed to compile
+   (usually because there was an error in the code) by checking to see if
+   ``sheet->hasErrors`` is true.
+
+   If a sheet does have an error, ``d_run_sheet`` will not run it.
+
 Running Decision Strings
 ------------------------
 
