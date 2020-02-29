@@ -1,6 +1,6 @@
 ..
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -46,6 +46,28 @@ Equal
    false
    true
 
+
+.. note::
+
+   As of the 0.3.0 update, you can also check to see if two booleans are equal:
+
+   .. code-block:: decision
+
+      Start~#1
+
+      Equal(true, true)~#2
+      Print(#1, #2)~#3
+
+      Equal(true, false)~#4
+      Print(#3, #4)
+   
+   .. code-block::
+
+      $ decision equal_bool.dc
+
+      true
+      false
+
 Not Equal
 ---------
 
@@ -68,6 +90,28 @@ Not Equal
    false
    true
    false
+
+.. note::
+
+   As of the 0.3.0 update, you can also check to see if two booleans are not
+   equal:
+
+   .. code-block:: decision
+
+      Start~#1
+      
+      Equal(true, true)~#2
+      Print(#1, #2)~#3
+
+      Equal(true, false)~#4
+      Print(#3, #4)
+   
+   .. code-block::
+
+      $ decision equal_bool.dc
+
+      false
+      true
 
 Less Than
 ---------

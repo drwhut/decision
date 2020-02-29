@@ -1,6 +1,6 @@
 ..
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -82,46 +82,49 @@ Meta-variables
 Each ``SyntaxDefinition`` has an associated function called a
 **meta-variable** in ``dsyntax.c``, which returns if the section of lexical
 tokens we're looking at fits the syntax rule of the meta-variable, and may
-potentially throw an error if it specifically breaks the rules (but not if
-none of the lexical tokens are valid, as they may be valid in another
-definition)
+potentially throw an error if it specifically breaks the rules of that
+meta-variable.
 
-.. note::
-
-   These functions have a *lot* of preprocessor macros that hide a lot of
-   what is going on under the hood - this is because all of these functions
-   do a lot of similar things, and it makes it easier in the long run to
-   create new rules, as the macros represent concepts similar to something
-   you would see in, say, Backus-Naur form.
-
-Here is an example of a meta-variable for a *call*, which is a list of
-arguments (that could be empty), surrounded by brackets:
+Here is an example of a meta-variable for a *line identifier*, which is a line
+symbol (``#``), followed by an integer literal:
 
 .. code-block:: c
 
-   /* <call> ::= <Lbracket><listOfArguments><Rbracket> */
-   META(call)
+   /* <lineIdentifier> ::= <Line><IntegerLiteral> */
+   static SyntaxResult lineIdentifier(SyntaxContext *context) {
+       SyntaxResult out;
+       out.node = d_syntax_create_node(STX_lineIdentifier, NULL, context->lineNum);
+       out.success = true;
 
-       if (acceptToken(TK_LBRACKET))
-       {
-           START_ADD
-           acceptDefinition(listOfArguments); // There dosen't nessesarily have to
-           END_ADD                            // be anything in the backets.
+       VERBOSE(5, "ENTER\tlineIdentifier\tWITH\t%i\n",
+               context->currentToken->type);
 
-           expectToken(TK_RBRACKET, "Expected ) symbol at end of call");
-           ACCEPT(call)
+       if (context->currentToken->type == TK_LINE) {
+           nextToken(context);
+
+           if (context->currentToken->type == TK_INTEGERLITERAL) {
+
+               SyntaxNode *literal = d_syntax_create_node(
+                   STX_TOKEN, context->currentToken, context->lineNum);
+               d_syntax_add_child(out.node, literal);
+
+               nextToken(context);
+
+           } else {
+               syntax_error(
+                   "Expected integer literal to follow the line symbol (#)",
+                   context);
+               fail_definition(&out);
+           }
+       } else {
+           syntax_error(
+               "Expected line identifier to start with the line symbol (#)",
+               context);
+           fail_definition(&out);
        }
-       else
-       {
-           DECLINE(call)
-       }
 
-   END_META
-
-Here it will accept a list of arguments if it finds one, but if it doesn't
-then it will not error - but it will error if after there isn't a right
-bracket. Also notice that if there is no left bracket it doesn't error, but
-simply says "this cannot be a call, try something else".
+       return out;
+   }
 
 Syntax functions
 ----------------
@@ -132,12 +135,8 @@ manipulate a syntax tree, for instance:
 .. doxygenfunction:: d_syntax_add_child
    :no-link:
 
-The ``child`` node is added as the next child of the ``parent`` node.
-
 .. doxygenfunction:: d_syntax_get_num_children
    :no-link:
-
-Returns the number of children that ``parent`` has.
 
 There is also a mechanism to help you find all of the syntax nodes with a
 given ``SyntaxDefinition``:
@@ -145,8 +144,8 @@ given ``SyntaxDefinition``:
 .. doxygenfunction:: d_syntax_get_all_nodes_with
    :no-link:
 
-Returns a list of ``SyntaxNode*`` which have the same ``SyntaxDefinition`` as
-``definition``. It also gives you the choice of whether you want to continue
+It returns a list of ``SyntaxNode*`` which have the same ``SyntaxDefinition``
+as ``definition``. It also gives you the choice of whether you want to continue
 traversing the children of a satisfactory node to try and find more, although
 this will mostly be false as certain syntax definitions will only appear in
 certain layers of the tree.
@@ -162,21 +161,21 @@ However, the *most important function* is:
 .. doxygenfunction:: d_syntax_parse
    :no-link:
 
-Returns the root node of a syntax tree, given the ``stream`` from
+It returns the root node of a syntax tree, given the ``stream`` from
 :ref:`lexical-analysis`. In the event there is an error, it blames
 ``filePath``.
 
 .. doxygenfunction:: d_syntax_free_tree
    :no-link:
 
-Frees the syntax tree after we are done with it.
+This frees the syntax tree after we are done with it.
 
 Like in :ref:`lexical-analysis`, there is a debugging method:
 
 .. doxygenfunction:: d_syntax_dump_tree
    :no-link:
 
-Dumps the syntax tree with indentation depending on the depth of the node.
+It dumps the syntax tree with indentation depending on the depth of the node.
 
 .. note::
 

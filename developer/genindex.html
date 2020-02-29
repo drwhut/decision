@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; Decision 0.2.0 documentation</title>
+  <title>Index &mdash; Decision 0.3.0 documentation</title>
   
 
   
@@ -22,10 +22,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -83,6 +83,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="introduction/index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="the_language/index.html">The Language</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_data_structures/index.html">Common Data Structures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="the_stages_of_compilation/index.html">The Stages of Compilation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="linking/index.html">Linking</a></li>
 <li class="toctree-l1"><a class="reference internal" href="the_virtual_machine/index.html">The Virtual Machine</a></li>
@@ -160,17 +161,18 @@
  | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
  | <a href="#E"><strong>E</strong></a>
+ | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
  | <a href="#I"><strong>I</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#N"><strong>N</strong></a>
  | <a href="#O"><strong>O</strong></a>
- | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
- | <a href="#U"><strong>U</strong></a>
  | <a href="#V"><strong>V</strong></a>
+ | <a href="#W"><strong>W</strong></a>
  
 </div>
 <h2 id="_">_</h2>
@@ -186,15 +188,13 @@
 </li>
       <li><a href="reference/index.html#_CPPv4N6_bcode4codeE">_bcode::code (C++ member)</a>
 </li>
+      <li><a href="reference/index.html#_CPPv4N6_bcode9debugInfoE">_bcode::debugInfo (C++ member)</a>
+</li>
       <li><a href="reference/index.html#_CPPv4N6_bcode8linkListE">_bcode::linkList (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv4N6_bcode12linkListSizeE">_bcode::linkListSize (C++ member)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv4N6_bcode23numStartOfReturnMarkersE">_bcode::numStartOfReturnMarkers (C++ member)</a>
-</li>
       <li><a href="reference/index.html#_CPPv4N6_bcode4sizeE">_bcode::size (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N6_bcode20startOfReturnMarkersE">_bcode::startOfReturnMarkers (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv413_buildContext">_buildContext (C++ class)</a>
 </li>
@@ -202,35 +202,83 @@
 </li>
       <li><a href="reference/index.html#_CPPv4N13_buildContext15dataSectionSizeE">_buildContext::dataSectionSize (C++ member)</a>
 </li>
+      <li><a href="reference/index.html#_CPPv4N13_buildContext5debugE">_buildContext::debug (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N13_buildContext5graphE">_buildContext::graph (C++ member)</a>
+</li>
       <li><a href="reference/index.html#_CPPv4N13_buildContext12linkMetaListE">_buildContext::linkMetaList (C++ member)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv4N13_buildContext10maxUsedRegE">_buildContext::maxUsedReg (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N13_buildContext12nextFloatRegE">_buildContext::nextFloatReg (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N13_buildContext7nextRegE">_buildContext::nextReg (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N13_buildContext16nextSafeFloatRegE">_buildContext::nextSafeFloatReg (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N13_buildContext11nextSafeRegE">_buildContext::nextSafeReg (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N13_buildContext7usedRegE">_buildContext::usedReg (C++ member)</a>
+      <li><a href="reference/index.html#_CPPv4N13_buildContext8stackTopE">_buildContext::stackTop (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv410_cFunction">_cFunction (C++ class)</a>
 </li>
+      <li><a href="reference/index.html#_CPPv4N10_cFunction10definitionE">_cFunction::definition (C++ member)</a>
+</li>
       <li><a href="reference/index.html#_CPPv4N10_cFunction8functionE">_cFunction::function (C++ member)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv4N10_cFunction6inputsE">_cFunction::inputs (C++ member)</a>
+      <li><a href="reference/index.html#_CPPv415_compileOptions">_compileOptions (C++ class)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv4N10_cFunction4nameE">_cFunction::name (C++ member)</a>
+      <li><a href="reference/index.html#_CPPv4N15_compileOptions5debugE">_compileOptions::debug (C++ member)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv4N10_cFunction9numInputsE">_cFunction::numInputs (C++ member)</a>
+      <li><a href="reference/index.html#_CPPv4N15_compileOptions8includesE">_compileOptions::includes (C++ member)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv4N10_cFunction10numOutputsE">_cFunction::numOutputs (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N10_cFunction7outputsE">_cFunction::outputs (C++ member)</a>
+      <li><a href="reference/index.html#_CPPv4N15_compileOptions6priorsE">_compileOptions::priors (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv413_coreFunction">_coreFunction (C++ enum)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv412_debugAgenda">_debugAgenda (C++ class)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N12_debugAgenda15nodeBreakpointsE">_debugAgenda::nodeBreakpoints (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N12_debugAgenda6onCallE">_debugAgenda::onCall (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N12_debugAgenda15onExecutionWireE">_debugAgenda::onExecutionWire (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N12_debugAgenda16onNodeBreakpointE">_debugAgenda::onNodeBreakpoint (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N12_debugAgenda16onNodedActivatedE">_debugAgenda::onNodedActivated (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N12_debugAgenda8onReturnE">_debugAgenda::onReturn (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N12_debugAgenda16onWireBreakpointE">_debugAgenda::onWireBreakpoint (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N12_debugAgenda11onWireValueE">_debugAgenda::onWireValue (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N12_debugAgenda15wireBreakpointsE">_debugAgenda::wireBreakpoints (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv410_debugInfo">_debugInfo (C++ class)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N10_debugInfo13debugInfoListE">_debugInfo::debugInfoList (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N10_debugInfo13debugInfoSizeE">_debugInfo::debugInfoSize (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv420_debugNodeBreakpoint">_debugNodeBreakpoint (C++ class)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N20_debugNodeBreakpoint9nodeIndexE">_debugNodeBreakpoint::nodeIndex (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N20_debugNodeBreakpoint5sheetE">_debugNodeBreakpoint::sheet (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv413_debugSession">_debugSession (C++ class)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N13_debugSession6agendaE">_debugSession::agenda (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N13_debugSession10sheetStackE">_debugSession::sheetStack (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N13_debugSession8stackPtrE">_debugSession::stackPtr (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N13_debugSession2vmE">_debugSession::vm (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv416_debugStackEntry">_debugStackEntry (C++ class)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N16_debugStackEntry16numInternalCallsE">_debugStackEntry::numInternalCalls (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N16_debugStackEntry5sheetE">_debugStackEntry::sheet (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv420_debugWireBreakpoint">_debugWireBreakpoint (C++ class)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N20_debugWireBreakpoint5sheetE">_debugWireBreakpoint::sheet (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N20_debugWireBreakpoint4wireE">_debugWireBreakpoint::wire (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv45_dIns">_dIns (C++ enum)</a>
 </li>
@@ -240,33 +288,79 @@
 </li>
       <li><a href="reference/index.html#_CPPv44_DVM">_DVM (C++ class)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv4N4_DVM13_callStackPtrE">_DVM::_callStackPtr (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N4_DVM16_generalStackPtrE">_DVM::_generalStackPtr (C++ member)</a>
-</li>
       <li><a href="reference/index.html#_CPPv4N4_DVM7_inc_pcE">_DVM::_inc_pc (C++ member)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv4N4_DVM12argRegistersE">_DVM::argRegisters (C++ member)</a>
+      <li><a href="reference/index.html#_CPPv4N4_DVM7basePtrE">_DVM::basePtr (C++ member)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv4N4_DVM9callStackE">_DVM::callStack (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N4_DVM14floatRegistersE">_DVM::floatRegisters (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N4_DVM12generalStackE">_DVM::generalStack (C++ member)</a>
+      <li><a href="reference/index.html#_CPPv4N4_DVM8framePtrE">_DVM::framePtr (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv4N4_DVM6haltedE">_DVM::halted (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv4N4_DVM2pcE">_DVM::pc (C++ member)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv4N4_DVM9registersE">_DVM::registers (C++ member)</a>
-</li>
       <li><a href="reference/index.html#_CPPv4N4_DVM12runtimeErrorE">_DVM::runtimeError (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N4_DVM8stackPtrE">_DVM::stackPtr (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N4_DVM9stackSizeE">_DVM::stackSize (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv46_graph">_graph (C++ class)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N6_graph5nodesE">_graph::nodes (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N6_graph8numNodesE">_graph::numNodes (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N6_graph8numWiresE">_graph::numWires (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N6_graph5wiresE">_graph::wires (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv412_insCallInfo">_insCallInfo (C++ class)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N12_insCallInfo7funcDefE">_insCallInfo::funcDef (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N12_insCallInfo3isCE">_insCallInfo::isC (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N12_insCallInfo5sheetE">_insCallInfo::sheet (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv413_insDebugInfo">_insDebugInfo (C++ class)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N13_insDebugInfo4infoE">_insDebugInfo::info (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N13_insDebugInfo8infoTypeE">_insDebugInfo::infoType (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N13_insDebugInfo3insE">_insDebugInfo::ins (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv412_insExecInfo">_insExecInfo (C++ class)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N12_insExecInfo8execWireE">_insExecInfo::execWire (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv418_insInfoCollection">_insInfoCollection (C++ union)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N18_insInfoCollection8callInfoE">_insInfoCollection::callInfo (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N18_insInfoCollection8execInfoE">_insInfoCollection::execInfo (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N18_insInfoCollection8nodeInfoE">_insInfoCollection::nodeInfo (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N18_insInfoCollection9valueInfoE">_insInfoCollection::valueInfo (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv412_insInfoType">_insInfoType (C++ enum)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv412_insNodeInfo">_insNodeInfo (C++ class)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N12_insNodeInfo4nodeE">_insNodeInfo::node (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv410_insToLink">_insToLink (C++ class)</a>
 </li>
       <li><a href="reference/index.html#_CPPv4N10_insToLink3insE">_insToLink::ins (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv4N10_insToLink4linkE">_insToLink::link (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv413_insValueInfo">_insValueInfo (C++ class)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N13_insValueInfo10stackIndexE">_insValueInfo::stackIndex (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N13_insValueInfo9valueWireE">_insValueInfo::valueWire (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv48_lexData">_lexData (C++ union)</a>
 </li>
@@ -286,17 +380,13 @@
 </li>
       <li><a href="reference/index.html#_CPPv49_lexToken">_lexToken (C++ class)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/index.html#_CPPv4N9_lexToken4dataE">_lexToken::data (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv4N9_lexToken4typeE">_lexToken::type (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv48_lexType">_lexType (C++ enum)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv415_lineSocketPair">_lineSocketPair (C++ class)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N15_lineSocketPair10identifierE">_lineSocketPair::identifier (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N15_lineSocketPair6socketE">_lineSocketPair::socket (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv49_linkMeta">_linkMeta (C++ class)</a>
 </li>
@@ -322,6 +412,8 @@
 </li>
       <li><a href="reference/index.html#_CPPv4N15_nameDefinition8coreFuncE">_nameDefinition::coreFunc (C++ member)</a>
 </li>
+      <li><a href="reference/index.html#_CPPv4N15_nameDefinition10definitionE">_nameDefinition::definition (C++ member)</a>
+</li>
       <li><a href="reference/index.html#_CPPv4N15_nameDefinition8functionE">_nameDefinition::function (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv4N15_nameDefinition5sheetE">_nameDefinition::sheet (C++ member)</a>
@@ -332,29 +424,49 @@
 </li>
       <li><a href="reference/index.html#_CPPv49_nameType">_nameType (C++ enum)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/index.html#_CPPv419_nodeTrueProperties">_nodeTrueProperties (C++ class)</a>
+      <li><a href="reference/index.html#_CPPv45_node">_node (C++ class)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv4N19_nodeTrueProperties8_mallocdE">_nodeTrueProperties::_mallocd (C++ member)</a>
+      <li><a href="reference/index.html#_CPPv4N5_node15_stackPositionsE">_node::_stackPositions (C++ member)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv4N19_nodeTrueProperties10inputTypesE">_nodeTrueProperties::inputTypes (C++ member)</a>
+      <li><a href="reference/index.html#_CPPv4N5_node10definitionE">_node::definition (C++ member)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv4N19_nodeTrueProperties9isDefinedE">_nodeTrueProperties::isDefined (C++ member)</a>
+      <li><a href="reference/index.html#_CPPv4N5_node7lineNumE">_node::lineNum (C++ member)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv4N19_nodeTrueProperties12needFuncNameE">_nodeTrueProperties::needFuncName (C++ member)</a>
+      <li><a href="reference/index.html#_CPPv4N5_node13literalValuesE">_node::literalValues (C++ member)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv4N19_nodeTrueProperties9numInputsE">_nodeTrueProperties::numInputs (C++ member)</a>
+      <li><a href="reference/index.html#_CPPv4N5_node14nameDefinitionE">_node::nameDefinition (C++ member)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv4N19_nodeTrueProperties10numOutputsE">_nodeTrueProperties::numOutputs (C++ member)</a>
+      <li><a href="reference/index.html#_CPPv4N5_node12reducedTypesE">_node::reducedTypes (C++ member)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv4N19_nodeTrueProperties11outputTypesE">_nodeTrueProperties::outputTypes (C++ member)</a>
+      <li><a href="reference/index.html#_CPPv4N5_node16startOutputIndexE">_node::startOutputIndex (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv415_nodeDefinition">_nodeDefinition (C++ class)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N15_nodeDefinition11descriptionE">_nodeDefinition::description (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N15_nodeDefinition14infiniteInputsE">_nodeDefinition::infiniteInputs (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N15_nodeDefinition4nameE">_nodeDefinition::name (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N15_nodeDefinition10numSocketsE">_nodeDefinition::numSockets (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N15_nodeDefinition7socketsE">_nodeDefinition::sockets (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N15_nodeDefinition16startOutputIndexE">_nodeDefinition::startOutputIndex (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv411_nodeSocket">_nodeSocket (C++ class)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N11_nodeSocket9nodeIndexE">_nodeSocket::nodeIndex (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N11_nodeSocket11socketIndexE">_nodeSocket::socketIndex (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv46_sheet">_sheet (C++ class)</a>
 </li>
       <li><a href="reference/index.html#_CPPv4N6_sheet5_dataE">_sheet::_data (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv4N6_sheet9_dataSizeE">_sheet::_dataSize (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N6_sheet10_debugInfoE">_sheet::_debugInfo (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv4N6_sheet12_insLinkListE">_sheet::_insLinkList (C++ member)</a>
 </li>
@@ -372,9 +484,15 @@
 </li>
       <li><a href="reference/index.html#_CPPv4N6_sheet9_textSizeE">_sheet::_textSize (C++ member)</a>
 </li>
+      <li><a href="reference/index.html#_CPPv4N6_sheet9allowFreeE">_sheet::allowFree (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N6_sheet10cFunctionsE">_sheet::cFunctions (C++ member)</a>
+</li>
       <li><a href="reference/index.html#_CPPv4N6_sheet8filePathE">_sheet::filePath (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv4N6_sheet9functionsE">_sheet::functions (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N6_sheet5graphE">_sheet::graph (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv4N6_sheet9hasErrorsE">_sheet::hasErrors (C++ member)</a>
 </li>
@@ -382,87 +500,57 @@
 </li>
       <li><a href="reference/index.html#_CPPv4N6_sheet8includesE">_sheet::includes (C++ member)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv4N6_sheet5nodesE">_sheet::nodes (C++ member)</a>
+      <li><a href="reference/index.html#_CPPv4N6_sheet13numCFunctionsE">_sheet::numCFunctions (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv4N6_sheet12numFunctionsE">_sheet::numFunctions (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv4N6_sheet11numIncludesE">_sheet::numIncludes (C++ member)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv4N6_sheet8numNodesE">_sheet::numNodes (C++ member)</a>
-</li>
       <li><a href="reference/index.html#_CPPv4N6_sheet9numStartsE">_sheet::numStarts (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv4N6_sheet12numVariablesE">_sheet::numVariables (C++ member)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv4N6_sheet9startNodeE">_sheet::startNode (C++ member)</a>
+      <li><a href="reference/index.html#_CPPv4N6_sheet14startNodeIndexE">_sheet::startNodeIndex (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv4N6_sheet9variablesE">_sheet::variables (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv414_sheetFunction">_sheetFunction (C++ class)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv4N14_sheetFunction9argumentsE">_sheetFunction::arguments (C++ member)</a>
+      <li><a href="reference/index.html#_CPPv4N14_sheetFunction16defineDefinitionE">_sheetFunction::defineDefinition (C++ member)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv4N14_sheetFunction10defineNodeE">_sheetFunction::defineNode (C++ member)</a>
+      <li><a href="reference/index.html#_CPPv4N14_sheetFunction15defineNodeIndexE">_sheetFunction::defineNodeIndex (C++ member)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv4N14_sheetFunction12isSubroutineE">_sheetFunction::isSubroutine (C++ member)</a>
+      <li><a href="reference/index.html#_CPPv4N14_sheetFunction18functionDefinitionE">_sheetFunction::functionDefinition (C++ member)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv4N14_sheetFunction14lastReturnNodeE">_sheetFunction::lastReturnNode (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N14_sheetFunction4nameE">_sheetFunction::name (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N14_sheetFunction12numArgumentsE">_sheetFunction::numArguments (C++ member)</a>
+      <li><a href="reference/index.html#_CPPv4N14_sheetFunction19lastReturnNodeIndexE">_sheetFunction::lastReturnNodeIndex (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv4N14_sheetFunction14numDefineNodesE">_sheetFunction::numDefineNodes (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv4N14_sheetFunction14numReturnNodesE">_sheetFunction::numReturnNodes (C++ member)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv4N14_sheetFunction10numReturnsE">_sheetFunction::numReturns (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N14_sheetFunction7returnsE">_sheetFunction::returns (C++ member)</a>
+      <li><a href="reference/index.html#_CPPv4N14_sheetFunction16returnDefinitionE">_sheetFunction::returnDefinition (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv4N14_sheetFunction5sheetE">_sheetFunction::sheet (C++ member)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv410_sheetNode">_sheetNode (C++ class)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N10_sheetNode10definitionE">_sheetNode::definition (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N10_sheetNode11isExecutionE">_sheetNode::isExecution (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N10_sheetNode7lineNumE">_sheetNode::lineNum (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N10_sheetNode4nameE">_sheetNode::name (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N10_sheetNode10numSocketsE">_sheetNode::numSockets (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N10_sheetNode5sheetE">_sheetNode::sheet (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N10_sheetNode7socketsE">_sheetNode::sockets (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv412_sheetSocket">_sheetSocket (C++ class)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N12_sheetSocket4_regE">_sheetSocket::_reg (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N12_sheetSocket11connectionsE">_sheetSocket::connections (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N12_sheetSocket12defaultValueE">_sheetSocket::defaultValue (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N12_sheetSocket7isInputE">_sheetSocket::isInput (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N12_sheetSocket4nodeE">_sheetSocket::node (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N12_sheetSocket14numConnectionsE">_sheetSocket::numConnections (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N12_sheetSocket4typeE">_sheetSocket::type (C++ member)</a>
-</li>
       <li><a href="reference/index.html#_CPPv414_sheetVariable">_sheetVariable (C++ class)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv4N14_sheetVariable8dataTypeE">_sheetVariable::dataType (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N14_sheetVariable12defaultValueE">_sheetVariable::defaultValue (C++ member)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv4N14_sheetVariable4nameE">_sheetVariable::name (C++ member)</a>
+      <li><a href="reference/index.html#_CPPv4N14_sheetVariable16getterDefinitionE">_sheetVariable::getterDefinition (C++ member)</a>
 </li>
       <li><a href="reference/index.html#_CPPv4N14_sheetVariable5sheetE">_sheetVariable::sheet (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N14_sheetVariable12variableMetaE">_sheetVariable::variableMeta (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv411_socketMeta">_socketMeta (C++ class)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N11_socketMeta12defaultValueE">_socketMeta::defaultValue (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N11_socketMeta11descriptionE">_socketMeta::description (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N11_socketMeta4nameE">_socketMeta::name (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N11_socketMeta4typeE">_socketMeta::type (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#c._STR">_STR (C macro)</a>
 </li>
       <li><a href="reference/index.html#_CPPv417_syntaxDefinition">_syntaxDefinition (C++ enum)</a>
 </li>
@@ -490,6 +578,14 @@
 </li>
       <li><a href="reference/index.html#_CPPv4N19_syntaxSearchResult10occurancesE">_syntaxSearchResult::occurances (C++ member)</a>
 </li>
+      <li><a href="reference/index.html#c._VERSION_STR">_VERSION_STR (C macro)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv45_wire">_wire (C++ class)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N5_wire10socketFromE">_wire::socketFrom (C++ member)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv4N5_wire8socketToE">_wire::socketTo (C++ member)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -506,8 +602,18 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/index.html#_CPPv45BCode">BCode (C++ type)</a>
 </li>
+      <li><a href="reference/index.html#c.BIMMEDIATE_MAX">BIMMEDIATE_MAX (C macro)</a>
+</li>
+      <li><a href="reference/index.html#c.BIMMEDIATE_MIN">BIMMEDIATE_MIN (C macro)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/index.html#c.BIMMEDIATE_PRINTF">BIMMEDIATE_PRINTF (C macro)</a>
+</li>
+      <li><a href="reference/index.html#c.BIMMEDIATE_SIZE">BIMMEDIATE_SIZE (C macro)</a>
+</li>
+      <li><a href="reference/index.html#c.bimmediate_t">bimmediate_t (C macro)</a>
+</li>
       <li><a href="reference/index.html#_CPPv412BuildContext">BuildContext (C++ type)</a>
 </li>
   </ul></td>
@@ -517,6 +623,8 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/index.html#_CPPv49CFunction">CFunction (C++ type)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv414CompileOptions">CompileOptions (C++ type)</a>
 </li>
       <li><a href="reference/index.html#_CPPv48CORE_ADD">CORE_ADD (C++ enumerator)</a>
 </li>
@@ -540,10 +648,10 @@
 </li>
       <li><a href="reference/index.html#_CPPv423CORE_LESS_THAN_OR_EQUAL">CORE_LESS_THAN_OR_EQUAL (C++ enumerator)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv48CORE_MOD">CORE_MOD (C++ enumerator)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/index.html#_CPPv48CORE_MOD">CORE_MOD (C++ enumerator)</a>
+</li>
       <li><a href="reference/index.html#_CPPv414CORE_MORE_THAN">CORE_MORE_THAN (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv423CORE_MORE_THAN_OR_EQUAL">CORE_MORE_THAN_OR_EQUAL (C++ enumerator)</a>
@@ -582,13 +690,11 @@
 </li>
       <li><a href="reference/index.html#_CPPv433d_allocate_string_literal_in_dataP12BuildContextP5BCode6size_tPc">d_allocate_string_literal_in_data (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv419d_allocate_variableP12BuildContextP14_sheetVariable6size_t6size_t">d_allocate_variable (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv419d_allocate_variableP12BuildContextP13SheetVariable6size_t6size_t">d_allocate_variable (C++ function)</a>
 </li>
       <li><a href="reference/index.html#_CPPv415d_asm_data_dumpPc6size_t">d_asm_data_dump (C++ function)</a>
 </li>
       <li><a href="reference/index.html#_CPPv414d_asm_dump_allP6_sheet">d_asm_dump_all (C++ function)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv421d_asm_generate_objectP6_sheetP6size_t">d_asm_generate_object (C++ function)</a>
 </li>
       <li><a href="reference/index.html#_CPPv415d_asm_incl_dumpPP6_sheet6size_t">d_asm_incl_dump (C++ function)</a>
 </li>
@@ -596,39 +702,59 @@
 </li>
       <li><a href="reference/index.html#_CPPv416d_asm_lmeta_dump12LinkMetaList">d_asm_lmeta_dump (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv417d_asm_load_objectPKc6size_tPKc">d_asm_load_object (C++ function)</a>
-</li>
       <li><a href="reference/index.html#_CPPv415d_asm_text_dumpPc6size_t">d_asm_text_dump (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv414d_bytecode_ins4DIns">d_bytecode_ins (C++ function)</a>
 </li>
       <li><a href="reference/index.html#_CPPv419d_bytecode_set_byte5BCode6size_tc">d_bytecode_set_byte (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv424d_bytecode_set_immediate5BCode6size_t11immediate_t">d_bytecode_set_immediate (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv425d_bytecode_set_fimmediate5BCode6size_t12fimmediate_t">d_bytecode_set_fimmediate (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv417d_codegen_compileP6_sheet">d_codegen_compile (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv418d_c_functions_dumpP9CFunction6size_t">d_c_functions_dump (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv48d_calloc6size_t6size_t">d_calloc (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv417d_codegen_compileP5Sheetb">d_codegen_compile (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv414d_compile_filePKcPKcP14CompileOptions">d_compile_file (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv416d_compile_stringPKcPKcP14CompileOptions">d_compile_string (C++ function)</a>
 </li>
       <li><a href="reference/index.html#_CPPv417d_concat_bytecodeP5BCodeP5BCode">d_concat_bytecode (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv430d_convert_between_number_typesP12_sheetSocketP12BuildContext4DInsb">d_convert_between_number_types (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv416d_core_dump_jsonv">d_core_dump_json (C++ function)</a>
 </li>
       <li><a href="reference/index.html#_CPPv416d_core_find_namePKc">d_core_find_name (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv422d_core_get_input_types12CoreFunction">d_core_get_input_types (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv421d_core_get_definitionK12CoreFunction">d_core_get_definition (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv415d_core_get_name12CoreFunction">d_core_get_name (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv419d_create_c_function17DecisionCFunctionPKcPKcP10SocketMeta6size_t6size_t">d_create_c_function (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv423d_core_get_output_types12CoreFunction">d_core_get_output_types (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv421d_create_c_subroutine17DecisionCFunctionPKcPKcP10SocketMeta6size_t6size_t">d_create_c_subroutine (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv424d_core_num_input_sockets12CoreFunction">d_core_num_input_sockets (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv421d_debug_add_call_infoP9DebugInfo6size_t11InsCallInfo">d_debug_add_call_info (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv425d_core_num_output_sockets12CoreFunction">d_core_num_output_sockets (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv421d_debug_add_exec_infoP9DebugInfo6size_t11InsExecInfo">d_debug_add_exec_info (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv419d_create_c_functionPKc17DecisionCFunctionP5DTypeP5DType">d_create_c_function (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv421d_debug_add_node_infoP9DebugInfo6size_t11InsNodeInfo">d_debug_add_node_info (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv421d_create_c_subroutinePKc17DecisionCFunctionP5DTypeP5DType">d_create_c_subroutine (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv422d_debug_add_value_infoP9DebugInfo6size_t12InsValueInfo">d_debug_add_value_info (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv425d_does_input_involve_callP10_sheetNode">d_does_input_involve_call (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv424d_debug_continue_sessionP12DebugSession">d_debug_continue_session (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv426d_does_output_involve_callP10_sheetNode">d_does_output_involve_call (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv422d_debug_create_sessionP6_sheet11DebugAgenda">d_debug_create_session (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv417d_debug_dump_info9DebugInfo">d_debug_dump_info (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv417d_debug_free_infoP9DebugInfo">d_debug_free_info (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv420d_debug_stop_sessionP12DebugSession">d_debug_stop_session (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv417d_definition_freeK14NodeDefinitionb">d_definition_free (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv423d_definition_num_inputsPK14NodeDefinition">d_definition_num_inputs (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv424d_definition_num_outputsPK14NodeDefinition">d_definition_num_outputs (C++ function)</a>
 </li>
       <li><a href="reference/index.html#_CPPv421d_error_compiler_pushPKcPKc6size_tb">d_error_compiler_push (C++ function)</a>
 </li>
@@ -638,47 +764,59 @@
 </li>
       <li><a href="reference/index.html#_CPPv415d_free_bytecodeP5BCode">d_free_bytecode (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv418d_free_c_functionsv">d_free_c_functions (C++ function)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv416d_free_float_regP12BuildContext5reg_t">d_free_float_reg (C++ function)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv418d_free_general_regP12BuildContext5reg_t">d_free_general_reg (C++ function)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv410d_free_regP12BuildContext5reg_t">d_free_reg (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv423d_free_name_definitionsP18AllNameDefinitions">d_free_name_definitions (C++ function)</a>
 </li>
       <li><a href="reference/index.html#_CPPv416d_functions_dumpP13SheetFunction6size_t">d_functions_dump (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv428d_generate_bytecode_for_callP10_sheetNodeP12BuildContextbb">d_generate_bytecode_for_call (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv415d_generate_callP12BuildContext6size_t">d_generate_call (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv434d_generate_bytecode_for_comparatorP10_sheetNodeP12BuildContext4DIns4DIns4DInsb">d_generate_bytecode_for_comparator (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv421d_generate_comparatorP12BuildContext6size_t4DIns4DIns12fimmediate_tb">d_generate_comparator (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv438d_generate_bytecode_for_execution_nodeP10_sheetNodeP12BuildContextbb">d_generate_bytecode_for_execution_node (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv425d_generate_execution_nodeP12BuildContext6size_tb">d_generate_execution_node (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv432d_generate_bytecode_for_functionP14_sheetFunctionP12BuildContext">d_generate_bytecode_for_function (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv419d_generate_functionP12BuildContext13SheetFunction">d_generate_function (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv429d_generate_bytecode_for_inputP12_sheetSocketP12BuildContextbb">d_generate_bytecode_for_input (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv428d_generate_nonexecution_nodeP12BuildContext6size_t">d_generate_nonexecution_node (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv431d_generate_bytecode_for_literalP12_sheetSocketP12BuildContextbb">d_generate_bytecode_for_literal (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv419d_generate_operatorP12BuildContext6size_t4DIns4DIns4DInsb">d_generate_operator (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv441d_generate_bytecode_for_nonexecution_nodeP10_sheetNodeP12BuildContextb">d_generate_bytecode_for_nonexecution_node (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv417d_generate_returnP12BuildContext6size_t">d_generate_return (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv432d_generate_bytecode_for_operatorP10_sheetNodeP12BuildContext4DIns4DIns4DInsbbb">d_generate_bytecode_for_operator (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv416d_generate_startP12BuildContext6size_t">d_generate_start (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv429d_generate_bytecode_for_startP10_sheetNodeP12BuildContext">d_generate_bytecode_for_start (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv416d_get_definitionP6_sheetPKc6size_tPKcP14NameDefinition">d_get_definition (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv432d_generate_bytecode_for_variableP10_sheetNodeP12BuildContextP14_sheetVariable">d_generate_bytecode_for_variable (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv422d_get_name_definitionsP6_sheetPKc">d_get_name_definitions (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv417d_get_c_functionsv">d_get_c_functions (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv421d_get_node_definition5Graph6size_t">d_get_node_definition (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv421d_get_num_c_functionsv">d_get_num_c_functions (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv417d_get_socket_meta5Graph10NodeSocket">d_get_socket_meta (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv417d_insert_bytecodeP5BCodeP5BCode6size_t">d_insert_bytecode (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv419d_get_verbose_levelv">d_get_verbose_level (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv422d_insert_return_markerP5BCode6size_t">d_insert_return_marker (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv416d_graph_add_nodeP5Graph4Node">d_graph_add_node (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv417d_is_all_reg_freeP12BuildContext">d_is_all_reg_free (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv416d_graph_add_wireP5Graph4WirePKc">d_graph_add_wire (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv414d_is_node_callP10_sheetNode">d_is_node_call (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv412d_graph_dump5Graph">d_graph_dump (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv412d_graph_freeP5Graph">d_graph_free (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv425d_is_execution_definitionPK14NodeDefinition">d_is_execution_definition (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv419d_is_execution_node5Graph6size_t">d_is_execution_node (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv417d_is_input_socket5Graph10NodeSocket">d_is_input_socket (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv421d_is_node_index_valid5Graph6size_t">d_is_node_index_valid (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv422d_is_node_socket_valid5Graph10NodeSocket">d_is_node_socket_valid (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv416d_is_object_filePKc">d_is_object_file (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv423d_is_socket_index_validPK14NodeDefinition6size_t">d_is_socket_index_valid (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv415d_is_subroutine13SheetFunction">d_is_subroutine (C++ function)</a>
 </li>
       <li><a href="reference/index.html#_CPPv419d_lex_create_streamPKcPKc">d_lex_create_stream (C++ function)</a>
 </li>
@@ -714,111 +852,107 @@
 </li>
       <li><a href="reference/index.html#_CPPv423d_link_precalculate_ptrP6_sheet">d_link_precalculate_ptr (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv423d_link_replace_load_insPcPc">d_link_replace_load_ins (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv425d_link_replace_fimmediatePcPc">d_link_replace_fimmediate (C++ function)</a>
 </li>
       <li><a href="reference/index.html#_CPPv411d_link_selfP6_sheet">d_link_self (C++ function)</a>
 </li>
       <li><a href="reference/index.html#_CPPv412d_link_sheetP6_sheet">d_link_sheet (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv415d_load_safe_regP12BuildContextP5BCode">d_load_safe_reg (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv411d_load_filePKcP14CompileOptions">d_load_file (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv418d_load_object_filePKcP14CompileOptions">d_load_object_file (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv418d_load_source_filePKcP14CompileOptions">d_load_source_file (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv413d_load_stringPKcPKcP14CompileOptions">d_load_string (C++ function)</a>
 </li>
       <li><a href="reference/index.html#_CPPv48d_malloc6size_t">d_malloc (C++ function)</a>
 </li>
       <li><a href="reference/index.html#_CPPv417d_malloc_bytecode6size_t">d_malloc_bytecode (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv416d_next_float_regP12BuildContextb">d_next_float_reg (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv417d_node_num_inputs5Graph6size_t">d_node_num_inputs (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv418d_next_general_regP12BuildContextb">d_next_general_reg (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv418d_node_num_outputs5Graph6size_t">d_node_num_outputs (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv410d_next_regP12BuildContextP5reg_t5reg_t">d_next_reg (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv414d_obj_generateP6_sheetP6size_t">d_obj_generate (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv417d_node_add_socketP9SheetNodeP11SheetSocket">d_node_add_socket (C++ function)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv413d_node_createPKc6size_tb">d_node_create (C++ function)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/index.html#_CPPv411d_node_freeP9SheetNode">d_node_free (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv410d_obj_loadPKc6size_tPKcPP6_sheetPP6_sheet">d_obj_load (C++ function)</a>
 </li>
       <li><a href="reference/index.html#_CPPv414d_optimize_allP6_sheet">d_optimize_all (C++ function)</a>
 </li>
       <li><a href="reference/index.html#_CPPv429d_optimize_call_func_relativeP6_sheet">d_optimize_call_func_relative (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv427d_optimize_move_consecutiveP6_sheet">d_optimize_move_consecutive (C++ function)</a>
-</li>
       <li><a href="reference/index.html#_CPPv426d_optimize_not_consecutiveP6_sheet">d_optimize_not_consecutive (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv431d_optimize_pop_push_consecutiveP6_sheet">d_optimize_pop_push_consecutive (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv431d_optimize_push_pop_consecutiveP6_sheet">d_optimize_push_pop_consecutive (C++ function)</a>
 </li>
       <li><a href="reference/index.html#_CPPv426d_optimize_remove_bytecodeP6_sheet6size_t6size_t">d_optimize_remove_bytecode (C++ function)</a>
 </li>
       <li><a href="reference/index.html#_CPPv429d_optimize_remove_ins_to_linkP6_sheet6size_t">d_optimize_remove_ins_to_link (C++ function)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/index.html#_CPPv428d_optimize_shrink_fimmediateP6_sheet">d_optimize_shrink_fimmediate (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv419d_optimize_simplifyP6_sheet">d_optimize_simplify (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv418d_optimize_uselessP6_sheet">d_optimize_useless (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv415d_push_argumentP12BuildContext10NodeSocket">d_push_argument (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv412d_push_inputP12BuildContext10NodeSocketb">d_push_input (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv414d_push_literalP12BuildContext10NodeSocketb">d_push_literal (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv418d_push_node_inputsP12BuildContext6size_tbbb">d_push_node_inputs (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv415d_push_variableP12BuildContext6size_t">d_push_variable (C++ function)</a>
+</li>
       <li><a href="reference/index.html#_CPPv49d_reallocPv6size_t">d_realloc (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv418d_reg_new_functionP12BuildContext">d_reg_new_function (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv410d_run_filePKcP14CompileOptions">d_run_file (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv415d_save_safe_regP12BuildContextP5BCode">d_save_safe_reg (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv414d_run_functionP4_DVMP6_sheetPKc">d_run_function (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv423d_semantic_detect_loopsP6_sheet">d_semantic_detect_loops (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv417d_run_object_filePKcP14CompileOptions">d_run_object_file (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv432d_semantic_free_name_definitions18AllNameDefinitions">d_semantic_free_name_definitions (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv411d_run_sheetP6_sheet">d_run_sheet (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv431d_semantic_free_true_properties18NodeTrueProperties">d_semantic_free_true_properties (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv417d_run_source_filePKcP14CompileOptions">d_run_source_file (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv431d_semantic_get_name_definitionsP6_sheetPKc">d_semantic_get_name_definitions (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv412d_run_stringPKcPKcP14CompileOptions">d_run_string (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv430d_semantic_get_node_propertiesP6_sheetPKc6size_tPKcP14NameDefinition">d_semantic_get_node_properties (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv435d_semantic_check_subroutine_returnsP5Sheet">d_semantic_check_subroutine_returns (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv428d_semantic_is_execution_node18NodeTrueProperties">d_semantic_is_execution_node (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv423d_semantic_detect_loopsP5Sheet">d_semantic_detect_loops (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv423d_semantic_reduce_typesP6_sheet">d_semantic_reduce_types (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv423d_semantic_reduce_typesP5Sheet">d_semantic_reduce_types (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv415d_semantic_scanP6_sheetP11_syntaxNode">d_semantic_scan (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv415d_semantic_scanP5SheetP10SyntaxNodePP5Sheetb">d_semantic_scan (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv421d_semantic_scan_nodesP6_sheetP11_syntaxNode">d_semantic_scan_nodes (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv421d_semantic_scan_nodesP5SheetP10SyntaxNode">d_semantic_scan_nodes (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv426d_semantic_scan_propertiesP6_sheetP11_syntaxNode">d_semantic_scan_properties (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv426d_semantic_scan_propertiesP5SheetP10SyntaxNodePP5Sheetb">d_semantic_scan_properties (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv433d_semantic_select_name_definitionPKc18AllNameDefinitionsP14NameDefinition">d_semantic_select_name_definition (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv419d_set_verbose_levelc">d_set_verbose_level (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv417d_setup_argumentsP10_sheetNodeP12BuildContextP5BCodeb">d_setup_arguments (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv422d_sheet_add_c_functionP5Sheet9CFunction">d_sheet_add_c_function (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv413d_setup_inputP12_sheetSocketP12BuildContextbbP5BCode">d_setup_input (C++ function)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv415d_setup_returnsP10_sheetNodeP12BuildContextP5BCodebb">d_setup_returns (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv420d_sheet_add_functionP5SheetK14NodeDefinition">d_sheet_add_function (C++ function)</a>
 </li>
       <li><a href="reference/index.html#_CPPv419d_sheet_add_includeP5SheetP5Sheet">d_sheet_add_include (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv429d_sheet_add_include_from_pathP5SheetPKc">d_sheet_add_include_from_path (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv429d_sheet_add_include_from_pathP5SheetPKcPP5Sheetb">d_sheet_add_include_from_path (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv416d_sheet_add_nodeP5SheetP9SheetNode">d_sheet_add_node (C++ function)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv420d_sheet_add_variableP5Sheet13SheetVariable">d_sheet_add_variable (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv420d_sheet_add_variableP5SheetK10SocketMeta">d_sheet_add_variable (C++ function)</a>
 </li>
       <li><a href="reference/index.html#_CPPv414d_sheet_createPKc">d_sheet_create (C++ function)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv423d_sheet_create_functionP5SheetPKcb">d_sheet_create_function (C++ function)</a>
 </li>
       <li><a href="reference/index.html#_CPPv412d_sheet_dumpP5Sheet">d_sheet_dump (C++ function)</a>
 </li>
       <li><a href="reference/index.html#_CPPv412d_sheet_freeP5Sheet">d_sheet_free (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv421d_sheet_free_function13SheetFunction">d_sheet_free_function (C++ function)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv421d_sheet_free_variable13SheetVariable">d_sheet_free_variable (C++ function)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv429d_sheet_function_add_argumentP5SheetPKcPKc5DType7LexData">d_sheet_function_add_argument (C++ function)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv427d_sheet_function_add_returnP5SheetPKcPKc5DType">d_sheet_function_add_return (C++ function)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv423d_socket_add_connectionP11SheetSocketP11SheetSocketP5SheetP9SheetNode">d_socket_add_connection (C++ function)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv416d_socket_connectP11SheetSocketP11SheetSocketP5SheetP9SheetNode">d_socket_connect (C++ function)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv415d_socket_create5DType7LexDatab">d_socket_create (C++ function)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv413d_socket_freeP11SheetSocket">d_socket_free (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv424d_socket_num_connections5Graph10NodeSocket">d_socket_num_connections (C++ function)</a>
 </li>
       <li><a href="reference/index.html#_CPPv418d_syntax_add_childP10SyntaxNodeP10SyntaxNode">d_syntax_add_child (C++ function)</a>
 </li>
@@ -852,23 +986,51 @@
 </li>
       <li><a href="reference/index.html#_CPPv411d_vm_add_pcP3DVM4dint">d_vm_add_pc (C++ function)</a>
 </li>
+      <li><a href="reference/index.html#_CPPv411d_vm_createv">d_vm_create (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv49d_vm_dumpP3DVM">d_vm_dump (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv410d_vm_frameP3DVM">d_vm_frame (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv49d_vm_freeP3DVM">d_vm_free (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv48d_vm_getP3DVM4dint">d_vm_get (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv414d_vm_get_floatP3DVM4dint">d_vm_get_float (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv412d_vm_get_ptrP3DVM4dint">d_vm_get_ptr (C++ function)</a>
+</li>
       <li><a href="reference/index.html#_CPPv411d_vm_inc_pcP3DVM">d_vm_inc_pc (C++ function)</a>
 </li>
       <li><a href="reference/index.html#_CPPv413d_vm_ins_size4DIns">d_vm_ins_size (C++ function)</a>
 </li>
+      <li><a href="reference/index.html#_CPPv411d_vm_insertP3DVM4dint4dint">d_vm_insert (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv417d_vm_insert_floatP3DVM4dint6dfloat">d_vm_insert_float (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv415d_vm_insert_ptrP3DVM4dintPv">d_vm_insert_ptr (C++ function)</a>
+</li>
       <li><a href="reference/index.html#_CPPv420d_vm_parse_ins_at_pcP3DVM">d_vm_parse_ins_at_pc (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv414d_vm_pop_stackP3DVM">d_vm_pop_stack (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv48d_vm_popP3DVM">d_vm_pop (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv420d_vm_pop_stack_floatP3DVM">d_vm_pop_stack_float (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv414d_vm_pop_floatP3DVM">d_vm_pop_float (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv418d_vm_pop_stack_ptrP3DVM">d_vm_pop_stack_ptr (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv412d_vm_pop_ptrP3DVM">d_vm_pop_ptr (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv415d_vm_push_stackP3DVM4dint">d_vm_push_stack (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv49d_vm_popnP3DVM6size_t">d_vm_popn (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv421d_vm_push_stack_floatP3DVM6dfloat">d_vm_push_stack_float (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv49d_vm_pushP3DVM4dint">d_vm_push (C++ function)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv419d_vm_push_stack_ptrP3DVMPv">d_vm_push_stack_ptr (C++ function)</a>
+      <li><a href="reference/index.html#_CPPv415d_vm_push_floatP3DVM6dfloat">d_vm_push_float (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv413d_vm_push_ptrP3DVMPv">d_vm_push_ptr (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv410d_vm_pushnP3DVM6size_t">d_vm_pushn (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv411d_vm_removeP3DVM4dint">d_vm_remove (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv415d_vm_remove_lenP3DVM4dint6size_t">d_vm_remove_len (C++ function)</a>
 </li>
       <li><a href="reference/index.html#_CPPv410d_vm_resetP3DVM">d_vm_reset (C++ function)</a>
 </li>
@@ -876,9 +1038,45 @@
 </li>
       <li><a href="reference/index.html#_CPPv418d_vm_runtime_errorP3DVMPKc">d_vm_runtime_error (C++ function)</a>
 </li>
+      <li><a href="reference/index.html#_CPPv48d_vm_setP3DVM4dint4dint">d_vm_set (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv414d_vm_set_floatP3DVM4dint6dfloat">d_vm_set_float (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv412d_vm_set_ptrP3DVM4dintPv">d_vm_set_ptr (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv48d_vm_topP3DVM">d_vm_top (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv410d_wire_cmp4Wire4Wire">d_wire_cmp (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv417d_wire_find_first5Graph10NodeSocket">d_wire_find_first (C++ function)</a>
+</li>
+      <li><a href="reference/index.html#c.DEBUG_SHEET_STACK_SIZE">DEBUG_SHEET_STACK_SIZE (C macro)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv411DebugAgenda">DebugAgenda (C++ type)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv49DebugInfo">DebugInfo (C++ type)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv419DebugNodeBreakpoint">DebugNodeBreakpoint (C++ type)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv412DebugSession">DebugSession (C++ type)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv415DebugStackEntry">DebugStackEntry (C++ type)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv419DebugWireBreakpoint">DebugWireBreakpoint (C++ type)</a>
+</li>
       <li><a href="reference/index.html#c.DECISION_API">DECISION_API (C macro)</a>
 </li>
+      <li><a href="reference/index.html#c.DECISION_VERSION">DECISION_VERSION (C macro)</a>
+</li>
+      <li><a href="reference/index.html#c.DECISION_VERSION_MAJOR">DECISION_VERSION_MAJOR (C macro)</a>
+</li>
+      <li><a href="reference/index.html#c.DECISION_VERSION_MINOR">DECISION_VERSION_MINOR (C macro)</a>
+</li>
+      <li><a href="reference/index.html#c.DECISION_VERSION_PATCH">DECISION_VERSION_PATCH (C macro)</a>
+</li>
       <li><a href="reference/index.html#_CPPv417DecisionCFunction">DecisionCFunction (C++ type)</a>
+</li>
+      <li><a href="reference/index.html#c.DEFAULT_COMPILE_OPTIONS">DEFAULT_COMPILE_OPTIONS (C macro)</a>
 </li>
       <li><a href="reference/index.html#c.dfloat">dfloat (C macro)</a>
 </li>
@@ -906,11 +1104,31 @@
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/index.html#c.ERROR_COMPILER">ERROR_COMPILER (C macro)</a>
+      <li><a href="reference/index.html#c.EMPTY_GRAPH">EMPTY_GRAPH (C macro)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/index.html#c.ERROR_RUNTIME">ERROR_RUNTIME (C macro)</a>, <a href="the_virtual_machine/index.html#c.ERROR_RUNTIME">[1]</a>
+      <li><a href="reference/index.html#c.ERROR_COMPILER">ERROR_COMPILER (C macro)</a>
+</li>
+      <li><a href="reference/index.html#c.ERROR_RUNTIME">ERROR_RUNTIME (C macro)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="F">F</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/index.html#c.FIMMEDIATE_MAX">FIMMEDIATE_MAX (C macro)</a>
+</li>
+      <li><a href="reference/index.html#c.FIMMEDIATE_MIN">FIMMEDIATE_MIN (C macro)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/index.html#c.FIMMEDIATE_PRINTF">FIMMEDIATE_PRINTF (C macro)</a>
+</li>
+      <li><a href="reference/index.html#c.FIMMEDIATE_SIZE">FIMMEDIATE_SIZE (C macro)</a>
+</li>
+      <li><a href="reference/index.html#c.fimmediate_t">fimmediate_t (C macro)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -918,13 +1136,25 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/index.html#c.GET_BYTEN">GET_BYTEN (C macro)</a>
+      <li><a href="reference/index.html#_CPPv45Graph">Graph (C++ type)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/index.html#c.HIMMEDIATE_MAX">HIMMEDIATE_MAX (C macro)</a>
+</li>
+      <li><a href="reference/index.html#c.HIMMEDIATE_MIN">HIMMEDIATE_MIN (C macro)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/index.html#c.GET_IMMEDIATE_PTR">GET_IMMEDIATE_PTR (C macro)</a>
+      <li><a href="reference/index.html#c.HIMMEDIATE_PRINTF">HIMMEDIATE_PRINTF (C macro)</a>
 </li>
-      <li><a href="reference/index.html#c.GET_UPPER_IMMEDIATE_PTR">GET_UPPER_IMMEDIATE_PTR (C macro)</a>
+      <li><a href="reference/index.html#c.HIMMEDIATE_SIZE">HIMMEDIATE_SIZE (C macro)</a>
+</li>
+      <li><a href="reference/index.html#c.himmediate_t">himmediate_t (C macro)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -932,27 +1162,35 @@
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/index.html#c.IMMEDIATE_MASK">IMMEDIATE_MASK (C macro)</a>
+      <li><a href="reference/index.html#_CPPv49INFO_CALL">INFO_CALL (C++ enumerator)</a>
 </li>
-      <li><a href="reference/index.html#c.IMMEDIATE_SIZE">IMMEDIATE_SIZE (C macro)</a>
+      <li><a href="reference/index.html#_CPPv49INFO_EXEC">INFO_EXEC (C++ enumerator)</a>
 </li>
-      <li><a href="reference/index.html#c.immediate_t">immediate_t (C macro)</a>
+      <li><a href="reference/index.html#_CPPv49INFO_NODE">INFO_NODE (C++ enumerator)</a>
 </li>
-      <li><a href="reference/index.html#c.IMMEDIATE_UPPER_MASK">IMMEDIATE_UPPER_MASK (C macro)</a>
+      <li><a href="reference/index.html#_CPPv410INFO_VALUE">INFO_VALUE (C++ enumerator)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv417InstructionToLink">InstructionToLink (C++ type)</a>
+      <li><a href="reference/index.html#_CPPv411InsCallInfo">InsCallInfo (C++ type)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv412InsDebugInfo">InsDebugInfo (C++ type)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv411InsExecInfo">InsExecInfo (C++ type)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/index.html#c.IS_REG_FREE">IS_REG_FREE (C macro)</a>
+      <li><a href="reference/index.html#_CPPv417InsInfoCollection">InsInfoCollection (C++ type)</a>
 </li>
-      <li><a href="reference/index.html#c.IS_REG_SAFE">IS_REG_SAFE (C macro)</a>
+      <li><a href="reference/index.html#_CPPv411InsInfoType">InsInfoType (C++ type)</a>
 </li>
-      <li><a href="reference/index.html#c.IS_REG_SAFE_FLOAT">IS_REG_SAFE_FLOAT (C macro)</a>
+      <li><a href="reference/index.html#_CPPv411InsNodeInfo">InsNodeInfo (C++ type)</a>
 </li>
-      <li><a href="reference/index.html#c.IS_REG_SAFE_GENERAL">IS_REG_SAFE_GENERAL (C macro)</a>
+      <li><a href="reference/index.html#_CPPv417InstructionToLink">InstructionToLink (C++ type)</a>
 </li>
-      <li><a href="reference/index.html#c.IS_REG_USED">IS_REG_USED (C macro)</a>
+      <li><a href="reference/index.html#_CPPv412InsValueInfo">InsValueInfo (C++ type)</a>
+</li>
+      <li><a href="reference/index.html#c.IS_INDEX_TOP">IS_INDEX_TOP (C macro)</a>
+</li>
+      <li><a href="reference/index.html#c.IS_WIRE_FROM">IS_WIRE_FROM (C macro)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -978,11 +1216,9 @@
 </li>
       <li><a href="reference/index.html#_CPPv48LexToken">LexToken (C++ type)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv47LexType">LexType (C++ type)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/index.html#_CPPv414LineSocketPair">LineSocketPair (C++ type)</a>
+      <li><a href="reference/index.html#_CPPv47LexType">LexType (C++ type)</a>
 </li>
       <li><a href="reference/index.html#_CPPv414LINK_CFUNCTION">LINK_CFUNCTION (C++ enumerator)</a>
 </li>
@@ -1026,19 +1262,23 @@
 </li>
       <li><a href="reference/index.html#_CPPv414NameDefinition">NameDefinition (C++ type)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/index.html#_CPPv48NameType">NameType (C++ type)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv418NodeTrueProperties">NodeTrueProperties (C++ type)</a>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/index.html#c.NO_AGENDA">NO_AGENDA (C macro)</a>
+</li>
+      <li><a href="reference/index.html#c.NO_DEBUG_INFO">NO_DEBUG_INFO (C macro)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv44Node">Node (C++ type)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv414NodeDefinition">NodeDefinition (C++ type)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv410NodeSocket">NodeSocket (C++ type)</a>
 </li>
       <li><a href="reference/index.html#c.NUM_CORE_FUNCTIONS">NUM_CORE_FUNCTIONS (C macro)</a>
 </li>
       <li><a href="reference/index.html#c.NUM_OPCODES">NUM_OPCODES (C macro)</a>
-</li>
-      <li><a href="reference/index.html#c.NUM_SAFE_FLOAT_REGISTERS">NUM_SAFE_FLOAT_REGISTERS (C macro)</a>
-</li>
-      <li><a href="reference/index.html#c.NUM_SAFE_GENERAL_REGISTERS">NUM_SAFE_GENERAL_REGISTERS (C macro)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -1046,137 +1286,207 @@
 <h2 id="O">O</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/index.html#_CPPv46OnCall">OnCall (C++ type)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv415OnExecutionWire">OnExecutionWire (C++ type)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv415OnNodeActivated">OnNodeActivated (C++ type)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv416OnNodeBreakpoint">OnNodeBreakpoint (C++ type)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv48OnReturn">OnReturn (C++ type)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv416OnWireBreakpoint">OnWireBreakpoint (C++ type)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv411OnWireValue">OnWireValue (C++ type)</a>
+</li>
       <li><a href="reference/index.html#_CPPv46OP_ADD">OP_ADD (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv48OP_ADDBI">OP_ADDBI (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv47OP_ADDF">OP_ADDF (C++ enumerator)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv47OP_ADDI">OP_ADDI (C++ enumerator)</a>
+      <li><a href="reference/index.html#_CPPv48OP_ADDFI">OP_ADDFI (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv48OP_ADDHI">OP_ADDHI (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv46OP_AND">OP_AND (C++ enumerator)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv47OP_ANDI">OP_ANDI (C++ enumerator)</a>
+      <li><a href="reference/index.html#_CPPv48OP_ANDBI">OP_ANDBI (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv48OP_ANDFI">OP_ANDFI (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv48OP_ANDHI">OP_ANDHI (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv47OP_CALL">OP_CALL (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv48OP_CALLC">OP_CALLC (C++ enumerator)</a>
 </li>
+      <li><a href="reference/index.html#_CPPv49OP_CALLCI">OP_CALLCI (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv48OP_CALLI">OP_CALLI (C++ enumerator)</a>
+</li>
       <li><a href="reference/index.html#_CPPv48OP_CALLR">OP_CALLR (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv49OP_CALLRB">OP_CALLRB (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv49OP_CALLRF">OP_CALLRF (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv49OP_CALLRH">OP_CALLRH (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv46OP_CEQ">OP_CEQ (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv47OP_CEQF">OP_CEQF (C++ enumerator)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv47OP_CEQS">OP_CEQS (C++ enumerator)</a>
-</li>
       <li><a href="reference/index.html#_CPPv47OP_CLEQ">OP_CLEQ (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv48OP_CLEQF">OP_CLEQF (C++ enumerator)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv48OP_CLEQS">OP_CLEQS (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv46OP_CLT">OP_CLT (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv47OP_CLTF">OP_CLTF (C++ enumerator)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv47OP_CLTS">OP_CLTS (C++ enumerator)</a>
-</li>
       <li><a href="reference/index.html#_CPPv47OP_CMEQ">OP_CMEQ (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv48OP_CMEQF">OP_CMEQF (C++ enumerator)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv48OP_CMEQS">OP_CMEQS (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv46OP_CMT">OP_CMT (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv47OP_CMTF">OP_CMTF (C++ enumerator)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv47OP_CMTS">OP_CMTS (C++ enumerator)</a>
-</li>
       <li><a href="reference/index.html#_CPPv47OP_CVTF">OP_CVTF (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv47OP_CVTI">OP_CVTI (C++ enumerator)</a>
 </li>
+      <li><a href="reference/index.html#_CPPv48OP_DEREF">OP_DEREF (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv49OP_DEREFB">OP_DEREFB (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv410OP_DEREFBI">OP_DEREFBI (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv49OP_DEREFI">OP_DEREFI (C++ enumerator)</a>
+</li>
       <li><a href="reference/index.html#_CPPv46OP_DIV">OP_DIV (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv48OP_DIVBI">OP_DIVBI (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv47OP_DIVF">OP_DIVF (C++ enumerator)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv47OP_DIVI">OP_DIVI (C++ enumerator)</a>
+      <li><a href="reference/index.html#_CPPv48OP_DIVFI">OP_DIVFI (C++ enumerator)</a>
 </li>
+      <li><a href="reference/index.html#_CPPv48OP_DIVHI">OP_DIVHI (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv46OP_GET">OP_GET (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv48OP_GETBI">OP_GETBI (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv48OP_GETFI">OP_GETFI (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv48OP_GETHI">OP_GETHI (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv46OP_INV">OP_INV (C++ enumerator)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/index.html#_CPPv44OP_J">OP_J (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv47OP_JCON">OP_JCON (C++ enumerator)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/index.html#_CPPv48OP_JCONI">OP_JCONI (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv45OP_JI">OP_JI (C++ enumerator)</a>
+</li>
       <li><a href="reference/index.html#_CPPv45OP_JR">OP_JR (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv47OP_JRBI">OP_JRBI (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv48OP_JRCON">OP_JRCON (C++ enumerator)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv47OP_LOAD">OP_LOAD (C++ enumerator)</a>
+      <li><a href="reference/index.html#_CPPv410OP_JRCONBI">OP_JRCONBI (C++ enumerator)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv410OP_LOADADR">OP_LOADADR (C++ enumerator)</a>
+      <li><a href="reference/index.html#_CPPv410OP_JRCONFI">OP_JRCONFI (C++ enumerator)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv411OP_LOADADRB">OP_LOADADRB (C++ enumerator)</a>
+      <li><a href="reference/index.html#_CPPv410OP_JRCONHI">OP_JRCONHI (C++ enumerator)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv410OP_LOADARG">OP_LOADARG (C++ enumerator)</a>
+      <li><a href="reference/index.html#_CPPv47OP_JRFI">OP_JRFI (C++ enumerator)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv411OP_LOADARGI">OP_LOADARGI (C++ enumerator)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv48OP_LOADF">OP_LOADF (C++ enumerator)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv48OP_LOADI">OP_LOADI (C++ enumerator)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv49OP_LOADUI">OP_LOADUI (C++ enumerator)</a>
+      <li><a href="reference/index.html#_CPPv47OP_JRHI">OP_JRHI (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv46OP_MOD">OP_MOD (C++ enumerator)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv47OP_MODI">OP_MODI (C++ enumerator)</a>
+      <li><a href="reference/index.html#_CPPv48OP_MODBI">OP_MODBI (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv48OP_MODFI">OP_MODFI (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv48OP_MODHI">OP_MODHI (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv46OP_MUL">OP_MUL (C++ enumerator)</a>
 </li>
+      <li><a href="reference/index.html#_CPPv48OP_MULBI">OP_MULBI (C++ enumerator)</a>
+</li>
       <li><a href="reference/index.html#_CPPv47OP_MULF">OP_MULF (C++ enumerator)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv47OP_MULI">OP_MULI (C++ enumerator)</a>
+      <li><a href="reference/index.html#_CPPv48OP_MULFI">OP_MULFI (C++ enumerator)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv47OP_MVTF">OP_MVTF (C++ enumerator)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv47OP_MVTI">OP_MVTI (C++ enumerator)</a>
+      <li><a href="reference/index.html#_CPPv48OP_MULHI">OP_MULHI (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv46OP_NOT">OP_NOT (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv45OP_OR">OP_OR (C++ enumerator)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv46OP_ORI">OP_ORI (C++ enumerator)</a>
+      <li><a href="reference/index.html#_CPPv47OP_ORBI">OP_ORBI (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv47OP_ORFI">OP_ORFI (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv47OP_ORHI">OP_ORHI (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv46OP_POP">OP_POP (C++ enumerator)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv47OP_PUSH">OP_PUSH (C++ enumerator)</a>
+      <li><a href="reference/index.html#_CPPv47OP_POPB">OP_POPB (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv47OP_POPF">OP_POPF (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv47OP_POPH">OP_POPH (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv48OP_PUSHB">OP_PUSHB (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv48OP_PUSHF">OP_PUSHF (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv48OP_PUSHH">OP_PUSHH (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv49OP_PUSHNB">OP_PUSHNB (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv49OP_PUSHNF">OP_PUSHNF (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv49OP_PUSHNH">OP_PUSHNH (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv46OP_RET">OP_RET (C++ enumerator)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv49OP_STOADR">OP_STOADR (C++ enumerator)</a>
+      <li><a href="reference/index.html#_CPPv47OP_RETN">OP_RETN (C++ enumerator)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv410OP_STOADRB">OP_STOADRB (C++ enumerator)</a>
+      <li><a href="reference/index.html#_CPPv49OP_SETADR">OP_SETADR (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv410OP_SETADRB">OP_SETADRB (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv46OP_SUB">OP_SUB (C++ enumerator)</a>
 </li>
+      <li><a href="reference/index.html#_CPPv48OP_SUBBI">OP_SUBBI (C++ enumerator)</a>
+</li>
       <li><a href="reference/index.html#_CPPv47OP_SUBF">OP_SUBF (C++ enumerator)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv47OP_SUBI">OP_SUBI (C++ enumerator)</a>
+      <li><a href="reference/index.html#_CPPv48OP_SUBFI">OP_SUBFI (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv48OP_SUBHI">OP_SUBHI (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv410OP_SYSCALL">OP_SYSCALL (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv46OP_XOR">OP_XOR (C++ enumerator)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv47OP_XORI">OP_XORI (C++ enumerator)</a>
+      <li><a href="reference/index.html#_CPPv48OP_XORBI">OP_XORBI (C++ enumerator)</a>
 </li>
-  </ul></td>
-</tr></table>
-
-<h2 id="R">R</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/index.html#c.reg_t">reg_t (C macro)</a>
+      <li><a href="reference/index.html#_CPPv48OP_XORFI">OP_XORFI (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv48OP_XORHI">OP_XORHI (C++ enumerator)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -1184,55 +1494,35 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/index.html#c.SET_REG_FREE">SET_REG_FREE (C macro)</a>
-</li>
-      <li><a href="reference/index.html#c.SET_REG_USED">SET_REG_USED (C macro)</a>
-</li>
       <li><a href="reference/index.html#_CPPv45Sheet">Sheet (C++ type)</a>
 </li>
       <li><a href="reference/index.html#_CPPv413SheetFunction">SheetFunction (C++ type)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv49SheetNode">SheetNode (C++ type)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv411SheetSocket">SheetSocket (C++ type)</a>
-</li>
       <li><a href="reference/index.html#_CPPv413SheetVariable">SheetVariable (C++ type)</a>
 </li>
-      <li><a href="reference/index.html#c.SHIFT_BYTE">SHIFT_BYTE (C macro)</a>
+      <li><a href="reference/index.html#_CPPv410SocketMeta">SocketMeta (C++ type)</a>
+</li>
+      <li><a href="reference/index.html#c.STACK_INDEX_TOP">STACK_INDEX_TOP (C macro)</a>
 </li>
       <li><a href="reference/index.html#_CPPv412STX_argument">STX_argument (C++ enumerator)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv48STX_call">STX_call (C++ enumerator)</a>
-</li>
       <li><a href="reference/index.html#_CPPv412STX_dataType">STX_dataType (C++ enumerator)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv47STX_eos">STX_eos (C++ enumerator)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv414STX_expression">STX_expression (C++ enumerator)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv420STX_generalStatement">STX_generalStatement (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv418STX_lineIdentifier">STX_lineIdentifier (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv419STX_listOfArguments">STX_listOfArguments (C++ enumerator)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/index.html#_CPPv424STX_listOfLineIdentifier">STX_listOfLineIdentifier (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv427STX_listOfPropertyArguments">STX_listOfPropertyArguments (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv411STX_literal">STX_literal (C++ enumerator)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv410STX_oneeos">STX_oneeos (C++ enumerator)</a>
-</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/index.html#_CPPv411STX_program">STX_program (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv420STX_propertyArgument">STX_propertyArgument (C++ enumerator)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv416STX_propertyCall">STX_propertyCall (C++ enumerator)</a>
-</li>
-      <li><a href="reference/index.html#_CPPv422STX_propertyExpression">STX_propertyExpression (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv421STX_propertyStatement">STX_propertyStatement (C++ enumerator)</a>
 </li>
@@ -1248,9 +1538,11 @@
 </li>
       <li><a href="reference/index.html#_CPPv418SyntaxSearchResult">SyntaxSearchResult (C++ type)</a>
 </li>
-      <li><a href="reference/index.html#_CPPv411SYS_LOADSTR">SYS_LOADSTR (C++ enumerator)</a>
-</li>
       <li><a href="reference/index.html#_CPPv49SYS_PRINT">SYS_PRINT (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv410SYS_STRCMP">SYS_STRCMP (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#_CPPv410SYS_STRLEN">SYS_STRLEN (C++ enumerator)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -1294,10 +1586,10 @@
 </li>
       <li><a href="reference/index.html#_CPPv49TK_OUTPUT">TK_OUTPUT (C++ enumerator)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/index.html#_CPPv49TK_RARRAY">TK_RARRAY (C++ enumerator)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/index.html#_CPPv411TK_RBRACKET">TK_RBRACKET (C++ enumerator)</a>
 </li>
       <li><a href="reference/index.html#_CPPv412TK_RPROPERTY">TK_RPROPERTY (C++ enumerator)</a>
@@ -1306,7 +1598,11 @@
 </li>
       <li><a href="reference/index.html#_CPPv413TK_STRINGTYPE">TK_STRINGTYPE (C++ enumerator)</a>
 </li>
+      <li><a href="reference/index.html#c.TYPE_BITWISE">TYPE_BITWISE (C macro)</a>
+</li>
       <li><a href="reference/index.html#_CPPv49TYPE_BOOL">TYPE_BOOL (C++ enumerator)</a>
+</li>
+      <li><a href="reference/index.html#c.TYPE_COMPARABLE">TYPE_COMPARABLE (C macro)</a>
 </li>
       <li><a href="reference/index.html#_CPPv414TYPE_EXECUTION">TYPE_EXECUTION (C++ enumerator)</a>
 </li>
@@ -1335,30 +1631,26 @@
   </ul></td>
 </tr></table>
 
-<h2 id="U">U</h2>
+<h2 id="V">V</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/index.html#c.uimmediate_t">uimmediate_t (C macro)</a>
+      <li><a href="reference/index.html#c.VERBOSE">VERBOSE (C macro)</a>
+</li>
+      <li><a href="reference/index.html#c.VM_STACK_SIZE_MIN">VM_STACK_SIZE_MIN (C macro)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/index.html#c.VM_STACK_SIZE_SCALE_DEC">VM_STACK_SIZE_SCALE_DEC (C macro)</a>
+</li>
+      <li><a href="reference/index.html#c.VM_STACK_SIZE_SCALE_INC">VM_STACK_SIZE_SCALE_INC (C macro)</a>
 </li>
   </ul></td>
 </tr></table>
 
-<h2 id="V">V</h2>
+<h2 id="W">W</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/index.html#c.VM_CALL_STACK_CAPACITY">VM_CALL_STACK_CAPACITY (C macro)</a>
-</li>
-      <li><a href="reference/index.html#c.VM_GENERAL_STACK_CAPACITY">VM_GENERAL_STACK_CAPACITY (C macro)</a>
-</li>
-      <li><a href="reference/index.html#c.VM_IS_FLOAT_REG">VM_IS_FLOAT_REG (C macro)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/index.html#c.VM_NUM_ARG_REG">VM_NUM_ARG_REG (C macro)</a>
-</li>
-      <li><a href="reference/index.html#c.VM_NUM_REG">VM_NUM_REG (C macro)</a>
-</li>
-      <li><a href="reference/index.html#c.VM_REG_FLOAT_START">VM_REG_FLOAT_START (C macro)</a>
+      <li><a href="reference/index.html#_CPPv44Wire">Wire (C++ type)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -1375,7 +1667,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Benjamin Beddows
+        &copy; Copyright 2019-2020, Benjamin Beddows
 
     </p>
   </div>

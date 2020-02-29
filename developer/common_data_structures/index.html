@@ -1,0 +1,865 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Common Data Structures &mdash; Decision 0.3.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="The Stages of Compilation" href="../the_stages_of_compilation/index.html" />
+    <link rel="prev" title="Semantic Rules" href="../the_language/definitions/semantics.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Decision
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../the_language/index.html">The Language</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Common Data Structures</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#dtype">DType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#lexdata">LexData</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#graph-structures">Graph Structures</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#socketmeta">SocketMeta</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nodedefinition">NodeDefinition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nodesocket">NodeSocket</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wire">Wire</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#node">Node</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#graph">Graph</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#sheet-structures">Sheet Structures</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sheetvariable">SheetVariable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sheetfunction">SheetFunction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sheet">Sheet</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../the_stages_of_compilation/index.html">The Stages of Compilation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../linking/index.html">Linking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../the_virtual_machine/index.html">The Virtual Machine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../the_c_api/index.html">The C API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Decision</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Common Data Structures</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/common_data_structures/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="common-data-structures">
+<h1>Common Data Structures<a class="headerlink" href="#common-data-structures" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="dtype">
+<h2>DType<a class="headerlink" href="#dtype" title="Permalink to this headline">¶</a></h2>
+<p>Defined in <code class="docutils literal notranslate"><span class="pre">dtype.h</span></code>.</p>
+<dl class="type">
+<dt>
+<em class="property">typedef </em><em class="property">enum</em> <a class="reference internal" href="#_CPPv46_dType" title="_dType">_dType</a> <code class="sig-name descname">DType</code><br /></dt>
+<dd></dd></dl>
+
+<dl class="enum">
+<dt>
+<em class="property">enum </em><code class="sig-name descname">_dType</code><br /></dt>
+<dd><p>An enum for the data types in Decision. </p>
+<p>The values go up in powers of 2. This is so that we can combine data types to make <em>vague</em> data types, e.g. a number is <code class="docutils literal notranslate"><span class="pre">TYPE_INTEGER</span> <span class="pre">|</span> <span class="pre">TYPE_FLOAT</span></code>.</p>
+<p>Note that there are several macros for common vague data types, e.g. <code class="docutils literal notranslate"><span class="pre">TYPE_NUMBER</span></code>, <code class="docutils literal notranslate"><span class="pre">TYPE_BITWISE</span></code>, <code class="docutils literal notranslate"><span class="pre">TYPE_VAR_ANY</span></code>, … </p>
+<p><em>Values:</em></p>
+<dl class="enumerator">
+<dt>
+<code class="sig-name descname">TYPE_NONE</code> = 0<br /></dt>
+<dd></dd></dl>
+
+<dl class="enumerator">
+<dt>
+<code class="sig-name descname">TYPE_EXECUTION</code> = 1<br /></dt>
+<dd></dd></dl>
+
+<dl class="enumerator">
+<dt>
+<code class="sig-name descname">TYPE_INT</code> = 2<br /></dt>
+<dd></dd></dl>
+
+<dl class="enumerator">
+<dt>
+<code class="sig-name descname">TYPE_FLOAT</code> = 4<br /></dt>
+<dd></dd></dl>
+
+<dl class="enumerator">
+<dt>
+<code class="sig-name descname">TYPE_STRING</code> = 8<br /></dt>
+<dd></dd></dl>
+
+<dl class="enumerator">
+<dt>
+<code class="sig-name descname">TYPE_BOOL</code> = 16<br /></dt>
+<dd></dd></dl>
+
+<dl class="enumerator">
+<dt>
+<code class="sig-name descname">TYPE_NAME</code> = 32<br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="lexdata">
+<h2>LexData<a class="headerlink" href="#lexdata" title="Permalink to this headline">¶</a></h2>
+<p>Defined in <code class="docutils literal notranslate"><span class="pre">dlex.h</span></code>.</p>
+<dl class="type">
+<dt>
+<em class="property">typedef </em><em class="property">union</em> <a class="reference internal" href="#_CPPv48_lexData" title="_lexData">_lexData</a> <code class="sig-name descname">LexData</code><br /></dt>
+<dd></dd></dl>
+
+<dl class="union">
+<dt>
+<em class="property">union </em><code class="sig-name descname">_lexData</code><br /></dt>
+<dd><em>#include &lt;dlex.h&gt;</em><p>A union for storing the variable data types in Decision. </p>
+<p>This is usually used in conjunction with <code class="docutils literal notranslate"><span class="pre">DType</span></code> to determine which element to get data from. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Members</p>
+<dl class="member">
+<dt>
+dint <code class="sig-name descname">integerValue</code><br /></dt>
+<dd></dd></dl>
+
+<dl class="member">
+<dt>
+dfloat <code class="sig-name descname">floatValue</code><br /></dt>
+<dd></dd></dl>
+
+<dl class="member">
+<dt>
+bool <code class="sig-name descname">booleanValue</code><br /></dt>
+<dd></dd></dl>
+
+<dl class="member">
+<dt>
+char *<code class="sig-name descname">stringValue</code><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="graph-structures">
+<h2>Graph Structures<a class="headerlink" href="#graph-structures" title="Permalink to this headline">¶</a></h2>
+<p>The graph of a sheet is the set of nodes, and the wires connecting those nodes.</p>
+<div class="section" id="socketmeta">
+<h3>SocketMeta<a class="headerlink" href="#socketmeta" title="Permalink to this headline">¶</a></h3>
+<p>Defined in <code class="docutils literal notranslate"><span class="pre">dgraph.h</span></code>.</p>
+<dl class="type">
+<dt>
+<em class="property">typedef </em><em class="property">struct</em> <a class="reference internal" href="#_CPPv411_socketMeta" title="_socketMeta">_socketMeta</a> <code class="sig-name descname">SocketMeta</code><br /></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">struct </em><code class="sig-name descname">_socketMeta</code><br /></dt>
+<dd><p>Defines the metadata of a socket, i.e. it’s type, name, description, etc. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Members</p>
+<dl class="member">
+<dt>
+<em class="property">const</em> char *<code class="sig-name descname">name</code><br /></dt>
+<dd><p>The name of the socket. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+<em class="property">const</em> char *<code class="sig-name descname">description</code><br /></dt>
+<dd><p>The socket description. Can be <code class="docutils literal notranslate"><span class="pre">NULL</span></code>. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+<a class="reference internal" href="#_CPPv45DType" title="DType">DType</a> <code class="sig-name descname">type</code><br /></dt>
+<dd><p>The data type of the socket. Can be vague. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+<a class="reference internal" href="#_CPPv47LexData" title="LexData">LexData</a> <code class="sig-name descname">defaultValue</code><br /></dt>
+<dd><p>The default value of the socket. Although it is not used by the compiler, it can be used by other programs to place a value in the socket by default. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="nodedefinition">
+<h3>NodeDefinition<a class="headerlink" href="#nodedefinition" title="Permalink to this headline">¶</a></h3>
+<p>Defined in <code class="docutils literal notranslate"><span class="pre">dgraph.h</span></code>.</p>
+<dl class="type">
+<dt>
+<em class="property">typedef </em><em class="property">struct</em> <a class="reference internal" href="#_CPPv415_nodeDefinition" title="_nodeDefinition">_nodeDefinition</a> <code class="sig-name descname">NodeDefinition</code><br /></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">struct </em><code class="sig-name descname">_nodeDefinition</code><br /></dt>
+<dd><p>Defined a node in Decision, i.e. it’s name, what sockets it has, etc. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Members</p>
+<dl class="member">
+<dt>
+<em class="property">const</em> char *<code class="sig-name descname">name</code><br /></dt>
+<dd><p>The name of the node. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+<em class="property">const</em> char *<code class="sig-name descname">description</code><br /></dt>
+<dd><p>The node description. Can be <code class="docutils literal notranslate"><span class="pre">NULL</span></code>. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+<em class="property">const</em> <a class="reference internal" href="#_CPPv410SocketMeta" title="SocketMeta">SocketMeta</a> *<code class="sig-name descname">sockets</code><br /></dt>
+<dd><p>An array of the node’s sockets. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+size_t <code class="sig-name descname">numSockets</code><br /></dt>
+<dd><p>The number of sockets the node has. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+size_t <code class="sig-name descname">startOutputIndex</code><br /></dt>
+<dd><p>Any socket before this index is an input socket, the rest are output sockets. This is also equivalent to the number of input sockets the node has. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+bool <code class="sig-name descname">infiniteInputs</code><br /></dt>
+<dd><p>Can the node has infinite inputs? </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="nodesocket">
+<h3>NodeSocket<a class="headerlink" href="#nodesocket" title="Permalink to this headline">¶</a></h3>
+<p>Defined in <code class="docutils literal notranslate"><span class="pre">dgraph.h</span></code>.</p>
+<dl class="type">
+<dt>
+<em class="property">typedef </em><em class="property">struct</em> <a class="reference internal" href="#_CPPv411_nodeSocket" title="_nodeSocket">_nodeSocket</a> <code class="sig-name descname">NodeSocket</code><br /></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">struct </em><code class="sig-name descname">_nodeSocket</code><br /></dt>
+<dd><p>A struct for indexing a node’s socket. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Members</p>
+<dl class="member">
+<dt>
+size_t <code class="sig-name descname">nodeIndex</code><br /></dt>
+<dd><p>The node index in the graph. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+size_t <code class="sig-name descname">socketIndex</code><br /></dt>
+<dd><p>The socket index in the node. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="wire">
+<h3>Wire<a class="headerlink" href="#wire" title="Permalink to this headline">¶</a></h3>
+<p>Defined in <code class="docutils literal notranslate"><span class="pre">dgraph.h</span></code>.</p>
+<dl class="type">
+<dt>
+<em class="property">typedef </em><em class="property">struct</em> <a class="reference internal" href="#_CPPv45_wire" title="_wire">_wire</a> <code class="sig-name descname">Wire</code><br /></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">struct </em><code class="sig-name descname">_wire</code><br /></dt>
+<dd><p>A struct for connecting two sockets together, effectively an edge of a graph. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Members</p>
+<dl class="member">
+<dt>
+<a class="reference internal" href="#_CPPv410NodeSocket" title="NodeSocket">NodeSocket</a> <code class="sig-name descname">socketFrom</code><br /></dt>
+<dd><p>The output socket. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+<a class="reference internal" href="#_CPPv410NodeSocket" title="NodeSocket">NodeSocket</a> <code class="sig-name descname">socketTo</code><br /></dt>
+<dd><p>The input socket. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="node">
+<h3>Node<a class="headerlink" href="#node" title="Permalink to this headline">¶</a></h3>
+<p>Defined in <code class="docutils literal notranslate"><span class="pre">dgraph.h</span></code>.</p>
+<dl class="type">
+<dt>
+<em class="property">typedef </em><em class="property">struct</em> <a class="reference internal" href="#_CPPv45_node" title="_node">_node</a> <code class="sig-name descname">Node</code><br /></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">struct </em><code class="sig-name descname">_node</code><br /></dt>
+<dd><p>A struct for storing node data. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Members</p>
+<dl class="member">
+<dt>
+<em class="property">const</em> <a class="reference internal" href="#_CPPv414NodeDefinition" title="NodeDefinition">NodeDefinition</a> *<code class="sig-name descname">definition</code><br /></dt>
+<dd><p>The definition of the node. This is where you would get details like the node’s name. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+size_t <code class="sig-name descname">lineNum</code><br /></dt>
+<dd><p>What line is the node on in the original source code? </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+int *<code class="sig-name descname">_stackPositions</code><br /></dt>
+<dd><p>Used by Code Generation. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+<a class="reference internal" href="#_CPPv45DType" title="DType">DType</a> *<code class="sig-name descname">reducedTypes</code><br /></dt>
+<dd><p>Needs to be malloc’d, and have as many elements as sockets. Can be <code class="docutils literal notranslate"><span class="pre">NULL</span></code> if the types are the same as in *definition. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+<a class="reference internal" href="#_CPPv47LexData" title="LexData">LexData</a> *<code class="sig-name descname">literalValues</code><br /></dt>
+<dd><p>Needs to be malloc’d, and have <code class="docutils literal notranslate"><span class="pre">startOutputIndex</span></code> elements. Can be <code class="docutils literal notranslate"><span class="pre">NULL</span></code> if the default values are the same as in *definition. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+size_t <code class="sig-name descname">startOutputIndex</code><br /></dt>
+<dd><p>This will by default be the same value as in the definition, but in the event that the definition allows for infinite inputs, this value will change to signify where the start of the outputs actually is. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+<a class="reference internal" href="../reference/index.html#_CPPv414NameDefinition" title="NameDefinition">NameDefinition</a> <code class="sig-name descname">nameDefinition</code><br /></dt>
+<dd><p>If the node is the getter or setter of a variable, then this points to the variable. If the node is a Define or Return node, this points to the function. Otherwise, it points to the name definition of the node. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="graph">
+<h3>Graph<a class="headerlink" href="#graph" title="Permalink to this headline">¶</a></h3>
+<p>Defined in <code class="docutils literal notranslate"><span class="pre">dgraph.h</span></code>.</p>
+<dl class="type">
+<dt>
+<em class="property">typedef </em><em class="property">struct</em> <a class="reference internal" href="#_CPPv46_graph" title="_graph">_graph</a> <code class="sig-name descname">Graph</code><br /></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">struct </em><code class="sig-name descname">_graph</code><br /></dt>
+<dd><p>A collection of nodes and wires. Essentially a representation of the code that the user wrote. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Members</p>
+<dl class="member">
+<dt>
+<a class="reference internal" href="#_CPPv44Node" title="Node">Node</a> *<code class="sig-name descname">nodes</code><br /></dt>
+<dd><p>The array of nodes. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+size_t <code class="sig-name descname">numNodes</code><br /></dt>
+<dd><p>The number of nodes in the <code class="docutils literal notranslate"><span class="pre">nodes</span></code> array. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+<a class="reference internal" href="#_CPPv44Wire" title="Wire">Wire</a> *<code class="sig-name descname">wires</code><br /></dt>
+<dd><p>This list will be stored in lexicographical order, so binary search can be performed on it. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+size_t <code class="sig-name descname">numWires</code><br /></dt>
+<dd><p>The number of wires in the <code class="docutils literal notranslate"><span class="pre">wires</span></code> array. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="sheet-structures">
+<h2>Sheet Structures<a class="headerlink" href="#sheet-structures" title="Permalink to this headline">¶</a></h2>
+<p>Sheets contain graphs, as well as extra properties like variables, functions,
+and the compiled bytecode.</p>
+<div class="section" id="sheetvariable">
+<h3>SheetVariable<a class="headerlink" href="#sheetvariable" title="Permalink to this headline">¶</a></h3>
+<p>Defined in <code class="docutils literal notranslate"><span class="pre">dsheet.h</span></code>.</p>
+<dl class="type">
+<dt>
+<em class="property">typedef </em><em class="property">struct</em> <a class="reference internal" href="#_CPPv414_sheetVariable" title="_sheetVariable">_sheetVariable</a> <code class="sig-name descname">SheetVariable</code><br /></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">struct </em><code class="sig-name descname">_sheetVariable</code><br /></dt>
+<dd><p>A struct for storing variable data. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Members</p>
+<dl class="member">
+<dt>
+<em class="property">const</em> <a class="reference internal" href="#_CPPv414NodeDefinition" title="NodeDefinition">NodeDefinition</a> <code class="sig-name descname">getterDefinition</code><br /></dt>
+<dd><p>The definition of the variable’s getter node. This is determined automatically when a variable is added to a sheet. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+<em class="property">const</em> <a class="reference internal" href="#_CPPv410SocketMeta" title="SocketMeta">SocketMeta</a> <code class="sig-name descname">variableMeta</code><br /></dt>
+<dd><p>The variable metadata, i.e. it’s name, it’s type, etc. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+<em class="property">struct</em> <a class="reference internal" href="#_CPPv46_sheet" title="_sheet">_sheet</a> *<code class="sig-name descname">sheet</code><br /></dt>
+<dd><p>The sheet the variable belongs to. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="sheetfunction">
+<h3>SheetFunction<a class="headerlink" href="#sheetfunction" title="Permalink to this headline">¶</a></h3>
+<p>Defined in <code class="docutils literal notranslate"><span class="pre">dsheet.h</span></code>.</p>
+<dl class="type">
+<dt>
+<em class="property">typedef </em><em class="property">struct</em> <a class="reference internal" href="#_CPPv414_sheetFunction" title="_sheetFunction">_sheetFunction</a> <code class="sig-name descname">SheetFunction</code><br /></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">struct </em><code class="sig-name descname">_sheetFunction</code><br /></dt>
+<dd><p>A struct for storing function data. </p>
+<p>Note that if you want to know if the function is a subroutine, you can use <code class="docutils literal notranslate"><span class="pre">d_is_subroutine</span></code>. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Members</p>
+<dl class="member">
+<dt>
+<em class="property">const</em> <a class="reference internal" href="#_CPPv414NodeDefinition" title="NodeDefinition">NodeDefinition</a> <code class="sig-name descname">functionDefinition</code><br /></dt>
+<dd><p>The definition of the function, i.e. it’s name, it’s sockets, etc. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+<em class="property">const</em> <a class="reference internal" href="#_CPPv414NodeDefinition" title="NodeDefinition">NodeDefinition</a> <code class="sig-name descname">defineDefinition</code><br /></dt>
+<dd><p>The definition of the function’s Define node. This is determined automatically when adding a function to a sheet. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+<em class="property">const</em> <a class="reference internal" href="#_CPPv414NodeDefinition" title="NodeDefinition">NodeDefinition</a> <code class="sig-name descname">returnDefinition</code><br /></dt>
+<dd><p>The definition of the function’s Return node. This is determined automatically when adding a function to a sheet. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+size_t <code class="sig-name descname">defineNodeIndex</code><br /></dt>
+<dd><p>Used in Semantic Analysis. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+size_t <code class="sig-name descname">numDefineNodes</code><br /></dt>
+<dd><p>Used in Semantic Analysis. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+size_t <code class="sig-name descname">lastReturnNodeIndex</code><br /></dt>
+<dd><p>Used in Semantic Analysis. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+size_t <code class="sig-name descname">numReturnNodes</code><br /></dt>
+<dd><p>Used in Semantic Analysis. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+<em class="property">struct</em> <a class="reference internal" href="#_CPPv46_sheet" title="_sheet">_sheet</a> *<code class="sig-name descname">sheet</code><br /></dt>
+<dd><p>The sheet the function belongs to. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="sheet">
+<h3>Sheet<a class="headerlink" href="#sheet" title="Permalink to this headline">¶</a></h3>
+<p>Defined in <code class="docutils literal notranslate"><span class="pre">dsheet.h</span></code>.</p>
+<dl class="type">
+<dt>
+<em class="property">typedef </em><em class="property">struct</em> <a class="reference internal" href="#_CPPv46_sheet" title="_sheet">_sheet</a> <code class="sig-name descname">Sheet</code><br /></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">struct </em><code class="sig-name descname">_sheet</code><br /></dt>
+<dd><p>A struct for storing sheet data. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Members</p>
+<dl class="member">
+<dt>
+<a class="reference internal" href="#_CPPv45Graph" title="Graph">Graph</a> <code class="sig-name descname">graph</code><br /></dt>
+<dd><p>Can be empty if the sheet came from a Decision object file. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+<a class="reference internal" href="../reference/index.html#_CPPv49DebugInfo" title="DebugInfo">DebugInfo</a> <code class="sig-name descname">_debugInfo</code><br /></dt>
+<dd><p>If the sheet is compiled in debug mode, this will contain debugging information. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+<a class="reference internal" href="../reference/index.html#_CPPv412LinkMetaList" title="LinkMetaList">LinkMetaList</a> <code class="sig-name descname">_link</code><br /></dt>
+<dd><p>What can be linked in this sheet? </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+<em class="property">const</em> char *<code class="sig-name descname">filePath</code><br /></dt>
+<dd><p>Essentially the name of the sheet. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+<em class="property">const</em> char *<code class="sig-name descname">includePath</code><br /></dt>
+<dd><p>i.e. what was the argument of the Include property that included this sheet. Default value is <code class="docutils literal notranslate"><span class="pre">NULL</span></code>. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+<em class="property">struct</em> <a class="reference internal" href="#_CPPv46_sheet" title="_sheet">_sheet</a> **<code class="sig-name descname">includes</code><br /></dt>
+<dd><p>The list of included sheets. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+size_t <code class="sig-name descname">numIncludes</code><br /></dt>
+<dd><p>The number of included sheets. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+<a class="reference internal" href="#_CPPv413SheetVariable" title="SheetVariable">SheetVariable</a> *<code class="sig-name descname">variables</code><br /></dt>
+<dd><p>The list of variables defined in this sheet. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+size_t <code class="sig-name descname">numVariables</code><br /></dt>
+<dd><p>The number of variables in this sheet. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+<a class="reference internal" href="#_CPPv413SheetFunction" title="SheetFunction">SheetFunction</a> *<code class="sig-name descname">functions</code><br /></dt>
+<dd><p>The list of functions defined in this sheet. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+size_t <code class="sig-name descname">numFunctions</code><br /></dt>
+<dd><p>The number of functions in this sheet. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+<a class="reference internal" href="../reference/index.html#_CPPv49CFunction" title="CFunction">CFunction</a> *<code class="sig-name descname">cFunctions</code><br /></dt>
+<dd><p>The list of C functions defined in this sheet. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+size_t <code class="sig-name descname">numCFunctions</code><br /></dt>
+<dd><p>The number of C functions in this sheet. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+size_t <code class="sig-name descname">_main</code><br /></dt>
+<dd><p>Points to the index of the first instruction of Start, <em>not</em> the <code class="docutils literal notranslate"><span class="pre">RET</span></code> instruction one before. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+char *<code class="sig-name descname">_text</code><br /></dt>
+<dd><p>The compiled bytecode. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+size_t <code class="sig-name descname">_textSize</code><br /></dt>
+<dd><p>The number of bytes the compiled bytecode has. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+char *<code class="sig-name descname">_data</code><br /></dt>
+<dd><p>The compiled data section. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+size_t <code class="sig-name descname">_dataSize</code><br /></dt>
+<dd><p>The number of bytes the data section has. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+<a class="reference internal" href="../reference/index.html#_CPPv417InstructionToLink" title="InstructionToLink">InstructionToLink</a> *<code class="sig-name descname">_insLinkList</code><br /></dt>
+<dd><p>A list of which instructions should link to which items. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+size_t <code class="sig-name descname">_insLinkListSize</code><br /></dt>
+<dd><p>The number of instructions to link. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+size_t <code class="sig-name descname">numStarts</code><br /></dt>
+<dd><p>Used by Semantic Analysis. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+int <code class="sig-name descname">startNodeIndex</code><br /></dt>
+<dd><p>If this value is <code class="docutils literal notranslate"><span class="pre">-1</span></code>, then no Start node exists. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+bool <code class="sig-name descname">hasErrors</code><br /></dt>
+<dd><p>If true, the sheet cannot be run. </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+bool <code class="sig-name descname">allowFree</code><br /></dt>
+<dd><p>Allow sheets that include this sheet to free it? </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+bool <code class="sig-name descname">_isCompiled</code><br /></dt>
+<dd><p>Has the sheet been compiled? </p>
+</dd></dl>
+
+<dl class="member">
+<dt>
+bool <code class="sig-name descname">_isLinked</code><br /></dt>
+<dd><p>Has the sheet been linked? </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../the_stages_of_compilation/index.html" class="btn btn-neutral float-right" title="The Stages of Compilation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../the_language/definitions/semantics.html" class="btn btn-neutral float-left" title="Semantic Rules" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019-2020, Benjamin Beddows
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

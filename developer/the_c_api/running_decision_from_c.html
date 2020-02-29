@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Running Decision from C &mdash; Decision 0.2.0 documentation</title>
+  <title>Running Decision from C &mdash; Decision 0.3.0 documentation</title>
   
 
   
@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -84,6 +84,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../the_language/index.html">The Language</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../common_data_structures/index.html">Common Data Structures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../the_stages_of_compilation/index.html">The Stages of Compilation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../linking/index.html">Linking</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../the_virtual_machine/index.html">The Virtual Machine</a></li>
@@ -109,6 +110,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="running_c_from_decision.html">Running C from Decision</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging_decision_code.html">Debugging Decision Code</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
@@ -197,21 +199,45 @@ block, like so:</p>
 <div class="section" id="loading-decision-strings">
 <h3>Loading Decision Strings<a class="headerlink" href="#loading-decision-strings" title="Permalink to this headline">¶</a></h3>
 <p>To load a string with Decision source code in into a <code class="docutils literal notranslate"><span class="pre">Sheet</span></code>, use:</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>doxygenfunction: Cannot find function “d_load_string” in doxygen xml output for project “Decision” from directory: ../xml</p>
-</div>
+<dl class="function">
+<dt>
+<a class="reference internal" href="../common_data_structures/index.html#_CPPv45Sheet" title="Sheet">Sheet</a> *<code class="sig-name descname">d_load_string</code><span class="sig-paren">(</span><em class="property">const</em> char *<em>source</em>, <em class="property">const</em> char *<em>name</em>, <a class="reference internal" href="../reference/index.html#_CPPv414CompileOptions" title="CompileOptions">CompileOptions</a> *<em>options</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Take Decision source code and compile it into bytecode, but do not run it. </p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>A malloc’d sheet containing all of the compilation info.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">source</span></code>: The source code to compile. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the sheet. If NULL, it is set to <code class="docutils literal notranslate"><span class="pre">&quot;source&quot;</span></code>. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options</span></code>: A set of compile options. If NULL, the default settings are used. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
 <p>You can then run any compiled <code class="docutils literal notranslate"><span class="pre">Sheet</span></code> with:</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>doxygenfunction: Cannot find function “d_run_sheet” in doxygen xml output for project “Decision” from directory: ../xml</p>
-</div>
+<dl class="function">
+<dt>
+bool <code class="sig-name descname">d_run_sheet</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../common_data_structures/index.html#_CPPv46_sheet" title="_sheet">_sheet</a> *<em>sheet</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Run the code in a given sheet, given that it has gone through <code class="docutils literal notranslate"><span class="pre">d_codegen_compile</span></code>, and it has exactly one defined <code class="docutils literal notranslate"><span class="pre">Start</span></code> function. </p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>If the sheet ran without any errors.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sheet</span></code>: The sheet to run. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;decision.h&gt;</span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf">&lt;dsheet.h&gt;</span><span class="cp"></span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="c1">// Load the string.</span>
-    <span class="n">Sheet</span> <span class="o">*</span><span class="n">sheet</span> <span class="o">=</span> <span class="n">d_load_string</span><span class="p">(</span><span class="s">&quot;Start~#1 ; Print(#1, &#39;Hello, world!&#39;)&quot;</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+    <span class="n">Sheet</span> <span class="o">*</span><span class="n">sheet</span> <span class="o">=</span> <span class="n">d_load_string</span><span class="p">(</span><span class="s">&quot;Start~#1 ; Print(#1, &#39;Hello, world!&#39;)&quot;</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
 
     <span class="c1">// Run the sheet.</span>
     <span class="n">d_run_sheet</span><span class="p">(</span><span class="n">sheet</span><span class="p">);</span>
@@ -223,19 +249,39 @@ block, like so:</p>
 <span class="p">}</span>
 </pre></div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For safety, you can check to see whether a sheet has failed to compile
+(usually because there was an error in the code) by checking to see if
+<code class="docutils literal notranslate"><span class="pre">sheet-&gt;hasErrors</span></code> is true.</p>
+<p>If a sheet does have an error, <code class="docutils literal notranslate"><span class="pre">d_run_sheet</span></code> will not run it.</p>
+</div>
 </div>
 <div class="section" id="running-decision-strings">
 <h3>Running Decision Strings<a class="headerlink" href="#running-decision-strings" title="Permalink to this headline">¶</a></h3>
 <p>To run a Decision source code string directly, use:</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>doxygenfunction: Cannot find function “d_run_string” in doxygen xml output for project “Decision” from directory: ../xml</p>
-</div>
+<dl class="function">
+<dt>
+bool <code class="sig-name descname">d_run_string</code><span class="sig-paren">(</span><em class="property">const</em> char *<em>source</em>, <em class="property">const</em> char *<em>name</em>, <a class="reference internal" href="../reference/index.html#_CPPv414CompileOptions" title="CompileOptions">CompileOptions</a> *<em>options</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Take Decision source code and compile it into bytecode. If it compiled successfully, run it in the virtual machine. </p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>If the code compiled/ran without any errors.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">source</span></code>: The source code the compile. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the sheet. If <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, it is set to <code class="docutils literal notranslate"><span class="pre">&quot;source&quot;</span></code>. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options</span></code>: A set of compile options. If NULL, the default settings are used. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;decision.h&gt;</span><span class="cp"></span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="c1">// Run the string.</span>
-    <span class="n">d_run_string</span><span class="p">(</span><span class="s">&quot;Start~#1 ; Print(#1, &#39;Hello, world!&#39;)&quot;</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+    <span class="n">d_run_string</span><span class="p">(</span><span class="s">&quot;Start~#1 ; Print(#1, &#39;Hello, world!&#39;)&quot;</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
 
     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
@@ -248,16 +294,28 @@ block, like so:</p>
 <div class="section" id="loading-decision-files">
 <h3>Loading Decision Files<a class="headerlink" href="#loading-decision-files" title="Permalink to this headline">¶</a></h3>
 <p>To load a Decision file from the disk into a <code class="docutils literal notranslate"><span class="pre">Sheet</span></code>, use:</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>doxygenfunction: Cannot find function “d_load_file” in doxygen xml output for project “Decision” from directory: ../xml</p>
-</div>
+<dl class="function">
+<dt>
+<a class="reference internal" href="../common_data_structures/index.html#_CPPv45Sheet" title="Sheet">Sheet</a> *<code class="sig-name descname">d_load_file</code><span class="sig-paren">(</span><em class="property">const</em> char *<em>filePath</em>, <a class="reference internal" href="../reference/index.html#_CPPv414CompileOptions" title="CompileOptions">CompileOptions</a> *<em>options</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Take a Decision file, decide whether it is a source or an object file based on its contents, and load it into memory. </p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>A malloc’d sheet object containing all of the compilation info.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">filePath</span></code>: The file path of the file to load. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options</span></code>: A set of compile options. If NULL, the default settings are used. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;decision.h&gt;</span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf">&lt;dsheet.h&gt;</span><span class="cp"></span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="c1">// Load the sheet into memory.</span>
-    <span class="n">Sheet</span> <span class="o">*</span><span class="n">sheet</span> <span class="o">=</span> <span class="n">d_load_file</span><span class="p">(</span><span class="s">&quot;hello_world.dc&quot;</span><span class="p">);</span>
+    <span class="n">Sheet</span> <span class="o">*</span><span class="n">sheet</span> <span class="o">=</span> <span class="n">d_load_file</span><span class="p">(</span><span class="s">&quot;hello_world.dc&quot;</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
 
     <span class="c1">// Run the sheet.</span>
     <span class="n">d_run_sheet</span><span class="p">(</span><span class="n">sheet</span><span class="p">);</span>
@@ -273,15 +331,27 @@ block, like so:</p>
 <div class="section" id="running-decision-files">
 <h3>Running Decision Files<a class="headerlink" href="#running-decision-files" title="Permalink to this headline">¶</a></h3>
 <p>To run a Decision file directly, use:</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>doxygenfunction: Cannot find function “d_run_file” in doxygen xml output for project “Decision” from directory: ../xml</p>
-</div>
+<dl class="function">
+<dt>
+bool <code class="sig-name descname">d_run_file</code><span class="sig-paren">(</span><em class="property">const</em> char *<em>filePath</em>, <a class="reference internal" href="../reference/index.html#_CPPv414CompileOptions" title="CompileOptions">CompileOptions</a> *<em>options</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Take a Decision file, decide whether it is a source or an object file based on its contents, and run it in the virtual machine. </p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>If the code compiled/ran without any errors.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">filePath</span></code>: The file path of the file to load. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options</span></code>: A set of compile options. If NULL, the default settings are used. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;decision.h&gt;</span><span class="cp"></span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="c1">// Run the file.</span>
-    <span class="n">d_run_file</span><span class="p">(</span><span class="s">&quot;hello_world.dc&quot;</span><span class="p">);</span>
+    <span class="n">d_run_file</span><span class="p">(</span><span class="s">&quot;hello_world.dc&quot;</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
 
     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
@@ -296,17 +366,16 @@ to pass arguments and get return values from them.</p>
 <div class="section" id="passing-arguments">
 <h3>Passing Arguments<a class="headerlink" href="#passing-arguments" title="Permalink to this headline">¶</a></h3>
 <p>To pass arguments to a function or subroutine, you need to push the values
-onto the Decision Virtual Machine’s general stack <strong>in reverse order</strong>.
+onto the Decision Virtual Machine’s stack <strong>in the correct order</strong>.
 This can be done with the following functions:</p>
 <dl class="function">
 <dt>
-void <code class="sig-name descname">d_vm_push_stack</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv43DVM" title="DVM">DVM</a> *<em>vm</em>, dint <em>value</em><span class="sig-paren">)</span><br /></dt>
-<dd><p>Push an integer onto the top of a VM’s general stack. </p>
-<p><strong>NOTE:</strong> If the general stack has already reached it’s capacity, a runtime error will occur when this function is called.</p>
+void <code class="sig-name descname">d_vm_push</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv43DVM" title="DVM">DVM</a> *<em>vm</em>, dint <em>value</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Push an integer value onto the stack. </p>
 <p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">vm</span></code>: The VM to push onto. </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">value</span></code>: The value to push onto the general stack. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vm</span></code>: The VM whose stack to push onto. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">value</span></code>: The value to push onto the stack. </p></li>
 </ul>
 </dd>
 </dl>
@@ -315,13 +384,12 @@ void <code class="sig-name descname">d_vm_push_stack</code><span class="sig-pare
 
 <dl class="function">
 <dt>
-void <code class="sig-name descname">d_vm_push_stack_float</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv43DVM" title="DVM">DVM</a> *<em>vm</em>, dfloat <em>value</em><span class="sig-paren">)</span><br /></dt>
-<dd><p>Push a float onto the top of a VM’s general stack. </p>
-<p><strong>NOTE:</strong> If the general stack has already reached it’s capacity, a runtime error will occur when this function is called.</p>
+void <code class="sig-name descname">d_vm_push_float</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv43DVM" title="DVM">DVM</a> *<em>vm</em>, dfloat <em>value</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Push a float value onto the stack. </p>
 <p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">vm</span></code>: The VM to push onto. </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">value</span></code>: The value to push onto the general stack. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vm</span></code>: The VM whose stack to push onto. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">value</span></code>: The value to push onto the stack. </p></li>
 </ul>
 </dd>
 </dl>
@@ -330,13 +398,12 @@ void <code class="sig-name descname">d_vm_push_stack_float</code><span class="si
 
 <dl class="function">
 <dt>
-void <code class="sig-name descname">d_vm_push_stack_ptr</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv43DVM" title="DVM">DVM</a> *<em>vm</em>, void *<em>ptr</em><span class="sig-paren">)</span><br /></dt>
-<dd><p>Push a generic pointer onto the top of a VM’s general stack. </p>
-<p><strong>NOTE:</strong> If the general stack has already reached it’s capacity, a runtime error will occur when this function is called.</p>
+void <code class="sig-name descname">d_vm_push_ptr</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv43DVM" title="DVM">DVM</a> *<em>vm</em>, void *<em>ptr</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Push a pointer onto the stack. </p>
 <p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">vm</span></code>: The VM to push onto. </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ptr</span></code>: The pointer to push onto the general stack. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vm</span></code>: The VM whose stack to push onto. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ptr</span></code>: The pointer to push onto the stack. </p></li>
 </ul>
 </dd>
 </dl>
@@ -347,18 +414,17 @@ void <code class="sig-name descname">d_vm_push_stack_ptr</code><span class="sig-
 <div class="section" id="getting-return-values">
 <h3>Getting Return Values<a class="headerlink" href="#getting-return-values" title="Permalink to this headline">¶</a></h3>
 <p>To get return values from a function or subroutine, you need to pop the values
-from the Decision Virtual Machine’s general stack <strong>in the correct order</strong>.
+from the Decision Virtual Machine’s stack <strong>in reverse order</strong>.
 This can be done with the following functions:</p>
 <dl class="function">
 <dt>
-dint <code class="sig-name descname">d_vm_pop_stack</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv43DVM" title="DVM">DVM</a> *<em>vm</em><span class="sig-paren">)</span><br /></dt>
-<dd><p>Pop an integer off the top of a VM’s general stack. </p>
-<p><strong>NOTE:</strong> If the general stack is empty, a runtime error will occur.</p>
+dint <code class="sig-name descname">d_vm_pop</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv43DVM" title="DVM">DVM</a> *<em>vm</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Pop an integer from the top of the stack. </p>
 <p><dl class="simple">
-<dt><strong>Return</strong></dt><dd><p>The integer at the top of the general stack.</p>
+<dt><strong>Return</strong></dt><dd><p>The integer at the top of the stack.</p>
 </dd>
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">vm</span></code>: The VM to pop from. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vm</span></code>: The VM whose stack to pop from. </p></li>
 </ul>
 </dd>
 </dl>
@@ -367,14 +433,13 @@ dint <code class="sig-name descname">d_vm_pop_stack</code><span class="sig-paren
 
 <dl class="function">
 <dt>
-dfloat <code class="sig-name descname">d_vm_pop_stack_float</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv43DVM" title="DVM">DVM</a> *<em>vm</em><span class="sig-paren">)</span><br /></dt>
-<dd><p>Pop a float off the top of a VM’s general stack. </p>
-<p><strong>NOTE:</strong> If the general stack is empty, a runtime error will occur.</p>
+dfloat <code class="sig-name descname">d_vm_pop_float</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv43DVM" title="DVM">DVM</a> *<em>vm</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Pop a float from the top of the stack. </p>
 <p><dl class="simple">
-<dt><strong>Return</strong></dt><dd><p>The float at the top of the general stack.</p>
+<dt><strong>Return</strong></dt><dd><p>The float at the top of the stack.</p>
 </dd>
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">vm</span></code>: The VM to pop from. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vm</span></code>: The VM whose stack to pop from. </p></li>
 </ul>
 </dd>
 </dl>
@@ -383,14 +448,13 @@ dfloat <code class="sig-name descname">d_vm_pop_stack_float</code><span class="s
 
 <dl class="function">
 <dt>
-void *<code class="sig-name descname">d_vm_pop_stack_ptr</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv43DVM" title="DVM">DVM</a> *<em>vm</em><span class="sig-paren">)</span><br /></dt>
-<dd><p>Pop a pointer off the top of a VM’s general stack. </p>
-<p><strong>NOTE:</strong> If the general stack is empty, a runtime error will occur.</p>
+void *<code class="sig-name descname">d_vm_pop_ptr</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv43DVM" title="DVM">DVM</a> *<em>vm</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Pop a pointer from the top of the stack. </p>
 <p><dl class="simple">
-<dt><strong>Return</strong></dt><dd><p>The generic pointer at the top of the general stack.</p>
+<dt><strong>Return</strong></dt><dd><p>The pointer at the top of the stack.</p>
 </dd>
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">vm</span></code>: The VM to pop from. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vm</span></code>: The VM whose stack to pop from. </p></li>
 </ul>
 </dd>
 </dl>
@@ -401,11 +465,24 @@ void *<code class="sig-name descname">d_vm_pop_stack_ptr</code><span class="sig-
 <div class="section" id="calling-decision-functions">
 <h3>Calling Decision Functions<a class="headerlink" href="#calling-decision-functions" title="Permalink to this headline">¶</a></h3>
 <p>Finally, you can call the function or subroutine itself using:</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>doxygenfunction: Cannot find function “d_run_function” in doxygen xml output for project “Decision” from directory: ../xml</p>
-</div>
-<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>&lt; decision.dc &gt;
+<dl class="function">
+<dt>
+bool <code class="sig-name descname">d_run_function</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv44_DVM" title="_DVM">_DVM</a> *<em>vm</em>, <em class="property">struct</em> <a class="reference internal" href="../common_data_structures/index.html#_CPPv46_sheet" title="_sheet">_sheet</a> *<em>sheet</em>, <em class="property">const</em> char *<em>funcName</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Run the specified function/subroutine in a given sheet, given the sheet has gone through <code class="docutils literal notranslate"><span class="pre">d_codegen_compile</span></code>. </p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>If the function/subroutine ran without any errors.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">vm</span></code>: The VM to run the function on. The reason it is a seperate argument is because it allows you to push and pop arguments and return values seperately. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sheet</span></code>: The sheet the function lives in. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">funcName</span></code>: The name of the function/subroutine to run. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>&gt; decision.dc
 
 [Function(IsEven)]
 [FunctionInput(IsEven, Integer)]
@@ -432,13 +509,10 @@ Print(#10, &quot;Hi! :3&quot;)
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="c1">// Load the sheet into memory.</span>
-    <span class="n">Sheet</span> <span class="o">*</span><span class="n">sheet</span> <span class="o">=</span> <span class="n">d_load_file</span><span class="p">(</span><span class="s">&quot;decision.dc&quot;</span><span class="p">);</span>
+    <span class="n">Sheet</span> <span class="o">*</span><span class="n">sheet</span> <span class="o">=</span> <span class="n">d_load_file</span><span class="p">(</span><span class="s">&quot;decision.dc&quot;</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
 
     <span class="c1">// Create a Decision Virtual Machine.</span>
-    <span class="n">DVM</span> <span class="n">vm</span><span class="p">;</span>
-
-    <span class="c1">// Set it to it&#39;s starting state.</span>
-    <span class="n">d_vm_reset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">vm</span><span class="p">);</span>
+    <span class="n">DVM</span> <span class="n">vm</span> <span class="o">=</span> <span class="n">d_vm_create</span><span class="p">();</span>
 
     <span class="c1">// Calling a function/subroutine with no inputs or outputs is easy:</span>
     <span class="n">d_run_function</span><span class="p">(</span><span class="o">&amp;</span><span class="n">vm</span><span class="p">,</span> <span class="n">sheet</span><span class="p">,</span> <span class="s">&quot;SayHi&quot;</span><span class="p">);</span>
@@ -450,16 +524,16 @@ Print(#10, &quot;Hi! :3&quot;)
 
     <span class="c1">// To call the IsEven function, we first need to push the argument onto</span>
     <span class="c1">// the stack.</span>
-    <span class="n">d_vm_push_stack</span><span class="p">(</span><span class="o">&amp;</span><span class="n">vm</span><span class="p">,</span> <span class="n">value</span><span class="p">);</span>
+    <span class="n">d_vm_push</span><span class="p">(</span><span class="o">&amp;</span><span class="n">vm</span><span class="p">,</span> <span class="n">value</span><span class="p">);</span>
 
     <span class="c1">// REMEMBER: If you have more than one argument, push the arguments IN</span>
-    <span class="c1">// REVERSE ORDER.</span>
+    <span class="c1">// THE CORRECT ORDER.</span>
 
     <span class="c1">// Then call the function:</span>
     <span class="n">d_run_function</span><span class="p">(</span><span class="o">&amp;</span><span class="n">vm</span><span class="p">,</span> <span class="n">sheet</span><span class="p">,</span> <span class="s">&quot;IsEven&quot;</span><span class="p">);</span>
 
-    <span class="c1">// Then pop the return values out IN THE CORRECT ORDER.</span>
-    <span class="n">dint</span> <span class="n">isEven</span> <span class="o">=</span> <span class="n">d_vm_pop_stack</span><span class="p">(</span><span class="o">&amp;</span><span class="n">vm</span><span class="p">);</span>
+    <span class="c1">// Then pop the return values out IN REVERSE ORDER.</span>
+    <span class="n">dint</span> <span class="n">isEven</span> <span class="o">=</span> <span class="n">d_vm_pop</span><span class="p">(</span><span class="o">&amp;</span><span class="n">vm</span><span class="p">);</span>
 
     <span class="c1">// dcfg.h has some handy macros for when you want to print dint or</span>
     <span class="c1">// dfloat types:</span>
@@ -468,6 +542,9 @@ Print(#10, &quot;Hi! :3&quot;)
     <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
         <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%&quot;</span> <span class="n">DINT_PRINTF_d</span> <span class="s">&quot; is odd!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">);</span>
     <span class="p">}</span>
+
+    <span class="c1">// Free the VM.</span>
+    <span class="n">d_vm_free</span><span class="p">(</span><span class="o">&amp;</span><span class="n">vm</span><span class="p">);</span>
 
     <span class="n">d_sheet_free</span><span class="p">(</span><span class="n">sheet</span><span class="p">);</span>
     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
@@ -498,7 +575,7 @@ Print(#10, &quot;Hi! :3&quot;)
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Benjamin Beddows
+        &copy; Copyright 2019-2020, Benjamin Beddows
 
     </p>
   </div>

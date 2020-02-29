@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Variables &mdash; Decision 0.2.0 documentation</title>
+  <title>Variables &mdash; Decision 0.3.0 documentation</title>
   
 
   
@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -90,7 +90,8 @@
 <li class="toctree-l3"><a class="reference internal" href="comments.html">Comments</a></li>
 <li class="toctree-l3"><a class="reference internal" href="arithmetic.html">Arithmetic</a></li>
 <li class="toctree-l3"><a class="reference internal" href="conditions.html">Conditions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="condition_arithmetic.html">Condition Arithmetic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="boolean_operations.html">Boolean Operations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bitwise_operations.html">Bitwise Operations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="changing_flow_with_conditions.html">Changing Flow with Conditions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="string_manipulation.html">String Manipulation</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Variables</a><ul>
@@ -184,18 +185,20 @@ later, from anywhere outside the sheet as well!</p>
 <div class="section" id="defining-variables">
 <h2>Defining variables<a class="headerlink" href="#defining-variables" title="Permalink to this headline">¶</a></h2>
 <p>You can define variables by defining a <code class="docutils literal notranslate"><span class="pre">Variable</span></code> property in the sheet:</p>
-<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>[Variable(integerVariableName, Integer, 420)]
-[Variable(floatVariableName, Float, 3.14)]
-[Variable(stringVariableName, String, &quot;Hello, world!&quot;)]
-[Variable(booleanVariableName, Boolean, false)]
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>[Variable(integerVariableName, Integer, 420, &quot;Because i&#39;m sensible...&quot;)]
+[Variable(floatVariableName, Float, 3.14, &quot;Yum...&quot;)]
+[Variable(stringVariableName, String, &quot;Hello, world!&quot;, &quot;... Hi?&quot;)]
+[Variable(booleanVariableName, Boolean, false, &quot;You either like it or ya don&#39;t.&quot;)]
 </pre></div>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The third argument is the <strong>starting value</strong> of the variable, and it is
-optional. If you don’t give it, Decision will warn you, but it will use
-<code class="docutils literal notranslate"><span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">0.0</span></code>, <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, and <code class="docutils literal notranslate"><span class="pre">false</span></code> as the default values respectively.</p>
-</div>
+<p>Here’s what each of the arguments mean:</p>
+<ol class="arabic simple">
+<li><p>The first argument is the name of the variable. You’ll use this name to get
+and set the variable’s value.</p></li>
+<li><p>The second argument is the data type of the variable.</p></li>
+<li><p>The third argument is the starting value of the variable.</p></li>
+<li><p>(Optional) The fourth argument is the description of the variable.</p></li>
+</ol>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The names of variables (as well as other names) can be made up of letters,
@@ -207,7 +210,7 @@ letter or an underscore.</p>
 <h2>Getting variable values<a class="headerlink" href="#getting-variable-values" title="Permalink to this headline">¶</a></h2>
 <p>You can get the values stored in variables from nodes with the same name as
 the variable:</p>
-<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>[Variable(myNum, Integer, 420)]
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>[Variable(myNum, Integer, 420, &quot;I am REALLY sensible.&quot;)]
 
 Start~#1
 myNum~#2
@@ -270,7 +273,7 @@ using the same <code class="docutils literal notranslate"><span class="pre">mySt
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Benjamin Beddows
+        &copy; Copyright 2019-2020, Benjamin Beddows
 
     </p>
   </div>

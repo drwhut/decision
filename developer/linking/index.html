@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Linking &mdash; Decision 0.2.0 documentation</title>
+  <title>Linking &mdash; Decision 0.3.0 documentation</title>
   
 
   
@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -84,6 +84,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../the_language/index.html">The Language</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../common_data_structures/index.html">Common Data Structures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../the_stages_of_compilation/index.html">The Stages of Compilation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Linking</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#object-sections">Object Sections</a></li>
@@ -278,13 +279,13 @@ void <code class="sig-name descname">d_link_free_list</code><span class="sig-par
 
 <dl class="function">
 <dt>
-void <code class="sig-name descname">d_link_replace_load_ins</code><span class="sig-paren">(</span>char *<em>ins</em>, char *<em>ptr</em><span class="sig-paren">)</span><br /></dt>
-<dd><p>Change a LOADUI/ORI instruction combination to load a specific pointer. </p>
+void <code class="sig-name descname">d_link_replace_fimmediate</code><span class="sig-paren">(</span>char *<em>ins</em>, char *<em>ptr</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Change an instruction’s full immediate to point somewhere. </p>
 <p><strong>NOTE:</strong> If you don’t like the fact that you can’t run 32-bit Decision code on 64-bit machines and vice versa, blame it on this function.</p>
 <p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">ins</span></code>: A pointer to first byte of the LOADUI instruction. </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ptr</span></code>: The memory address for the instructions to load. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ins</span></code>: A pointer to first byte of the instruction. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ptr</span></code>: The memory address for the instruction to load. </p></li>
 </ul>
 </dd>
 </dl>
@@ -294,10 +295,10 @@ void <code class="sig-name descname">d_link_replace_load_ins</code><span class="
 <p>This function is what actually changes the instructions in <code class="docutils literal notranslate"><span class="pre">.text</span></code> to point
 to the correct items. Since we use pointers to set links, the instructions
 need to load either 32-bit or 64-bit addresses into a register. This is always
-done with a <code class="docutils literal notranslate"><span class="pre">LOADUI</span></code> / <code class="docutils literal notranslate"><span class="pre">ORI</span></code> combination.</p>
+done with a <code class="docutils literal notranslate"><span class="pre">PUSHF</span></code> combination.</p>
 <dl class="function">
 <dt>
-void <code class="sig-name descname">d_link_self</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv46_sheet" title="_sheet">_sheet</a> *<em>sheet</em><span class="sig-paren">)</span><br /></dt>
+void <code class="sig-name descname">d_link_self</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../common_data_structures/index.html#_CPPv46_sheet" title="_sheet">_sheet</a> *<em>sheet</em><span class="sig-paren">)</span><br /></dt>
 <dd><p>Link a sheet’s properties from itself to itself and included sheets. </p>
 <p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
@@ -310,7 +311,7 @@ void <code class="sig-name descname">d_link_self</code><span class="sig-paren">(
 
 <p>Takes a compiled sheet, gets the information it needs to link from the
 <code class="docutils literal notranslate"><span class="pre">.lmeta</span></code> and <code class="docutils literal notranslate"><span class="pre">.link</span></code> sections, and uses it to call
-<code class="docutils literal notranslate"><span class="pre">d_link_replace_load_ins</span></code> to replace all of the instructions that need
+<code class="docutils literal notranslate"><span class="pre">d_link_replace_fimmediate</span></code> to replace all of the instructions that need
 linking.</p>
 </div>
 </div>
@@ -335,7 +336,7 @@ linking.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Benjamin Beddows
+        &copy; Copyright 2019-2020, Benjamin Beddows
 
     </p>
   </div>

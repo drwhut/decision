@@ -1,6 +1,6 @@
 ..
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -22,19 +22,16 @@ Syntax Rules
 Comments
 ========
 
-Comments are defined as everything including and in between the ``<`` and
-``>`` characters. Comments should be ignored by the compiler. They can be
-freely used by the programmer, but their main purpose is for GUI editors to
-store graphical information in them, like the positions of nodes for example.
+Comments are defined as everything after and including the ``>`` symbol on the
+same line, as long as the ``>`` is not in a string. Comments should be ignored
+by the compiler. They can be freely used by the programmer, but their main
+purpose is for GUI editors to store graphical information in them, like the
+positions of nodes for example.
 
 .. code-block:: decision
 
-   < This is a single-line comment! >
-
-   <
-       This is a multi-line comment!
-       See? This is another line!
-   >
+   > This is a comment!
+   > This is still a comment! > Still the same comment...
 
 Statements
 ==========
@@ -67,10 +64,7 @@ comma-seperated list after the ``~`` symbol, like so:
 
 .. code-block:: decision
 
-   <
-       #1 is an execution wire, since it is coming out of the Start node
-       socket.
-   >
+   > #1 is an execution wire, since it is coming out of the Start node socket.
    Start~#1
 
 Arguments and Node Inputs
@@ -93,13 +87,11 @@ nessesary.
 
 .. code-block:: decision
 
-   <
-       The node Set sets the value of a variable.
-       integerVariableName is the name of the variable to set.
-       #5 is the input execution wire.
-       99 is the value to set.
-       #6 is the execution wire to activate after we've set the value.
-   >
+   > The node Set sets the value of a variable.
+   > integerVariableName is the name of the variable to set.
+   > #5 is the input execution wire.
+   > 99 is the value to set.
+   > #6 is the execution wire to activate after we've set the value.
 
    Set(integerVariableName, #5, 99)~#6
 
@@ -128,7 +120,7 @@ or newlines ``\n`` between them:
 .. code-block:: decision
 
    Print ( # 9 , "Hello, world!" ) ~ # 56
-   < Is equivalent to... >
+   > Is equivalent to...
    Print(#9,"Hello, world!")~#56
 
 Property Statements

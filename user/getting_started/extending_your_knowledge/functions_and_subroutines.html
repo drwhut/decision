@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Functions and Subroutines &mdash; Decision 0.2.0 documentation</title>
+  <title>Functions and Subroutines &mdash; Decision 0.3.0 documentation</title>
   
 
   
@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -90,7 +90,8 @@
 <li class="toctree-l3"><a class="reference internal" href="comments.html">Comments</a></li>
 <li class="toctree-l3"><a class="reference internal" href="arithmetic.html">Arithmetic</a></li>
 <li class="toctree-l3"><a class="reference internal" href="conditions.html">Conditions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="condition_arithmetic.html">Condition Arithmetic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="boolean_operations.html">Boolean Operations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bitwise_operations.html">Bitwise Operations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="changing_flow_with_conditions.html">Changing Flow with Conditions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="string_manipulation.html">String Manipulation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="variables.html">Variables</a></li>
@@ -185,24 +186,37 @@ call upon whenever you like!</p>
 <p>To create a function, you can use the <code class="docutils literal notranslate"><span class="pre">Function</span></code> property, then you can use
 the <code class="docutils literal notranslate"><span class="pre">FunctionInput</span></code> and <code class="docutils literal notranslate"><span class="pre">FunctionOutput</span></code> properties to state the inputs
 and outputs of the function.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Function</span></code> properties have two arguments:</p>
+<ol class="arabic simple">
+<li><p>The name of the function.</p></li>
+<li><p>(Optional) A description of the function.</p></li>
+</ol>
+<p><code class="docutils literal notranslate"><span class="pre">FunctionInput</span></code> properties have several arguments:</p>
+<ol class="arabic simple">
+<li><p>The name of the function the input is for.</p></li>
+<li><p>The name of the input itself.</p></li>
+<li><p>The data type of the input, i.e. <code class="docutils literal notranslate"><span class="pre">Integer</span></code>, <code class="docutils literal notranslate"><span class="pre">Float</span></code>, …</p></li>
+<li><p>(Optional) The default value of the input. This is not used by the compiler,
+but it is used by editors.</p></li>
+<li><p>(Optional) A description of the input.</p></li>
+</ol>
+<p><code class="docutils literal notranslate"><span class="pre">FunctionOutput</span></code> properties have several arguments:</p>
+<ol class="arabic simple">
+<li><p>The name of the function the output is for.</p></li>
+<li><p>The name of the output itself.</p></li>
+<li><p>The data type of the output, i.e. <code class="docutils literal notranslate"><span class="pre">String</span></code>, <code class="docutils literal notranslate"><span class="pre">Boolean</span></code>, …</p></li>
+<li><p>(Optional) A description of the output.</p></li>
+</ol>
 <p>For functions, you need to have one and only one <code class="docutils literal notranslate"><span class="pre">Return</span></code> node to return
 the output of your function. You will also need a <code class="docutils literal notranslate"><span class="pre">Define</span></code> node if your
 function takes any inputs, but if it doesn’t, then it is not nessesary.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p><code class="docutils literal notranslate"><span class="pre">FunctionInput</span></code> properties have 2 optional arguments: one for the name,
-and one for the default value. As of now, neither of these values are
-actually used.</p>
-<p><code class="docutils literal notranslate"><span class="pre">FunctionOutput</span></code> properties also have an optional argument for the name,
-but like in <code class="docutils literal notranslate"><span class="pre">FunctionInput</span></code>, it is not used yet.</p>
-</div>
-<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>[Function(Double)]
-[FunctionInput(Double, Float)]
-[FunctionOutput(Double, Float)]
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>[Function(Double, &quot;Doubles a given number.&quot;)]
+[FunctionInput(Double, num, Float, 1.0, &quot;The number to double.&quot;)]
+[FunctionOutput(Double, doubled, Float, &quot;The input number doubled.&quot;)]
 
-[Function(CanLegallyDrink)]
-[FunctionInput(CanLegallyDrink, Integer)]
-[FunctionOutput(CanLegallyDrink, Boolean)]
+[Function(CanLegallyDrink, &quot;Determine if someone is allowed to drink.&quot;)]
+[FunctionInput(CanLegallyDrink, age, Integer, 0, &quot;The person&#39;s age.&quot;)]
+[FunctionOutput(CanLegallyDrink, canDrink, Boolean, &quot;If the person can drink.&quot;)]
 
 Define(Double)~#1
 Multiply(#1, 2)~#2
@@ -239,19 +253,19 @@ your inputs and outputs.</p>
 need at least one <code class="docutils literal notranslate"><span class="pre">Return</span></code> node if the subroutine returns any values
 (otherwise you don’t need any), but you can have as many <code class="docutils literal notranslate"><span class="pre">Return</span></code> nodes
 as you need (since your flow of execution could go down different paths).</p>
-<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>[Subroutine(CountTo)]
-[FunctionInput(CountTo, Integer)]
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>[Subroutine(CountTo, &quot;Count from 1 to a given integer.&quot;)]
+[FunctionInput(CountTo, upTo, Integer, 10, &quot;The number to count up to.&quot;)]
 
-[Subroutine(PrintFactorsOf)]
-[FunctionInput(PrintFactorsOf, Integer)]
-[FunctionOutput(PrintFactorsOf, Integer)] &lt;How may factors?&gt;
+[Subroutine(PrintFactorsOf, &quot;Print off the factors of a given number.&quot;)]
+[FunctionInput(PrintFactorsOf, num, Integer, 1, &quot;The number to print the factors of.&quot;)]
+[FunctionOutput(PrintFactorsOf, numFactors, Integer, &quot;The number of factors the number has.&quot;)]
 
 Define(CountTo)~#1, #2
 For(#1, 1, #2, 1)~#3, #4, #5
 Print(#3, #4)
 Return(CountTo, #5)
 
-[Variable(numFactors, Integer, 0)]
+[Variable(numFactors, Integer, 0, &quot;Incremented every time a factor is found.&quot;)]
 
 Define(PrintFactorsOf)~#10, #11
 Set(numFactors, #10, 0)~#12
@@ -267,7 +281,7 @@ numFactors~#21
 Add(#21, 1)~#22
 Set(numFactors, #20, #22)
 
-Return(PrintFactorsOf, #16, #20)
+Return(PrintFactorsOf, #16, #21)
 
 Start~#30
 CountTo(#30, 10)~#31
@@ -336,7 +350,7 @@ Factors of 360:
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Benjamin Beddows
+        &copy; Copyright 2019-2020, Benjamin Beddows
 
     </p>
   </div>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Syntax Analysis &mdash; Decision 0.2.0 documentation</title>
+  <title>Syntax Analysis &mdash; Decision 0.3.0 documentation</title>
   
 
   
@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -84,6 +84,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../the_language/index.html">The Language</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../common_data_structures/index.html">Common Data Structures</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">The Stages of Compilation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="lexical_analysis.html">Lexical Analysis</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Syntax Analysis</a><ul>
@@ -227,43 +228,47 @@ children, which in C is a pain.</p>
 <p>Each <code class="docutils literal notranslate"><span class="pre">SyntaxDefinition</span></code> has an associated function called a
 <strong>meta-variable</strong> in <code class="docutils literal notranslate"><span class="pre">dsyntax.c</span></code>, which returns if the section of lexical
 tokens we’re looking at fits the syntax rule of the meta-variable, and may
-potentially throw an error if it specifically breaks the rules (but not if
-none of the lexical tokens are valid, as they may be valid in another
-definition)</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>These functions have a <em>lot</em> of preprocessor macros that hide a lot of
-what is going on under the hood - this is because all of these functions
-do a lot of similar things, and it makes it easier in the long run to
-create new rules, as the macros represent concepts similar to something
-you would see in, say, Backus-Naur form.</p>
-</div>
-<p>Here is an example of a meta-variable for a <em>call</em>, which is a list of
-arguments (that could be empty), surrounded by brackets:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/* &lt;call&gt; ::= &lt;Lbracket&gt;&lt;listOfArguments&gt;&lt;Rbracket&gt; */</span>
-<span class="n">META</span><span class="p">(</span><span class="n">call</span><span class="p">)</span>
+potentially throw an error if it specifically breaks the rules of that
+meta-variable.</p>
+<p>Here is an example of a meta-variable for a <em>line identifier</em>, which is a line
+symbol (<code class="docutils literal notranslate"><span class="pre">#</span></code>), followed by an integer literal:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/* &lt;lineIdentifier&gt; ::= &lt;Line&gt;&lt;IntegerLiteral&gt; */</span>
+<span class="k">static</span> <span class="n">SyntaxResult</span> <span class="nf">lineIdentifier</span><span class="p">(</span><span class="n">SyntaxContext</span> <span class="o">*</span><span class="n">context</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">SyntaxResult</span> <span class="n">out</span><span class="p">;</span>
+    <span class="n">out</span><span class="p">.</span><span class="n">node</span> <span class="o">=</span> <span class="n">d_syntax_create_node</span><span class="p">(</span><span class="n">STX_lineIdentifier</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">context</span><span class="o">-&gt;</span><span class="n">lineNum</span><span class="p">);</span>
+    <span class="n">out</span><span class="p">.</span><span class="n">success</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
 
-    <span class="k">if</span> <span class="p">(</span><span class="n">acceptToken</span><span class="p">(</span><span class="n">TK_LBRACKET</span><span class="p">))</span>
-    <span class="p">{</span>
-        <span class="n">START_ADD</span>
-        <span class="n">acceptDefinition</span><span class="p">(</span><span class="n">listOfArguments</span><span class="p">);</span> <span class="c1">// There dosen&#39;t nessesarily have to</span>
-        <span class="n">END_ADD</span>                            <span class="c1">// be anything in the backets.</span>
+    <span class="n">VERBOSE</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="s">&quot;ENTER</span><span class="se">\t</span><span class="s">lineIdentifier</span><span class="se">\t</span><span class="s">WITH</span><span class="se">\t</span><span class="s">%i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+            <span class="n">context</span><span class="o">-&gt;</span><span class="n">currentToken</span><span class="o">-&gt;</span><span class="n">type</span><span class="p">);</span>
 
-        <span class="n">expectToken</span><span class="p">(</span><span class="n">TK_RBRACKET</span><span class="p">,</span> <span class="s">&quot;Expected ) symbol at end of call&quot;</span><span class="p">);</span>
-        <span class="n">ACCEPT</span><span class="p">(</span><span class="n">call</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">context</span><span class="o">-&gt;</span><span class="n">currentToken</span><span class="o">-&gt;</span><span class="n">type</span> <span class="o">==</span> <span class="n">TK_LINE</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">nextToken</span><span class="p">(</span><span class="n">context</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">context</span><span class="o">-&gt;</span><span class="n">currentToken</span><span class="o">-&gt;</span><span class="n">type</span> <span class="o">==</span> <span class="n">TK_INTEGERLITERAL</span><span class="p">)</span> <span class="p">{</span>
+
+            <span class="n">SyntaxNode</span> <span class="o">*</span><span class="n">literal</span> <span class="o">=</span> <span class="n">d_syntax_create_node</span><span class="p">(</span>
+                <span class="n">STX_TOKEN</span><span class="p">,</span> <span class="n">context</span><span class="o">-&gt;</span><span class="n">currentToken</span><span class="p">,</span> <span class="n">context</span><span class="o">-&gt;</span><span class="n">lineNum</span><span class="p">);</span>
+            <span class="n">d_syntax_add_child</span><span class="p">(</span><span class="n">out</span><span class="p">.</span><span class="n">node</span><span class="p">,</span> <span class="n">literal</span><span class="p">);</span>
+
+            <span class="n">nextToken</span><span class="p">(</span><span class="n">context</span><span class="p">);</span>
+
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="n">syntax_error</span><span class="p">(</span>
+                <span class="s">&quot;Expected integer literal to follow the line symbol (#)&quot;</span><span class="p">,</span>
+                <span class="n">context</span><span class="p">);</span>
+            <span class="n">fail_definition</span><span class="p">(</span><span class="o">&amp;</span><span class="n">out</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="n">syntax_error</span><span class="p">(</span>
+            <span class="s">&quot;Expected line identifier to start with the line symbol (#)&quot;</span><span class="p">,</span>
+            <span class="n">context</span><span class="p">);</span>
+        <span class="n">fail_definition</span><span class="p">(</span><span class="o">&amp;</span><span class="n">out</span><span class="p">);</span>
     <span class="p">}</span>
-    <span class="k">else</span>
-    <span class="p">{</span>
-        <span class="n">DECLINE</span><span class="p">(</span><span class="n">call</span><span class="p">)</span>
-    <span class="p">}</span>
 
-<span class="n">END_META</span>
+    <span class="k">return</span> <span class="n">out</span><span class="p">;</span>
+<span class="p">}</span>
 </pre></div>
 </div>
-<p>Here it will accept a list of arguments if it finds one, but if it doesn’t
-then it will not error - but it will error if after there isn’t a right
-bracket. Also notice that if there is no left bracket it doesn’t error, but
-simply says “this cannot be a call, try something else”.</p>
 </div>
 <div class="section" id="syntax-functions">
 <h3>Syntax functions<a class="headerlink" href="#syntax-functions" title="Permalink to this headline">¶</a></h3>
@@ -283,7 +288,6 @@ void <code class="sig-name descname">d_syntax_add_child</code><span class="sig-p
 </p>
 </dd></dl>
 
-<p>The <code class="docutils literal notranslate"><span class="pre">child</span></code> node is added as the next child of the <code class="docutils literal notranslate"><span class="pre">parent</span></code> node.</p>
 <dl class="function">
 <dt>
 size_t <code class="sig-name descname">d_syntax_get_num_children</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv410SyntaxNode" title="SyntaxNode">SyntaxNode</a> *<em>parent</em><span class="sig-paren">)</span><br /></dt>
@@ -299,7 +303,6 @@ size_t <code class="sig-name descname">d_syntax_get_num_children</code><span cla
 </p>
 </dd></dl>
 
-<p>Returns the number of children that <code class="docutils literal notranslate"><span class="pre">parent</span></code> has.</p>
 <p>There is also a mechanism to help you find all of the syntax nodes with a
 given <code class="docutils literal notranslate"><span class="pre">SyntaxDefinition</span></code>:</p>
 <dl class="function">
@@ -312,15 +315,15 @@ given <code class="docutils literal notranslate"><span class="pre">SyntaxDefinit
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">root</span></code>: The root node to search from. </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">definition</span></code>: The definition we want our found nodes to have. </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">traverseChildrenOfFound</span></code>: If we find a node that we want, should w also traverse the children of that found node? </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">traverseChildrenOfFound</span></code>: If we find a node that we want, should we also traverse the children of that found node? </p></li>
 </ul>
 </dd>
 </dl>
 </p>
 </dd></dl>
 
-<p>Returns a list of <code class="docutils literal notranslate"><span class="pre">SyntaxNode*</span></code> which have the same <code class="docutils literal notranslate"><span class="pre">SyntaxDefinition</span></code> as
-<code class="docutils literal notranslate"><span class="pre">definition</span></code>. It also gives you the choice of whether you want to continue
+<p>It returns a list of <code class="docutils literal notranslate"><span class="pre">SyntaxNode*</span></code> which have the same <code class="docutils literal notranslate"><span class="pre">SyntaxDefinition</span></code>
+as <code class="docutils literal notranslate"><span class="pre">definition</span></code>. It also gives you the choice of whether you want to continue
 traversing the children of a satisfactory node to try and find more, although
 this will mostly be false as certain syntax definitions will only appear in
 certain layers of the tree.</p>
@@ -356,7 +359,7 @@ void <code class="sig-name descname">d_syntax_free_results</code><span class="si
 </p>
 </dd></dl>
 
-<p>Returns the root node of a syntax tree, given the <code class="docutils literal notranslate"><span class="pre">stream</span></code> from
+<p>It returns the root node of a syntax tree, given the <code class="docutils literal notranslate"><span class="pre">stream</span></code> from
 <a class="reference internal" href="lexical_analysis.html#lexical-analysis"><span class="std std-ref">Lexical Analysis</span></a>. In the event there is an error, it blames
 <code class="docutils literal notranslate"><span class="pre">filePath</span></code>.</p>
 <dl class="function">
@@ -372,7 +375,7 @@ void <code class="sig-name descname">d_syntax_free_tree</code><span class="sig-p
 </p>
 </dd></dl>
 
-<p>Frees the syntax tree after we are done with it.</p>
+<p>This frees the syntax tree after we are done with it.</p>
 <p>Like in <a class="reference internal" href="lexical_analysis.html#lexical-analysis"><span class="std std-ref">Lexical Analysis</span></a>, there is a debugging method:</p>
 <dl class="function">
 <dt>
@@ -387,7 +390,7 @@ void <code class="sig-name descname">d_syntax_dump_tree</code><span class="sig-p
 </p>
 </dd></dl>
 
-<p>Dumps the syntax tree with indentation depending on the depth of the node.</p>
+<p>It dumps the syntax tree with indentation depending on the depth of the node.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The syntax gets dumped automatically whenever you compile source code with
@@ -417,7 +420,7 @@ a <code class="docutils literal notranslate"><span class="pre">VERBOSE_LEVEL</sp
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Benjamin Beddows
+        &copy; Copyright 2019-2020, Benjamin Beddows
 
     </p>
   </div>

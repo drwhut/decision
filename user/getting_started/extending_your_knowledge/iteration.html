@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Iteration &mdash; Decision 0.2.0 documentation</title>
+  <title>Iteration &mdash; Decision 0.3.0 documentation</title>
   
 
   
@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -90,7 +90,8 @@
 <li class="toctree-l3"><a class="reference internal" href="comments.html">Comments</a></li>
 <li class="toctree-l3"><a class="reference internal" href="arithmetic.html">Arithmetic</a></li>
 <li class="toctree-l3"><a class="reference internal" href="conditions.html">Conditions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="condition_arithmetic.html">Condition Arithmetic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="boolean_operations.html">Boolean Operations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bitwise_operations.html">Bitwise Operations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="changing_flow_with_conditions.html">Changing Flow with Conditions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="string_manipulation.html">String Manipulation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="variables.html">Variables</a></li>
@@ -227,10 +228,8 @@ Done!
 
 [Variable(gcf, Integer, 1)]
 
-&lt;
-    A program to calculate the greatest common factor of num1 and num2,
-    given that num1 is greater than num2.
-&gt;
+&gt; A program to calculate the greatest common factor of num1 and num2,
+&gt; given that num1 is greater than num2.
 Start~#1
 
 num1~#2
@@ -241,7 +240,7 @@ Mod(#2, #5)~#7
 Mod(#3, #5)~#8
 Equal(#7, 0)~#9
 Equal(#8, 0)~#10
-And(#9, #10)~#11 &lt;#5 is a factor of num1 AND num2&gt;
+And(#9, #10)~#11 &gt; #5 is a factor of num1 AND num2
 IfThen(#4, #11)~#12
 Set(gcf, #12, #5)
 
@@ -308,7 +307,7 @@ Done!
 [Variable(num2, Integer, 1)]
 [Variable(temp, Integer, 1)]
 
-&lt; A program to calculate the fibonacci numbers from 0 to stop &gt;
+&gt; A program to calculate the fibonacci numbers from 0 to stop
 
 Start~#1
 
@@ -324,10 +323,10 @@ Print(#7, #3)~#8
 
 While(#8, #6)~#9
 Print(#9, #4)~#10
-Set(temp, #10, #4)~#11  &lt;temp = num1 + num2&gt;
-Set(num1, #11, #3)~#12  &lt;num1 = num2&gt;
+Set(temp, #10, #4)~#11  &gt; temp = num1 + num2
+Set(num1, #11, #3)~#12  &gt; num1 = num2
 temp~#13
-Set(num2, #12, #13)~#14 &lt;num2 = temp&gt;
+Set(num2, #12, #13)~#14 &gt; num2 = temp
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ decision fibonacci.dc
@@ -369,7 +368,7 @@ Set(num2, #12, #13)~#14 &lt;num2 = temp&gt;
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Benjamin Beddows
+        &copy; Copyright 2019-2020, Benjamin Beddows
 
     </p>
   </div>

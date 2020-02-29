@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Semantic Rules &mdash; Decision 0.2.0 documentation</title>
+  <title>Semantic Rules &mdash; Decision 0.3.0 documentation</title>
   
 
   
@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="The Stages of Compilation" href="../../the_stages_of_compilation/index.html" />
+    <link rel="next" title="Common Data Structures" href="../../common_data_structures/index.html" />
     <link rel="prev" title="Syntax Rules" href="syntax.html" /> 
 </head>
 
@@ -96,6 +96,7 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../common_data_structures/index.html">Common Data Structures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../the_stages_of_compilation/index.html">The Stages of Compilation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../linking/index.html">Linking</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../the_virtual_machine/index.html">The Virtual Machine</a></li>
@@ -175,7 +176,8 @@
 <h2>Properties<a class="headerlink" href="#properties" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Variable</span></code> properties must have <strong>name</strong> and <strong>data type</strong> arguments,
-but the <strong>default value</strong> argument is optional.</p>
+but the <strong>default value</strong> argument and <strong>description string literal</strong>
+arguments are optional.</p>
 <ul>
 <li><p>The data type argument <strong>cannot be vague</strong>.</p></li>
 <li><p>The default value, if given, must be a <strong>literal</strong>.</p></li>
@@ -191,11 +193,21 @@ or a single <strong>name argument</strong>.</p>
 include it</strong>.</p></li>
 </ul>
 </li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Function</span></code> properties must have a single <strong>name argument</strong>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Subroutine</span></code> properties must have a single <strong>name argument</strong>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">FunctionInput</span></code> properties must have a <strong>function name argument</strong> and a
-<strong>data type argument</strong>, but the <strong>name argument</strong> and the <strong>default value
-argument</strong> are optional.</p>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>As of now, only the string literal argument is functional. See the
+<code class="docutils literal notranslate"><span class="pre">add_property_Include</span></code> function in <code class="docutils literal notranslate"><span class="pre">dsemantic.c</span></code>.</p>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Function</span></code> properties must have a <strong>name argument</strong>, and can have an
+optional <strong>description string literal argument.</strong></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Subroutine</span></code> properties must have a <strong>name argument</strong>, and can have an
+optional <strong>description string literal argument.</strong></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">FunctionInput</span></code> properties must have a <strong>function name argument</strong>, a
+<strong>socket name argument</strong>, a <strong>data type argument</strong>, and an optional
+<strong>default value argument</strong> and an optional <strong>description string literal
+argument</strong>.</p>
 <ul>
 <li><p>The function name argument must reference a <strong>defined</strong> function.</p></li>
 <li><p>The default value, if given, must be a <strong>literal</strong>.</p></li>
@@ -203,19 +215,15 @@ argument</strong> are optional.</p>
 function input</strong>.</p></li>
 </ul>
 </li>
-<li><p><code class="docutils literal notranslate"><span class="pre">FunctionOutput</span></code> properties must have a <strong>function name argument</strong> and a
-<strong>data type argument</strong>, but the <strong>name argument</strong> is optional.</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">FunctionOutput</span></code> properties must have a <strong>function name argument</strong>, a
+<strong>socket name argument</strong>, a <strong>data type argument</strong>, and an optional
+<strong>description string literal</strong> argument.</p>
 <ul>
 <li><p>The function name argument must reference a <strong>defined</strong> function.</p></li>
 </ul>
 </li>
 <li><p>You cannot create 2 functions / subroutines with the <strong>same name</strong>.</p></li>
 </ul>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>As of now, only the string literal argument is functional. See the
-<code class="docutils literal notranslate"><span class="pre">add_property_Include</span></code> function in <code class="docutils literal notranslate"><span class="pre">dsemantic.c</span></code>.</p>
-</div>
 </div>
 <div class="section" id="statements">
 <h2>Statements<a class="headerlink" href="#statements" title="Permalink to this headline">¶</a></h2>
@@ -256,7 +264,7 @@ defined <strong>in the same sheet</strong>.</p></li>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../../the_stages_of_compilation/index.html" class="btn btn-neutral float-right" title="The Stages of Compilation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../../common_data_structures/index.html" class="btn btn-neutral float-right" title="Common Data Structures" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="syntax.html" class="btn btn-neutral float-left" title="Syntax Rules" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -268,7 +276,7 @@ defined <strong>in the same sheet</strong>.</p></li>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Benjamin Beddows
+        &copy; Copyright 2019-2020, Benjamin Beddows
 
     </p>
   </div>

@@ -1,6 +1,6 @@
 ..
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -64,10 +64,7 @@ and recursively generate the bytecode for the node that starts the connection.
 Secondly, bytecode is generated depending on the node itself, using the
 inputs. If the node is a core function, then we can directly insert the
 bytecode in. Otherwise, we make use of the calling abilities of
-:ref:`the-virtual-machine` by saving current unsafe values onto the stack,
-then adding the arguments onto the stack, then calling the function itself.
-When we return from the function, we then pop the returned values out from
-the stack, and then restore the saved unsafe values.
+:ref:`the-virtual-machine`.
 
 Lastly, it will check to see if the last output execution socket has a
 connection. If it does, then there is something more to do after this node
@@ -78,7 +75,7 @@ are done. In some cases, however, this is not needed, like inside ``For``
 loops.
 
 When getting output from an execution node, the generator will copy the output
-into another register to preserve the original value.
+onto the top of the stack in order to preserve the original value.
 
 Non-Execution Nodes
 ===================
@@ -95,9 +92,9 @@ the current node. This is because non-execution nodes are purely meant to be
 called upon from execution nodes.
 
 When getting output from a non-execution node, it will be used by the node
-getting the input, then the register will be freed. This ensures that if
-values change over time, then the calculations will produce different results
-over time as well. Non-execution nodes are purely meant to just manipulate
+getting the input. This ensures that if values change over time, then the
+calculations will produce different results over time as well. Non-execution
+nodes are purely meant to just manipulate
 the inputs to execution nodes.
 
 .. _calling-convention:
@@ -110,73 +107,15 @@ If we see a node with a name that isn't a core function, it needs to be
 possible since there could be lots of calls during execution, especially
 if the call is inside a loop.
 
-Arguments and return values are easy - the arguments are pushed onto the
-general stack in reverse order just before the call and the return values are
-poped out of the general stack in order just after the call.
-
-What isn't so easy is the registers themselves. A problem that needed to be
-solved was that a called functions will most likely use the same registers as
-its caller. The initial solution was to save registers that needed to be
-saved into the general stack before pushing the arguments, and popping the
-saved values back afterwards, but I'm going to be honest: **This solution
-sucked.**
-
-So here is the current solution: We split the virtual machine registers into
-2 categories:
-
-* **Safe registers** (callee-saved): No matter what function you call, these
-  registers will *always* retain the value they had before calling. This is
-  guaranteed by having the callee save the safe registers it knows it will use
-  into the general stack at the start of the function, and popping them back
-  out at the end of the function, before pushing the return values.
-
-* **Temporary / Unsafe registers** (caller-saved): If you call another
-  function, there is a chance that these register values can change by the end
-  of the call. In this case, if you want to save the value inside a temporary
-  register, you'll need to manually save the register into the stack yourself.
+Arguments and return values are easy - arguments are pushed onto the stack in
+order before the call, and return values are pushed onto the stack in reverse
+order before returning.
 
 .. note::
 
-   There is no difference between safe and temporary registers in terms of how
-   they are implemented in the virtual machine - it's how we treat them in the
-   bytecode that is different, hence why it is called a **convention**.
-
-.. note::
-
-   A bug that came from this that took (in my opinion) too long to find was
-   that some functions that saved safe registers at the start of the function
-   would pop them back out into their correct registers (as intended), but
-   there was a chance that in doing that it would overwrite a return value
-   stored at that register. So because of this, **any return values stored in
-   safe registers get transferred to a temporary register before being pushed
-   onto the stack.**
-
-Functions
----------
-
-So we've got some *safe* registers thanks to this calling convention, but we
-should use the safe registers sparingly... so how do we know if we need to use
-a safe register or not? Simple. There are recursive functions that tell you
-if a call is coming up:
-
-.. doxygenfunction:: d_does_input_involve_call
-   :no-link:
-
-Checks input nodes starting from ``node`` to see if any of them involve a call.
-
-.. doxygenfunction:: d_does_output_involve_call
-   :no-link:
-
-Checks output nodes (i.e. an execution sequence) starting from ``node`` to see
-if any of them involve a call.
-
-Both of these functions call:
-
-.. doxygenfunction:: d_is_node_call
-   :no-link:
-
-To see if ``node`` is a function that needs to be called, i.e. it isn't a core
-function.
+   The calling and returning instructions in :ref:`the-virtual-machine` have a
+   byte immediate operand for how many arguments or return values there are,
+   meaning you can only have at most up to 256 arguments and 256 returns.
 
 Structures
 ==========
@@ -208,22 +147,6 @@ Arguably the most useful function however is:
 Concatenates ``after`` onto the end of ``base``, which makes building up the
 bytecode simple.
 
-There is an alternate function for attaching bytecode to one another:
-
-.. doxygenfunction:: d_insert_bytecode
-   :no-link:
-
-Takes some bytecode ``insertCode`` and inserts it into the bytecode ``base``,
-starting at the index ``insertIndex``, i.e. the bytecode at index
-``insertIndex`` of ``base`` after the function is called should be the
-start of the bytecode ``insertCode``.
-
-.. note::
-
-   ``d_insert_bytecode`` is a lot more expensive computationally than
-   ``d_concat_bytecode``, and thus should be used sparingly. This is because
-   it needs to fix data like links and relative jumps after the insertion.
-
 ``BuildContext``
     Contains useful information used by the code generator to help make the
     most efficient bytecode possible. Only one instance is made at the
@@ -235,85 +158,35 @@ start of the bytecode ``insertCode``.
     links to those items.
 
     One thing we want to guarantee when creating the bytecode is that
-    :ref:`the-virtual-machine` is using the least amount of registers
-    possible, since there is a finite amount of them. We also don't want to
-    store values that aren't going to be used anymore. The way we do this is
-    by storing a list of bits, one for each register, and set the bit to 1 if
-    the register is currently in use, and 0 if it is free. We also store 2
-    extra variables to say what the next available integer register is, and
-    what the next available float register is.
-
-    When we generate bytecode for a non-execution node, we typically free all
-    of the input registers and use a register for the output (most of the time
-    we use the first input register as the output register).
-
-    When we generate bytecode for an execution node that involves a loop, we
-    don't free the output register until the loop bytecode has been generated,
-    so the loop can get its value. Only after do we free the register.
-
-    This freedom of choosing when registers are freed allows us to keep values
-    in memory for as long as they are needed.
-
-There are a few functions that control the use of registers in ``BuildContext``:
-
-.. doxygenfunction:: d_next_general_reg
-   :no-link:
-
-Takes the index of the next available integer register, and outputs it.
-It also takes the time to find the next available register by incrementing
-until it finds one. You can also specify if you want a *safe* register rather
-than a *temporary* one, to follow the :ref:`calling-convention`.
-
-.. doxygenfunction:: d_next_float_reg
-   :no-link:
-
-Does the same thing as ``d_next_general_reg``, but for float registers.
-
-.. warning::
-
-   Bear in mind if you want a safe register, **you are not guaranteed to get
-   one.** If the context has run out of safe registers, it will give you the
-   next available temporary one.
-
-Both of the above functions call a more generic one:
-
-.. doxygenfunction:: d_next_reg
-   :no-link:
-
-Where ``nextRegInContext`` points to a ``reg_t`` variable in ``context`` that
-represents which register is the next free register, and ``end`` says to the
-function what the last register it can use is - if it goes over this value,
-it will produce a warning.
-
-.. doxygenfunction:: d_free_reg
-   :no-link:
-
-Frees a given register. If the given register's index is less than the current
-next available register, the next available register is set to ``reg``. Again,
-this is to make sure we use the least amount of registers possible.
+    :ref:`the-virtual-machine` stack is as small as possible throughout the
+    execution of the program. This is done by keeping track, at any one time,
+    of what the index of the top of the stack is.
 
 Sockets
 =======
 
 One important thing to note is how a node knows which input corresponds to
-which register.
+which element in the stack.
 
-Inside the ``SheetSocket`` structure defined in ``dsheet.h``, there is a
-property called ``_reg``. Only Code Generation uses this property. If the
-socket is an output socket, it is set during the generation of the bytecode
-of the node to the index of the register containing that output value. If
-the socket is an input socket, and if the socket has a connection, it is set
-to the connected output socket's register to guarantee that the value is
-transferred along the wire to the correct input socket. If there is no
-connection, then a register may or may not be assigned for the literal value,
-depending on if we want to use the literal value as an immediate or not.
+Inside the ``Node`` structure defined in ``dgraph.h``, there is a property
+called ``_stackPositions``. Only Code Generation uses this property.
+If the socket is connected, the socket's entry will be set to the index of the
+socket's value in the stack at that time. If there is no connection, then an
+index may or may not be assigned for the literal value, depending on if we want
+to use the literal value as an immediate or not.
 
 .. note::
 
    See :ref:`the-virtual-machine` to see what I mean by an *immediate* value.
 
-This way, registers are passed along from socket to socket, so that the next
-node knows which register its input is in.
+This way, indexes are passed along from socket to socket, so that the next node
+knows in what index the socket's value is in.
+
+.. note::
+
+   Most of the bytecode generation functions guarantee that the output is on
+   the top of the stack, so usually we take advantage of this and don't bother
+   to read the socket's stack index.
 
 Linking Functions
 =================
@@ -364,132 +237,79 @@ in the ``LinkMeta`` list in ``context``.
 Generation Functions
 ====================
 
-.. doxygenfunction:: d_convert_between_number_types
+.. doxygenfunction:: d_push_literal
    :no-link:
 
-Takes a numbered socket (Integer or Float), and generates bytecode to convert
-it to the other discrete type, how it does so depends on the opcode you provide.
+This function takes a literal value and pushes it onto the top of the stack.
 
-If you provide ``OP_MVTF`` or ``OP_MVTI``, it will just move the raw value to
-that type of register.
-
-If you provide ``OP_CVTF`` or ``OP_CVTI``, it will convert the value into that
-type so that it represents the same value (truncated).
-
-This function automatically sets the socket's new register.
-
-.. doxygenfunction:: d_setup_input
+.. doxygenfunction:: d_push_variable
    :no-link:
 
-Builds on ``d_generate_bytecode_for_literal`` and also sets up inputs that are
-a part of a connection. **This function does not generate the bytecode for the
-nodes that contribute to the input!** The function also automatically adds any
-bytecode it needed to generate onto ``addTo``, and sets the value of
-``inputReg`` to the register containing the input value. Like 
-``d_generate_bytecode_for_literal``, you can specify if you want your integers
-to be converted to floats with ``forceFloat``.
+This function takes a variable's value and pushes it onto the top of the stack.
 
-.. doxygenfunction:: d_setup_arguments
+.. doxygenfunction:: d_push_input
    :no-link:
 
-If you are generating the bytecode for a function, then this function pops the
-arguments needed from the stack, puts them in the correct registers, and
-assigns those registers to their respective sockets. The bytecode to do this
-is added onto ``addTo``.
+This function takes an input socket and pushes it's value onto the top of the
+stack. However, that is not as simple as it sounds, as it may generate the
+entire bytecode nessesary to get the value.
 
-.. doxygenfunction:: d_setup_returns
+.. doxygenfunction:: d_push_node_inputs
    :no-link:
 
-If you are generating the bytecode for a function, then this function pushes
-the return values onto the stack, and if ``retAtEnd`` is true, also places a
-return instruction at the end of the bytecode. The bytecode to do this is
-added onto ``addTo``.
+This function takes the variable inputs of a node, and pushes them onto the top
+of the stack in an order of your choosing.
 
-.. doxygenfunction:: d_generate_bytecode_for_literal
+.. doxygenfunction:: d_generate_operator
    :no-link:
 
-Generates the bytecode needed to load in a literal value. It will
-automatically set the register the literal value is now in into socket.
-If the literal is an integer, and you want it converted to a float, you can
-specify that in ``cvtFloat``.
+This function generates the bytecode for a generic operator (e.g. ``Add``).
 
-.. doxygenfunction:: d_generate_bytecode_for_inputs
+.. doxygenfunction:: d_generate_comparator
    :no-link:
 
-Generates the bytecode for all nodes that contribute to an input to a node.
-``inLoop`` is used for optimization purposes.
+This function generates the bytecode for a generic comparator (e.g. ``Equal``).
 
-.. doxygenfunction:: d_generate_bytecode_for_variable
+.. doxygenfunction:: d_generate_call
    :no-link:
 
-Generates the bytecode for a node that is the getter of a variable
-``variable``. It essentially loads its value from the data section of the
-sheet. This function also consequently adds a link to that bytecode to the
-location of the variable.
+This function generates the bytecode to call a function or subroutine.
+It abides to the calling convention and pushes the arguments in the correct
+order.
 
-.. doxygenfunction:: d_generate_bytecode_for_call
+.. doxygenfunction:: d_push_argument
    :no-link:
 
-Generates the bytecode to call a custom function or subroutine. The bytecode
-does a number of things:
+If you are in a function or subroutine, and you want an argument on the top of
+the stack, this is the function for that.
 
-1. It saves temporary registers that haven't been freed yet by pushing them
-   onto the stack.
-
-2. It then pushes the argument values on afterwards (in reverse order, because
-   stacks)
-
-3. It then calls the function by pushing the current program counter onto a
-   call stack, and jumping to the function's location.
-
-4. When the function returns, it first pops the return values into available
-   registers that aren't going to be overwritten with the previously pushed
-   saved values.
-
-5. It then pops the saved temporary values back into the register that it was
-   originally in, just in case a node expects it to be in that register later
-   on.
-
-.. note::
-
-   If you know that a call is coming, and you need to save a register for
-   after the call, **put it in a safe register**. This is more efficient,
-   especially if the call is being executed in a loop.
-
-.. doxygenfunction:: d_generate_bytecode_for_operator
+.. doxygenfunction:: d_generate_return
    :no-link:
 
-Generates bytecode for a generic operator node. Based on the inputs, it will
-automatically deal with the types for you, unless you set ``forceFloat``
-to true.
+This function generates the bytecode to return from the function or subroutine.
+It abides to the calling convention and pushes the return values in reverse
+order.
 
-.. doxygenfunction:: d_generate_bytecode_for_comparator
+.. doxygenfunction:: d_generate_nonexecution_node
    :no-link:
 
-Generates bytecode for a generic comparator node that outputs a boolean.
-Since the VM does not have an opcode for "not equals", a ``notAfter``
-argument is provided to invert the answer.
+This function generates the bytecode for a generic non-execution node.
 
-.. doxygenfunction:: d_generate_bytecode_for_nonexecution_node
+.. doxygenfunction:: d_generate_execution_node
    :no-link:
 
-Generates the bytecode for any non-execution node, regardless of if it's a
-core function or not.
+This function generates the bytecode for a generic execution node.
 
-.. doxygenfunction:: d_generate_bytecode_for_execution_node
+.. doxygenfunction:: d_generate_start
    :no-link:
 
-Generates the bytecode for any execution node, regardless of if it's a core
-function or not. If ``retAtEnd`` is true, it will place a return instruction
-at the end of the sequence, unless ``inLoop`` is true. ``inLoop`` should be
-true if the node is being executed inside a loop like ``For`` or ``While``.
-``inLoop`` will always stop a return instruction from being generated, so the
-program does not return at the end of one loop.
+This function generates the bytecode for the main Start function.
 
-.. doxygenfunction:: d_generate_bytecode_for_function
+.. doxygenfunction:: d_generate_function
    :no-link:
 
-Generates the bytecode for any custom function or subroutine.
+This function generates the bytecode for a function or subroutine defined in
+the sheet.
 
 Conclusion
 ==========
@@ -528,5 +348,3 @@ Object Sections
 * ``.func``: Essentially a list of ``SheetFunction``.
 * ``.var``: Essentially a list of ``SheetVariable``.
 * ``.incl``: A list of paths to sheets that this sheet includes.
-* ``.c``: A list of specifications of C functions the sheet uses.
-  See :ref:`running-c-from-decision`.

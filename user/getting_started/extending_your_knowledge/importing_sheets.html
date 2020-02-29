@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Importing Sheets &mdash; Decision 0.2.0 documentation</title>
+  <title>Importing Sheets &mdash; Decision 0.3.0 documentation</title>
   
 
   
@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -90,7 +90,8 @@
 <li class="toctree-l3"><a class="reference internal" href="comments.html">Comments</a></li>
 <li class="toctree-l3"><a class="reference internal" href="arithmetic.html">Arithmetic</a></li>
 <li class="toctree-l3"><a class="reference internal" href="conditions.html">Conditions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="condition_arithmetic.html">Condition Arithmetic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="boolean_operations.html">Boolean Operations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bitwise_operations.html">Bitwise Operations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="changing_flow_with_conditions.html">Changing Flow with Conditions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="string_manipulation.html">String Manipulation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="variables.html">Variables</a></li>
@@ -179,29 +180,29 @@ multiple times when you can create it once and use it elsewhere?</p>
 sheet by using either it’s absolute path, or it’s path relative to the sheet
 including it. Once you do, you then have access to <strong>all of the sheet’s
 functions, subroutines, and variables</strong>.</p>
-<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>&lt; my_math.dc &gt;
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>&gt; my_math.dc
 
-[Function(IsEven)]
-[FunctionInput(IsEven, Integer)]
-[FunctionOutput(IsEven, Boolean)]
+[Function(IsEven, &quot;Check if an integer is even.&quot;)]
+[FunctionInput(IsEven, num, Integer, 0, &quot;The number to check.&quot;)]
+[FunctionOutput(IsEven, even, Boolean, &quot;Is the number even?&quot;)]
 
 Define(IsEven)~#1
 Mod(#1, 2)~#2
 Return(IsEven, #2)
 
-[Function(IsOdd)]
-[FunctionInput(IsOdd, Integer)]
-[FunctionOutput(IsOdd, Boolean)]
+[Function(IsOdd, &quot;Check if an integer is odd.&quot;)]
+[FunctionInput(IsOdd, num, Integer, 0, &quot;The number to check.&quot;)]
+[FunctionOutput(IsOdd, odd, Boolean, &quot;Is the number odd?&quot;)]
 
 Define(IsOdd)~#3
 IsEven(#3)~#4
 Not(#4)~#5
 Return(IsOdd, #5)
 
-[Variable(PI, Float, 3.14159)]
+[Variable(PI, Float, 3.14159, &quot;You know, THAT number?&quot;)]
 
-[Subroutine(AreaOfCircle)]
-[FunctionInput(AreaOfCircle, Float)]
+[Subroutine(AreaOfCircle, &quot;Print the area of a circle, given it&#39;s radius.&quot;)]
+[FunctionInput(AreaOfCircle, radius, Float, 1.0, &quot;The radius of the circle.&quot;)]
 
 Define(AreaOfCircle)~#10, #11
 PI~#12
@@ -212,7 +213,7 @@ Print(#15, &quot;It&#39;s area is:&quot;)~#16
 Print(#16, #13)
 </pre></div>
 </div>
-<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>&lt; main.dc &gt;
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>&gt; main.dc
 
 [Include(&quot;my_math.dc&quot;)]
 
@@ -264,7 +265,7 @@ It&#39;s area is:
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Benjamin Beddows
+        &copy; Copyright 2019-2020, Benjamin Beddows
 
     </p>
   </div>

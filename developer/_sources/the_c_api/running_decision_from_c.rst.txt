@@ -1,6 +1,6 @@
 ..
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -55,7 +55,7 @@ You can then run any compiled ``Sheet`` with:
 
    int main() {
        // Load the string.
-       Sheet *sheet = d_load_string("Start~#1 ; Print(#1, 'Hello, world!')", NULL);
+       Sheet *sheet = d_load_string("Start~#1 ; Print(#1, 'Hello, world!')", NULL, NULL);
 
        // Run the sheet.
        d_run_sheet(sheet);
@@ -65,6 +65,14 @@ You can then run any compiled ``Sheet`` with:
 
        return 0;
    }
+
+.. note::
+
+   For safety, you can check to see whether a sheet has failed to compile
+   (usually because there was an error in the code) by checking to see if
+   ``sheet->hasErrors`` is true.
+
+   If a sheet does have an error, ``d_run_sheet`` will not run it.
 
 Running Decision Strings
 ------------------------
@@ -80,7 +88,7 @@ To run a Decision source code string directly, use:
 
    int main() {
        // Run the string.
-       d_run_string("Start~#1 ; Print(#1, 'Hello, world!')", NULL);
+       d_run_string("Start~#1 ; Print(#1, 'Hello, world!')", NULL, NULL);
 
        return 0;
    }
@@ -103,7 +111,7 @@ To load a Decision file from the disk into a ``Sheet``, use:
 
    int main() {
        // Load the sheet into memory.
-       Sheet *sheet = d_load_file("hello_world.dc");
+       Sheet *sheet = d_load_file("hello_world.dc", NULL);
 
        // Run the sheet.
        d_run_sheet(sheet);
@@ -128,7 +136,7 @@ To run a Decision file directly, use:
 
    int main() {
        // Run the file.
-       d_run_file("hello_world.dc");
+       d_run_file("hello_world.dc", NULL);
 
        return 0;
    }
@@ -145,32 +153,32 @@ Passing Arguments
 -----------------
 
 To pass arguments to a function or subroutine, you need to push the values
-onto the Decision Virtual Machine's general stack **in reverse order**.
+onto the Decision Virtual Machine's stack **in the correct order**.
 This can be done with the following functions:
 
-.. doxygenfunction:: d_vm_push_stack
+.. doxygenfunction:: d_vm_push
    :no-link:
 
-.. doxygenfunction:: d_vm_push_stack_float
+.. doxygenfunction:: d_vm_push_float
    :no-link:
 
-.. doxygenfunction:: d_vm_push_stack_ptr
+.. doxygenfunction:: d_vm_push_ptr
    :no-link:
 
 Getting Return Values
 ---------------------
 
 To get return values from a function or subroutine, you need to pop the values
-from the Decision Virtual Machine's general stack **in the correct order**.
+from the Decision Virtual Machine's stack **in reverse order**.
 This can be done with the following functions:
 
-.. doxygenfunction:: d_vm_pop_stack
+.. doxygenfunction:: d_vm_pop
    :no-link:
 
-.. doxygenfunction:: d_vm_pop_stack_float
+.. doxygenfunction:: d_vm_pop_float
    :no-link:
 
-.. doxygenfunction:: d_vm_pop_stack_ptr
+.. doxygenfunction:: d_vm_pop_ptr
    :no-link:
 
 Calling Decision Functions
@@ -183,7 +191,7 @@ Finally, you can call the function or subroutine itself using:
 
 .. code-block:: decision
 
-   < decision.dc >
+   > decision.dc
 
    [Function(IsEven)]
    [FunctionInput(IsEven, Integer)]
@@ -211,13 +219,10 @@ Finally, you can call the function or subroutine itself using:
 
    int main() {
        // Load the sheet into memory.
-       Sheet *sheet = d_load_file("decision.dc");
+       Sheet *sheet = d_load_file("decision.dc", NULL);
 
        // Create a Decision Virtual Machine.
-       DVM vm;
-
-       // Set it to it's starting state.
-       d_vm_reset(&vm);
+       DVM vm = d_vm_create();
 
        // Calling a function/subroutine with no inputs or outputs is easy:
        d_run_function(&vm, sheet, "SayHi");
@@ -229,16 +234,16 @@ Finally, you can call the function or subroutine itself using:
 
        // To call the IsEven function, we first need to push the argument onto
        // the stack.
-       d_vm_push_stack(&vm, value);
+       d_vm_push(&vm, value);
 
        // REMEMBER: If you have more than one argument, push the arguments IN
-       // REVERSE ORDER.
+       // THE CORRECT ORDER.
 
        // Then call the function:
        d_run_function(&vm, sheet, "IsEven");
 
-       // Then pop the return values out IN THE CORRECT ORDER.
-       dint isEven = d_vm_pop_stack(&vm);
+       // Then pop the return values out IN REVERSE ORDER.
+       dint isEven = d_vm_pop(&vm);
 
        // dcfg.h has some handy macros for when you want to print dint or
        // dfloat types:
@@ -247,6 +252,9 @@ Finally, you can call the function or subroutine itself using:
        } else {
            printf("%" DINT_PRINTF_d " is odd!\n", value);
        }
+
+       // Free the VM.
+       d_vm_free(&vm);
 
        d_sheet_free(sheet);
        return 0;

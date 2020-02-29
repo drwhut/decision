@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>The C API &mdash; Decision 0.2.0 documentation</title>
+  <title>The C API &mdash; Decision 0.3.0 documentation</title>
   
 
   
@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -84,6 +84,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../the_language/index.html">The Language</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../common_data_structures/index.html">Common Data Structures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../the_stages_of_compilation/index.html">The Stages of Compilation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../linking/index.html">Linking</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../the_virtual_machine/index.html">The Virtual Machine</a></li>
@@ -91,6 +92,7 @@
 <li class="toctree-l2"><a class="reference internal" href="embedding_decision.html">Embedding Decision</a></li>
 <li class="toctree-l2"><a class="reference internal" href="running_decision_from_c.html">Running Decision from C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="running_c_from_decision.html">Running C from Decision</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging_decision_code.html">Debugging Decision Code</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
@@ -161,7 +163,7 @@
   <div class="section" id="the-c-api">
 <h1>The C API<a class="headerlink" href="#the-c-api" title="Permalink to this headline">¶</a></h1>
 <p>Since Decision is made in C, if you are writing a program in either C or C++,
-you can include Decision as en embeddable programming language! This chapter
+you can include Decision as an embeddable programming language! This chapter
 describes in detail how you can do so, and what you can do once you’ve
 embedded it into your program.</p>
 <div class="toctree-wrapper compound">
@@ -197,6 +199,17 @@ embedded it into your program.</p>
 <li class="toctree-l2"><a class="reference internal" href="running_c_from_decision.html#c-functions-as-decision-subroutines">C Functions as Decision Subroutines</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="debugging_decision_code.html">Debugging Decision Code</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="debugging_decision_code.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging_decision_code.html#compiling-in-debug-mode">Compiling in Debug Mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging_decision_code.html#debugging-agendas">Debugging Agendas</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="debugging_decision_code.html#breakpoints">Breakpoints</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="debugging_decision_code.html#debugging-sessions">Debugging Sessions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging_decision_code.html#partial-example">Partial Example</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -221,7 +234,7 @@ embedded it into your program.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Benjamin Beddows
+        &copy; Copyright 2019-2020, Benjamin Beddows
 
     </p>
   </div>

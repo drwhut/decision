@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Semantic Analysis &mdash; Decision 0.2.0 documentation</title>
+  <title>Semantic Analysis &mdash; Decision 0.3.0 documentation</title>
   
 
   
@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -84,15 +84,16 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../the_language/index.html">The Language</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../common_data_structures/index.html">Common Data Structures</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">The Stages of Compilation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="lexical_analysis.html">Lexical Analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="syntax_analysis.html">Syntax Analysis</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Semantic Analysis</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#structures">Structures</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#property-scanning">Property Scanning</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#node-scanning">Node Scanning</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#reducing-data-types">Reducing Data Types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#detecting-loops">Detecting Loops</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#checking-subroutine-returns">Checking Subroutine Returns</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#conclusion">Conclusion</a></li>
 </ul>
 </li>
@@ -178,23 +179,6 @@
 in terms of the nodes, their connections, and their definitions. During this
 stage, we build up a representation of the sheet in memory (<code class="docutils literal notranslate"><span class="pre">Sheet</span></code>, defined
 in <code class="docutils literal notranslate"><span class="pre">dsheet.h</span></code>), and check for errors using that structure.</p>
-<div class="section" id="structures">
-<h2>Structures<a class="headerlink" href="#structures" title="Permalink to this headline">¶</a></h2>
-<p>This stage of the compilation doesn’t have any data structures we care about.
-Instead, we are working with data structures from <code class="docutils literal notranslate"><span class="pre">dsheet.h</span></code>:</p>
-<dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">SheetSocket</span></code></dt><dd><p>A structure representing a node’s socket.</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">SheetNode</span></code></dt><dd><p>A structure representing a node.</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">SheetVariable</span></code></dt><dd><p>A structure representing a sheet’s global variable.</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">SheetFunction</span></code></dt><dd><p>A structure representing a sheet’s function <em>or</em> subroutine.</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">Sheet</span></code></dt><dd><p>A structure representing a sheet.</p>
-</dd>
-</dl>
-</div>
 <div class="section" id="property-scanning">
 <h2>Property Scanning<a class="headerlink" href="#property-scanning" title="Permalink to this headline">¶</a></h2>
 <p>Firstly, we scan the syntax tree we made in <a class="reference internal" href="syntax_analysis.html#syntax-analysis"><span class="std std-ref">Syntax Analysis</span></a>, and
@@ -202,12 +186,14 @@ extract the property statements that were found. We use the property
 statements to manipulate a sheet’s data.</p>
 <dl class="function">
 <dt>
-void <code class="sig-name descname">d_semantic_scan_properties</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv46_sheet" title="_sheet">_sheet</a> *<em>sheet</em>, <em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv411_syntaxNode" title="_syntaxNode">_syntaxNode</a> *<em>root</em><span class="sig-paren">)</span><br /></dt>
+void <code class="sig-name descname">d_semantic_scan_properties</code><span class="sig-paren">(</span><a class="reference internal" href="../common_data_structures/index.html#_CPPv45Sheet" title="Sheet">Sheet</a> *<em>sheet</em>, <a class="reference internal" href="../reference/index.html#_CPPv410SyntaxNode" title="SyntaxNode">SyntaxNode</a> *<em>root</em>, <a class="reference internal" href="../common_data_structures/index.html#_CPPv45Sheet" title="Sheet">Sheet</a> **<em>priors</em>, bool <em>debugIncluded</em><span class="sig-paren">)</span><br /></dt>
 <dd><p>Sets the properties of the sheet, given the syntax tree. </p>
 <p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">sheet</span></code>: A pointer to the sheet where we want to set the properties. </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">root</span></code>: The root node of the syntax tree. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">priors</span></code>: A NULL-terminated list of sheets that, if included, will produce an error. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">debugIncluded</span></code>: If true, compile included sheets in debug mode. </p></li>
 </ul>
 </dd>
 </dl>
@@ -248,7 +234,7 @@ and we check that an output execution socket doesn’t have more than one
 connection, etc.</p>
 <dl class="function">
 <dt>
-void <code class="sig-name descname">d_semantic_scan_nodes</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv46_sheet" title="_sheet">_sheet</a> *<em>sheet</em>, <em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv411_syntaxNode" title="_syntaxNode">_syntaxNode</a> *<em>root</em><span class="sig-paren">)</span><br /></dt>
+void <code class="sig-name descname">d_semantic_scan_nodes</code><span class="sig-paren">(</span><a class="reference internal" href="../common_data_structures/index.html#_CPPv45Sheet" title="Sheet">Sheet</a> *<em>sheet</em>, <a class="reference internal" href="../reference/index.html#_CPPv410SyntaxNode" title="SyntaxNode">SyntaxNode</a> *<em>root</em><span class="sig-paren">)</span><br /></dt>
 <dd><p>Sets the nodes of the sheet, given the syntax tree. </p>
 <p><strong>NOTE:</strong> This function also sets the connections between the nodes.</p>
 <p><dl class="simple">
@@ -261,36 +247,12 @@ void <code class="sig-name descname">d_semantic_scan_nodes</code><span class="si
 </p>
 </dd></dl>
 
-<p>Takes <code class="docutils literal notranslate"><span class="pre">sheet</span></code> and creates a list of <code class="docutils literal notranslate"><span class="pre">SheetNode*</span></code> in the sheet, which have
-a list of <code class="docutils literal notranslate"><span class="pre">SheetSocket*</span></code> within them. Each <code class="docutils literal notranslate"><span class="pre">SheetSocket</span></code> has a list of
-<code class="docutils literal notranslate"><span class="pre">SheetSocket*</span></code> within them as well, to represent the connections.</p>
-<p>When we find out what the name of the node is (by looking at the name of the
-node in the syntax tree, then extracting the name from the child token node),
-we call:</p>
+<p>Takes <code class="docutils literal notranslate"><span class="pre">sheet</span></code> and creates a list of <code class="docutils literal notranslate"><span class="pre">Node</span></code> in the sheet’s graph, as well as
+a list of <code class="docutils literal notranslate"><span class="pre">Wire</span></code> to connect the sockets of the nodes.</p>
+<p>When we want to find out where the name of something is defined, we can use:</p>
 <dl class="function">
 <dt>
-<a class="reference internal" href="../reference/index.html#_CPPv418NodeTrueProperties" title="NodeTrueProperties">NodeTrueProperties</a> <code class="sig-name descname">d_semantic_get_node_properties</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv46_sheet" title="_sheet">_sheet</a> *<em>sheet</em>, <em class="property">const</em> char *<em>name</em>, size_t <em>lineNum</em>, <em class="property">const</em> char *<em>funcName</em>, <a class="reference internal" href="../reference/index.html#_CPPv414NameDefinition" title="NameDefinition">NameDefinition</a> *<em>definition</em><span class="sig-paren">)</span><br /></dt>
-<dd><p>Get a node’s true properties (e.g. input and output types) by it’s name. </p>
-<p><dl class="simple">
-<dt><strong>Return</strong></dt><dd><p>A NodeTrueProperties object with malloc’d elements.</p>
-</dd>
-<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">sheet</span></code>: The sheet the node is a part of. </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the node. </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">lineNum</span></code>: In case we error, say where we errored from. </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">funcName</span></code>: If the name is Return, we need the function name so we can get the correct return values. </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">definition</span></code>: A convenience reference that is set to the name definition of the name or funcName given. This can be used to set the definition of a node. Should not be used if the NodeTrueProperties struct has isDefined set to false. </p></li>
-</ul>
-</dd>
-</dl>
-</p>
-</dd></dl>
-
-<p>to get the specification of the node’s input and output data types. This
-function in turn calls:</p>
-<dl class="function">
-<dt>
-<a class="reference internal" href="../reference/index.html#_CPPv418AllNameDefinitions" title="AllNameDefinitions">AllNameDefinitions</a> <code class="sig-name descname">d_semantic_get_name_definitions</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv46_sheet" title="_sheet">_sheet</a> *<em>sheet</em>, <em class="property">const</em> char *<em>name</em><span class="sig-paren">)</span><br /></dt>
+<a class="reference internal" href="../reference/index.html#_CPPv418AllNameDefinitions" title="AllNameDefinitions">AllNameDefinitions</a> <code class="sig-name descname">d_get_name_definitions</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../common_data_structures/index.html#_CPPv46_sheet" title="_sheet">_sheet</a> *<em>sheet</em>, <em class="property">const</em> char *<em>name</em><span class="sig-paren">)</span><br /></dt>
 <dd><p>Get all of the places where a name is defined, and what the name’s type is. </p>
 <p>We will also check recursively up the includes of sheets.</p>
 <p><dl class="simple">
@@ -305,28 +267,31 @@ function in turn calls:</p>
 </p>
 </dd></dl>
 
-<p>to find out all of the locations where a name is defined, and what they are
-defined as (Variable, Function, etc.). It then uses the function:</p>
+<p>This gets all the places a name is defined. Ideally, there should only be one
+definition of a name. If there is more than one, then we error saying that we
+can’t pick a definition, and if there is none, then we error saying the name
+is not defined.</p>
+<p>If we know there is only one definition of a name, then we can go straight
+to the name’s definition with this function:</p>
 <dl class="function">
 <dt>
-bool <code class="sig-name descname">d_semantic_select_name_definition</code><span class="sig-paren">(</span><em class="property">const</em> char *<em>name</em>, <a class="reference internal" href="../reference/index.html#_CPPv418AllNameDefinitions" title="AllNameDefinitions">AllNameDefinitions</a> <em>allDefinitions</em>, <a class="reference internal" href="../reference/index.html#_CPPv414NameDefinition" title="NameDefinition">NameDefinition</a> *<em>selection</em><span class="sig-paren">)</span><br /></dt>
-<dd><p>Given a set of definitions, select the one the user intended, give the name of the node. </p>
+<em class="property">const</em> <a class="reference internal" href="../common_data_structures/index.html#_CPPv414NodeDefinition" title="NodeDefinition">NodeDefinition</a> *<code class="sig-name descname">d_get_definition</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../common_data_structures/index.html#_CPPv46_sheet" title="_sheet">_sheet</a> *<em>sheet</em>, <em class="property">const</em> char *<em>name</em>, size_t <em>lineNum</em>, <em class="property">const</em> char *<em>funcName</em>, <a class="reference internal" href="../reference/index.html#_CPPv414NameDefinition" title="NameDefinition">NameDefinition</a> *<em>nameDef</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Get a node’s definition from it’s name. </p>
 <p><dl class="simple">
-<dt><strong>Return</strong></dt><dd><p>If a definition was selected.</p>
+<dt><strong>Return</strong></dt><dd><p>The node’s definition.</p>
 </dd>
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name that decides the definition to use. </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">allDefinitions</span></code>: The set of definitions to choose from. </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">selection</span></code>: A pointer whose value is set to the definition if it was selected, i.e. if we return <code class="docutils literal notranslate"><span class="pre">true</span></code>. If <code class="docutils literal notranslate"><span class="pre">false</span></code> is returned, do not trust this value. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sheet</span></code>: The sheet the node is a part of. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the node. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lineNum</span></code>: In case we error, say where we errored from. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">funcName</span></code>: If the name is Define or Return, we need the function name so we can get the correct sockets. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nameDef</span></code>: A pointer that is set to the node’s name definition. If the node definition returns NULL, do not trust this value. </p></li>
 </ul>
 </dd>
 </dl>
 </p>
 </dd></dl>
 
-<p>to select the best candidate among the potentially many name definitions.
-This allows the user to specify which they want a function’s functionality
-to come from.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Nodes store a <code class="docutils literal notranslate"><span class="pre">NameDefinition</span></code> as a cache for <a class="reference internal" href="code_generation.html#code-generation"><span class="std std-ref">Code Generation</span></a>,
@@ -339,33 +304,10 @@ definition stores a reference to <strong>the node’s functionality itself.</str
 <p>Remember that the sheets can include other sheets, so we need to check
 included sheets recursively to see if there are names that are defined that
 we can use.</p>
-<p>You can use a <code class="docutils literal notranslate"><span class="pre">NodeTrueProperties</span></code> struct to find out if a node will be an
-execution node or not with the function:</p>
-<dl class="function">
-<dt>
-bool <code class="sig-name descname">d_semantic_is_execution_node</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv418NodeTrueProperties" title="NodeTrueProperties">NodeTrueProperties</a> <em>trueProperties</em><span class="sig-paren">)</span><br /></dt>
-<dd><p>Given the properties of a node, decide if it’s an execution node or not. </p>
-<p><dl class="simple">
-<dt><strong>Return</strong></dt><dd><p>If this theoretical node is an execution node.</p>
-</dd>
-<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">trueProperties</span></code>: The properties to query. </p></li>
-</ul>
-</dd>
-</dl>
-</p>
-</dd></dl>
-
-<p>This function is used to set the <code class="docutils literal notranslate"><span class="pre">isExecution</span></code> property of the <code class="docutils literal notranslate"><span class="pre">SheetNode</span></code>
-struct.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>An execution node is a node that has at least one execution socket.</p>
-</div>
 <p>You can free an <code class="docutils literal notranslate"><span class="pre">AllNameDefinitions</span></code> struct with:</p>
 <dl class="function">
 <dt>
-void <code class="sig-name descname">d_semantic_free_name_definitions</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv418AllNameDefinitions" title="AllNameDefinitions">AllNameDefinitions</a> <em>definitions</em><span class="sig-paren">)</span><br /></dt>
+void <code class="sig-name descname">d_free_name_definitions</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv418AllNameDefinitions" title="AllNameDefinitions">AllNameDefinitions</a> *<em>definitions</em><span class="sig-paren">)</span><br /></dt>
 <dd><p>Free an <code class="docutils literal notranslate"><span class="pre">AllNameDefinitions</span></code> struct. It should not be used after it has been freed. </p>
 <p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
@@ -380,18 +322,22 @@ void <code class="sig-name descname">d_semantic_free_name_definitions</code><spa
 a connection to a socket with the function:</p>
 <dl class="function">
 <dt>
-void <code class="sig-name descname">d_semantic_free_name_definitions</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv418AllNameDefinitions" title="AllNameDefinitions">AllNameDefinitions</a> <em>definitions</em><span class="sig-paren">)</span><br /></dt>
-<dd><p>Free an <code class="docutils literal notranslate"><span class="pre">AllNameDefinitions</span></code> struct. It should not be used after it has been freed. </p>
+bool <code class="sig-name descname">d_graph_add_wire</code><span class="sig-paren">(</span><a class="reference internal" href="../common_data_structures/index.html#_CPPv45Graph" title="Graph">Graph</a> *<em>graph</em>, <a class="reference internal" href="../common_data_structures/index.html#_CPPv44Wire" title="Wire">Wire</a> <em>wire</em>, <em class="property">const</em> char *<em>filePath</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Add a wire to a sheet, connecting two sockets. </p>
 <p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>If the operation was successful.</p>
+</dd>
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">definitions</span></code>: The structure to free. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">graph</span></code>: The graph to add the wire to. Both nodes have to belong to this graph. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">wire</span></code>: The wire to add to the sheet. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">filePath</span></code>: In case we error, say where we errored from. </p></li>
 </ul>
 </dd>
 </dl>
 </p>
 </dd></dl>
 
-<p>which is defined in <code class="docutils literal notranslate"><span class="pre">dsheet.h</span></code>.</p>
+<p>which is defined in <code class="docutils literal notranslate"><span class="pre">dgraph.h</span></code>.</p>
 </div>
 <div class="section" id="reducing-data-types">
 <h2>Reducing Data Types<a class="headerlink" href="#reducing-data-types" title="Permalink to this headline">¶</a></h2>
@@ -415,7 +361,7 @@ for when we come to <a class="reference internal" href="code_generation.html#cod
 </div></blockquote>
 <dl class="function">
 <dt>
-void <code class="sig-name descname">d_semantic_reduce_types</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv46_sheet" title="_sheet">_sheet</a> *<em>sheet</em><span class="sig-paren">)</span><br /></dt>
+void <code class="sig-name descname">d_semantic_reduce_types</code><span class="sig-paren">(</span><a class="reference internal" href="../common_data_structures/index.html#_CPPv45Sheet" title="Sheet">Sheet</a> *<em>sheet</em><span class="sig-paren">)</span><br /></dt>
 <dd><p>Take the connections of a sheet which may have “vague” connections, and reduce them to unique types with the information we have. </p>
 <p>e.g. If <code class="docutils literal notranslate"><span class="pre">Multiply</span></code> has at least one <code class="docutils literal notranslate"><span class="pre">Float</span></code> input, the output must be a <code class="docutils literal notranslate"><span class="pre">Float</span></code>.</p>
 <p><dl class="simple">
@@ -468,11 +414,54 @@ the integer 00000110 represents Integer | Float, since both the Integer bit
 Therefore, if two data types are compatible, then at least one base data type
 has to be present in both data types - so we can <strong>bitwise AND</strong> both data
 types, and hope to god we don’t get 0, i.e.</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">type1</span> <span class="o">&amp;</span> <span class="n">type</span> <span class="mi">2</span><span class="p">)</span> <span class="o">!=</span> <span class="n">TYPE_NONE</span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">type1</span> <span class="o">&amp;</span> <span class="n">type2</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span>
 </pre></div>
 </div>
-<p>Feel free to look at <code class="docutils literal notranslate"><span class="pre">dtype.h</span></code> to see the enumerator of data types,
-<code class="docutils literal notranslate"><span class="pre">DType</span></code>.</p>
+<p>Here is what the <code class="docutils literal notranslate"><span class="pre">DType</span></code> enum looks like:</p>
+<dl class="enum">
+<dt>
+<em class="property">enum </em><code class="sig-name descname">_dType</code><br /></dt>
+<dd><p>An enum for the data types in Decision. </p>
+<p>The values go up in powers of 2. This is so that we can combine data types to make <em>vague</em> data types, e.g. a number is <code class="docutils literal notranslate"><span class="pre">TYPE_INTEGER</span> <span class="pre">|</span> <span class="pre">TYPE_FLOAT</span></code>.</p>
+<p>Note that there are several macros for common vague data types, e.g. <code class="docutils literal notranslate"><span class="pre">TYPE_NUMBER</span></code>, <code class="docutils literal notranslate"><span class="pre">TYPE_BITWISE</span></code>, <code class="docutils literal notranslate"><span class="pre">TYPE_VAR_ANY</span></code>, … </p>
+<p><em>Values:</em></p>
+<dl class="enumerator">
+<dt>
+<code class="sig-name descname">TYPE_NONE</code> = 0<br /></dt>
+<dd></dd></dl>
+
+<dl class="enumerator">
+<dt>
+<code class="sig-name descname">TYPE_EXECUTION</code> = 1<br /></dt>
+<dd></dd></dl>
+
+<dl class="enumerator">
+<dt>
+<code class="sig-name descname">TYPE_INT</code> = 2<br /></dt>
+<dd></dd></dl>
+
+<dl class="enumerator">
+<dt>
+<code class="sig-name descname">TYPE_FLOAT</code> = 4<br /></dt>
+<dd></dd></dl>
+
+<dl class="enumerator">
+<dt>
+<code class="sig-name descname">TYPE_STRING</code> = 8<br /></dt>
+<dd></dd></dl>
+
+<dl class="enumerator">
+<dt>
+<code class="sig-name descname">TYPE_BOOL</code> = 16<br /></dt>
+<dd></dd></dl>
+
+<dl class="enumerator">
+<dt>
+<code class="sig-name descname">TYPE_NAME</code> = 32<br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </div>
 <div class="section" id="detecting-loops">
 <h2>Detecting Loops<a class="headerlink" href="#detecting-loops" title="Permalink to this headline">¶</a></h2>
@@ -495,7 +484,7 @@ cycles bit is tricky…</p>
 that have no connections, i.e. <em>redundant</em> nodes.</p>
 <dl class="function">
 <dt>
-void <code class="sig-name descname">d_semantic_detect_loops</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv46_sheet" title="_sheet">_sheet</a> *<em>sheet</em><span class="sig-paren">)</span><br /></dt>
+void <code class="sig-name descname">d_semantic_detect_loops</code><span class="sig-paren">(</span><a class="reference internal" href="../common_data_structures/index.html#_CPPv45Sheet" title="Sheet">Sheet</a> *<em>sheet</em><span class="sig-paren">)</span><br /></dt>
 <dd><p>After a sheet has been connected in <code class="docutils literal notranslate"><span class="pre">d_semantic_scan_nodes</span></code>, go through the sheet and see if there are any loops. </p>
 <p>“Loops are bad, and should be given coal at christmas.”</p>
 <p>In retrospect, this was a bad quote. Instead, give it something that won’t cause climate change, like a really cheap sticker.</p>
@@ -509,33 +498,42 @@ void <code class="sig-name descname">d_semantic_detect_loops</code><span class="
 </p>
 </dd></dl>
 
-<p>Takes <code class="docutils literal notranslate"><span class="pre">sheet</span></code> and detects if there are any loops in it. We also warn the
-user of any redundant nodes while we’re checking for loops as well.</p>
 <p>This function goes through all of the nodes and finds nodes with no input
 sockets (except for names). These nodes are the start of a path of execution.
-We each of these nodes, we call the function:</p>
+We each of these nodes, we enter a function with the node with no input sockets
+<code class="docutils literal notranslate"><span class="pre">start</span></code>, we get the outputs of the node and recursively call the function
+again, and again. We are essentially checking every possible path through the
+graph from the starting node using depth-first search. As we are checking each
+path, we are adding the latest node into <code class="docutils literal notranslate"><span class="pre">pathArray</span></code>, which acts as a stack,
+and represents the current path we’ve taken. Thus, if the node we’ve just added
+is already in <code class="docutils literal notranslate"><span class="pre">pathArray</span></code>, we have a cycle!</p>
+</div>
+<div class="section" id="checking-subroutine-returns">
+<h2>Checking Subroutine Returns<a class="headerlink" href="#checking-subroutine-returns" title="Permalink to this headline">¶</a></h2>
+<p>Last but not least, once we have verified that there are no loops in the graph,
+we need to check that every subroutine in the sheet has a Return node at the
+end of every possible execution path.</p>
+<p>The reason we need to check this is because execution paths can <em>branch</em>, e.g.
+with an IfThenElse node. If an execution path doesn’t end with a Return, then
+we don’t know what return values the subroutine should return!</p>
+<p>Functions don’t have this problem, as they have one and only one Return node.</p>
+<p>This check is done with the function:</p>
 <dl class="function">
 <dt>
-void <code class="sig-name descname">d_semantic_detect_loops</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv46_sheet" title="_sheet">_sheet</a> *<em>sheet</em><span class="sig-paren">)</span><br /></dt>
-<dd><p>After a sheet has been connected in <code class="docutils literal notranslate"><span class="pre">d_semantic_scan_nodes</span></code>, go through the sheet and see if there are any loops. </p>
-<p>“Loops are bad, and should be given coal at christmas.”</p>
-<p>In retrospect, this was a bad quote. Instead, give it something that won’t cause climate change, like a really cheap sticker.</p>
-<p>While we are here, we also check to see if there are any redundant nodes.</p>
+void <code class="sig-name descname">d_semantic_check_subroutine_returns</code><span class="sig-paren">(</span><a class="reference internal" href="../common_data_structures/index.html#_CPPv45Sheet" title="Sheet">Sheet</a> *<em>sheet</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>After a sheet has been checked for loops with <code class="docutils literal notranslate"><span class="pre">d_semantic_detect_loops</span></code>, check to see if all execution paths from the Define of a subroutine end with a Return. </p>
 <p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">sheet</span></code>: The connected sheet to check for loops. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sheet</span></code>: The sheet to check. </p></li>
 </ul>
 </dd>
 </dl>
 </p>
 </dd></dl>
 
-<p>With the node with no input sockets <code class="docutils literal notranslate"><span class="pre">start</span></code>, we get the outputs of the node
-and recursively call the function again, and again. We are essentially
-checking every possible path through the graph from the starting node. As we
-are checking each path, we are adding the latest node into <code class="docutils literal notranslate"><span class="pre">pathArray</span></code>,
-which acts as a stack, and represents the current path we’ve taken. Thus, if
-the node we’ve just added is already in <code class="docutils literal notranslate"><span class="pre">pathArray</span></code>, we have a cycle!</p>
+<p>It calls a recursive function that checks every possible execution path with
+depth-first search, similar to how <code class="docutils literal notranslate"><span class="pre">d_semantic_detect_loops</span></code> works, but this
+time it only traverses execution wires.</p>
 </div>
 <div class="section" id="conclusion">
 <h2>Conclusion<a class="headerlink" href="#conclusion" title="Permalink to this headline">¶</a></h2>
@@ -544,12 +542,14 @@ good samaritan would have put all of the above and wrapped it up in a nice,
 cosy function for everyone to use?</p>
 <dl class="function">
 <dt>
-void <code class="sig-name descname">d_semantic_scan</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv46_sheet" title="_sheet">_sheet</a> *<em>sheet</em>, <em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv411_syntaxNode" title="_syntaxNode">_syntaxNode</a> *<em>root</em><span class="sig-paren">)</span><br /></dt>
+void <code class="sig-name descname">d_semantic_scan</code><span class="sig-paren">(</span><a class="reference internal" href="../common_data_structures/index.html#_CPPv45Sheet" title="Sheet">Sheet</a> *<em>sheet</em>, <a class="reference internal" href="../reference/index.html#_CPPv410SyntaxNode" title="SyntaxNode">SyntaxNode</a> *<em>root</em>, <a class="reference internal" href="../common_data_structures/index.html#_CPPv45Sheet" title="Sheet">Sheet</a> **<em>priors</em>, bool <em>debugIncluded</em><span class="sig-paren">)</span><br /></dt>
 <dd><p>Perform Semantic Analysis on a syntax tree. </p>
 <p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">sheet</span></code>: The sheet to put everything into. </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">root</span></code>: The <em>valid</em> syntax tree to scan everything from. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">priors</span></code>: A NULL-terminated list of sheets that, if included, will produce an error. This is to prevent circular includes. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">debugIncluded</span></code>: If true, compile any included sheets in debug mode. </p></li>
 </ul>
 </dd>
 </dl>
@@ -579,7 +579,7 @@ void <code class="sig-name descname">d_semantic_scan</code><span class="sig-pare
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Benjamin Beddows
+        &copy; Copyright 2019-2020, Benjamin Beddows
 
     </p>
   </div>

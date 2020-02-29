@@ -1,0 +1,1 @@
+/usr/bin/cc   -rdynamic CMakeFiles/decision.dir/dmain.c.o  -o ../decision  ../libdecision.a 

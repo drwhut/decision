@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Optimisation &mdash; Decision 0.2.0 documentation</title>
+  <title>Optimisation &mdash; Decision 0.3.0 documentation</title>
   
 
   
@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -84,6 +84,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../the_language/index.html">The Language</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../common_data_structures/index.html">Common Data Structures</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">The Stages of Compilation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="lexical_analysis.html">Lexical Analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="syntax_analysis.html">Syntax Analysis</a></li>
@@ -180,14 +181,21 @@ changing it so it is simpler or simply by removing redundant instructions.</p>
 <p>Here is a really basic example of optimisation (this should actually be
 reduced in the code):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#      Instruction</span>
-<span class="mi">41</span> <span class="o">...</span> <span class="n">AND</span> <span class="n">r0</span><span class="p">,</span> <span class="n">r1</span>
-<span class="mi">42</span> <span class="o">...</span> <span class="n">NOT</span> <span class="n">r0</span>
-<span class="mi">43</span> <span class="o">...</span> <span class="n">NOT</span> <span class="n">r0</span>
-<span class="mi">44</span> <span class="o">...</span> <span class="n">JRCON</span> <span class="n">r0</span><span class="p">,</span> <span class="mh">0x43</span>
+<span class="mi">41</span> <span class="o">...</span> <span class="n">AND</span>
+<span class="mi">42</span> <span class="o">...</span> <span class="n">NOT</span>
+<span class="mi">43</span> <span class="o">...</span> <span class="n">NOT</span>
+<span class="mi">44</span> <span class="o">...</span> <span class="n">JRCON</span>
 </pre></div>
 </div>
 <p>There is no point in those 2 NOT instructions being there, they cancel each
 other out!</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Another example is since code generation, for simplicity, only works with
+full immediate variations of instructions, optimisation tries to reduce
+those instructions to half or byte immediate variations of the same
+instruction.</p>
+</div>
 <div class="section" id="implementation">
 <h2>Implementation<a class="headerlink" href="#implementation" title="Permalink to this headline">¶</a></h2>
 <p>Each “situation” like the example above is in its own function in
@@ -195,7 +203,7 @@ other out!</p>
 situations in the code, and reduces the bytecode using a helper function:</p>
 <dl class="function">
 <dt>
-void <code class="sig-name descname">d_optimize_remove_bytecode</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv46_sheet" title="_sheet">_sheet</a> *<em>sheet</em>, size_t <em>start</em>, size_t <em>len</em><span class="sig-paren">)</span><br /></dt>
+void <code class="sig-name descname">d_optimize_remove_bytecode</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../common_data_structures/index.html#_CPPv46_sheet" title="_sheet">_sheet</a> *<em>sheet</em>, size_t <em>start</em>, size_t <em>len</em><span class="sig-paren">)</span><br /></dt>
 <dd><p>Remove a section of bytecode, and make any adjustments to the data that is nessesary. </p>
 <p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
@@ -217,7 +225,7 @@ bytecode is removed, but only if bytecode was removed.</p>
 <p>All of the optimisations are attempted in one big helper function:</p>
 <dl class="function">
 <dt>
-void <code class="sig-name descname">d_optimize_all</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../reference/index.html#_CPPv46_sheet" title="_sheet">_sheet</a> *<em>sheet</em><span class="sig-paren">)</span><br /></dt>
+void <code class="sig-name descname">d_optimize_all</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../common_data_structures/index.html#_CPPv46_sheet" title="_sheet">_sheet</a> *<em>sheet</em><span class="sig-paren">)</span><br /></dt>
 <dd><p>Try and optimise all possible senarios. </p>
 <p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
@@ -251,7 +259,7 @@ void <code class="sig-name descname">d_optimize_all</code><span class="sig-paren
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Benjamin Beddows
+        &copy; Copyright 2019-2020, Benjamin Beddows
 
     </p>
   </div>

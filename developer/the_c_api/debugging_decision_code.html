@@ -1,0 +1,479 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Debugging Decision Code &mdash; Decision 0.3.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Reference" href="../reference/index.html" />
+    <link rel="prev" title="Running C from Decision" href="running_c_from_decision.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Decision
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../the_language/index.html">The Language</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../common_data_structures/index.html">Common Data Structures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../the_stages_of_compilation/index.html">The Stages of Compilation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../linking/index.html">Linking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../the_virtual_machine/index.html">The Virtual Machine</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">The C API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="embedding_decision.html">Embedding Decision</a></li>
+<li class="toctree-l2"><a class="reference internal" href="running_decision_from_c.html">Running Decision from C</a></li>
+<li class="toctree-l2"><a class="reference internal" href="running_c_from_decision.html">Running C from Decision</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Debugging Decision Code</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#compiling-in-debug-mode">Compiling in Debug Mode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#debugging-agendas">Debugging Agendas</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#breakpoints">Breakpoints</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#debugging-sessions">Debugging Sessions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#partial-example">Partial Example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Decision</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">The C API</a> &raquo;</li>
+        
+      <li>Debugging Decision Code</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/the_c_api/debugging_decision_code.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="debugging-decision-code">
+<h1>Debugging Decision Code<a class="headerlink" href="#debugging-decision-code" title="Permalink to this headline">¶</a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If you are embedding into a C++ program, it is very, very recommended that
+when you include a C header file, you encapsulate it with an <code class="docutils literal notranslate"><span class="pre">extern</span></code>
+block, like so:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">extern</span> <span class="s">&quot;C&quot;</span> <span class="p">{</span>
+    <span class="cp">#include</span> <span class="cpf">&lt;decision.h&gt;</span><span class="cp"></span>
+    <span class="cp">#include</span> <span class="cpf">&lt;dsheet.h&gt;</span><span class="cp"></span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>As of the 0.3.0 update, you can debug Decision code through the C API!
+This means that when you compile Decision code in <strong>debug mode</strong> (more on this
+later), you can tell the debugger to tell you when:</p>
+<ul class="simple">
+<li><p>A non-execution wire transfers a value from one socket to another, and what
+the value transfered was.</p></li>
+<li><p>An execution wire activates.</p></li>
+<li><p>A node activates.</p></li>
+<li><p>A node calls a function or subroutine.</p></li>
+<li><p>A function or subroutine returns.</p></li>
+</ul>
+<p>You can also set breakpoints which, when hit, will pause the debugger.</p>
+<ul class="simple">
+<li><p>Node breakpoints are hit when the node is activated.</p></li>
+<li><p>Wire breakpoints are hit when:</p>
+<ul>
+<li><p>A value is transfered if the wire is a non-execution wire.</p></li>
+<li><p>The wire is activated if the wire is an execution wire.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="compiling-in-debug-mode">
+<h2>Compiling in Debug Mode<a class="headerlink" href="#compiling-in-debug-mode" title="Permalink to this headline">¶</a></h2>
+<p>In order to debug a sheet, you need to compile the sheet in <strong>debug mode</strong>.
+This will make a couple of changes to the compilation process:</p>
+<ul class="simple">
+<li><p>When generating the bytecode, the code generator will also store debugging
+information alongside the bytecode, e.g. where a node starts in bytecode,
+which instructions call functions, etc.</p></li>
+<li><p>Optimisation will no longer occur. This is because we don’t want to lose
+debugging information. For example, say there are two consecutive <code class="docutils literal notranslate"><span class="pre">NOT</span></code>
+instructions in the bytecode, made from two <code class="docutils literal notranslate"><span class="pre">Not</span></code> nodes in the Decision
+code. Optimisation would usually remove these instructions, but when
+debugging, we still want to know when those two <code class="docutils literal notranslate"><span class="pre">Not</span></code> nodes activate!</p></li>
+</ul>
+<p>To compile a sheet in debug mode, you need to set the <code class="docutils literal notranslate"><span class="pre">debug</span></code> property in a
+<code class="docutils literal notranslate"><span class="pre">CompileOptions</span></code> structure:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">CompileOptions</span> <span class="n">options</span> <span class="o">=</span> <span class="n">DEFAULT_COMPILE_OPTIONS</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">debug</span>          <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+
+<span class="c1">// This sheet will now be compiled in debug mode.</span>
+<span class="n">Sheet</span> <span class="o">*</span><span class="n">sheet</span> <span class="o">=</span> <span class="n">d_load_file</span><span class="p">(</span><span class="s">&quot;debug.dc&quot;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">options</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="debugging-agendas">
+<h2>Debugging Agendas<a class="headerlink" href="#debugging-agendas" title="Permalink to this headline">¶</a></h2>
+<p>Agendas describe what you want to happen when certain events occur during the
+debugging process. In code, they are in the form of function pointers:</p>
+<dl class="type">
+<dt>
+<em class="property">typedef </em>void (*<code class="sig-name descname">OnWireValue</code>)<span class="sig-paren">(</span><a class="reference internal" href="../common_data_structures/index.html#_CPPv45Sheet" title="Sheet">Sheet</a> *sheet, <a class="reference internal" href="../common_data_structures/index.html#_CPPv44Wire" title="Wire">Wire</a> wire, <a class="reference internal" href="../common_data_structures/index.html#_CPPv45DType" title="DType">DType</a> type, <a class="reference internal" href="../common_data_structures/index.html#_CPPv47LexData" title="LexData">LexData</a> value<span class="sig-paren">)</span><br /></dt>
+<dd><p>Called when a value is transfered over a wire during a debugging session. </p>
+</dd></dl>
+
+<dl class="type">
+<dt>
+<em class="property">typedef </em>void (*<code class="sig-name descname">OnExecutionWire</code>)<span class="sig-paren">(</span><a class="reference internal" href="../common_data_structures/index.html#_CPPv45Sheet" title="Sheet">Sheet</a> *sheet, <a class="reference internal" href="../common_data_structures/index.html#_CPPv44Wire" title="Wire">Wire</a> wire<span class="sig-paren">)</span><br /></dt>
+<dd><p>Called when an execution wire is activated during a debugging session. </p>
+</dd></dl>
+
+<dl class="type">
+<dt>
+<em class="property">typedef </em>void (*<code class="sig-name descname">OnNodeActivated</code>)<span class="sig-paren">(</span><a class="reference internal" href="../common_data_structures/index.html#_CPPv45Sheet" title="Sheet">Sheet</a> *sheet, size_t nodeIndex<span class="sig-paren">)</span><br /></dt>
+<dd><p>Called when a node is activated during a debugging session. </p>
+</dd></dl>
+
+<dl class="type">
+<dt>
+<em class="property">typedef </em>void (*<code class="sig-name descname">OnCall</code>)<span class="sig-paren">(</span><a class="reference internal" href="../common_data_structures/index.html#_CPPv45Sheet" title="Sheet">Sheet</a> *sheet, <em class="property">const</em> <a class="reference internal" href="../common_data_structures/index.html#_CPPv414NodeDefinition" title="NodeDefinition">NodeDefinition</a> *funcDef, bool isC<span class="sig-paren">)</span><br /></dt>
+<dd><p>Called when a call occurs during a debugging session. </p>
+</dd></dl>
+
+<dl class="type">
+<dt>
+<em class="property">typedef </em>void (*<code class="sig-name descname">OnReturn</code>)<span class="sig-paren">(</span><span class="sig-paren">)</span><br /></dt>
+<dd><p>Called when a return occurs during a debugging session. </p>
+</dd></dl>
+
+<p>Once you have functions in the above forms, you can then add them to a
+<code class="docutils literal notranslate"><span class="pre">DebugAgenda</span></code> structure:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">DebugAgenda</span> <span class="n">agenda</span>      <span class="o">=</span> <span class="n">NO_AGENDA</span><span class="p">;</span>
+<span class="n">agenda</span><span class="p">.</span><span class="n">onWireValue</span>      <span class="o">=</span> <span class="o">&amp;</span><span class="n">onWireValue</span><span class="p">;</span>
+<span class="n">agenda</span><span class="p">.</span><span class="n">onExecutionWire</span>  <span class="o">=</span> <span class="o">&amp;</span><span class="n">onExecutionWire</span><span class="p">;</span>
+<span class="n">agenda</span><span class="p">.</span><span class="n">onNodedActivated</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">onNodeActivated</span><span class="p">;</span>
+<span class="n">agenda</span><span class="p">.</span><span class="n">onCall</span>           <span class="o">=</span> <span class="o">&amp;</span><span class="n">onCall</span><span class="p">;</span>
+<span class="n">agenda</span><span class="p">.</span><span class="n">onReturn</span>         <span class="o">=</span> <span class="o">&amp;</span><span class="n">onReturn</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="section" id="breakpoints">
+<h3>Breakpoints<a class="headerlink" href="#breakpoints" title="Permalink to this headline">¶</a></h3>
+<p>If you want to set breakpoints, you can specify where you want the breakpoints
+to be set:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">DebugNodeBreakpoint</span> <span class="n">nodeBreaks</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="p">{</span><span class="n">sheet</span><span class="p">,</span> <span class="mi">2</span><span class="p">},</span> <span class="c1">// The 3rd node in the sheet.</span>
+    <span class="p">{</span><span class="nb">NULL</span><span class="p">,</span> <span class="mi">0</span><span class="p">}</span>   <span class="c1">// Array needs to end with a NULL entry!</span>
+<span class="p">};</span>
+
+<span class="n">DebugWireBreakpoint</span> <span class="n">wireBreaks</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="p">{</span><span class="n">sheet</span><span class="p">,</span> <span class="p">{{</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">},</span> <span class="p">{</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">}}},</span> <span class="c1">// The wire that goes from the 3rd socket of</span>
+                               <span class="c1">// the 3rd node to the 2nd socket of the 4th</span>
+                               <span class="c1">// node.</span>
+    <span class="p">{</span><span class="nb">NULL</span><span class="p">,</span> <span class="p">{{</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">},</span> <span class="p">{</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">}}}</span>   <span class="c1">// Array needs to end with a NULL entry!</span>
+<span class="p">};</span>
+
+<span class="c1">// Don&#39;t forget to add them to the agenda!</span>
+<span class="n">agenda</span><span class="p">.</span><span class="n">nodeBreakpoints</span> <span class="o">=</span> <span class="n">nodeBreaks</span><span class="p">;</span>
+<span class="n">agenda</span><span class="p">.</span><span class="n">wireBreakpoints</span> <span class="o">=</span> <span class="n">wireBreaks</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Then, you can tell the debugger to let you know when the breakpoints are hit
+with the given function pointers:</p>
+<dl class="type">
+<dt>
+<em class="property">typedef </em>void (*<code class="sig-name descname">OnNodeBreakpoint</code>)<span class="sig-paren">(</span><a class="reference internal" href="../common_data_structures/index.html#_CPPv45Sheet" title="Sheet">Sheet</a> *sheet, size_t nodeIndex<span class="sig-paren">)</span><br /></dt>
+<dd><p>Called when a node breakpoint is hit. </p>
+</dd></dl>
+
+<dl class="type">
+<dt>
+<em class="property">typedef </em>void (*<code class="sig-name descname">OnWireBreakpoint</code>)<span class="sig-paren">(</span><a class="reference internal" href="../common_data_structures/index.html#_CPPv45Sheet" title="Sheet">Sheet</a> *sheet, <a class="reference internal" href="../common_data_structures/index.html#_CPPv44Wire" title="Wire">Wire</a> wire<span class="sig-paren">)</span><br /></dt>
+<dd><p>Called when a wire breakpoint is hit. </p>
+</dd></dl>
+
+<p>Then you can add them to the agenda:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">agenda</span><span class="p">.</span><span class="n">onNodeBreakpoint</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">onNodeBreakpoint</span><span class="p">;</span>
+<span class="n">agenda</span><span class="p">.</span><span class="n">onWireBreakpoint</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">onWireBreakpoint</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="debugging-sessions">
+<h2>Debugging Sessions<a class="headerlink" href="#debugging-sessions" title="Permalink to this headline">¶</a></h2>
+<p>To create a debugging session, use:</p>
+<dl class="function">
+<dt>
+<a class="reference internal" href="../reference/index.html#_CPPv412DebugSession" title="DebugSession">DebugSession</a> <code class="sig-name descname">d_debug_create_session</code><span class="sig-paren">(</span><em class="property">struct</em> <a class="reference internal" href="../common_data_structures/index.html#_CPPv46_sheet" title="_sheet">_sheet</a> *<em>sheet</em>, <a class="reference internal" href="../reference/index.html#_CPPv411DebugAgenda" title="DebugAgenda">DebugAgenda</a> <em>agenda</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Create a debugging session. </p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>A debugging session in it’s starting state.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sheet</span></code>: The sheet to debug. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">agenda</span></code>: The agenda the session should use. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<p>You can then start/continue a debugging session with:</p>
+<dl class="function">
+<dt>
+bool <code class="sig-name descname">d_debug_continue_session</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv412DebugSession" title="DebugSession">DebugSession</a> *<em>session</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Continue a debugging session until either a breakpoint is hit, or the VM halts. </p>
+<p><dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>True if the debugger hit a breakpoint, false if the VM halted.</p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">session</span></code>: The session to continue. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>You can put <code class="docutils literal notranslate"><span class="pre">d_debug_continue_session</span></code> as the condition of a while loop!
+This way, the session will continue until the sheet exits, and you can
+process something after each breakpoint hit!</p>
+</div>
+<p>Once you are done debugging, you should use:</p>
+<dl class="function">
+<dt>
+void <code class="sig-name descname">d_debug_stop_session</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv412DebugSession" title="DebugSession">DebugSession</a> *<em>session</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Stop a debugging session, freeing all of the memory malloc’d by the session. The session should not be used afterwards. </p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">session</span></code>: The session to stop. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+</div>
+<div class="section" id="partial-example">
+<h2>Partial Example<a class="headerlink" href="#partial-example" title="Permalink to this headline">¶</a></h2>
+<p>This example just prints out when nodes get activated.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;ddebug.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;decision.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;dsheet.h&gt;</span><span class="cp"></span>
+
+<span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+
+<span class="kt">void</span> <span class="nf">onNodeActivated</span><span class="p">(</span><span class="n">Sheet</span> <span class="o">*</span><span class="n">sheet</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">nodeIndex</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">Node</span> <span class="n">node</span> <span class="o">=</span> <span class="n">sheet</span><span class="o">-&gt;</span><span class="n">graph</span><span class="p">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">nodeIndex</span><span class="p">];</span>
+    <span class="k">const</span> <span class="n">NodeDefinition</span> <span class="o">*</span><span class="n">nodeDef</span> <span class="o">=</span> <span class="n">node</span><span class="p">.</span><span class="n">definition</span><span class="p">;</span>
+
+    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Debug&gt; Node %s on line %zu in sheet %s has been activated!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+        <span class="n">nodeDef</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">,</span> <span class="n">node</span><span class="p">.</span><span class="n">lineNum</span><span class="p">,</span> <span class="n">sheet</span><span class="o">-&gt;</span><span class="n">filePath</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// Load the sheet in debug mode.</span>
+    <span class="n">CompileOptions</span> <span class="n">options</span> <span class="o">=</span> <span class="n">DEFAULT_COMPILE_OPTIONS</span><span class="p">;</span>
+    <span class="n">options</span><span class="p">.</span><span class="n">debug</span>          <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+
+    <span class="n">Sheet</span> <span class="o">*</span><span class="n">sheet</span> <span class="o">=</span> <span class="n">d_load_file</span><span class="p">(</span><span class="s">&quot;debug.dc&quot;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">options</span><span class="p">);</span>
+
+    <span class="c1">// Set up the debugging agenda.</span>
+    <span class="n">DebugAgenda</span> <span class="n">agenda</span>     <span class="o">=</span> <span class="n">NO_AGENDA</span><span class="p">;</span>
+    <span class="n">agenda</span><span class="p">.</span><span class="n">onNodeActivated</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">onNodeActivated</span><span class="p">;</span>
+
+    <span class="c1">// Create the session.</span>
+    <span class="n">DebugSession</span> <span class="n">session</span> <span class="o">=</span> <span class="n">d_debug_create_session</span><span class="p">(</span><span class="n">sheet</span><span class="p">,</span> <span class="n">agenda</span><span class="p">);</span>
+
+    <span class="c1">// Keep continuing the session until the sheet exits.</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">d_debug_continue_session</span><span class="p">(</span><span class="o">&amp;</span><span class="n">session</span><span class="p">))</span> <span class="p">{</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Debug&gt; A breakpoint was hit!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Once we&#39;re done, stop the session.</span>
+    <span class="n">d_debug_stop_session</span><span class="p">(</span><span class="o">&amp;</span><span class="n">session</span><span class="p">);</span>
+
+    <span class="c1">// Free the sheet.</span>
+    <span class="n">d_sheet_free</span><span class="p">(</span><span class="n">sheet</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>To see a full example that uses all of the capabilities of the debugger, feel
+free to look at <code class="docutils literal notranslate"><span class="pre">tests/c/debugging.c</span></code>!</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../reference/index.html" class="btn btn-neutral float-right" title="Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="running_c_from_decision.html" class="btn btn-neutral float-left" title="Running C from Decision" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019-2020, Benjamin Beddows
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

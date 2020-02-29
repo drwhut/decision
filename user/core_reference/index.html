@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Core Reference &mdash; Decision 0.2.0 documentation</title>
+  <title>Core Reference &mdash; Decision 0.3.0 documentation</title>
   
 
   
@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -84,9 +84,132 @@
 <li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started/index.html">Getting Started</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Core Reference</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#core-functions">Core Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#core-subroutines">Core Subroutines</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#core-properties">Core Properties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#functions">Core Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Add">Add</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Add-inputs">Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Add-outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#And">And</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#And-inputs">Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#And-outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Div">Div</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Div-inputs">Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Div-outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Divide">Divide</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Divide-inputs">Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Divide-outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Equal">Equal</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Equal-inputs">Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Equal-outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Length">Length</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Length-inputs">Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Length-outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#LessThan">LessThan</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#LessThan-inputs">Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#LessThan-outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#LessThanOrEqual">LessThanOrEqual</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#LessThanOrEqual-inputs">Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#LessThanOrEqual-outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Mod">Mod</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Mod-inputs">Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Mod-outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#MoreThan">MoreThan</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#MoreThan-inputs">Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MoreThan-outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#MoreThanOrEqual">MoreThanOrEqual</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#MoreThanOrEqual-inputs">Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#MoreThanOrEqual-outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Multiply">Multiply</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Multiply-inputs">Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Multiply-outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Not">Not</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Not-inputs">Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Not-outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#NotEqual">NotEqual</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#NotEqual-inputs">Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#NotEqual-outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Or">Or</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Or-inputs">Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Or-outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Subtract">Subtract</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Subtract-inputs">Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Subtract-outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Ternary">Ternary</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Ternary-inputs">Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Ternary-outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Xor">Xor</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Xor-inputs">Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Xor-outputs">Outputs</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#subroutines">Core Subroutines</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#For">For</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#For-inputs">Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#For-outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#IfThen">IfThen</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#IfThen-inputs">Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#IfThen-outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#IfThenElse">IfThenElse</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#IfThenElse-inputs">Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#IfThenElse-outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Print">Print</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Print-inputs">Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Print-outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Set">Set</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Set-inputs">Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Set-outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#While">While</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#While-inputs">Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#While-outputs">Outputs</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -155,364 +278,429 @@
             
   <div class="section" id="core-reference">
 <h1>Core Reference<a class="headerlink" href="#core-reference" title="Permalink to this headline">¶</a></h1>
-<div class="admonition-todo admonition" id="id1">
-<p class="admonition-title">Todo</p>
-<p>This page was created manually.
-Find a suitable method to automatically generate this page.</p>
+<div class="section" id="functions">
+<h2>Core Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="Add">
+<h3>Add<a class="headerlink" href="#Add" title="Permalink to this headline">¶</a></h3>
+<p>Calculate the addition of two or more numbers.</p>
+<p>This node allows for an infinite number of inputs.</p>
+<div class="section" id="Add-inputs">
+<h4>Inputs<a class="headerlink" href="#Add-inputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>number (Number; Integer/Float): A number to be used in the addition.</p></li>
+<li><p>number (Number; Integer/Float): A number to be used in the addition.</p></li>
+</ol>
 </div>
-<div class="section" id="core-functions">
-<h2>Core Functions<a class="headerlink" href="#core-functions" title="Permalink to this headline">¶</a></h2>
-<dl>
-<dt><code class="docutils literal notranslate"><span class="pre">Add</span></code></dt><dd><p>Calculate the addition of all number inputs.</p>
-<p>Inputs:</p>
-<ul class="simple">
-<li><p>Any number of <code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code> inputs.</p></li>
-</ul>
-<p>Outputs:</p>
-<ol class="arabic simple">
-<li><p>The addition of all of the inputs. Is a <code class="docutils literal notranslate"><span class="pre">Float</span></code> if at least one of
-the inputs was a <code class="docutils literal notranslate"><span class="pre">Float</span></code>, otherwise it is an <code class="docutils literal notranslate"><span class="pre">Integer</span></code>.</p></li>
+<div class="section" id="Add-outputs">
+<h4>Outputs<a class="headerlink" href="#Add-outputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>output (Number; Integer/Float): The addition of all the inputs.</p></li>
 </ol>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">And</span></code></dt><dd><p>Output the bitwise AND of two boolean values.</p>
-<p>Inputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The first boolean.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The second boolean.</p></li>
-</ol>
-<p>Outputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The bitwise AND of the two inputs.</p></li>
-</ol>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">Div</span></code></dt><dd><p>Take the division of two numbers, and truncate the answer.</p>
-<p>Inputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>: The numerator.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>: The denominator.</p></li>
-</ol>
-<p>Outputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>: The truncated division.</p></li>
-</ol>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">Divide</span></code></dt><dd><p>Take the division of two numbers.</p>
-<p>Inputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>: The numerator.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>: The denominator.</p></li>
-</ol>
-<p>Outputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Float</span></code>: The division.</p></li>
-</ol>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">Equal</span></code></dt><dd><p>Check if two numbers or two strings are equal in value.</p>
-<p>Inputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>: The first value.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>: The second value.</p></li>
-</ol>
-<p>Outputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: <code class="docutils literal notranslate"><span class="pre">true</span></code> if the values were equal, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p></li>
-</ol>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">LessThan</span></code></dt><dd><p>Check if a number or string is less in value than a second number or
-string.</p>
-<p>Inputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>: The first value.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>: The second value.</p></li>
-</ol>
-<p>Outputs:</p>
-<p>1. <code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: <code class="docutils literal notranslate"><span class="pre">true</span></code> if the first value was less than the second,
-<code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">LessThanOrEqual</span></code></dt><dd><p>Check if a number or string is less than or equal in value than a second
-number or string.</p>
-<p>Inputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>: The first value.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>: The second value.</p></li>
-</ol>
-<p>Outputs:</p>
-<p>1. <code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: <code class="docutils literal notranslate"><span class="pre">true</span></code> if the first value was less than or equal to the
-second, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">Mod</span></code></dt><dd><p>Calculate the remainder after division of two integers.</p>
-<p>Inputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>: The numerator.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>: The denominator.</p></li>
-</ol>
-<p>Outputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>: The remainder after division.</p></li>
-</ol>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">MoreThan</span></code></dt><dd><p>Check if a number or string is more in value than a second number or
-string.</p>
-<p>Inputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>: The first value.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>: The second value.</p></li>
-</ol>
-<p>Outputs:</p>
-<p>1. <code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: <code class="docutils literal notranslate"><span class="pre">true</span></code> if the first value was more than the second,
-<code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">MoreThanOrEqual</span></code></dt><dd><p>Check if a number or string is more than or equal in value than a second
-number or string.</p>
-<p>Inputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>: The first value.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>: The second value.</p></li>
-</ol>
-<p>Outputs:</p>
-<p>1. <code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: <code class="docutils literal notranslate"><span class="pre">true</span></code> if the first value was more than or equal to the
-second, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">Multiply</span></code></dt><dd><p>Calculate the multiplication of all number inputs.</p>
-<p>Inputs:</p>
-<ul class="simple">
-<li><p>Any number of <code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code> inputs.</p></li>
-</ul>
-<p>Outputs:</p>
-<ol class="arabic simple">
-<li><p>The multiplication of all of the inputs. Is a <code class="docutils literal notranslate"><span class="pre">Float</span></code> if at least one
-of the inputs was a <code class="docutils literal notranslate"><span class="pre">Float</span></code>, otherwise it is an <code class="docutils literal notranslate"><span class="pre">Integer</span></code>.</p></li>
-</ol>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">Not</span></code></dt><dd><p>Output the bitwise NOT of a boolean input.</p>
-<p>Inputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The input.</p></li>
-</ol>
-<p>Outputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The inverse of the input.</p></li>
-</ol>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">NotEqual</span></code></dt><dd><p>Check if two numbers or two strings are not equal in value.</p>
-<p>Inputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>: The first value.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>: The second value.</p></li>
-</ol>
-<p>Outputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: <code class="docutils literal notranslate"><span class="pre">true</span></code> if the values were not equal, <code class="docutils literal notranslate"><span class="pre">false</span></code>
-otherwise.</p></li>
-</ol>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">Or</span></code></dt><dd><p>Output the bitwise OR of two boolean values.</p>
-<p>Inputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The first boolean.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The second boolean.</p></li>
-</ol>
-<p>Outputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The bitwise OR of the two inputs.</p></li>
-</ol>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">Subtract</span></code></dt><dd><p>Take the subtraction of two numbers.</p>
-<p>Inputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>: The first number.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>: The second number.</p></li>
-</ol>
-<p>Outputs:</p>
-<ol class="arabic simple">
-<li><p>The subtraction of the second number from the first number. Is a
-<code class="docutils literal notranslate"><span class="pre">Float</span></code> if at least one of the inputs was a <code class="docutils literal notranslate"><span class="pre">Float</span></code>, otherwise it
-is an <code class="docutils literal notranslate"><span class="pre">Integer</span></code>.</p></li>
-</ol>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">Ternary</span></code></dt><dd><p>Return one value or another depending on a condition.</p>
-<p>Inputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The condition to evaluate.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>/<code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The value to return if the
-condition is true.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>/<code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The value to return if the
-condition is false.</p></li>
-</ol>
-<p>Outputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>/<code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The selected input.</p></li>
-</ol>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">Xor</span></code></dt><dd><p>Output the bitwise XOR of two boolean values.</p>
-<p>Inputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The first boolean.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The second boolean.</p></li>
-</ol>
-<p>Outputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The bitwise XOR of the two inputs.</p></li>
-</ol>
-</dd>
-</dl>
 </div>
-<div class="section" id="core-subroutines">
-<h2>Core Subroutines<a class="headerlink" href="#core-subroutines" title="Permalink to this headline">¶</a></h2>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>“Standard execution input” means the execution socket that needs to be
-activated in order for the execution node to activate.</p>
-<p>“Standard execution output” means the execution socket that is activated
-by the execution node once the node is done with it’s action.</p>
 </div>
-<dl>
-<dt><code class="docutils literal notranslate"><span class="pre">For</span></code></dt><dd><p>For each iteration of a numerical value, activate an execution path.</p>
-<p>Inputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The standard execution input.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>: The starting value of the numerical value.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>: The ending value of the numerical value.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>: The increment/decrement amount of the numerical
-value.</p></li>
+<div class="section" id="And">
+<h3>And<a class="headerlink" href="#And" title="Permalink to this headline">¶</a></h3>
+<p>Calculate the bitwise AND of two integers or booleans.</p>
+<div class="section" id="And-inputs">
+<h4>Inputs<a class="headerlink" href="#And-inputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>input1 (Bitwise; Integer/Boolean): The first integer or boolean input.</p></li>
+<li><p>input2 (Bitwise; Integer/Boolean): The second integer or boolean input.</p></li>
 </ol>
-<p>Outputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The exection socket to activate every iteration.</p></li>
-<li><p>The numerical value. Is a <code class="docutils literal notranslate"><span class="pre">Float</span></code> if at least one of the numerical
-inputs is a <code class="docutils literal notranslate"><span class="pre">Float</span></code>, otherwise it is an <code class="docutils literal notranslate"><span class="pre">Integer</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The standard execution output.</p></li>
-</ol>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">IfThen</span></code></dt><dd><p>Activate an execution path if a condition is true.</p>
-<p>Inputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The standard execution input.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The condition to evaluate.</p></li>
-</ol>
-<p>Outputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The execution socket to activate is the condition is
-true.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The standard execution output.</p></li>
-</ol>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">IfThenElse</span></code></dt><dd><p>Activate an execution path if a condition is true, and another if the
-condition is false.</p>
-<p>Inputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The standard execution input.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The condition to evaluate.</p></li>
-</ol>
-<p>Outputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The execution socket to activate if the condition is
-true.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The execution socket to activate if the condition is
-false.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The standard execution output.</p></li>
-</ol>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">Print</span></code></dt><dd><p>Print a value to the standard output.</p>
-<p>Inputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The standard execution input.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>/<code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The value to print.</p></li>
-</ol>
-<p>Outputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The standard execution output.</p></li>
-</ol>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">Set</span></code></dt><dd><p>Set the value of a variable.</p>
-<p>Inputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Name</span></code>: The name of the variable to set.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The standard execution input.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Integer</span></code>/<code class="docutils literal notranslate"><span class="pre">Float</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>/<code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The value to set the
-variable to - must be the same type as the variable being set.</p></li>
-</ol>
-<p>Outputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The standard execution output.</p></li>
-</ol>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">While</span></code></dt><dd><p>Repeat an execution path while a condition is true.</p>
-<p>Inputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The standard execution input.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: The condition to evaluate at the start of every loop.</p></li>
-</ol>
-<p>Outputs:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The execution socket to activate every loop.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Execution</span></code>: The standard execution output.</p></li>
-</ol>
-</dd>
-</dl>
 </div>
-<div class="section" id="core-properties">
-<h2>Core Properties<a class="headerlink" href="#core-properties" title="Permalink to this headline">¶</a></h2>
-<dl>
-<dt><code class="docutils literal notranslate"><span class="pre">Variable</span></code></dt><dd><p>Define a variable in the sheet.</p>
-<p>Arguments:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Name</span></code>: The name of the variable.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Type</span></code>: The data type of the variable.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Literal</span></code>: The default value of the variable. Technically optional,
-but highly recommended to set a default value.</p></li>
+<div class="section" id="And-outputs">
+<h4>Outputs<a class="headerlink" href="#And-outputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>output (Bitwise; Integer/Boolean): The bitwise AND of the two inputs.</p></li>
 </ol>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">Include</span></code></dt><dd><p>Include the functions, subroutine and variables of another sheet.</p>
-<p>Arguments:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Name</span></code>/<code class="docutils literal notranslate"><span class="pre">String</span></code>: The file path of the sheet.</p></li>
-</ol>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Standard libraries will eventually be implemented by providing a name
-rather than a string literal, but this is not yet functional.</p>
 </div>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">Function</span></code></dt><dd><p>Create a custom function in the sheet.</p>
-<p>Arguments:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Name</span></code>: The name of the function.</p></li>
-</ol>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">Subroutine</span></code></dt><dd><p>Create a custom subroutine in the sheet.</p>
-<p>By default it will have an input and output execution socket, representing
-the standard execution input and output respectively.</p>
-<p>Arguments:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Name</span></code>: The name of the subroutine.</p></li>
-</ol>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">FunctionInput</span></code></dt><dd><p>Add an input socket to a function (or subroutine).</p>
-<p>Arguments:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Name</span></code>: The name of the function/subroutine to add an input to.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Type</span></code>: The data type of the input.</p></li>
-</ol>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>There are also optional arguments for the name of the input and it’s
-default value, but these are not yet functional.</p>
 </div>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">FunctionOutput</span></code></dt><dd><p>Add an output socket to a function (or subroutine).</p>
-<p>Arguments:</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Name</span></code>: The name of the function/subroutine to add an output to.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Type</span></code>: The data type of the output.</p></li>
+<div class="section" id="Div">
+<h3>Div<a class="headerlink" href="#Div" title="Permalink to this headline">¶</a></h3>
+<p>Calculate the truncated division of two numbers.</p>
+<div class="section" id="Div-inputs">
+<h4>Inputs<a class="headerlink" href="#Div-inputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>dividend (Number; Integer/Float): The dividend of the division.</p></li>
+<li><p>divisor (Number; Integer/Float): The divisor of the division.</p></li>
 </ol>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>There is also an optional argument for the nmae of the output, but this
-is not yet functional.</p>
 </div>
-</dd>
-</dl>
+<div class="section" id="Div-outputs">
+<h4>Outputs<a class="headerlink" href="#Div-outputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>output (Integer): The dividend divided by the divisor, truncated.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="Divide">
+<h3>Divide<a class="headerlink" href="#Divide" title="Permalink to this headline">¶</a></h3>
+<p>Calculate the division of two numbers.</p>
+<div class="section" id="Divide-inputs">
+<h4>Inputs<a class="headerlink" href="#Divide-inputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>dividend (Number; Integer/Float): The dividend of the division.</p></li>
+<li><p>divisor (Number; Integer/Float): The divisor of the division.</p></li>
+</ol>
+</div>
+<div class="section" id="Divide-outputs">
+<h4>Outputs<a class="headerlink" href="#Divide-outputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>output (Float): The dividend divided by the divisor.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="Equal">
+<h3>Equal<a class="headerlink" href="#Equal" title="Permalink to this headline">¶</a></h3>
+<p>Check if two values are equal.</p>
+<div class="section" id="Equal-inputs">
+<h4>Inputs<a class="headerlink" href="#Equal-inputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>input1 (Any; Integer/Float/String/Boolean): The first input.</p></li>
+<li><p>input2 (Any; Integer/Float/String/Boolean): The second input.</p></li>
+</ol>
+</div>
+<div class="section" id="Equal-outputs">
+<h4>Outputs<a class="headerlink" href="#Equal-outputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>output (Boolean): True if the two inputs are equal, false otherwise.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="Length">
+<h3>Length<a class="headerlink" href="#Length" title="Permalink to this headline">¶</a></h3>
+<p>Output the number of characters in a string.</p>
+<div class="section" id="Length-inputs">
+<h4>Inputs<a class="headerlink" href="#Length-inputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>string (String): The string to get the length of.</p></li>
+</ol>
+</div>
+<div class="section" id="Length-outputs">
+<h4>Outputs<a class="headerlink" href="#Length-outputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>length (Integer): The length of the input string.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="LessThan">
+<h3>LessThan<a class="headerlink" href="#LessThan" title="Permalink to this headline">¶</a></h3>
+<p>Check if one value is less than another.</p>
+<div class="section" id="LessThan-inputs">
+<h4>Inputs<a class="headerlink" href="#LessThan-inputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>input1 (Comparable; Integer/Float/String): The first input.</p></li>
+<li><p>input2 (Comparable; Integer/Float/String): The second input.</p></li>
+</ol>
+</div>
+<div class="section" id="LessThan-outputs">
+<h4>Outputs<a class="headerlink" href="#LessThan-outputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>output (Boolean): True if the first input is less than the second input, false otherwise.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="LessThanOrEqual">
+<h3>LessThanOrEqual<a class="headerlink" href="#LessThanOrEqual" title="Permalink to this headline">¶</a></h3>
+<p>Check if one value is less than or equal to another.</p>
+<div class="section" id="LessThanOrEqual-inputs">
+<h4>Inputs<a class="headerlink" href="#LessThanOrEqual-inputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>input1 (Comparable; Integer/Float/String): The first input.</p></li>
+<li><p>input2 (Comparable; Integer/Float/String): The second input.</p></li>
+</ol>
+</div>
+<div class="section" id="LessThanOrEqual-outputs">
+<h4>Outputs<a class="headerlink" href="#LessThanOrEqual-outputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>output (Boolean): True if the first input is less than or equal to the second input, false otherwise.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="Mod">
+<h3>Mod<a class="headerlink" href="#Mod" title="Permalink to this headline">¶</a></h3>
+<p>Calculate the remainder after division of two integers.</p>
+<div class="section" id="Mod-inputs">
+<h4>Inputs<a class="headerlink" href="#Mod-inputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>dividend (Integer): The dividend of the division.</p></li>
+<li><p>divisor (Integer): The divisor of the division.</p></li>
+</ol>
+</div>
+<div class="section" id="Mod-outputs">
+<h4>Outputs<a class="headerlink" href="#Mod-outputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>output (Integer): The remainder after division of the dividend by the divisor.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="MoreThan">
+<h3>MoreThan<a class="headerlink" href="#MoreThan" title="Permalink to this headline">¶</a></h3>
+<p>Check if one value is more than another.</p>
+<div class="section" id="MoreThan-inputs">
+<h4>Inputs<a class="headerlink" href="#MoreThan-inputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>input1 (Comparable; Integer/Float/String): The first input.</p></li>
+<li><p>input2 (Comparable; Integer/Float/String): The second input.</p></li>
+</ol>
+</div>
+<div class="section" id="MoreThan-outputs">
+<h4>Outputs<a class="headerlink" href="#MoreThan-outputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>output (Boolean): True if the first input is more than the second input, false otherwise.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="MoreThanOrEqual">
+<h3>MoreThanOrEqual<a class="headerlink" href="#MoreThanOrEqual" title="Permalink to this headline">¶</a></h3>
+<p>Check if one value is more than or equal to another.</p>
+<div class="section" id="MoreThanOrEqual-inputs">
+<h4>Inputs<a class="headerlink" href="#MoreThanOrEqual-inputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>input1 (Comparable; Integer/Float/String): The first input.</p></li>
+<li><p>input2 (Comparable; Integer/Float/String): The second input.</p></li>
+</ol>
+</div>
+<div class="section" id="MoreThanOrEqual-outputs">
+<h4>Outputs<a class="headerlink" href="#MoreThanOrEqual-outputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>output (Boolean): True if the first input is more than or equal to the second input, false otherwise.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="Multiply">
+<h3>Multiply<a class="headerlink" href="#Multiply" title="Permalink to this headline">¶</a></h3>
+<p>Calculate the multiplication of two or more numbers.</p>
+<p>This node allows for an infinite number of inputs.</p>
+<div class="section" id="Multiply-inputs">
+<h4>Inputs<a class="headerlink" href="#Multiply-inputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>number (Number; Integer/Float): A number to be used in the multiplication.</p></li>
+<li><p>number (Number; Integer/Float): A number to be used in the multiplication.</p></li>
+</ol>
+</div>
+<div class="section" id="Multiply-outputs">
+<h4>Outputs<a class="headerlink" href="#Multiply-outputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>output (Number; Integer/Float): The multiplication of all the inputs.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="Not">
+<h3>Not<a class="headerlink" href="#Not" title="Permalink to this headline">¶</a></h3>
+<p>Calculate the bitwise NOT of an integer or boolean.</p>
+<div class="section" id="Not-inputs">
+<h4>Inputs<a class="headerlink" href="#Not-inputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>input (Bitwise; Integer/Boolean): The integer or boolean input.</p></li>
+</ol>
+</div>
+<div class="section" id="Not-outputs">
+<h4>Outputs<a class="headerlink" href="#Not-outputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>output (Bitwise; Integer/Boolean): The bitwise NOT of the input.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="NotEqual">
+<h3>NotEqual<a class="headerlink" href="#NotEqual" title="Permalink to this headline">¶</a></h3>
+<p>Check if two values are not equal.</p>
+<div class="section" id="NotEqual-inputs">
+<h4>Inputs<a class="headerlink" href="#NotEqual-inputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>input1 (Any; Integer/Float/String/Boolean): The first input.</p></li>
+<li><p>input2 (Any; Integer/Float/String/Boolean): The second input.</p></li>
+</ol>
+</div>
+<div class="section" id="NotEqual-outputs">
+<h4>Outputs<a class="headerlink" href="#NotEqual-outputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>output (Boolean): True if the two inputs are not equal, false otherwise.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="Or">
+<h3>Or<a class="headerlink" href="#Or" title="Permalink to this headline">¶</a></h3>
+<p>Calculate the bitwise OR of two integers or booleans.</p>
+<div class="section" id="Or-inputs">
+<h4>Inputs<a class="headerlink" href="#Or-inputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>input1 (Bitwise; Integer/Boolean): The first integer or boolean input.</p></li>
+<li><p>input2 (Bitwise; Integer/Boolean): The second integer or boolean input.</p></li>
+</ol>
+</div>
+<div class="section" id="Or-outputs">
+<h4>Outputs<a class="headerlink" href="#Or-outputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>output (Bitwise; Integer/Boolean): The bitwise OR of the two inputs.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="Subtract">
+<h3>Subtract<a class="headerlink" href="#Subtract" title="Permalink to this headline">¶</a></h3>
+<p>Calculate the subtraction of two numbers.</p>
+<div class="section" id="Subtract-inputs">
+<h4>Inputs<a class="headerlink" href="#Subtract-inputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>from (Number; Integer/Float): The number to subtract from.</p></li>
+<li><p>subtract (Number; Integer/Float): How much to subtract.</p></li>
+</ol>
+</div>
+<div class="section" id="Subtract-outputs">
+<h4>Outputs<a class="headerlink" href="#Subtract-outputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>output (Number; Integer/Float): The subtraction of the two inputs.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="Ternary">
+<h3>Ternary<a class="headerlink" href="#Ternary" title="Permalink to this headline">¶</a></h3>
+<p>Output one input or another, depending on a condition.</p>
+<div class="section" id="Ternary-inputs">
+<h4>Inputs<a class="headerlink" href="#Ternary-inputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>if (Boolean): The condition boolean.</p></li>
+<li><p>then (Any; Integer/Float/String/Boolean): The input to output if the condition is true.</p></li>
+<li><p>else (Any; Integer/Float/String/Boolean): The input to output if the condition is false.</p></li>
+</ol>
+</div>
+<div class="section" id="Ternary-outputs">
+<h4>Outputs<a class="headerlink" href="#Ternary-outputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>output (Any; Integer/Float/String/Boolean): The selected output.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="Xor">
+<h3>Xor<a class="headerlink" href="#Xor" title="Permalink to this headline">¶</a></h3>
+<p>Calculate the bitwise XOR of two integers or booleans.</p>
+<div class="section" id="Xor-inputs">
+<h4>Inputs<a class="headerlink" href="#Xor-inputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>input1 (Bitwise; Integer/Boolean): The first integer or boolean input.</p></li>
+<li><p>input2 (Bitwise; Integer/Boolean): The second integer or boolean input.</p></li>
+</ol>
+</div>
+<div class="section" id="Xor-outputs">
+<h4>Outputs<a class="headerlink" href="#Xor-outputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>output (Bitwise; Integer/Boolean): The bitwise XOR of the two inputs.</p></li>
+</ol>
+</div>
+</div>
+</div>
+<div class="section" id="subroutines">
+<h2>Core Subroutines<a class="headerlink" href="#subroutines" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="For">
+<h3>For<a class="headerlink" href="#For" title="Permalink to this headline">¶</a></h3>
+<p>For each iteration of a numerical value, activate an execution path.</p>
+<div class="section" id="For-inputs">
+<h4>Inputs<a class="headerlink" href="#For-inputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>before (Execution): The for loop will start when this input is activated.</p></li>
+<li><p>start (Number; Integer/Float): The starting value of the for loop.</p></li>
+<li><p>end (Number; Integer/Float): The ending value of the for loop.</p></li>
+<li><p>step (Number; Integer/Float): The number added to the value of the for loop at the end of every loop.</p></li>
+</ol>
+</div>
+<div class="section" id="For-outputs">
+<h4>Outputs<a class="headerlink" href="#For-outputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>loop (Execution): This output will be activated at the start of every loop.</p></li>
+<li><p>value (Number; Integer/Float): The value of the for loop.</p></li>
+<li><p>after (Execution): This output will activate when the for loop is over.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="IfThen">
+<h3>IfThen<a class="headerlink" href="#IfThen" title="Permalink to this headline">¶</a></h3>
+<p>Activate an execution path if a condition is true.</p>
+<div class="section" id="IfThen-inputs">
+<h4>Inputs<a class="headerlink" href="#IfThen-inputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>before (Execution): The node will check the boolean input when this input is activated.</p></li>
+<li><p>if (Boolean): The condition boolean.</p></li>
+</ol>
+</div>
+<div class="section" id="IfThen-outputs">
+<h4>Outputs<a class="headerlink" href="#IfThen-outputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>then (Execution): This output is only activated if the condition is true.</p></li>
+<li><p>after (Execution): This output will activate after the condition has been checked.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="IfThenElse">
+<h3>IfThenElse<a class="headerlink" href="#IfThenElse" title="Permalink to this headline">¶</a></h3>
+<p>Activate an execution path if a condition is true, or another if the condition is false.</p>
+<div class="section" id="IfThenElse-inputs">
+<h4>Inputs<a class="headerlink" href="#IfThenElse-inputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>before (Execution): The node will check the boolean input when this input is activated.</p></li>
+<li><p>if (Boolean): The condition boolean.</p></li>
+</ol>
+</div>
+<div class="section" id="IfThenElse-outputs">
+<h4>Outputs<a class="headerlink" href="#IfThenElse-outputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>then (Execution): This output is only activated if the condition is true.</p></li>
+<li><p>else (Execution): This output is only activated if the condition is false.</p></li>
+<li><p>after (Execution): This output will activate after the condition has been checked.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="Print">
+<h3>Print<a class="headerlink" href="#Print" title="Permalink to this headline">¶</a></h3>
+<p>Print a value to the standard output.</p>
+<div class="section" id="Print-inputs">
+<h4>Inputs<a class="headerlink" href="#Print-inputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>before (Execution): The node will print the value when this input is activated.</p></li>
+<li><p>value (Any; Integer/Float/String/Boolean): The value to print to the screen.</p></li>
+</ol>
+</div>
+<div class="section" id="Print-outputs">
+<h4>Outputs<a class="headerlink" href="#Print-outputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>after (Execution): This output will activate after the value has been printed.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="Set">
+<h3>Set<a class="headerlink" href="#Set" title="Permalink to this headline">¶</a></h3>
+<p>Set the value of a variable.</p>
+<div class="section" id="Set-inputs">
+<h4>Inputs<a class="headerlink" href="#Set-inputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>variable (Name): The variable whose value to set.</p></li>
+<li><p>before (Execution): The node will set the value of the variable when this input is activated.</p></li>
+<li><p>value (Any; Integer/Float/String/Boolean): The value to set the variable to. It must be the same data type as the variable.</p></li>
+</ol>
+</div>
+<div class="section" id="Set-outputs">
+<h4>Outputs<a class="headerlink" href="#Set-outputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>after (Execution): This output is activated after the variable’s value has been set.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="While">
+<h3>While<a class="headerlink" href="#While" title="Permalink to this headline">¶</a></h3>
+<p>Keep activating an execution path while a condition is true.</p>
+<div class="section" id="While-inputs">
+<h4>Inputs<a class="headerlink" href="#While-inputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>before (Execution): The while loop will start when this input is activated.</p></li>
+<li><p>condition (Boolean): The condition that needs to be met for the while loop to continue looping.</p></li>
+</ol>
+</div>
+<div class="section" id="While-outputs">
+<h4>Outputs<a class="headerlink" href="#While-outputs" title="Permalink to this headline">¶</a></h4>
+<ol class="simple">
+<li><p>loop (Execution): This output will be activated at the start of every loop.</p></li>
+<li><p>after (Execution): This output will activate when the while loop is over.</p></li>
+</ol>
+</div>
+</div>
 </div>
 </div>
 
@@ -534,7 +722,7 @@ is not yet functional.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Benjamin Beddows
+        &copy; Copyright 2019-2020, Benjamin Beddows
 
     </p>
   </div>

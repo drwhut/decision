@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Embedding Decision &mdash; Decision 0.2.0 documentation</title>
+  <title>Embedding Decision &mdash; Decision 0.3.0 documentation</title>
   
 
   
@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -84,6 +84,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../the_language/index.html">The Language</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../common_data_structures/index.html">Common Data Structures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../the_stages_of_compilation/index.html">The Stages of Compilation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../linking/index.html">Linking</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../the_virtual_machine/index.html">The Virtual Machine</a></li>
@@ -96,6 +97,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="running_decision_from_c.html">Running Decision from C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="running_c_from_decision.html">Running C from Decision</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging_decision_code.html">Debugging Decision Code</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
@@ -180,13 +182,6 @@ file in the root of the project, and more detailed instructions in the
 <a class="reference external" href="https://drwhut.github.io/decision/user/getting_started/install_decision.html#from-the-source-code">user manual</a>.</p>
 <p>When you build Decision, not only do you get the executable you probably
 intended, but you also get a compiled library as well!</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>On Linux, you get both the static (.a) and dynamic (.so) libraries, whereas
-on Windows by default you get the static (.lib) library. To get the
-dynamic (.dll) library, you need to specify an argument when using
-<code class="docutils literal notranslate"><span class="pre">cmake</span></code>, see <code class="docutils literal notranslate"><span class="pre">README.md</span></code> for more details.</p>
-</div>
 <p>So if you have the header files and the libraries at hand, here is how you can
 embed Decision into your program:</p>
 </div>
@@ -266,7 +261,7 @@ lives, it should just find it under a known list of directories.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Benjamin Beddows
+        &copy; Copyright 2019-2020, Benjamin Beddows
 
     </p>
   </div>

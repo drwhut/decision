@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Running C from Decision &mdash; Decision 0.2.0 documentation</title>
+  <title>Running C from Decision &mdash; Decision 0.3.0 documentation</title>
   
 
   
@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Reference" href="../reference/index.html" />
+    <link rel="next" title="Debugging Decision Code" href="debugging_decision_code.html" />
     <link rel="prev" title="Running Decision from C" href="running_decision_from_c.html" /> 
 </head>
 
@@ -84,6 +84,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../the_language/index.html">The Language</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../common_data_structures/index.html">Common Data Structures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../the_stages_of_compilation/index.html">The Stages of Compilation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../linking/index.html">Linking</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../the_virtual_machine/index.html">The Virtual Machine</a></li>
@@ -96,6 +97,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#c-functions-as-decision-subroutines">C Functions as Decision Subroutines</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="debugging_decision_code.html">Debugging Decision Code</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
@@ -193,7 +195,7 @@ call need to look like this:</p>
 anything, and they take a Decision Virtual Machine pointer as input.</p>
 <p>But wait, what if I want my C function to return values? The answer to that
 question is that inputs and outputs are taken from the Virtual Machine’s
-general stack, with the same functions described in <a class="reference internal" href="running_decision_from_c.html#decision-functions"><span class="std std-ref">Decision Functions</span></a>.</p>
+stack, with the same functions described in <a class="reference internal" href="running_decision_from_c.html#decision-functions"><span class="std std-ref">Decision Functions</span></a>.</p>
 <p>For example, lets say you want to create a <code class="docutils literal notranslate"><span class="pre">Sin</span></code> function that you want to
 call from a Decision sheet. A way you could implement the C function would be
 like this:</p>
@@ -203,28 +205,29 @@ like this:</p>
 <span class="cp">#include</span> <span class="cpf">&lt;math.h&gt;</span><span class="cp"></span>
 
 <span class="kt">void</span> <span class="nf">mySin</span><span class="p">(</span><span class="n">DVM</span> <span class="o">*</span><span class="n">vm</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// Pop the argument from the stack.</span>
-    <span class="n">dfloat</span> <span class="n">input</span> <span class="o">=</span> <span class="n">d_vm_pop_stack_float</span><span class="p">(</span><span class="n">vm</span><span class="p">);</span>
+    <span class="c1">// Get the &quot;first&quot; argument from the stack.</span>
+    <span class="n">dfloat</span> <span class="n">input</span> <span class="o">=</span> <span class="n">d_vm_get_float</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
 
     <span class="n">dfloat</span> <span class="n">output</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">input</span><span class="p">)</span> <span class="c1">// sin defined in math.h</span>
 
     <span class="c1">// Push the return value back onto the stack.</span>
-    <span class="n">d_vm_push_stack_float</span><span class="p">(</span><span class="n">vm</span><span class="p">);</span>
+    <span class="n">d_vm_push_float</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="n">output</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <p>Notice that the <code class="docutils literal notranslate"><span class="pre">mySin</span></code> function doesn’t return anything, and it takes a
-<code class="docutils literal notranslate"><span class="pre">DVM</span> <span class="pre">*</span></code> input, so it fits the prototype explained above. It then pops a float
+<code class="docutils literal notranslate"><span class="pre">DVM</span> <span class="pre">*</span></code> input, so it fits the prototype explained above. It then gets a float
 value from the stack, takes the <code class="docutils literal notranslate"><span class="pre">sin</span></code> of that value, and pushes the result
 onto the stack as the return value.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>As per the calling convention, the VM before calling will push arguments in
-reverse order, and after calling will pop return values in the correct
-order.</p>
-<p>This is why, when defining C functions to be called from Decision, you
-should <strong>pop arguments in the correct order</strong> and <strong>push return values in
-reverse order</strong>.</p>
+the correct order, during the call the VM’s frame pointer will be set, and
+after the call the VM will get the return values assuming the first return
+value is at the top of the stack.</p>
+<p>This is why, when defining C functions to be called from Decision, in order
+to get the nth argument, you should use <code class="docutils literal notranslate"><span class="pre">d_vm_get(vm,</span> <span class="pre">n)</span></code>, and when you
+push the return values, you should push them <strong>in reverse order.</strong></p>
 </div>
 <p>So now you know how to create C functions so you can call them from Decision,
 so how do you call them from Decision?</p>
@@ -235,26 +238,36 @@ so how do you call them from Decision?</p>
 defined in <code class="docutils literal notranslate"><span class="pre">dcfunc.h</span></code>:</p>
 <dl class="function">
 <dt>
-void <code class="sig-name descname">d_create_c_function</code><span class="sig-paren">(</span><em class="property">const</em> char *<em>name</em>, <a class="reference internal" href="../reference/index.html#_CPPv417DecisionCFunction" title="DecisionCFunction">DecisionCFunction</a> <em>function</em>, <a class="reference internal" href="../reference/index.html#_CPPv45DType" title="DType">DType</a> *<em>inputs</em>, <a class="reference internal" href="../reference/index.html#_CPPv45DType" title="DType">DType</a> *<em>outputs</em><span class="sig-paren">)</span><br /></dt>
-<dd><p>Create a function that calls a C function. Any sheets that are loaded after this call can use this new function. </p>
+<a class="reference internal" href="../reference/index.html#_CPPv49CFunction" title="CFunction">CFunction</a> <code class="sig-name descname">d_create_c_function</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv417DecisionCFunction" title="DecisionCFunction">DecisionCFunction</a> <em>function</em>, <em class="property">const</em> char *<em>name</em>, <em class="property">const</em> char *<em>description</em>, <a class="reference internal" href="../common_data_structures/index.html#_CPPv410SocketMeta" title="SocketMeta">SocketMeta</a> *<em>sockets</em>, size_t <em>numInputs</em>, size_t <em>numOutputs</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Create a function that calls a C function. </p>
 <p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">function</span></code>: The C function to call when this node is activated. </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the function. </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">function</span></code>: The C function to call when the node is activated. </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">inputs</span></code>: A <code class="docutils literal notranslate"><span class="pre">TYPE_NONE</span></code>-terminated array of the input data types. </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">outputs</span></code>: A <code class="docutils literal notranslate"><span class="pre">TYPE_NONE</span></code>-terminated array of the output data types. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">description</span></code>: The description of the function. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sockets</span></code>: An array of socket metadata. This array should have at least <code class="docutils literal notranslate"><span class="pre">numInputs</span> <span class="pre">+</span> <span class="pre">numOutputs</span></code> elements in. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">numInputs</span></code>: The number of input sockets the function has. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">numOutputs</span></code>: The number of output sockets the function has. </p></li>
 </ul>
 </dd>
 </dl>
 </p>
 </dd></dl>
 
-<p>You should then free the list of created C functions at the end of your program
-with:</p>
+<p>You can then add the C function to a sheet with:</p>
 <dl class="function">
 <dt>
-void <code class="sig-name descname">d_free_c_functions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><br /></dt>
-<dd><p>If any functions or subroutines have been created that call C functions, free them. </p>
+void <code class="sig-name descname">d_sheet_add_c_function</code><span class="sig-paren">(</span><a class="reference internal" href="../common_data_structures/index.html#_CPPv45Sheet" title="Sheet">Sheet</a> *<em>sheet</em>, <a class="reference internal" href="../reference/index.html#_CPPv49CFunction" title="CFunction">CFunction</a> <em>cFunction</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Add a C function to a sheet. </p>
+<p><strong>NOTE:</strong> To create a C function, have a look at <code class="docutils literal notranslate"><a class="reference internal" href="../reference/index.html#dcfunc_8h"><span class="std std-ref"><span class="pre">dcfunc.h</span></span></a></code>.</p>
+<p><dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sheet</span></code>: The sheet to add the C function to. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cFunction</span></code>: The C function to add. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
 </dd></dl>
 
 <p>Here is an example that uses the <code class="docutils literal notranslate"><span class="pre">mySin</span></code> function that we defined earlier:</p>
@@ -266,30 +279,54 @@ void <code class="sig-name descname">d_free_c_functions</code><span class="sig-p
 <span class="cp">#include</span> <span class="cpf">&lt;math.h&gt;</span><span class="cp"></span>
 
 <span class="kt">void</span> <span class="nf">mySin</span><span class="p">(</span><span class="n">DVM</span> <span class="o">*</span><span class="n">vm</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// Pop the argument from the stack.</span>
-    <span class="n">dfloat</span> <span class="n">input</span> <span class="o">=</span> <span class="n">d_vm_pop_stack_float</span><span class="p">(</span><span class="n">vm</span><span class="p">);</span>
+    <span class="c1">// Get the &quot;first&quot; argument from the stack.</span>
+    <span class="n">dfloat</span> <span class="n">input</span> <span class="o">=</span> <span class="n">d_vm_get_float</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
 
-    <span class="n">dfloat</span> <span class="n">output</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">input</span><span class="p">)</span> <span class="c1">// sin defined in math.h</span>
+    <span class="n">dfloat</span> <span class="n">output</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">input</span><span class="p">);</span> <span class="c1">// sin defined in math.h</span>
 
     <span class="c1">// Push the return value back onto the stack.</span>
-    <span class="n">d_vm_push_stack_float</span><span class="p">(</span><span class="n">vm</span><span class="p">);</span>
+    <span class="n">d_vm_push_float</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="n">output</span><span class="p">);</span>
 <span class="p">}</span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
-    <span class="c1">// Sin has 1 Float input.</span>
-    <span class="n">DType</span> <span class="n">sinInputs</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span><span class="n">TYPE_FLOAT</span><span class="p">,</span> <span class="n">TYPE_NONE</span><span class="p">};</span>
+    <span class="c1">// The Sin function sockets.</span>
+    <span class="n">SocketMeta</span> <span class="n">sinSockets</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="p">{</span><span class="s">&quot;theta&quot;</span><span class="p">,</span> <span class="s">&quot;The number to take the sin of, in radians.&quot;</span><span class="p">,</span> <span class="n">TYPE_FLOAT</span><span class="p">,</span> <span class="p">{</span><span class="mi">0</span><span class="p">}},</span>
+        <span class="p">{</span><span class="s">&quot;sin&quot;</span><span class="p">,</span> <span class="s">&quot;The sin of theta.&quot;</span><span class="p">,</span> <span class="n">TYPE_FLOAT</span><span class="p">,</span> <span class="p">{</span><span class="mi">0</span><span class="p">}}</span>
+    <span class="p">};</span>
 
-    <span class="c1">// Sin has 1 Float output.</span>
-    <span class="n">DType</span> <span class="n">sinOutputs</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span><span class="n">TYPE_FLOAT</span><span class="p">,</span> <span class="n">TYPE_NONE</span><span class="p">};</span>
+    <span class="c1">// If a socket&#39;s default value you want to set isn&#39;t an integer, you will</span>
+    <span class="c1">// need to set it outside the array, like this:</span>
+    <span class="n">sinSockets</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">defaultValue</span><span class="p">.</span><span class="n">floatValue</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
 
-    <span class="c1">// Create the C function.</span>
-    <span class="n">d_create_c_function</span><span class="p">(</span><span class="s">&quot;Sin&quot;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">mySin</span><span class="p">,</span> <span class="n">sinInputs</span><span class="p">,</span> <span class="n">sinOutputs</span><span class="p">);</span>
+    <span class="c1">// The Sin function has 1 input and 1 output.</span>
+    <span class="n">CFunction</span> <span class="n">sinFunction</span> <span class="o">=</span> <span class="n">d_create_c_function</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mySin</span><span class="p">,</span> <span class="s">&quot;Sin&quot;</span><span class="p">,</span> <span class="s">&quot;Get the sin of a number.&quot;</span><span class="p">,</span>
+        <span class="n">sinSockets</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
 
-    <span class="c1">// Run source code that calls the function.</span>
-    <span class="n">d_run_string</span><span class="p">(</span><span class="s">&quot;Start~#1; Sin(1.0)~#2; Print(#1, #2);&quot;</span><span class="p">,</span> <span class="s">&quot;source&quot;</span><span class="p">);</span>
+    <span class="c1">// Create a &quot;library&quot; sheet to store the C function in.</span>
+    <span class="n">Sheet</span> <span class="o">*</span><span class="n">library</span> <span class="o">=</span> <span class="n">d_sheet_create</span><span class="p">(</span><span class="s">&quot;MathStuff&quot;</span><span class="p">);</span>
 
-    <span class="c1">// Free the function we defined earlier.</span>
-    <span class="n">d_free_c_functions</span><span class="p">();</span>
+    <span class="c1">// Make sure other sheets do not free this library when they are freed.</span>
+    <span class="n">library</span><span class="o">-&gt;</span><span class="n">allowFree</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+
+    <span class="c1">// Add the C function to the sheet.</span>
+    <span class="n">d_sheet_add_c_function</span><span class="p">(</span><span class="n">library</span><span class="p">,</span> <span class="n">sinFunction</span><span class="p">);</span>
+
+    <span class="c1">// Create a list of sheets with the sheet that has the C function in.</span>
+    <span class="c1">// It needs to end with a NULL entry!</span>
+    <span class="n">Sheet</span> <span class="o">*</span><span class="n">includeList</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span><span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">};</span>
+    <span class="n">includeList</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>       <span class="o">=</span> <span class="n">library</span><span class="p">;</span>
+
+    <span class="c1">// Set the compile options so the sheet that we want to run, so the sheet</span>
+    <span class="c1">// can find the definition of &quot;Sin&quot; during compile time.</span>
+    <span class="n">CompileOptions</span> <span class="n">options</span> <span class="o">=</span> <span class="n">DEFAULT_COMPILE_OPTIONS</span><span class="p">;</span>
+    <span class="n">options</span><span class="p">.</span><span class="n">includes</span>       <span class="o">=</span> <span class="n">includeList</span><span class="p">;</span>
+
+    <span class="c1">// Run a Decision string which uses Sin!</span>
+    <span class="n">d_run_string</span><span class="p">(</span><span class="s">&quot;Start~#1; Sin(1.57)~#2; Print(#1, #2);&quot;</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">options</span><span class="p">);</span>
+
+    <span class="c1">// Free the library sheet.</span>
+    <span class="n">d_sheet_free</span><span class="p">(</span><span class="n">library</span><span class="p">);</span>
 
     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
@@ -302,14 +339,17 @@ void <code class="sig-name descname">d_free_c_functions</code><span class="sig-p
 defined in <code class="docutils literal notranslate"><span class="pre">dcfunc.h</span></code>:</p>
 <dl class="function">
 <dt>
-void <code class="sig-name descname">d_create_c_subroutine</code><span class="sig-paren">(</span><em class="property">const</em> char *<em>name</em>, <a class="reference internal" href="../reference/index.html#_CPPv417DecisionCFunction" title="DecisionCFunction">DecisionCFunction</a> <em>function</em>, <a class="reference internal" href="../reference/index.html#_CPPv45DType" title="DType">DType</a> *<em>inputs</em>, <a class="reference internal" href="../reference/index.html#_CPPv45DType" title="DType">DType</a> *<em>outputs</em><span class="sig-paren">)</span><br /></dt>
-<dd><p>Create a subroutine that calls a C function. Any sheets that are loaded after this call can use this new subroutine. </p>
+<a class="reference internal" href="../reference/index.html#_CPPv49CFunction" title="CFunction">CFunction</a> <code class="sig-name descname">d_create_c_subroutine</code><span class="sig-paren">(</span><a class="reference internal" href="../reference/index.html#_CPPv417DecisionCFunction" title="DecisionCFunction">DecisionCFunction</a> <em>function</em>, <em class="property">const</em> char *<em>name</em>, <em class="property">const</em> char *<em>description</em>, <a class="reference internal" href="../common_data_structures/index.html#_CPPv410SocketMeta" title="SocketMeta">SocketMeta</a> *<em>sockets</em>, size_t <em>numInputs</em>, size_t <em>numOutputs</em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Create a subroutine that calls a C function. </p>
+<p><strong>NOTE:</strong> The <code class="docutils literal notranslate"><span class="pre">sockets</span></code> array should not have any execution sockets in, these will automatically be added. Thus <code class="docutils literal notranslate"><span class="pre">numInputs</span></code> and <code class="docutils literal notranslate"><span class="pre">numOutputs</span></code> should not account for any execution nodes either.</p>
 <p><dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the subroutine. </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">function</span></code>: The C function to call when the node is activated. </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">inputs</span></code>: A <code class="docutils literal notranslate"><span class="pre">TYPE_NONE</span></code>-terminated array of the input data types. Note that this array should not include a <code class="docutils literal notranslate"><span class="pre">TYPE_EXECUTION</span></code> type. </p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">outputs</span></code>: A <code class="docutils literal notranslate"><span class="pre">TYPE_NONE</span></code>-terminated array of the output data types. Note that this array should not include a <code class="docutils literal notranslate"><span class="pre">TYPE_EXECUTION</span></code> type. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">function</span></code>: The C function to call when this node is activated. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the function. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">description</span></code>: The description of the function. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sockets</span></code>: An array of socket metadata. This array should have at least <code class="docutils literal notranslate"><span class="pre">numInputs</span> <span class="pre">+</span> <span class="pre">numOutputs</span></code> elements in. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">numInputs</span></code>: The number of input sockets the function has. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">numOutputs</span></code>: The number of output sockets the function has. </p></li>
 </ul>
 </dd>
 </dl>
@@ -318,17 +358,9 @@ void <code class="sig-name descname">d_create_c_subroutine</code><span class="si
 
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This function automatically prepends the standard input and output
-Execution sockets for you.</p>
+<p>This function automatically prepends a <strong>before</strong> input execution socket and
+appends an <strong>after</strong> output execution socket for you.</p>
 </div>
-<p>Like before, you should then free the list of created C functions at the end of
-your program with:</p>
-<dl class="function">
-<dt>
-void <code class="sig-name descname">d_free_c_functions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><br /></dt>
-<dd><p>If any functions or subroutines have been created that call C functions, free them. </p>
-</dd></dl>
-
 <p>Here is an example of a subroutine that reads the contents of a given file:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;dcfunc.h&gt;</span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf">&lt;decision.h&gt;</span><span class="cp"></span>
@@ -344,8 +376,8 @@ void <code class="sig-name descname">d_free_c_functions</code><span class="sig-p
 <span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span>
 
 <span class="kt">void</span> <span class="nf">myReadFile</span><span class="p">(</span><span class="n">DVM</span> <span class="o">*</span><span class="n">vm</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// Pop the file name argument from the stack.</span>
-    <span class="kt">char</span> <span class="o">*</span><span class="n">fileName</span> <span class="o">=</span> <span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span><span class="n">d_vm_pop_stack_ptr</span><span class="p">(</span><span class="n">vm</span><span class="p">);</span>
+    <span class="c1">// Get the file name argument from the stack.</span>
+    <span class="kt">char</span> <span class="o">*</span><span class="n">fileName</span> <span class="o">=</span> <span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span><span class="n">d_vm_get_ptr</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
 
     <span class="kt">FILE</span> <span class="o">*</span><span class="n">fp</span> <span class="o">=</span> <span class="n">fopen</span><span class="p">(</span><span class="n">fileName</span><span class="p">,</span> <span class="s">&quot;r&quot;</span><span class="p">);</span>
 
@@ -362,24 +394,48 @@ void <code class="sig-name descname">d_free_c_functions</code><span class="sig-p
     <span class="p">}</span>
 
     <span class="c1">// Push the buffer pointer return value to the stack.</span>
-    <span class="n">d_vm_push_stack_ptr</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="n">buffer</span><span class="p">);</span>
+    <span class="n">d_vm_push_ptr</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="n">buffer</span><span class="p">);</span>
 <span class="p">}</span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
-    <span class="c1">// ReadFile has 1 String input.</span>
-    <span class="n">DType</span> <span class="n">readFileInputs</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span><span class="n">TYPE_STRING</span><span class="p">,</span> <span class="n">TYPE_NONE</span><span class="p">};</span>
+    <span class="c1">// The ReadFile subroutine non-execution sockets.</span>
+    <span class="n">SocketMeta</span> <span class="n">readFileSockets</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="p">{</span><span class="s">&quot;file&quot;</span><span class="p">,</span> <span class="s">&quot;The name of the file to open.&quot;</span><span class="p">,</span> <span class="n">TYPE_STRING</span><span class="p">,</span> <span class="p">{</span><span class="mi">0</span><span class="p">}},</span>
+        <span class="p">{</span><span class="s">&quot;content&quot;</span><span class="p">,</span> <span class="s">&quot;The content of the file.&quot;</span><span class="p">,</span> <span class="n">TYPE_STRING</span><span class="p">,</span> <span class="p">{</span><span class="mi">0</span><span class="p">}}</span>
+    <span class="p">}</span>
 
-    <span class="c1">// ReadFile has 1 String output.</span>
-    <span class="n">DType</span> <span class="n">readFileOutputs</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span><span class="n">TYPE_STRING</span><span class="p">,</span> <span class="n">TYPE_NONE</span><span class="p">};</span>
+    <span class="c1">// Again, if you want to set a non-integer socket&#39;s default value...</span>
+    <span class="n">readFileSockets</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">defaultValue</span><span class="p">.</span><span class="n">stringValue</span> <span class="o">=</span> <span class="s">&quot;file.txt&quot;</span><span class="p">;</span>
 
-    <span class="c1">// Create the C subroutine.</span>
-    <span class="n">d_create_c_subroutine</span><span class="p">(</span><span class="s">&quot;ReadFile&quot;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">myReadFile</span><span class="p">,</span> <span class="n">readFileInputs</span><span class="p">,</span> <span class="n">readFileOutputs</span><span class="p">);</span>
+    <span class="c1">// The ReadFile subroutine has 1 input and 1 output.</span>
+    <span class="n">CFunction</span> <span class="n">readFileSubroutine</span> <span class="o">=</span> <span class="n">d_create_c_subroutine</span><span class="p">(</span><span class="o">&amp;</span><span class="n">myReadFile</span><span class="p">,</span> <span class="s">&quot;ReadFile&quot;</span><span class="p">,</span>
+        <span class="s">&quot;Read the contents of a file.&quot;</span><span class="p">,</span> <span class="n">readFileSockets</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
 
-    <span class="c1">// Run source code that calls the subrotune.</span>
-    <span class="n">d_run_string</span><span class="p">(</span><span class="s">&quot;Start~#1; ReadFile(#1, &#39;hello.txt&#39;)~#2, #3; Print(#2, #3);&quot;</span><span class="p">,</span> <span class="s">&quot;source&quot;</span><span class="p">);</span>
+    <span class="c1">// Create a &quot;library&quot; sheet to store the C function in.</span>
+    <span class="n">Sheet</span> <span class="o">*</span><span class="n">library</span> <span class="o">=</span> <span class="n">d_sheet_create</span><span class="p">(</span><span class="s">&quot;FileThings&quot;</span><span class="p">);</span>
 
-    <span class="c1">// Free the subroutine we defined earlier.</span>
-    <span class="n">d_free_c_functions</span><span class="p">();</span>
+    <span class="c1">// Make sure other sheets do not free this library when they are freed.</span>
+    <span class="n">library</span><span class="o">-&gt;</span><span class="n">allowFree</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+
+    <span class="c1">// Add the C function to the sheet.</span>
+    <span class="n">d_sheet_add_c_function</span><span class="p">(</span><span class="n">library</span><span class="p">,</span> <span class="n">readFileSubroutine</span><span class="p">);</span>
+
+    <span class="c1">// Create a list of sheets with the sheet that has the C function in.</span>
+    <span class="c1">// It needs to end with a NULL entry!</span>
+    <span class="n">Sheet</span> <span class="o">*</span><span class="n">includeList</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span><span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">};</span>
+    <span class="n">includeList</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>       <span class="o">=</span> <span class="n">library</span><span class="p">;</span>
+
+    <span class="c1">// Set the compile options so the sheet that we want to run, so the sheet</span>
+    <span class="c1">// can find the definition of &quot;ReadFile&quot; during compile time.</span>
+    <span class="n">CompileOptions</span> <span class="n">options</span> <span class="o">=</span> <span class="n">DEFAULT_COMPILE_OPTIONS</span><span class="p">;</span>
+    <span class="n">options</span><span class="p">.</span><span class="n">includes</span>       <span class="o">=</span> <span class="n">includeList</span><span class="p">;</span>
+
+    <span class="c1">// Run source code that calls the ReadFile subroutine!</span>
+    <span class="n">d_run_string</span><span class="p">(</span><span class="s">&quot;Start~#1; ReadFile(#1, &#39;hello.txt&#39;)~#2, #3; Print(#3, #2);&quot;</span><span class="p">,</span>
+        <span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">options</span><span class="p">);</span>
+
+    <span class="c1">// Free the library sheet.</span>
+    <span class="n">d_sheet_free</span><span class="p">(</span><span class="n">library</span><span class="p">);</span>
 
     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
@@ -396,7 +452,7 @@ void <code class="sig-name descname">d_free_c_functions</code><span class="sig-p
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../reference/index.html" class="btn btn-neutral float-right" title="Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="debugging_decision_code.html" class="btn btn-neutral float-right" title="Debugging Decision Code" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="running_decision_from_c.html" class="btn btn-neutral float-left" title="Running Decision from C" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -408,7 +464,7 @@ void <code class="sig-name descname">d_free_c_functions</code><span class="sig-p
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Benjamin Beddows
+        &copy; Copyright 2019-2020, Benjamin Beddows
 
     </p>
   </div>

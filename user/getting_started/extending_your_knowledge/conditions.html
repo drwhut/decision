@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Conditions &mdash; Decision 0.2.0 documentation</title>
+  <title>Conditions &mdash; Decision 0.3.0 documentation</title>
   
 
   
@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Condition Arithmetic" href="condition_arithmetic.html" />
+    <link rel="next" title="Boolean Operations" href="boolean_operations.html" />
     <link rel="prev" title="Arithmetic" href="arithmetic.html" /> 
 </head>
 
@@ -98,7 +98,8 @@
 <li class="toctree-l4"><a class="reference internal" href="#more-than-or-equal">More Than or Equal</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="condition_arithmetic.html">Condition Arithmetic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="boolean_operations.html">Boolean Operations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bitwise_operations.html">Bitwise Operations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="changing_flow_with_conditions.html">Changing Flow with Conditions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="string_manipulation.html">String Manipulation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="variables.html">Variables</a></li>
@@ -203,6 +204,25 @@ false
 true
 </pre></div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>As of the 0.3.0 update, you can also check to see if two booleans are equal:</p>
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>Start~#1
+
+Equal(true, true)~#2
+Print(#1, #2)~#3
+
+Equal(true, false)~#4
+Print(#3, #4)
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ decision equal_bool.dc
+
+true
+false
+</pre></div>
+</div>
+</div>
 </div>
 <div class="section" id="not-equal">
 <h2>Not Equal<a class="headerlink" href="#not-equal" title="Permalink to this headline">¶</a></h2>
@@ -223,6 +243,26 @@ false
 true
 false
 </pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>As of the 0.3.0 update, you can also check to see if two booleans are not
+equal:</p>
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>Start~#1
+
+Equal(true, true)~#2
+Print(#1, #2)~#3
+
+Equal(true, false)~#4
+Print(#3, #4)
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ decision equal_bool.dc
+
+false
+true
+</pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="less-than">
@@ -319,7 +359,7 @@ false
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="condition_arithmetic.html" class="btn btn-neutral float-right" title="Condition Arithmetic" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="boolean_operations.html" class="btn btn-neutral float-right" title="Boolean Operations" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="arithmetic.html" class="btn btn-neutral float-left" title="Arithmetic" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -331,7 +371,7 @@ false
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Benjamin Beddows
+        &copy; Copyright 2019-2020, Benjamin Beddows
 
     </p>
   </div>

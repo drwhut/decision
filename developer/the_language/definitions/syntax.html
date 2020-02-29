@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Syntax Rules &mdash; Decision 0.2.0 documentation</title>
+  <title>Syntax Rules &mdash; Decision 0.3.0 documentation</title>
   
 
   
@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -97,6 +97,7 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../common_data_structures/index.html">Common Data Structures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../the_stages_of_compilation/index.html">The Stages of Compilation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../linking/index.html">Linking</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../the_virtual_machine/index.html">The Virtual Machine</a></li>
@@ -174,16 +175,13 @@
 <h1>Syntax Rules<a class="headerlink" href="#syntax-rules" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="comments">
 <h2>Comments<a class="headerlink" href="#comments" title="Permalink to this headline">¶</a></h2>
-<p>Comments are defined as everything including and in between the <code class="docutils literal notranslate"><span class="pre">&lt;</span></code> and
-<code class="docutils literal notranslate"><span class="pre">&gt;</span></code> characters. Comments should be ignored by the compiler. They can be
-freely used by the programmer, but their main purpose is for GUI editors to
-store graphical information in them, like the positions of nodes for example.</p>
-<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>&lt; This is a single-line comment! &gt;
-
-&lt;
-    This is a multi-line comment!
-    See? This is another line!
-&gt;
+<p>Comments are defined as everything after and including the <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> symbol on the
+same line, as long as the <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> is not in a string. Comments should be ignored
+by the compiler. They can be freely used by the programmer, but their main
+purpose is for GUI editors to store graphical information in them, like the
+positions of nodes for example.</p>
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>&gt; This is a comment!
+&gt; This is still a comment! &gt; Still the same comment...
 </pre></div>
 </div>
 </div>
@@ -208,10 +206,7 @@ nodes know which output to get their input from. They are given as a hashtag
 (<code class="docutils literal notranslate"><span class="pre">#</span></code>), followed by a positive integer.</p>
 <p>Wire identifiers can then be defined as the outputs of nodes, in a
 comma-seperated list after the <code class="docutils literal notranslate"><span class="pre">~</span></code> symbol, like so:</p>
-<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>&lt;
-    #1 is an execution wire, since it is coming out of the Start node
-    socket.
-&gt;
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>&gt; #1 is an execution wire, since it is coming out of the Start node socket.
 Start~#1
 </pre></div>
 </div>
@@ -230,13 +225,11 @@ nessesary.</p>
 <p class="admonition-title">Note</p>
 <p>In some nodes, you need to provide <em>names</em> as arguments.</p>
 </div>
-<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>&lt;
-    The node Set sets the value of a variable.
-    integerVariableName is the name of the variable to set.
-    #5 is the input execution wire.
-    99 is the value to set.
-    #6 is the execution wire to activate after we&#39;ve set the value.
-&gt;
+<div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>&gt; The node Set sets the value of a variable.
+&gt; integerVariableName is the name of the variable to set.
+&gt; #5 is the input execution wire.
+&gt; 99 is the value to set.
+&gt; #6 is the execution wire to activate after we&#39;ve set the value.
 
 Set(integerVariableName, #5, 99)~#6
 </pre></div>
@@ -260,7 +253,7 @@ Print(#2, &quot;Hi!&quot;)
 <p>Whitespace should never matter.</p>
 </div>
 <div class="highlight-decision notranslate"><div class="highlight"><pre><span></span>Print ( # 9 , &quot;Hello, world!&quot; ) ~ # 56
-&lt; Is equivalent to... &gt;
+&gt; Is equivalent to...
 Print(#9,&quot;Hello, world!&quot;)~#56
 </pre></div>
 </div>
@@ -306,7 +299,7 @@ literals, or <em>keyword representations of data types</em>:</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Benjamin Beddows
+        &copy; Copyright 2019-2020, Benjamin Beddows
 
     </p>
   </div>
