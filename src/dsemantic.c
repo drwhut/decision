@@ -2136,7 +2136,7 @@ void d_semantic_reduce_types(Sheet *sheet) {
                     nodeReduced[nodeIndex] = true;
                 }
 
-                if (VERBOSE_LEVEL >= 5) {
+                if (d_get_verbose_level() >= 5) {
                     if (nodeReduced[nodeIndex])
                         printf("done.\n");
                     else

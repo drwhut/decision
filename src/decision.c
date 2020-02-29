@@ -34,8 +34,35 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* Definition of the VERBOSE_LEVEL extern. */
-char VERBOSE_LEVEL = 0;
+/* Definition of the verbose level. */
+char verboseLevel = 0;
+
+/**
+ * \fn char d_get_verbose_level()
+ * \brief Get the current verbose level.
+ *
+ * \return The verbose level. It will be a number between 0 and 5.
+ */
+char d_get_verbose_level() {
+    return verboseLevel;
+}
+
+/**
+ * \fn void d_set_verbose_level(char level)
+ * \brief Set the current verbose level.
+ *
+ * \param level The verbose level to set. If the number is bigger than 5,
+ * then the verbose level is set to 5.
+ */
+void d_set_verbose_level(char level) {
+    if (level > 5) {
+        level = 5;
+    } else if (level < 0) {
+        level = 0;
+    }
+
+    verboseLevel = level;
+}
 
 /*
     const char* load_string_from_file(const char* filePath, size_t* size)
@@ -272,7 +299,7 @@ Sheet *d_load_string(const char *source, const char *name,
 
     VERBOSE(1, "--- STAGE 1: Creating lexical stream...\n")
     LexStream stream = d_lex_create_stream(source, name);
-    if (VERBOSE_LEVEL >= 4)
+    if (d_get_verbose_level() >= 4)
         d_lex_dump_stream(stream);
 
     if (stream.numTokens > 0) {
@@ -284,12 +311,12 @@ Sheet *d_load_string(const char *source, const char *name,
         // Syntax analysis may have thrown errors, in which case semantic
         // analysis is unreliable.
         if (result.success) {
-            if (VERBOSE_LEVEL >= 4)
+            if (d_get_verbose_level() >= 4)
                 d_syntax_dump_tree(root);
 
             VERBOSE(1, "--- STAGE 3: Checking semantics...\n")
             d_semantic_scan(sheet, root, opts.priors, opts.debug);
-            if (VERBOSE_LEVEL >= 2)
+            if (d_get_verbose_level() >= 2)
                 d_sheet_dump(sheet);
 
             // After checking the sheet, see if we got any errors.
@@ -315,7 +342,7 @@ Sheet *d_load_string(const char *source, const char *name,
                 d_link_sheet(sheet);
 
                 // Dump the compiled content.
-                if (VERBOSE_LEVEL >= 3) {
+                if (d_get_verbose_level() >= 3) {
                     d_asm_dump_all(sheet);
 
                     if (opts.debug) {
@@ -362,7 +389,7 @@ bool d_run_string(const char *source, const char *name,
     bool hadErrors = sheet->hasErrors;
 
     if (!hadErrors) {
-        if (VERBOSE_LEVEL >= 3)
+        if (d_get_verbose_level() >= 3)
             d_asm_dump_all(sheet);
 
         hadErrors = !d_run_sheet(sheet);
@@ -448,7 +475,7 @@ bool d_run_source_file(const char *filePath, CompileOptions *options) {
     bool hadErrors = sheet->hasErrors;
 
     if (!hadErrors) {
-        if (VERBOSE_LEVEL >= 3)
+        if (d_get_verbose_level() >= 3)
             d_asm_dump_all(sheet);
 
         hadErrors = !d_run_sheet(sheet);
@@ -550,7 +577,7 @@ bool d_run_object_file(const char *filePath, CompileOptions *options) {
     bool hadErrors = sheet->hasErrors;
 
     if (!hadErrors) {
-        if (VERBOSE_LEVEL >= 3)
+        if (d_get_verbose_level() >= 3)
             d_asm_dump_all(sheet);
 
         hadErrors = !d_run_sheet(sheet);
@@ -652,7 +679,7 @@ bool d_run_file(const char *filePath, CompileOptions *options) {
     if (!hadErrors) {
         d_link_sheet(sheet);
 
-        if (VERBOSE_LEVEL >= 3)
+        if (d_get_verbose_level() >= 3)
             d_asm_dump_all(sheet);
 
         hadErrors = !d_run_sheet(sheet);

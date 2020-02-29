@@ -121,7 +121,7 @@ int main(int argc, char *argv[]) {
         else if (strncmp(arg, "-V", 2) == 0 ||
                  strncmp(arg, "--verbose", 9) == 0) {
             // The default verbose level.
-            VERBOSE_LEVEL = 3;
+            char verboseLevel = 3;
 
             size_t flagSize = (strncmp(arg, "-V", 2) == 0) ? 2 : 9;
 
@@ -130,22 +130,22 @@ int main(int argc, char *argv[]) {
                 if (arg[flagSize] == '=') {
                     switch (arg[flagSize + 1]) {
                         case '0':
-                            VERBOSE_LEVEL = 0;
+                            verboseLevel = 0;
                             break;
                         case '1':
-                            VERBOSE_LEVEL = 1;
+                            verboseLevel = 1;
                             break;
                         case '2':
-                            VERBOSE_LEVEL = 2;
+                            verboseLevel = 2;
                             break;
                         case '3':
-                            VERBOSE_LEVEL = 3;
+                            verboseLevel = 3;
                             break;
                         case '4':
-                            VERBOSE_LEVEL = 4;
+                            verboseLevel = 4;
                             break;
                         case '5':
-                            VERBOSE_LEVEL = 5;
+                            verboseLevel = 5;
                             break;
                         default:
                             break;
@@ -153,7 +153,8 @@ int main(int argc, char *argv[]) {
                 }
             }
 
-            printf("Verbose level set to %d.\n", VERBOSE_LEVEL);
+            d_set_verbose_level(verboseLevel);
+            printf("Verbose level set to %d.\n", verboseLevel);
         }
         // -v, --version
         else if (ARG("-v") || ARG("--version")) {

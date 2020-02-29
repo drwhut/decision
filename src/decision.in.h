@@ -69,28 +69,6 @@
 
 // clang-format on
 
-/**
- * \var extern char VERBOSE_LEVEL
- * \brief A variable stating the verbose level being used.
- */
-DECISION_API char VERBOSE_LEVEL;
-
-/**
- * \def VERBOSE(level, ...)
- * \brief A macro to print verbose information depending on the level.
- *
- * The arguments after `level` are fed into a `printf` statement.
- *
- * If the level given is greater than or equal to the current verbose level
- * `VERBOSE_LEVEL`, the message will be printed. Otherwise, it will not be
- * printed.
- *
- * \param level The verbose level at which to start displaying the message.
- */
-#define VERBOSE(level, ...)       \
-    if (VERBOSE_LEVEL >= (level)) \
-        printf(__VA_ARGS__);
-
 /* A forward declaration of the Sheet struct from dsheet.h */
 struct _sheet;
 
@@ -100,10 +78,10 @@ struct _DVM;
 /**
  * \struct _compileOptions
  * \brief A set of options for when a sheet is compiled.
- * 
+ *
  * By default, there are no initial includes, and the sheet is not compiled in
  * debug mode.
- * 
+ *
  * \typedef struct _compileOptions CompileOptions
  */
 typedef struct _compileOptions {
@@ -123,11 +101,46 @@ typedef struct _compileOptions {
  * \def DEFAULT_COMPILE_OPTIONS
  * \brief The default compile options.
  */
-#define DEFAULT_COMPILE_OPTIONS (CompileOptions){NULL, NULL, false}
+#define DEFAULT_COMPILE_OPTIONS \
+    (CompileOptions) {          \
+        NULL, NULL, false       \
+    }
 
 /*
 === FUNCTIONS =============================================
 */
+
+/**
+ * \fn char d_get_verbose_level()
+ * \brief Get the current verbose level.
+ *
+ * \return The verbose level. It will be a number between 0 and 5.
+ */
+DECISION_API char d_get_verbose_level();
+
+/**
+ * \fn void d_set_verbose_level(char level)
+ * \brief Set the current verbose level.
+ *
+ * \param level The verbose level to set. If the number is bigger than 5,
+ * then the verbose level is set to 5.
+ */
+DECISION_API void d_set_verbose_level(char level);
+
+/**
+ * \def VERBOSE(level, ...)
+ * \brief A macro to print verbose information depending on the level.
+ *
+ * The arguments after `level` are fed into a `printf` statement.
+ *
+ * If the level given is greater than or equal to the current verbose level,
+ * the message will be printed. Otherwise, it will not be printed.
+ *
+ * \param level The verbose level at which to start displaying the message.
+ */
+#define VERBOSE(level, ...)               \
+    if (d_get_verbose_level() >= (level)) \
+        printf(__VA_ARGS__);
 
 /**
  * \fn bool d_run_sheet(Sheet *sheet)
