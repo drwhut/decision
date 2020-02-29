@@ -134,7 +134,7 @@ as you need (since your flow of execution could go down different paths).
    Add(#21, 1)~#22
    Set(numFactors, #20, #22)
 
-   Return(PrintFactorsOf, #16, #20)
+   Return(PrintFactorsOf, #16, #21)
 
    Start~#30
    CountTo(#30, 10)~#31

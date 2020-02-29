@@ -511,12 +511,12 @@ BCode d_push_input(BuildContext *context, NodeSocket socket, bool forceFloat) {
                     d_concat_bytecode(&out, &get);
                     d_free_bytecode(&get);
 
+                    context->stackTop++;
+                    inputIndex = context->stackTop;
+
                     if (!forceOnTop) {
-                        inputIndex = context->stackTop;
                         set_stack_index(context, connSocket, inputIndex);
                     }
-
-                    context->stackTop++;
                 }
 
                 set_stack_index(context, socket, inputIndex);
@@ -1739,7 +1739,9 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
                 BCode thenBranch = d_malloc_bytecode(0);
                 BCode elseBranch = d_malloc_bytecode(0);
 
-                int initStackTop = context->stackTop;
+                // The boolean at the top of the stack will be poped by the
+                // JRCONFI instruction!
+                int initStackTop = --context->stackTop;
 
                 // Get the individual branches compiled.
                 socket.nodeIndex   = nodeIndex;
@@ -1797,10 +1799,10 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
                     }
                 }
 
+                int elseTopDiff = context->stackTop - initStackTop;
+
                 // Reset the context stack top.
                 context->stackTop = initStackTop;
-
-                int elseTopDiff = context->stackTop - initStackTop;
 
                 // We want both branches to pop whatever they push onto the
                 // stack.
@@ -1850,10 +1852,6 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
 
                 BCode conAtStart = d_bytecode_ins(OP_JRCONFI);
                 d_bytecode_set_fimmediate(conAtStart, 1, jmpToThen);
-
-                // This JRCONFI will pop the condition from the top of the
-                // stack!
-                context->stackTop--;
 
                 BCode conAtEndElse = d_malloc_bytecode(0);
 

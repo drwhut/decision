@@ -8,8 +8,14 @@ testdecisioncompile collatz_conjecture.dc collatz_conjecture.out
 testdecision factorial.dc factorial.out
 testdecisioncompile factorial.dc factorial.out
 
+testdecision factors.dc factors.out
+testdecisioncompile factors.dc factors.out
+
 testdecision fibonacci.dc fibonacci.out
 testdecisioncompile fibonacci.dc fibonacci.out
+
+testdecision gcf.dc gcf.out
+testdecisioncompile gcf.dc gcf.out
 
 testdecision hello_world.dc hello_world.out
 testdecisioncompile hello_world.dc hello_world.out

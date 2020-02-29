@@ -389,9 +389,6 @@ bool d_run_string(const char *source, const char *name,
     bool hadErrors = sheet->hasErrors;
 
     if (!hadErrors) {
-        if (d_get_verbose_level() >= 3)
-            d_asm_dump_all(sheet);
-
         hadErrors = !d_run_sheet(sheet);
     }
 
@@ -475,9 +472,6 @@ bool d_run_source_file(const char *filePath, CompileOptions *options) {
     bool hadErrors = sheet->hasErrors;
 
     if (!hadErrors) {
-        if (d_get_verbose_level() >= 3)
-            d_asm_dump_all(sheet);
-
         hadErrors = !d_run_sheet(sheet);
     }
 
@@ -552,6 +546,10 @@ Sheet *d_load_object_file(const char *filePath, CompileOptions *options) {
         if (!out->hasErrors) {
             d_link_sheet(out);
         }
+
+        if (d_get_verbose_level() >= 3) {
+            d_asm_dump_all(out);
+        }
     } else {
         // We errored loading the file.
         out            = d_sheet_create(filePath);
@@ -577,9 +575,6 @@ bool d_run_object_file(const char *filePath, CompileOptions *options) {
     bool hadErrors = sheet->hasErrors;
 
     if (!hadErrors) {
-        if (d_get_verbose_level() >= 3)
-            d_asm_dump_all(sheet);
-
         hadErrors = !d_run_sheet(sheet);
     }
 
@@ -677,11 +672,6 @@ bool d_run_file(const char *filePath, CompileOptions *options) {
     bool hadErrors = sheet->hasErrors;
 
     if (!hadErrors) {
-        d_link_sheet(sheet);
-
-        if (d_get_verbose_level() >= 3)
-            d_asm_dump_all(sheet);
-
         hadErrors = !d_run_sheet(sheet);
     }
 
