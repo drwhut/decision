@@ -1,6 +1,6 @@
 /*
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -26,8 +26,8 @@
 #ifndef DOPTIMIZE_H
 #define DOPTIMIZE_H
 
-#include <stdbool.h>
 #include "dcfg.h"
+#include <stdbool.h>
 
 #include <stddef.h>
 
@@ -73,25 +73,35 @@ DECISION_API void d_optimize_remove_bytecode(struct _sheet *sheet, size_t start,
 DECISION_API void d_optimize_all(struct _sheet *sheet);
 
 /**
- * \fn bool d_optimize_pop_push_consecutive(Sheet *sheet)
- * \brief Try and find consecutive instructions that push and pop the general
- * stack into / from the same register. The push and pop order doesn't matter.
- *
- * \return If we were able to optimise.
- *
- * \param sheet The sheet containing the bytecode to optimize.
- */
-DECISION_API bool d_optimize_pop_push_consecutive(struct _sheet *sheet);
-
-/**
  * \fn bool d_optimize_not_consecutive(Sheet *sheet)
- * \brief Try and find consecutive NOT instructions that NOT the same register.
+ * \brief Try and find consecutive NOT instructions.
  *
  * \return If we were able to optimise.
  *
  * \param sheet The sheet containing the bytecode to optimize.
  */
 DECISION_API bool d_optimize_not_consecutive(struct _sheet *sheet);
+
+/**
+ * \fn bool d_optimize_push_pop_consecutive(Sheet *sheet)
+ * \brief Try and find POP instructions immediately following PUSH instructions.
+ *
+ * \return If we were able to optimise.
+ *
+ * \param sheet The sheet containing the bytecode to optimise.
+ */
+DECISION_API bool d_optimize_push_pop_consecutive(struct _sheet *sheet);
+
+/**
+ * \fn d_optimize_useless(Sheet *sheet)
+ * \brief Try and find useless instructions in the bytecode, e.g. poping 0
+ * items.
+ *
+ * \return If we were able to optimise.
+ *
+ * \param sheet The sheet containing the bytecode to optimise.
+ */
+DECISION_API bool d_optimize_useless(struct _sheet *sheet);
 
 /**
  * \fn bool d_optimize_call_func_relative(Sheet *sheet)
@@ -106,14 +116,25 @@ DECISION_API bool d_optimize_not_consecutive(struct _sheet *sheet);
 DECISION_API bool d_optimize_call_func_relative(struct _sheet *sheet);
 
 /**
- * \fn bool d_optimize_move_consecutive(Sheet *sheet)
- * \brief Try and find consecutive MVTF and MVTI instructions that move a value
- * in and out the same register.
- * 
+ * \fn bool d_optimize_simplify(Sheet *sheet)
+ * \brief Try and find instructions that can be simplified, i.e. POPB 1 = POP.
+ *
  * \return If we were able to optimise.
- * 
- * \param sheet The sheet containing the bytecode to optimize.
+ *
+ * \param sheet The sheet containing the bytecode to optimise.
  */
-DECISION_API bool d_optimize_move_consecutive(struct _sheet *sheet);
+DECISION_API bool d_optimize_simplify(struct _sheet *sheet);
+
+/**
+ * \fn bool d_optimize_shrink_fimmediate(Sheet *sheet)
+ * \brief For instructions that have full immediate operands, try and replace
+ * them with equivalent instructions that use immediates that are smaller, i.e.
+ * half and byte immediates.
+ *
+ * \return If we were able to optimise.
+ *
+ * \param sheet The sheet containing the bytecode to optimise.
+ */
+DECISION_API bool d_optimize_shrink_fimmediate(struct _sheet *sheet);
 
 #endif // DOPTIMIZE_H

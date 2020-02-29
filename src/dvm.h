@@ -1,6 +1,6 @@
 /*
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -42,75 +42,106 @@
  * \typedef enum _dIns DIns
  */
 typedef enum _dIns {
-    OP_RET   = 0,  ///< $( pc )  = pop(callStack) ELSE vm.halted = true
-    OP_ADD   = 1,  ///< $( r1 )  = $( r1 ) + $( r2 )
-    OP_ADDF  = 2,  ///< $( f1 )  = $( f1 ) + $( f2 )
-    OP_ADDI  = 3,  ///< $( r )  += W_IMMEDIATE(4/2)
-    OP_AND   = 4,  ///< $( r1 )  = $( r1 ) & $( r2 )
-    OP_ANDI  = 5,  ///< $( r )  &= IMMEDIATE(4/2)
-    OP_CALL  = 6,  ///< push(callStack, $( pc )); $( pc ) = $( r )
-    OP_CALLC = 7,  ///< (*$( r ))(this)
-    OP_CALLR = 8,  ///< push(callStack, $( pc )); $( pc ) += W_IMMEDIATE(4/2)
-    OP_CEQ   = 9,  ///< $( r1 )  = ($( r2 ) == $( r3 )) ? 1 : 0
-    OP_CEQF  = 10, ///< $( r1 )  = ($( f2 ) == $( f3 )) ? 1 : 0
-    OP_CEQS  = 11, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) == 0) ? 1 : 0
-    OP_CLEQ  = 12, ///< $( r1 )  = ($( r2 ) <= $( r3 )) ? 1 : 0
-    OP_CLEQF = 13, ///< $( r1 )  = ($( f2 ) <= $( f3 )) ? 1 : 0
-    OP_CLEQS = 14, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) <= 0) ? 1 : 0
-    OP_CLT   = 15, ///< $( r1 )  = ($( r2 ) < $( r3 )) ? 1 : 0
-    OP_CLTF  = 16, ///< $( r1 )  = ($( f2 ) < $( f3 )) ? 1 : 0
-    OP_CLTS  = 17, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) < 0) ? 1 : 0
-    OP_CMEQ  = 18, ///< $( r1 )  = ($( r2 ) >= $( r3 )) ? 1 : 0
-    OP_CMEQF = 19, ///< $( r1 )  = ($( f2 ) >= $( f3 )) ? 1 : 0
-    OP_CMEQS = 20, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) >= 0) ? 1 : 0
-    OP_CMT   = 21, ///< $( r1 )  = ($( r2 ) > $( r3 )) ? 1 : 0
-    OP_CMTF  = 22, ///< $( r1 )  = ($( f2 ) > $( f3 )) ? 1 : 0
-    OP_CMTS  = 23, ///< $( r1 )  = (strcmp($( r2 ), $( r3 )) > 0) ? 1 : 0
-    OP_CVTF  = 24, ///< $( f1 )  = (dfloat)$( r0 )
-    OP_CVTI  = 25, ///< $( r1 )  = (dint)$(f0)
-    OP_DIV   = 26, ///< $( r1 )  = $( r1 ) / $( r2 )
-    OP_DIVF  = 27, ///< $( f1 )  = $( f1 ) / $( f2 )
-    OP_DIVI  = 28, ///< $( r )   = $( r ) / W_IMMEDIATE(4/2)
-    OP_J     = 29, ///< $( pc )  = $( r )
-    OP_JCON  = 30, ///< $( pc )  = ($( r2 )) ? $( r1 ) : $( pc )
-    OP_JR    = 31, ///< $( pc ) += W_IMMEDIATE(4/2)
-    OP_JRCON =
-        32, ///< $( pc )  = ($( r1 )) ? $( pc ) + W_IMMEDIATE(4/2) : $( pc )
-    OP_LOAD     = 33, ///< $( r1 )  = $( r2 )
-    OP_LOADADR  = 34, ///< $( r1 )  = *((dint*)$( r2 ))
-    OP_LOADADRB = 35, ///< $( r1 )  = *((uint8_t*)$( r2 ))
-    OP_LOADARG  = 36, ///< arg[r1] = $( r2 )
-    OP_LOADARGI = 37, ///< arg[r1] = IMMEDIATE(4/2)
-    OP_LOADF    = 38, ///< $( f1 )  = $( f2 )
-    OP_LOADI    = 39, ///< $( r )   = IMMEDIATE(4/2)
-    OP_LOADUI   = 40, ///< $( r )   = IMMEDIATE(4/2) << 32 / 16
-    OP_MOD      = 41, ///< $( r1 ) %= $( r2 )
-    OP_MODI     = 42, ///< $( r1 ) %= W_IMMEDIATE(4/2)
-    OP_MUL      = 43, ///< $( r1 )  = $( r1 ) * $( r2 )
-    OP_MULF     = 44, ///< $( f1 )  = $( f1 ) * $( f2 )
-    OP_MULI     = 45, ///< $( r )   = $(r) * W_IMMEDIATE(4/2)
-    OP_MVTF     = 46, ///< $( f1 )  = $( r0 )
-    OP_MVTI     = 47, ///< $( r1 )  = $( f0 )
-    OP_NOT      = 48, ///< $( r )   = !$( r )
-    OP_OR       = 49, ///< $( r1 )  = $( r1 ) | $( r2 )
-    OP_ORI      = 50, ///< $( r )  |= IMMEDIATE(4/2)
-    OP_POP      = 51, ///< $( r )   = pop(generalStack)
-    OP_PUSH     = 52, ///< push(generalStack, $( r ))
-    OP_STOADR   = 53, ///< *((dint*)$( r2 )) = $( r1 )
-    OP_STOADRB  = 54, ///< *((uint8_t*)$( r2 )) = $( r1 )
-    OP_SUB      = 55, ///< $( r1 )  = $( r1 ) - $( r2 )
-    OP_SUBF     = 56, ///< $( f1 )  = $( f1 ) - $( f2 )
-    OP_SUBI     = 57, ///< $( r )  -= W_IMMEDIATE(4/2)
-    OP_SYSCALL  = 58, ///< syscall(IMMEDIATE(1)), see `DSyscall`.
-    OP_XOR      = 59, ///< $( r1 )  = $( r1 ) ^ $( r2 )
-    OP_XORI     = 60, ///< $( r )  ^= IMMEDIATE(4/2)
+    OP_RET     = 0,  ///< Equivalent to RETN 0.
+    OP_RETN    = 1,  ///< pop(stackFrame w/ I(1) return values)
+    OP_ADD     = 2,  ///< push(pop() + pop())
+    OP_ADDF    = 3,  ///< pushFloat(popFloat() + popFloat())
+    OP_ADDBI   = 4,  ///< push(pop() + I(1))
+    OP_ADDHI   = 5,  ///< push(pop() + I(|M|/2))
+    OP_ADDFI   = 6,  ///< push(pop() + I(|M|))
+    OP_AND     = 7,  ///< push(pop() & pop())
+    OP_ANDBI   = 8,  ///< push(pop() & I(1))
+    OP_ANDHI   = 9,  ///< push(pop() & I(|M|/2))
+    OP_ANDFI   = 10, ///< push(pop() & I(|M|))
+    OP_CALL    = 11, ///< pc = pop(); push(stackFrame w/ I(1) arguments)
+    OP_CALLC   = 12, ///< (*pop())(this) w/ I(1) arguments
+    OP_CALLCI  = 13, ///< (*I(|M|))(this) w/ I(1) arguments
+    OP_CALLI   = 14, ///< pc = I(|M|); push(stackFrame w/ I(1) arguments)
+    OP_CALLR   = 15, ///< pc += pop(); push(stackFrame w/ I(1) arguments)
+    OP_CALLRB  = 16, ///< pc += I(1); push(stackFrame w/ I(1) arguments)
+    OP_CALLRH  = 17, ///< pc += I(|M|/2); push(stackFrame w/ I(1) arguments)
+    OP_CALLRF  = 18, ///< pc += I(|M|); push(stackFrame w/ I(1) arguments)
+    OP_CEQ     = 19, ///< push(pop() == pop())
+    OP_CEQF    = 20, ///< push(popFloat() == popFloat())
+    OP_CLEQ    = 21, ///< push(pop() <= pop())
+    OP_CLEQF   = 22, ///< push(popFloat() <= popFloat())
+    OP_CLT     = 23, ///< push(pop() < pop())
+    OP_CLTF    = 24, ///< push(popFloat() < popFloat())
+    OP_CMEQ    = 25, ///< push(pop() >= pop())
+    OP_CMEQF   = 26, ///< push(popFloat() >= popFloat())
+    OP_CMT     = 27, ///< push(pop() > pop())
+    OP_CMTF    = 28, ///< push(popFloat() > popFloat())
+    OP_CVTF    = 29, ///< push((dfloat)pop())
+    OP_CVTI    = 30, ///< push((dint)pop())
+    OP_DEREF   = 31, ///< push(*pop())
+    OP_DEREFI  = 32, ///< push(*I(|M|))
+    OP_DEREFB  = 33, ///< push(*((uint8_t *)pop()))
+    OP_DEREFBI = 34, ///< push(*((uint8_t *)I(|M|)))
+    OP_DIV     = 35, ///< push(pop() / pop())
+    OP_DIVF    = 36, ///< pushFloat(popFloat() / popFloat())
+    OP_DIVBI   = 37, ///< push(pop() / I(1))
+    OP_DIVHI   = 38, ///< push(pop() / I(|M|/2))
+    OP_DIVFI   = 39, ///< push(pop() / I(|M|))
+    OP_GET     = 40, ///< push(get(pop()))
+    OP_GETBI   = 41, ///< push(get(I(1)))
+    OP_GETHI   = 42, ///< push(get(I(|M|/2)))
+    OP_GETFI   = 43, ///< push(get(I(|M|)))
+    OP_INV     = 44, ///< push(~pop())
+    OP_J       = 45, ///< pc = pop()
+    OP_JCON    = 46, ///< IF pop() THEN pc = pop() ELSE pop()
+    OP_JCONI   = 47, ///< IF pop() THEN pc = I(|M|)
+    OP_JI      = 48, ///< pc = I(|M|)
+    OP_JR      = 49, ///< pc += pop()
+    OP_JRBI    = 50, ///< pc += I(1)
+    OP_JRHI    = 51, ///< pc += I(|M|/2)
+    OP_JRFI    = 52, ///< pc += I(|M|)
+    OP_JRCON   = 53, ///< IF pop() THEN pc += pop() ELSE pop()
+    OP_JRCONBI = 54, ///< IF pop() THEN pc += I(1)
+    OP_JRCONHI = 55, ///< IF pop() THEN pc += I(|M|/2)
+    OP_JRCONFI = 56, ///< IF pop() THEN pc += I(|M|)
+    OP_MOD     = 57, ///< push(pop() % pop())
+    OP_MODBI   = 58, ///< push(pop() % I(1))
+    OP_MODHI   = 59, ///< push(pop() % I(|M|/2))
+    OP_MODFI   = 60, ///< push(pop() % I(|M|))
+    OP_MUL     = 61, ///< push(pop() * pop())
+    OP_MULF    = 62, ///< pushFloat(popFloat() * popFloat())
+    OP_MULBI   = 63, ///< push(pop() * I(1))
+    OP_MULHI   = 64, ///< push(pop() * I(|M|/2))
+    OP_MULFI   = 65, ///< push(pop() * I(|M|))
+    OP_NOT     = 66, ///< push(!pop())
+    OP_OR      = 67, ///< push(pop() | pop())
+    OP_ORBI    = 68, ///< push(pop() | I(1))
+    OP_ORHI    = 69, ///< push(pop() | I(|M|/2))
+    OP_ORFI    = 70, ///< push(pop() | I(|M|))
+    OP_POP     = 71, ///< pop() once
+    OP_POPB    = 72, ///< pop() I(1) times
+    OP_POPH    = 73, ///< pop() I(|M|/2) times
+    OP_POPF    = 74, ///< pop() I(|M|) times
+    OP_PUSHB   = 75, ///< push(I(1))
+    OP_PUSHH   = 76, ///< push(I(|M|/2))
+    OP_PUSHF   = 77, ///< push(I(|M|))
+    OP_PUSHNB  = 78, ///< push(0) I(1) times
+    OP_PUSHNH  = 79, ///< push(0) I(|M|/2) times
+    OP_PUSHNF  = 80, ///< push(0) I(|M|) times
+    OP_SETADR  = 81, ///< *((dint *)pop()) = pop()
+    OP_SETADRB = 82, ///< *((uint8_t *)pop()) = pop()
+    OP_SUB     = 83, ///< push(pop() - pop())
+    OP_SUBF    = 84, ///< pushFloat(popFloat() - popFloat())
+    OP_SUBBI   = 85, ///< push(pop() - I(1))
+    OP_SUBHI   = 86, ///< push(pop() - I(|M|/2))
+    OP_SUBFI   = 87, ///< push(pop() - I(|M|))
+    OP_SYSCALL = 88, ///< push(syscall(I(1), pop(), pop(), pop()))
+    OP_XOR     = 89, ///< push(pop() ^ pop())
+    OP_XORBI   = 90, ///< push(pop() ^ I(1))
+    OP_XORHI   = 91, ///< push(pop() ^ I(|M|/2))
+    OP_XORFI   = 92, ///< push(pop() ^ I(|M|))
 } DIns;
 
 /**
  * \def NUM_OPCODES
  * \brief Macro constant representing the number of opcodes.
  */
-#define NUM_OPCODES (OP_XORI + 1)
+#define NUM_OPCODES (OP_XORFI + 1)
 
 /**
  * \enum _dSyscall
@@ -119,73 +150,46 @@ typedef enum _dIns {
  * \typedef enum _dSyscall DSyscall
  */
 typedef enum _dSyscall {
-    SYS_LOADSTR = 0, ///< Load a string value into a MALLOC'D string.
-                     ///< * `arg0`: A register which contains a pointer to a
-                     ///< MALLOC'D string, the string that is being set.
-                     ///< If the new string is a different length, chances are
-                     ///< the pointer to the malloc'd string will change, and
-                     ///< so will this register.
-                     ///< * `arg1`: A register which contains a pointer to the
-                     ///< string to copy.
-
-    SYS_PRINT = 1, ///< Print a value to `stdout`.
+    SYS_PRINT = 0, ///< Print a value to `stdout`.
                    ///< * `arg0`: `0`: `Integer`, `1`: `Float`, `2`: `String`,
                    ///< `3`: `Boolean`.
-                   ///< * `arg1`: The register to print.
-                   ///< * `arg2`: If set to `1`, it will print a newline at the
+                   ///< * `arg1`: If set to `1`, it will print a newline at the
                    ///< end, otherwise it will not.
+                   ///< * `arg2`: The value to print.
+                   ///< * Returns: The value 0.
+
+    SYS_STRCMP = 1, ///< Compare two strings.
+                    ///< * `arg0`: `0`: Equal, `1`: Less Than or Equal,
+                    ///< `2`: Less Than, `3`: More Than or Equal,
+                    ///< `4`: More Than.
+                    ///< * `arg1`: The first string pointer.
+                    ///< * `arg2`: The second string pointer.
+                    ///< * Returns: 1 if true, 0 if false.
+
+    SYS_STRLEN = 2, ///< Get the length of a string.
+                    ///< * `arg0`: Unused.
+                    ///< * `arg1`: Unused.
+                    ///< * `arg2`: The string to get the length of.
+                    ///< * Returns: The length of the string.
 } DSyscall;
 
 /**
- * \def reg_t
- * \brief Macro to represent register indexes.
- *
- * **NOTE:** Needs to be able to hold numbers bigger than the number of
- * registers, since we need to check in code generation if we've used too many.
+ * \def VM_STACK_SIZE_MIN
+ * \brief The minimum, and starting, size of the VM's stack.
  */
-#define reg_t uint16_t
+#define VM_STACK_SIZE_MIN 16
 
 /**
- * \def VM_NUM_REG
- * \brief Macro constant to state the number of registers in the Decision VM.
+ * \def VM_STACK_SIZE_SCALE_INC
+ * \brief How much should the stack size increase once it reaches capacity?
  */
-#define VM_NUM_REG 256
+#define VM_STACK_SIZE_SCALE_INC 1.5
 
 /**
- * \def VM_NUM_ARG_REG
- * \brief Macro constant to state the number of argument registers.
+ * \def VM_STACK_SIZE_SCALE_DEC
+ * \brief How much should the stack size decrease to save memory?
  */
-#define VM_NUM_ARG_REG 4
-
-/**
- * \def VM_REG_FLOAT_START
- * \brief Macro constant to state the starting index of the floating point
- * registers.
- *
- * **NOTE:** There are always 256 general-purpose registers, this constant says
- * where it divides them into integer and floating point registers.
- *
- * **NOTE:** Needs to be < `VM_NUM_REG`!
- */
-#define VM_REG_FLOAT_START 128
-
-/**
- * \def VM_IS_FLOAT_REG(reg)
- * \brief Macro to help distinguish floating point registers.
- */
-#define VM_IS_FLOAT_REG(reg) ((reg) >= VM_REG_FLOAT_START)
-
-/**
- * \def VM_GENERAL_STACK_CAPACITY
- * \brief Macro constant to state the capacity of the general stack.
- */
-#define VM_GENERAL_STACK_CAPACITY 128
-
-/**
- * \def VM_CALL_STACK_CAPACITY
- * \brief Macro constant to state the capacity of the call stack.
- */
-#define VM_CALL_STACK_CAPACITY 128
+#define VM_STACK_SIZE_SCALE_DEC 0.5
 
 /**
  * \enum _DVM
@@ -194,80 +198,329 @@ typedef enum _dSyscall {
  * \typedef struct _DVM DVM
  */
 typedef struct _DVM {
-    char *pc;              ///< The program counter.
+    char *pc; ///< The program counter.
+
+    dint *basePtr;  ///< A pointer to the base of the stack.
+    dint *stackPtr; ///< A pointer to the top of the stack.
+    dint *framePtr; ///< A pointer to the start of the stack frame.
+
+    duint stackSize; ///< The current size of the stack.
+
     unsigned char _inc_pc; ///< How many bytes to increment the program counter.
                            ///< This is determined automatically.
-
-    dint registers[VM_REG_FLOAT_START]; ///< The general registers.
-    dfloat floatRegisters[VM_NUM_REG -
-                          VM_REG_FLOAT_START]; ///< The float registers.
-    dint argRegisters[VM_NUM_ARG_REG];         ///< The argument registers.
-
-    dint generalStack[VM_GENERAL_STACK_CAPACITY]; ///< The general stack.
-    short _generalStackPtr; ///< The general stack pointer.
-
-    char *callStack[VM_CALL_STACK_CAPACITY]; ///< The call stack.
-    short _callStackPtr;                     ///< The call stack pointer.
 
     bool halted;       ///< The halted flag.
     bool runtimeError; ///< The runtime error flag.
 } DVM;
 
-/**
- * \def IMMEDIATE_SIZE
- * \brief The size of immediates in bytes.
- *
- * \def immediate_t
- * \brief A type to store immediates in.
- *
- * \def uimmediate_t
- * \brief A type to store unsigned immediates in.
- *
- * \def IMMEDIATE_MASK
- * \brief A mask to get the lower half of an immediate.
- *
- * \def IMMEDIATE_UPPER_MASK
- * \brief A mask to get the upper half of an immediate.
- */
+#define BIMMEDIATE_SIZE   1
+#define bimmediate_t      int8_t
+#define BIMMEDIATE_MIN    INT8_MIN
+#define BIMMEDIATE_MAX    INT8_MAX
+#define BIMMEDIATE_PRINTF "hh"
+
 #ifdef DECISION_32
-#define IMMEDIATE_SIZE       2
-#define immediate_t          int16_t
-#define uimmediate_t         uint16_t
-#define IMMEDIATE_MASK       0xffff
-#define IMMEDIATE_UPPER_MASK 0xffff0000
+#define HIMMEDIATE_SIZE 2
+#define himmediate_t    int16_t
+#define HIMMEDIATE_MIN  INT16_MIN
+#define HIMMEDIATE_MAX  INT16_MAX
+#define FIMMEDIATE_SIZE 4
+#define fimmediate_t    int32_t
+#define FIMMEDIATE_MIN  INT32_MIN
+#define FIMMEDIATE_MAX  INT32_MAX
+
+#if defined(WIN32)
+#define HIMMEDIATE_PRINTF "h"
+#define FIMMEDIATE_PRINTF "l"
 #else
-#define IMMEDIATE_SIZE       4
-#define immediate_t          int32_t
-#define uimmediate_t         uint32_t
-#define IMMEDIATE_MASK       0xffffffff
-#define IMMEDIATE_UPPER_MASK 0xffffffff00000000
+#define HIMMEDIATE_PRINTF "hh"
+#define FIMMEDIATE_PRINTF "h"
+#endif // defined(WIN32)
+
+#else // 64-bit.
+#define HIMMEDIATE_SIZE 4
+#define himmediate_t    int32_t
+#define HIMMEDIATE_MIN  INT32_MIN
+#define HIMMEDIATE_MAX  INT32_MAX
+#define FIMMEDIATE_SIZE 8
+#define fimmediate_t    int64_t
+#define FIMMEDIATE_MIN  INT64_MIN
+#define FIMMEDIATE_MAX  INT64_MAX
+
+#if defined(WIN32)
+#define HIMMEDIATE_PRINTF "l"
+#define FIMMEDIATE_PRINTF "ll"
+#else
+#define HIMMEDIATE_PRINTF "h"
+#define FIMMEDIATE_PRINTF "l"
+#endif // defined(WIN32)
 #endif // DECISION_32
 
-/**
- * \def GET_IMMEDIATE_PTR(ptr)
- * \brief Get a lower immediate value from a pointer.
- */
-#define GET_IMMEDIATE_PTR(ptr) (dint) * ((uimmediate_t *)(ptr))
-
-/**
- * \def GET_UPPER_IMMEDIATE_PTR(ptr)
- * \brief Get an upper immediate value from a pointer.
- */
-#define GET_UPPER_IMMEDIATE_PTR(ptr) \
-    (GET_IMMEDIATE_PTR(ptr) << IMMEDIATE_SIZE * 8)
-
-/**
- * \def GET_BYTEN(ptr, n)
- * \brief Macro function to get the `n`th byte after a pointer `ptr`.
- */
-#define GET_BYTEN(ptr, n) *((unsigned char *)(ptr) + (n))
-
 /*
-=== FUNCTIONS =============================================
+=== STACK FUNCTIONS =======================================
 */
 
 /**
- * \fn const unsigned char d_vm_ins_size(DIns opcode)
+ * \fn size_t d_vm_frame(DVM *vm)
+ * \brief Get the number of elements in the current stack frame.
+ *
+ * \return The number of elements in the stack frame.
+ *
+ * \param vm The VM whose stack to query.
+ */
+DECISION_API size_t d_vm_frame(DVM *vm);
+
+/**
+ * \fn dint d_vm_get(DVM *vm, dint index)
+ * \brief Get an integer from a value in the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \return The integer value of the stack at the given index.
+ *
+ * \param vm The VM whose stack to retrieve from.
+ * \param index The index of the stack.
+ */
+DECISION_API dint d_vm_get(DVM *vm, dint index);
+
+/**
+ * \fn dfloat d_vm_get_float(DVM *vm, dint index)
+ * \brief Get a float from a value in the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \return The float value of the stack at the given index.
+ *
+ * \param vm The VM whose stack to retrieve from.
+ * \param index The index of the stack.
+ */
+DECISION_API dfloat d_vm_get_float(DVM *vm, dint index);
+
+/**
+ * \fn void *d_vm_get_ptr(DVM *vm, dint index)
+ * \brief Get a pointer from a value in the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \return The pointer value of the stack at the given index.
+ *
+ * \param vm The VM whose stack to retrieve from.
+ * \param index The index of the stack.
+ */
+DECISION_API void *d_vm_get_ptr(DVM *vm, dint index);
+
+/**
+ * \fn void d_vm_insert(DVM *vm, dint index, dint value)
+ * \brief Insert an integer into the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \param vm The VM whose stack to insert to.
+ * \param index The index of the stack to insert to, i.e. `value` will be at
+ * this location when the function returns.
+ * \param value The value to insert into the stack.
+ */
+DECISION_API void d_vm_insert(DVM *vm, dint index, dint value);
+
+/**
+ * \fn void d_vm_insert_float(DVM *vm, dint index, dfloat value)
+ * \brief Insert a float into the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \param vm The VM whose stack to insert to.
+ * \param index The index of the stack to insert to, i.e. `value` will be at
+ * this location when the function returns.
+ * \param value The value to insert into the stack.
+ */
+DECISION_API void d_vm_insert_float(DVM *vm, dint index, dfloat value);
+
+/**
+ * \fn void d_vm_insert_ptr(DVM *vm, dint index, void *ptr)
+ * \brief Insert a pointer into the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \param vm The VM whose stack to insert to.
+ * \param index The index of the stack to insert to, i.e. `ptr` will be at this
+ * location when the function returns.
+ * \param ptr The pointer to insert into the stack.
+ */
+DECISION_API void d_vm_insert_ptr(DVM *vm, dint index, void *ptr);
+
+/**
+ * \fn dint d_vm_pop(DVM *vm)
+ * \brief Pop an integer from the top of the stack.
+ *
+ * \return The integer at the top of the stack.
+ *
+ * \param vm The VM whose stack to pop from.
+ */
+DECISION_API dint d_vm_pop(DVM *vm);
+
+/**
+ * \fn void d_vm_popn(DVM *vm, size_t n)
+ * \brief Pop `n` elements from the stack.
+ *
+ * \param vm The VM whose stack to pop from.
+ * \param n The number of elements to pop.
+ */
+DECISION_API void d_vm_popn(DVM *vm, size_t n);
+
+/**
+ * \fn dfloat d_vm_pop_float(DVM *vm)
+ * \brief Pop a float from the top of the stack.
+ *
+ * \return The float at the top of the stack.
+ *
+ * \param vm The VM whose stack to pop from.
+ */
+DECISION_API dfloat d_vm_pop_float(DVM *vm);
+
+/**
+ * \fn void *d_vm_pop_ptr(DVM *vm)
+ * \brief Pop a pointer from the top of the stack.
+ *
+ * \return The pointer at the top of the stack.
+ *
+ * \param vm The VM whose stack to pop from.
+ */
+DECISION_API void *d_vm_pop_ptr(DVM *vm);
+
+/**
+ * \fn void d_vm_push(DVM *vm, dint value)
+ * \brief Push an integer value onto the stack.
+ *
+ * \param vm The VM whose stack to push onto.
+ * \param value The value to push onto the stack.
+ */
+DECISION_API void d_vm_push(DVM *vm, dint value);
+
+/**
+ * \fn void d_vm_pushn(DVM *vm, size_t n)
+ * \brief Push `0` onto the stack `n` times.
+ *
+ * \param vm The VM whose stack to push onto.
+ * \param n The number of items to push onto the stack.
+ */
+DECISION_API void d_vm_pushn(DVM *vm, size_t n);
+
+/**
+ * \fn void d_vm_push_float(DVM *vm, dfloat value)
+ * \brief Push a float value onto the stack.
+ *
+ * \param vm The VM whose stack to push onto.
+ * \param value The value to push onto the stack.
+ */
+DECISION_API void d_vm_push_float(DVM *vm, dfloat value);
+
+/**
+ * \fn void d_vm_push_ptr(DVM *vm, void *ptr)
+ * \brief Push a pointer onto the stack.
+ *
+ * \param vm The VM whose stack to push onto.
+ * \param ptr The pointer to push onto the stack.
+ */
+DECISION_API void d_vm_push_ptr(DVM *vm, void *ptr);
+
+/**
+ * \fn void d_vm_remove(DVM *vm, dint index)
+ * \brief Remove the value from the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \param vm The VM whose stack to remove from.
+ * \param index The index to remove from the stack.
+ */
+DECISION_API void d_vm_remove(DVM *vm, dint index);
+
+/**
+ * \fn void d_vm_remove_len(DVM *vm, dint index, size_t len)
+ * \brief Remove a number of values from the stack, starting at a particular
+ * index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \param vm The VM whose stack to remove from.
+ * \param index The index to start removing from the stack.
+ * \param len The number of items to remove from the stack.
+ */
+DECISION_API void d_vm_remove_len(DVM *vm, dint index, size_t len);
+
+/**
+ * \fn void d_vm_set(DVM *vm, dint index, dint value)
+ * \brief Set the value of an element in the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \param vm The VM whose stack to set the element of.
+ * \param index The index of the stack.
+ * \param value The value to set.
+ */
+DECISION_API void d_vm_set(DVM *vm, dint index, dint value);
+
+/**
+ * \fn void d_vm_set_float(DVM *vm, dint index, dfloat value)
+ * \brief Set the value of an element in the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \param vm The VM whose stack to set the element of.
+ * \param index The index of the stack.
+ * \param value The value to set.
+ */
+DECISION_API void d_vm_set_float(DVM *vm, dint index, dfloat value);
+
+/**
+ * \fn void d_vm_set_ptr(DVM *vm, dint index, void *ptr)
+ * \brief Set the value of an element in the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \param vm The VM whose stack to set the element of.
+ * \param index The index of the stack.
+ * \param ptr The value to set.
+ */
+DECISION_API void d_vm_set_ptr(DVM *vm, dint index, void *ptr);
+
+/**
+ * \fn size_t d_vm_top(DVM *vm)
+ * \brief Get the number of elements in the stack.
+ *
+ * \return The number of elements in the stack.
+ *
+ * \param vm The VM whose stack to query.
+ */
+DECISION_API size_t d_vm_top(DVM *vm);
+
+/*
+=== VM FUNCTIONS ==========================================
+*/
+
+/**
+ * \fn unsigned char d_vm_ins_size(DIns opcode)
  * \brief Given an opcode, get the total size of the instruction involving that
  * opcode in bytes.
  *
@@ -275,15 +528,32 @@ typedef struct _DVM {
  *
  * \param opcode The opcode to query.
  */
-DECISION_API const unsigned char d_vm_ins_size(DIns opcode);
+DECISION_API unsigned char d_vm_ins_size(DIns opcode);
+
+/**
+ * \fn DVM d_vm_create()
+ * \brief Create a Decision VM in its starting state, with malloc'd elements.
+ *
+ * \return A Decision VM in its starting state.
+ */
+DECISION_API DVM d_vm_create();
 
 /**
  * \fn void d_vm_reset(DVM *vm)
- * \brief Reset a Decision VM object to it's starting state.
+ * \brief Reset a Decision VM to its starting state.
  *
- * \param vm A Decision VM to set to it's starting state.
+ * \param vm A Decision VM to set to its starting state.
  */
 DECISION_API void d_vm_reset(DVM *vm);
+
+/**
+ * \fn void d_vm_free(DVM *vm)
+ * \brief Free the malloc'd elements of a Decision VM. Note that this makes the
+ * VM unusable unless you call `d_vm_reset` on it.
+ *
+ * \param vm The Decision VM to free.
+ */
+DECISION_API void d_vm_free(DVM *vm);
 
 /**
  * \fn void d_vm_runtime_error(DVM *vm, const char *error)
@@ -303,93 +573,12 @@ DECISION_API void d_vm_runtime_error(DVM *vm, const char *error);
  * This is to `d_vm_runtime_error` what `ERROR_COMPILER` is to
  * `d_error_compiler_push`.
  */
-#ifdef DECISION_SAFE_FUNCTIONS
-#define ERROR_RUNTIME(vm, ...)                          \
-    {                                                   \
-        char errMsg[MAX_ERROR_SIZE];                    \
-        sprintf_s(errMsg, MAX_ERROR_SIZE, __VA_ARGS__); \
-        d_vm_runtime_error((vm), errMsg);               \
-    }
-#else
 #define ERROR_RUNTIME(vm, ...)            \
     {                                     \
         char errMsg[MAX_ERROR_SIZE];      \
         sprintf(errMsg, __VA_ARGS__);     \
         d_vm_runtime_error((vm), errMsg); \
     }
-#endif // DECISION_SAFE_FUNCTIONS
-
-/**
- * \fn dint d_vm_pop_stack(DVM *vm)
- * \brief Pop an integer off the top of a VM's general stack.
- *
- * **NOTE:** If the general stack is empty, a runtime error will occur.
- *
- * \return The integer at the top of the general stack.
- *
- * \param vm The VM to pop from.
- */
-DECISION_API dint d_vm_pop_stack(DVM *vm);
-
-/**
- * \fn dfloat d_vm_pop_stack_float(DVM *vm)
- * \brief Pop a float off the top of a VM's general stack.
- *
- * **NOTE:** If the general stack is empty, a runtime error will occur.
- *
- * \return The float at the top of the general stack.
- *
- * \param vm The VM to pop from.
- */
-DECISION_API dfloat d_vm_pop_stack_float(DVM *vm);
-
-/**
- * \fn void *d_vm_pop_stack_ptr(DVM *vm)
- * \brief Pop a pointer off the top of a VM's general stack.
- *
- * **NOTE:** If the general stack is empty, a runtime error will occur.
- *
- * \return The generic pointer at the top of the general stack.
- *
- * \param vm The VM to pop from.
- */
-DECISION_API void *d_vm_pop_stack_ptr(DVM *vm);
-
-/**
- * \fn void d_vm_push_stack(DVM *vm, dint value)
- * \brief Push an integer onto the top of a VM's general stack.
- *
- * **NOTE:** If the general stack has already reached it's capacity, a runtime
- * error will occur when this function is called.
- *
- * \param vm The VM to push onto.
- * \param value The value to push onto the general stack.
- */
-DECISION_API void d_vm_push_stack(DVM *vm, dint value);
-
-/**
- * \fn void d_vm_push_stack_float(DVM *vm, dfloat value)
- * \brief Push a float onto the top of a VM's general stack.
- *
- * **NOTE:** If the general stack has already reached it's capacity, a runtime
- * error will occur when this function is called.
- *
- * \param vm The VM to push onto.
- * \param value The value to push onto the general stack.
- */
-DECISION_API void d_vm_push_stack_float(DVM *vm, dfloat value);
-
-/**
- * \fn void d_vm_push_stack_ptr(DVM *vm, void *ptr)
- * \brief Push a generic pointer onto the top of a VM's general stack.
- *
- * **NOTE:** If the general stack has already reached it's capacity, a runtime
- * error will occur when this function is called.
- *
- * \param vm The VM to push onto.
- * \param ptr The pointer to push onto the general stack.
- */
-DECISION_API void d_vm_push_stack_ptr(DVM *vm, void *ptr);
 
 /**
  * \fn void d_vm_parse_ins_at_pc(DVM *vm)
@@ -404,7 +593,8 @@ DECISION_API void d_vm_parse_ins_at_pc(DVM *vm);
  * \fn void d_vm_add_pc(DVM *vm, dint rel)
  * \brief Add to the program counter to go +rel bytes.
  *
- * **NOTE:** The VM will ALWAYS increment the PC after every instruction.
+ * **NOTE:** The VM will ALWAYS increment the PC after any instruction that
+ * isn't a jump, call or return.
  *
  * \param vm The VM whose PC to add to.
  * \param rel How many bytes to go forward. *Can* be negative.
@@ -416,7 +606,8 @@ DECISION_API void d_vm_add_pc(DVM *vm, dint rel);
  * \brief Increment the program counter in a Decision VM, to go to the next
  * instruction.
  *
- * **NOTE:** The VM will ALWAYS increment the PC after every instruction.
+ * **NOTE:** The VM will ALWAYS increment the PC after any instruction that
+ * isn't a jump, call or return.
  *
  * \param vm The VM whose PC to add to.
  */
@@ -433,5 +624,13 @@ DECISION_API void d_vm_inc_pc(DVM *vm);
  * \param start A pointer to the start of the bytecode to execute.
  */
 DECISION_API bool d_vm_run(DVM *vm, void *start);
+
+/**
+ * \fn void d_vm_dump(DVM *vm)
+ * \brief Dump the contents of a Decision VM to stdout for debugging.
+ *
+ * \param vm The VM to dump the contents of.
+ */
+DECISION_API void d_vm_dump(DVM *vm);
 
 #endif // DVM_H

@@ -1,6 +1,6 @@
 /*
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,12 +25,7 @@
 #include <stdio.h>
 
 void write_source_file() {
-    FILE *file;
-#ifdef DECISION_SAFE_FUNCTIONS
-    fopen_s(&file, "main.dc", "w");
-#else
-    file = fopen("main.dc", "w");
-#endif // DECISION_SAFE_FUNCTIONS
+    FILE *file = fopen("main.dc", "w");
 
     fprintf(file, "Start~#1\nPrint(#1, 'Hello, world!')");
     fclose(file);
@@ -39,8 +34,10 @@ void write_source_file() {
 int main() {
     write_source_file();
 
+    printf("So putting this here fixes testing on Linux? Ok.\n");
+
     // d_load_source_file
-    Sheet *sheet = d_load_source_file("main.dc");
+    Sheet *sheet = d_load_source_file("main.dc", NULL);
 
     // d_run_sheet
     START_CAPTURE_STDOUT()
@@ -53,16 +50,16 @@ int main() {
 
     // d_run_source_file
     START_CAPTURE_STDOUT()
-    d_run_source_file("main.dc");
+    d_run_source_file("main.dc", NULL);
     STOP_CAPTURE_STDOUT()
     ASSERT_CAPTURED_STDOUT("Hello, world!\n")
 
     // d_compile_file
-    d_compile_file("main.dc", "main.dco");
+    d_compile_file("main.dc", "main.dco", NULL);
 
     // d_run_object_file
     START_CAPTURE_STDOUT()
-    d_run_object_file("main.dco");
+    d_run_object_file("main.dco", NULL);
     STOP_CAPTURE_STDOUT()
     ASSERT_CAPTURED_STDOUT("Hello, world!\n")
 
@@ -73,7 +70,7 @@ int main() {
     ASSERT_EQUAL(isObj, 1)
 
     // d_load_file
-    sheet = d_load_file("main.dc");
+    sheet = d_load_file("main.dc", NULL);
 
     // d_run_sheet
     START_CAPTURE_STDOUT()
@@ -86,7 +83,7 @@ int main() {
 
     // d_run_file
     START_CAPTURE_STDOUT()
-    d_run_file("main.dco");
+    d_run_file("main.dco", NULL);
     STOP_CAPTURE_STDOUT()
     ASSERT_CAPTURED_STDOUT("Hello, world!\n")
 

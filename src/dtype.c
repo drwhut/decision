@@ -1,6 +1,6 @@
 /*
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -72,9 +72,13 @@ const char *d_type_name(DType type) {
             return "Name";
         // Vague types:
         case TYPE_NUMBER:
-            return "Number";
+            return "Number; Integer/Float";
+        case TYPE_BITWISE:
+            return "Bitwise; Integer/Boolean";
+        case TYPE_COMPARABLE:
+            return "Comparable; Integer/Float/String";
         case TYPE_VAR_ANY:
-            return "Variable";
+            return "Any; Integer/Float/String/Boolean";
         default:
             return NULL;
     }

@@ -11,3 +11,10 @@ src/decision.h
 
 # Doxygen generated XML files.
 docs/developer/xml
+
+# Sphinx generated files.
+__pycache__/
+*.pyc
+
+# Any exported core references in JSON.
+*.json

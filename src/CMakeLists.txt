@@ -1,6 +1,6 @@
 #[[
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,11 +21,15 @@ dasm.c
 dcfunc.c
 dcodegen.c
 dcore.c
+ddebug.c
 decision.c
 derror.c
+dgraph.c
 dlex.c
 dlink.c
 dmalloc.c
+dname.c
+dobj.c
 doptimize.c
 dsemantic.c
 dsheet.c
@@ -40,11 +44,15 @@ dcfg.h
 dcfunc.h
 dcodegen.h
 dcore.h
+ddebug.h
 decision.h
 derror.h
+dgraph.h
 dlex.h
 dlink.h
 dmalloc.h
+dname.h
+dobj.h
 doptimize.h
 dsemantic.h
 dsheet.h
@@ -60,61 +68,86 @@ configure_file(decision.in.h ${PROJECT_SOURCE_DIR}/src/decision.h)
 # Do we want to compile in 32-bit mode?
 option(COMPILER_32 "Set the compiler to store data in 32-bit formats?" OFF)
 
-# Do we want to compile into a DLL?
-option(COMPILER_DLL "Build a DLL rather than an executable?" OFF)
+# Do we want to compile a shared library rather than a static one?
+option(COMPILER_SHARED "Build a shared library rather than a static one?" OFF)
 
 if(COMPILER_32)
     add_definitions(-DDECISION_32)
 endif(COMPILER_32)
 
-if(COMPILER_DLL)
-    add_definitions(-DDECISION_BUILD_DLL)
-endif(COMPILER_DLL)
+if(COMPILER_SHARED)
+    if (MSVC)
+        add_definitions(-DDECISION_BUILD_DLL)
+    endif(MSVC)
+endif(COMPILER_SHARED)
+
+# Disable warnings about not using "safe" functions in MSVC.
+if(MSVC)
+    add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
+endif(MSVC)
 
 # The executable.
-add_executable(decision ${SRCS})
+add_executable(decision dmain.c)
 install(TARGETS decision DESTINATION bin)
 
 # Set where the header files should be installed.
 install(FILES ${HDRS} DESTINATION include/decision)
 
-# Add the libraries, but only one if on Windows.
+# Show warnings for the main executable!
 if(MSVC)
-    if(COMPILER_DLL)
-        add_library(decisionLibShared SHARED ${SRCS})
-    else(COMPILER_DLL)
-        add_library(decisionLibStatic STATIC ${SRCS})
-    endif(COMPILER_DLL)
+    target_compile_options(decision PRIVATE /W4)
 else(MSVC)
-    add_library(decisionLibStatic STATIC ${SRCS})
-    add_library(decisionLibShared SHARED ${SRCS})
+    target_compile_options(decision PRIVATE -Wall -Wextra -pedantic)
 endif(MSVC)
 
-# Change the output names of the libraries to be the same name as the executable,
-# and make the library dependent on the executable, so that it is always built
-# AFTER the executable.
-# We also want to pass a macro definition to the libraries so the pre-processor
-# knows we are building libraries.
-# We also want to set the install destination.
-if(TARGET decisionLibShared)
-    set_target_properties(decisionLibShared PROPERTIES OUTPUT_NAME decision)
-    set_target_properties(decisionLibShared PROPERTIES COMPILE_DEFINITIONS DECISION_LIBRARY)
-    add_dependencies(decisionLibShared decision)
+# The library.
+if(COMPILER_SHARED)
+    add_library(decisionLibShared SHARED ${SRCS})
+
+    # Link the executable with the library.
+    target_link_libraries(decision PUBLIC decisionLibShared)
+
+    # Set the install target.
     install(TARGETS decisionLibShared DESTINATION lib)
-endif(TARGET decisionLibShared)
-if(TARGET decisionLibStatic)
-    set_target_properties(decisionLibStatic PROPERTIES OUTPUT_NAME decision)
-    set_target_properties(decisionLibStatic PROPERTIES COMPILE_DEFINITIONS DECISION_LIBRARY)
-    add_dependencies(decisionLibStatic decision)
+
+    # Set the name of the library.
+    if(MSVC)
+        set_target_properties(decisionLibShared PROPERTIES OUTPUT_NAME libdecision)
+    else(MSVC)
+        set_target_properties(decisionLibShared PROPERTIES OUTPUT_NAME decision)
+    endif(MSVC)
+
+    # Show warnings for the library!
+    if(MSVC)
+        target_compile_options(decisionLibShared PRIVATE /W4)
+    else(MSVC)
+        target_compile_options(decisionLibShared PRIVATE -Wall -Wextra -pedantic)
+    endif(MSVC)
+else(COMPILER_SHARED)
+    add_library(decisionLibStatic STATIC ${SRCS})
+
+    # Link the executable with the library.
+    target_link_libraries(decision PUBLIC decisionLibStatic)
+
+    # Set the install target.
     install(TARGETS decisionLibStatic DESTINATION lib)
-endif(TARGET decisionLibStatic)
+
+    # Set the name of the library.
+    if(MSVC)
+        set_target_properties(decisionLibStatic PROPERTIES OUTPUT_NAME libdecision)
+    else(MSVC)
+        set_target_properties(decisionLibStatic PROPERTIES OUTPUT_NAME decision)
+    endif(MSVC)
+
+    # Show warnings for the library!
+    if(MSVC)
+        target_compile_options(decisionLibStatic PRIVATE /W4)
+    else(MSVC)
+        target_compile_options(decisionLibStatic PRIVATE -Wall -Wextra -pedantic)
+    endif(MSVC)
+endif(COMPILER_SHARED)
 
 # Export symbols for debugging on Linux.
-# target_compile_options(decision PRIVATE "-g")
-
-# Show warnings!
-if(MSVC)
-    target_compile_options(decision PRIVATE "-W4")
-else(MSVC)
-    target_compile_options(decision PRIVATE "-Wall")
-endif(MSVC)
+# target_compile_options(decision PRIVATE -g)
+# target_compile_options(decisionLibStatic PRIVATE -g)
+# target_compile_options(decisionLibShared PRIVATE -g)

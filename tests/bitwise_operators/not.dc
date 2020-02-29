@@ -1,9 +1,13 @@
 Start~#1
 
-< NOT false = true >
+> NOT false = true
 Not(false)~#2
 Print(#1, #2)~#3
 
-< NOT true = false >
+> NOT true = false
 Not(true)~#4
 Print(#3, #4)~#5
+
+> new in 0.3.0: NOT integers!
+Not(-2)~#6
+Print(#5, #6)~#7

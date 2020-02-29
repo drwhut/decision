@@ -1,3 +1,123 @@
+# Decision v0.3.0 - 29th February 2020
+
+**NOTE:** This update changes some of the fundamental definitions of items in
+Decision, and thus will break most source files, and all object files, from
+previous Decision versions!
+
+## Compiler
+
+### Comments
+
+* Removed multi-line comments.
+* Added single-line comments: Anything after and including the `>` symbol on
+the same line will be ignored by the compiler.
+
+### Metadata
+
+* All nodes, sockets, variables, functions and subroutines now have both names
+and descriptions which are accessible via the C API.
+  * The `Variable` property now has a description argument, e.g.
+  `Variable(count, Integer, 0, "Counts how many pies you've eaten today.")`
+  * The `Function` and `Subroutine` properties now have a description argument,
+  e.g. `Function(Double, "Doubles the number.")`
+  * The `FunctionInput` and `FunctionOutput` argument specification has
+  changed:
+    * `FunctionInput(functionName, inputName, inputType [,inputDefaultValue [, inputDescription]])`
+    * `FunctionOutput(functionName, outputName, outputType [, outputDescription])`
+
+### Core Functions
+
+* Integers as inputs to bitwise operators is now supported.
+* Booleans as inputs to `Equal` and `NotEqual` is now supported.
+* Reimplemented `Length` to use the C function `strlen`.
+
+### The VM
+
+* Changed the Decision VM to be stack-based, rather than register-based.
+  * The VM stack can grow and shrink in size, meaning the VM is not limited in
+  the amount of memory it can use anymore.
+  * The stack holds temporary values (previously stored in the registers),
+  arguments and return values (previously stored in the general stack), saved
+  return addresses (previously stored in the call stack), as well as saved
+  frame pointers.
+* Now produces a runtime error if a division by 0 is attempted.
+
+### Object Files
+
+* Compiled object files (.dco) now store the version of Decision that created
+them. The compiler now checks to see if an object file was made with a future
+version of Decision, and will check in future releases for incompatible
+versions.
+
+## The C API
+
+* C functions are now stored in sheets, rather than in a global list.
+* Sheets can now be loaded with an initial list of included sheets, which are
+loaded before any compilation happens.
+* Sheets now have an `allowFree` property that stops sheets that include it
+from freeing the sheet when they are freed.
+* Bytecode now stores the pointer to the `CFunction` struct containing the
+actual function pointer, rather than the function pointer itself, to conform to
+the ISO C Standard.
+
+## Debugging
+
+* The ability to debug Decision sheets has now been added, and can be done
+  through the C API (see [ddebug.h](src/ddebug.h)).
+  * If compiling in debug mode, code generation will store information about
+  instructions in the bytecode, and optimisation will no longer occur.
+  * You can provide agendas to debugging sessions, which allows you to give
+  function pointers which are called when certain events happen, and also allows
+  you to provide node and wire breakpoints.
+  * You can then run debug sessions, which essentially simulates running the
+  Decision VM.
+  * A C test has been added to test this functionality.
+
+## Refactoring
+
+* Split large source files into smaller ones to improve code readability.
+  * The graph components of sheets (i.e. the nodes and wires) have their own
+  set of files, `dgraph.c` and `dgraph.h`.
+  * Finding the definitions of names has been moved to `dname.c` and `dname.h`.
+  * Decision object files now have their own set of source files, `dobj.c` and
+  `dobj.h`, and the code has been revamped to be less error-prone.
+* Removed `d_insert_bytecode`, as it is no longer used.
+* Removed all calls to "safe" Visual C++ functions, due to considerations of
+standardisation.
+
+## Documentation
+
+* The compiler now has a `--export-core` flag, which will output the core
+reference in JSON format.
+  * This is used in conjunction with an extension added to the user manual,
+  which reads the JSON and displays the core reference automatically.
+* Both the user and developer manuals have been updated for changes made in
+this update.
+
+## Optimisations
+
+* Changed the build system such that most of the code compiles to a singular
+library (which is either static or shared, static by default, see
+[README.md](README.md) for more details), and link the executable to that
+library. This has reduced the compile time significantly.
+  * Compiler warnings have also been set to maximum on both the executable and
+  the library that is built.
+* Syntax Analysis has been optimised to check the next token ahead before
+dedicating itself to a syntax definition.
+* Nodes now reference their definitions, which reduces data redundancy.
+* Wires are stored in an ordered list, rather than as direct pointers, to
+reduce the number of memory allocations and to remove the potential for
+dangling pointers.
+
+## Bug Fixes
+
+* Fixed a bug where reduced types were no longer compatible with their
+connected sockets, but the compiler didn't throw an error.
+* Fixed a bug where a stack overflow would occur if there was a circular
+include cycle in the sheets.
+* Fixed a bug where the compiler would let subroutines with return values and
+without ending return nodes compile, leading to undefined values being returned.
+
 # Decision v0.2.0 - 16th January 2020
 
 ## Strings

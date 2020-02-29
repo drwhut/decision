@@ -1,6 +1,6 @@
 /*
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,9 +24,9 @@
 #ifndef DTYPE_H
 #define DTYPE_H
 
-#include <stdbool.h>
 #include "dcfg.h"
 #include "dlex.h"
+#include <stdbool.h>
 
 /*
 === HEADER DEFINITIONS ====================================
@@ -34,11 +34,13 @@
 
 /**
  * \enum _dType
- * \brief An enum for the data types.
+ * \brief An enum for the data types in Decision.
  *
  * The values go up in powers of 2. This is so that we can combine data types
- * to make *vague* data types, e.g. `Multiply` should be able to take
- * `Integer`s *or* `Float`s.
+ * to make *vague* data types, e.g. a number is `TYPE_INTEGER | TYPE_FLOAT`.
+ * 
+ * Note that there are several macros for common vague data types, e.g.
+ * `TYPE_NUMBER`, `TYPE_BITWISE`, `TYPE_VAR_ANY`, ...
  *
  * \typedef enum _dType DType
  */
@@ -69,6 +71,19 @@ typedef enum _dType {
  * \brief A vague type representing all numbers.
  */
 #define TYPE_NUMBER (TYPE_INT | TYPE_FLOAT)
+
+/**
+ * \def TYPE_BITWISE
+ * \brief A vague type representing bitwise types.
+ */
+#define TYPE_BITWISE (TYPE_INT | TYPE_BOOL)
+
+/**
+ * \def TYPE_COMPARABLE
+ * \brief A vague type representing types that can be compared, i.e. one value
+ * can be "more" than another.
+ */
+#define TYPE_COMPARABLE (TYPE_INT | TYPE_FLOAT | TYPE_STRING)
 
 /**
  * \def TYPE_VAR_ANY

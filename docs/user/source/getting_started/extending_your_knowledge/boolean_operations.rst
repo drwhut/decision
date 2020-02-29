@@ -1,6 +1,6 @@
 ..
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,11 +15,11 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-Condition Arithmetic
-====================
+Boolean Operations
+==================
 
-Since conditions are just booleans, you can perform some simple bitwise
-operations on conditions:
+Since conditions are just booleans, you can perform some simple operations on
+conditions:
 
 And
 ---

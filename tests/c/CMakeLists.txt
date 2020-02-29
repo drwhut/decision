@@ -1,6 +1,6 @@
 #[[
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,21 +21,22 @@
 # We should use the dynamic library where possible, as there will be a lot
 # of executables made here.
 function(link_with_decision testTarget)
-    if(MSVC)
-        if(COMPILER_DLL)
-            target_link_libraries(${testTarget} decisionLibShared)
-        else(COMPILER_DLL)
-            target_link_libraries(${testTarget} decisionLibStatic)
-        endif(COMPILER_DLL)
-    else(MSVC)
+    if(COMPILER_SHARED)
         target_link_libraries(${testTarget} decisionLibShared)
-    endif(MSVC)
+    else(COMPILER_SHARED)
+        target_link_libraries(${testTarget} decisionLibStatic)
+    endif(COMPILER_SHARED)
 endfunction(link_with_decision)
 
 # If the compiler is storing data in 32 bits, we need to here as well.
 if(COMPILER_32)
     add_definitions(-DDECISION_32)
 endif(COMPILER_32)
+
+# Disable warnings about not using "safe" functions here as well.
+if(MSVC)
+    add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
+endif(MSVC)
 
 # Add the include directory for the header files.
 include_directories(${PROJECT_SOURCE_DIR}/src)
@@ -44,6 +45,9 @@ include_directories(${PROJECT_SOURCE_DIR}/src)
 # library.
 add_executable(TestCFromDecision c_from_decision.c)
 link_with_decision(TestCFromDecision)
+
+add_executable(TestDebugging debugging.c)
+link_with_decision(TestDebugging)
 
 add_executable(TestDecisionFiles decision_files.c)
 link_with_decision(TestDecisionFiles)
@@ -59,6 +63,7 @@ link_with_decision(TestDecisionStrings)
 
 # Defining the CMake tests.
 add_test(NAME TestCFromDecision COMMAND TestCFromDecision)
+add_test(NAME TestDebugging COMMAND TestDebugging)
 add_test(NAME TestDecisionFiles COMMAND TestDecisionFiles)
 add_test(NAME TestDecisionFromC COMMAND TestDecisionFromC)
 add_test(NAME TestDecisionObjects COMMAND TestDecisionObjects)

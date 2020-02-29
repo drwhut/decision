@@ -1,0 +1,25 @@
+[Subroutine(PrintFactorsOf, "Print off the factors of a given number.")]
+[FunctionInput(PrintFactorsOf, num, Integer, 1, "The number to print the factors of.")]
+[FunctionOutput(PrintFactorsOf, numFactors, Integer, "The number of factors the number has.")]
+
+[Variable(numFactors, Integer, 0, "Incremented every time a factor is found.")]
+
+Define(PrintFactorsOf)~#10, #11
+Set(numFactors, #10, 0)~#12
+Div(#11, 2)~#13
+
+For(#12, 1, #13, 1)~#14, #15, #16
+Mod(#11, #15)~#17
+Equal(#17, 0)~#18
+IfThen(#14, #18)~#19
+Print(#19, #15)~#20
+
+numFactors~#21
+Add(#21, 1)~#22
+Set(numFactors, #20, #22)
+
+Return(PrintFactorsOf, #16, #21)
+
+Start~#30
+Print(#30, "Factors of 360:")~#31
+PrintFactorsOf(#31, 360)

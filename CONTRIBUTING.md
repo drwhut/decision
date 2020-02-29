@@ -49,8 +49,8 @@ foot in the door in terms of using the language.
 ## 2. Have a look at the code!
 
 If you are even slightly curious as to how the language works, go ahead!
-Try starting with [decision.c](src/decision.c), which contains the `main`
-execution point of the compiler, and go from there!
+Try starting with [dmain.c](src/dmain.c), which contains the `main` execution
+point of the compiler, and go from there!
 
 Remember that there is a **developer manual** designed for anyone who is
 looking at the source code, which explains each stage of compilation in detail.

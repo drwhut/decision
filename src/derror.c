@@ -1,6 +1,6 @@
 /*
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ static size_t add_length_to_messages(size_t length) {
     size_t indexOfFirstFreeSpace = 0;
 
     if (errorMessages == NULL) {
-        errorMessages = (char *)d_malloc((length + 1) * sizeof(char));
+        errorMessages = d_calloc((length + 1), sizeof(char));
 
         if (errorMessages != NULL)
             lenErrorMessages = length + 1;
@@ -56,8 +56,7 @@ static size_t add_length_to_messages(size_t length) {
         indexOfFirstFreeSpace =
             lenErrorMessages - 1; // lenErrorMessages includes the \0.
         size_t newLength = lenErrorMessages + length + 1;
-        errorMessages =
-            (char *)d_realloc(errorMessages, newLength * sizeof(char));
+        errorMessages    = d_realloc(errorMessages, newLength * sizeof(char));
 
         if (errorMessages != NULL)
             lenErrorMessages = newLength;
@@ -89,12 +88,8 @@ static void add_message_to_error_list(const char *message,
         ptr++;
     }
 
-// Now copy our message onto there.
-#ifdef DECISION_SAFE_FUNCTIONS
-    strcpy_s(ptr, lenMessage + 1, message);
-#else
+    // Now copy our message onto there.
     strcpy(ptr, message);
-#endif // DECISION_SAFE_FUNCTIONS
 }
 
 /**
@@ -115,14 +110,9 @@ void d_error_compiler_push(const char *message, const char *filePath,
 
     char errorMessage[MAX_ERROR_SIZE];
 
-// Create the error message with sprintf.
-#ifdef DECISION_SAFE_FUNCTIONS
-    sprintf_s(errorMessage, MAX_ERROR_SIZE, "%s: (%s:%zd) %s",
-              (isError) ? "Fatal" : "Warning", filePath, lineNum, message);
-#else
+    // Create the error message with sprintf.
     sprintf(errorMessage, "%s: (%s:%zd) %s", (isError) ? "Fatal" : "Warning",
             filePath, lineNum, message);
-#endif // DECISION_SAFE_FUNCTIONS
 
     // Add the error to the error list.
     add_message_to_error_list(errorMessage, '\n');

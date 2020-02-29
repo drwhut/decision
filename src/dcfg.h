@@ -1,6 +1,6 @@
 /*
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -101,16 +101,5 @@
 #else
 #define DECISION_API extern
 #endif // DECISION_BUILD_DLL
-
-/**
- * \def DECISION_SAFE_FUNCTIONS
- * \brief Defined if Decision should use the "safe" versions of memory
- * manipulation functions.
- *
- * It is automatically defined if building on a Windows system.
- */
-#ifdef _WIN32
-#define DECISION_SAFE_FUNCTIONS
-#endif // _WIN32
 
 #endif // DCFG_H

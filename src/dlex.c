@@ -1,6 +1,6 @@
 /*
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -146,7 +146,7 @@ const char *d_lex_get_string_literal(const char *source, size_t *i,
     }
 
     // Now we are building the string.
-    out = (char *)d_malloc((lenStr + 1) * sizeof(char));
+    out = d_calloc((lenStr + 1), sizeof(char));
 
     size_t pos = oldi + 1;
 
@@ -265,7 +265,7 @@ const char *d_lex_get_name(const char *source, size_t *i, const char *filePath,
     }
 
     // Now we are building the string.
-    out = (char *)d_malloc(((size_t)lenStr + 1) * sizeof(char));
+    out = d_calloc(((size_t)lenStr + 1), sizeof(char));
 
     memcpy(out, source + oldi, lenStr);
     out[lenStr] = '\0';
@@ -304,7 +304,7 @@ LexStream d_lex_create_stream(const char *source, const char *filePath) {
 
     // We set the size now to the length of the source code,
     // but we will later resize it to the actual amount of tokens.
-    LexToken *lexArray = (LexToken *)d_malloc(sourceLength * sizeof(LexToken));
+    LexToken *lexArray = d_calloc(sourceLength, sizeof(LexToken));
 
     if (lexArray != NULL) {
         size_t i       = 0; // The character we're on in the source.
@@ -325,6 +325,9 @@ LexStream d_lex_create_stream(const char *source, const char *filePath) {
             if (source[i] == '\n') {
                 currentToken.type = TK_EOSNL;
                 lineNum++;
+
+                // If we were in a comment, we aren't now.
+                inComment = false;
             }
 
             else if (!inComment)
@@ -332,7 +335,7 @@ LexStream d_lex_create_stream(const char *source, const char *filePath) {
                     case ' ': // Whitespace, ignore.
                         break;
 
-                    case '<':; // Comment, ignore until we hit a '>'.
+                    case '>':; // Comment, ignore until we hit a newline.
                         inComment = true;
                         break;
 
@@ -526,17 +529,14 @@ LexStream d_lex_create_stream(const char *source, const char *filePath) {
 
             ADD_TOKEN()
 
-            // We are now out of a comment!
-            if (source[i] == '>')
-                inComment = false;
-
-            if (++i >= sourceLength)
+            if (++i >= sourceLength) {
                 break;
+            }
         }
 
         // Format output and reduce size of stream.
         if (n > 0) {
-            lexArray = (LexToken *)d_realloc(lexArray, n * sizeof(LexToken));
+            lexArray = d_realloc(lexArray, n * sizeof(LexToken));
         } else {
             free(lexArray);
             lexArray = NULL;

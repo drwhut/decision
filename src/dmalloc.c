@@ -1,6 +1,6 @@
 /*
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -54,6 +54,26 @@ void *d_realloc(void *ptr, size_t size) {
 
     if (newptr == NULL) {
         printf("Fatal: realloc returned NULL\n");
+        exit(1);
+    }
+
+    return newptr;
+}
+
+/**
+ * \fn void *d_calloc(size_t num, size_t size)
+ * \brief A wrapper function for `calloc` with error checking.
+ * 
+ * \return A pointer to the allocated memory.
+ * 
+ * \param num The number of elements to allocate.
+ * \param size The size of each element.
+ */
+void *d_calloc(size_t num, size_t size) {
+    void *newptr = calloc(num, size);
+
+    if (newptr == NULL) {
+        printf("Fatal: calloc returned NULL\n");
         exit(1);
     }
 

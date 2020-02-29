@@ -1,6 +1,6 @@
 /*
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -26,84 +26,6 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-/* A macro to help with syntax definitions. */
-#define STXDEF(d) STX_##d
-
-/* Macro for defining META-variables. */
-#define META(f)                                                          \
-    static SyntaxResult f(SyntaxContext *context, bool saveNode) {       \
-        VERBOSE(5, "ENTER\t%s\tWITH\t%i\n", #f, context->currentType)    \
-        SyntaxNode *definitionNode = NULL;                               \
-        if (saveNode)                                                    \
-            definitionNode =                                             \
-                d_syntax_create_node(STXDEF(f), NULL, context->lineNum); \
-        SyntaxResult out;                                                \
-        out.node      = definitionNode;                                  \
-        bool addChild = false;
-
-#define END_META }
-
-/* Macros for if meta variables got accepted or not. */
-#define ACCEPT(f)                       \
-    {                                   \
-        VERBOSE(5, "SUCCESS\t%s\n", #f) \
-        out.success = true;             \
-        return out;                     \
-    }
-
-#define DECLINE(f)                   \
-    {                                \
-        VERBOSE(5, "FAIL\t%s\n", #f) \
-        out.success = false;         \
-        if (saveNode)                \
-            free(definitionNode);    \
-        return out;                  \
-    }
-
-/*
-    Macros for whether we start or end adding children to the definition node.
-    NOTE: If the parent doesn't want to add the current node as a child, then
-    we don't bother adding children to this node, since they would never be in
-    the final syntax tree.
-*/
-#define START_ADD addChild = true;
-#define END_ADD   addChild = false;
-
-/* Macro for getting the current token's type. */
-#define currentType currentToken->type
-
-/*
-    Some handy macros for switch statements.
-    NOTE: Only use switch for tokens, NOT definitions.
- */
-#define START_SWITCH switch (context->currentType) {
-
-#define SWITCH_IF(t) case t:
-
-#define SWITCH_THEN(f)                                                         \
-    if (saveNode && addChild) {                                                \
-        SyntaxNode *n = d_syntax_create_node(STX_TOKEN, context->currentToken, \
-                                             context->lineNum);                \
-        d_syntax_add_child(definitionNode, n);                                 \
-    }                                                                          \
-    nextToken(context);                                                        \
-    ACCEPT(f);
-
-#define END_SWITCH(f) \
-    default:          \
-        DECLINE(f);   \
-        }
-
-/* A structure to keep track of tokens during the syntax check. */
-typedef struct {
-    LexStream lexicalStream;
-    LexToken *currentToken;
-    long tokenIndex;
-    size_t numTokens;
-    size_t lineNum;
-    const char *currentFilePath;
-} SyntaxContext;
-
 /*
 === SYNTAX TREE FUNCTIONS =======================
 */
@@ -121,7 +43,7 @@ typedef struct {
  */
 SyntaxNode *d_syntax_create_node(SyntaxDefinition d, LexToken *info,
                                  size_t line) {
-    SyntaxNode *n = (SyntaxNode *)d_malloc(sizeof(SyntaxNode));
+    SyntaxNode *n = d_malloc(sizeof(SyntaxNode));
 
     n->definition = d;
     n->info       = info;
@@ -161,6 +83,10 @@ SyntaxNode *d_syntax_last_sibling(SyntaxNode *node) {
  * \param child The child node to add onto the parent.
  */
 void d_syntax_add_child(SyntaxNode *parent, SyntaxNode *child) {
+    if (parent == NULL || child == NULL) {
+        return;
+    }
+
     // If the parent has no child, just add it straight away.
     if (parent->child == NULL) {
         parent->child = child;
@@ -275,7 +201,7 @@ SyntaxNode *d_syntax_get_child_by_definition(SyntaxNode *parent,
  *
  * \param root The root node to search from.
  * \param definition The definition we want our found nodes to have.
- * \param traverseChildrenOfFound If we find a node that we want, should w
+ * \param traverseChildrenOfFound If we find a node that we want, should we
  * also traverse the children of that found node?
  */
 SyntaxSearchResult d_syntax_get_all_nodes_with(SyntaxNode *root,
@@ -285,8 +211,7 @@ SyntaxSearchResult d_syntax_get_all_nodes_with(SyntaxNode *root,
     size_t n = 0;
 
     size_t currentSize = 16;
-    SyntaxNode **found =
-        (SyntaxNode **)d_malloc(currentSize * sizeof(SyntaxNode *));
+    SyntaxNode **found = d_calloc(currentSize, sizeof(SyntaxNode *));
 
     // Iterative traversal.
     SyntaxNode *nodeStack[32];
@@ -308,8 +233,7 @@ SyntaxSearchResult d_syntax_get_all_nodes_with(SyntaxNode *root,
             // Resize if the array is too small!
             if (n + 1 > currentSize) {
                 currentSize++;
-                found = (SyntaxNode **)d_realloc(
-                    found, currentSize * sizeof(SyntaxNode **));
+                found = d_realloc(found, currentSize * sizeof(SyntaxNode **));
             }
 
             found[n++] = top;
@@ -326,7 +250,7 @@ SyntaxSearchResult d_syntax_get_all_nodes_with(SyntaxNode *root,
     }
 
     // Cleaning up and outputting.
-    found = (SyntaxNode **)d_realloc(found, (n + 1) * sizeof(SyntaxNode *));
+    found             = d_realloc(found, (n + 1) * sizeof(SyntaxNode *));
     out.numOccurances = n;
     out.occurances    = found;
     out.occurances[n] = 0;
@@ -338,6 +262,16 @@ SyntaxSearchResult d_syntax_get_all_nodes_with(SyntaxNode *root,
 === PARSER FUNCTIONS ============================
 */
 
+/* A structure to keep track of tokens during the syntax check. */
+typedef struct {
+    const char *currentFilePath;
+    LexStream lexicalStream;
+    LexToken *currentToken;
+    size_t numTokens;
+    size_t lineNum;
+    int tokenIndex;
+} SyntaxContext;
+
 /*
     void nextToken(SyntaxContext* context)
     Get the next lexical token.
@@ -347,28 +281,28 @@ SyntaxSearchResult d_syntax_get_all_nodes_with(SyntaxNode *root,
 static void nextToken(SyntaxContext *context) {
     context->tokenIndex++;
 
-    if (!context->currentToken)
+    if (!context->currentToken) {
         context->currentToken = context->lexicalStream.tokenArray;
-
-    else if (context->tokenIndex >= (long)context->numTokens)
-        context->currentType = -1;
-
-    else
+    } else if (context->tokenIndex >= (long)context->numTokens) {
+        context->currentToken->type = -1;
+    } else {
         context->currentToken++;
+    }
 
-    if (context->currentToken->type == TK_EOSNL)
+    if (context->currentToken->type == TK_EOSNL) {
         context->lineNum++;
+    }
 }
 
 /*
-    void error(const char* message)
+    void syntax_error(const char* message)
     Take the blue pill. Forget anything happened.
 
     const char* message: The message to display.
     SyntaxContext* context: The context that contains the info needed to
     display a meaningful error.
 */
-static void error(const char *message, SyntaxContext *context) {
+static void syntax_error(const char *message, SyntaxContext *context) {
     d_error_compiler_push(message, context->currentFilePath, context->lineNum,
                           true);
 }
@@ -378,471 +312,574 @@ static void error(const char *message, SyntaxContext *context) {
     ERROR_COMPILER((contextPtr)->currentFilePath, (contextPtr)->lineNum, true, \
                    __VA_ARGS__)
 
-/*
-    bool accept_t(
-        LexType t,
-        SyntaxNode* root,
-        bool addChild,
-        SyntaxContext* context
-    )
+/* What if a given definition fails? */
+static void fail_definition(SyntaxResult *out) {
+    out->success = false;
 
-    Returns: If the token was the one we wanted.
-
-    LexType t: The token type we want.
-    SyntaxNode* root: The parent of the child we may want to create.
-    bool addChild: Do we want to add a child if this succeeds?
-    SyntaxContext* context: The context to check the type against.
-*/
-static bool accept_t(LexType t, SyntaxNode *root, bool addChild,
-                     SyntaxContext *context) {
-    if (context->currentType == t) {
-        if (addChild) {
-            SyntaxNode *n = d_syntax_create_node(
-                STX_TOKEN, context->currentToken, context->lineNum);
-
-            d_syntax_add_child(root, n);
-        }
-
-        nextToken(context);
-        return true;
+    if (out->node != NULL) {
+        d_syntax_free_tree(out->node);
+        out->node = NULL;
     }
-
-    return false;
 }
-
-/*
-    void expect_t(LexType t, const char* message, SyntaxNode* root, bool
-   addChild) If we don't get what we want, EXPLODE EVERYTHING.
-
-    LexType t: The token type we want to see.
-    const char message*: The error message to show if the token isn't the type
-   we want. SyntaxNode* root: The parent of the child we may want to create.
-    bool addChild: Do we want to add a child if this succeeds?
-    SyntaxContext* context: The context to check the type against.
-*/
-static void expect_t(LexType t, const char *message, SyntaxNode *root,
-                     bool addChild, SyntaxContext *context) {
-    if (accept_t(t, root, addChild, context))
-        return;
-    error(message, context);
-}
-
-/* A macro version of expect_t which calls SYNTAX_ERROR. */
-#define EXPECT_T(t, root, addChild, context, ...)     \
-    if (accept_t((t), (root), (addChild), (context))) \
-        return;                                       \
-    SYNTAX_ERROR(context, __VA_ARGS__);
-
-/*
-    Same functions as above, but accept and expect definitions instead of
-   tokens.
-*/
-static bool accept_d(SyntaxResult (*f)(SyntaxContext *, bool), SyntaxNode *root,
-                     bool addChild, SyntaxContext *context) {
-    SyntaxResult r = f(context, addChild);
-
-    if (addChild && r.success) {
-        d_syntax_add_child(root, r.node);
-    }
-
-    return r.success;
-}
-
-static void expect_d(SyntaxResult (*f)(SyntaxContext *, bool),
-                     const char *message, SyntaxNode *root, bool addChild,
-                     SyntaxContext *context) {
-    if (accept_d(f, root, addChild, context))
-        return;
-    error(message, context);
-}
-
-/* A macro version of expect_d which calls SYNTAX_ERROR. */
-#define EXPECT_D(f, root, addChild, context, ...)     \
-    if (accept_d((f), (root), (addChild), (context))) \
-        return;                                       \
-    SYNTAX_ERROR((context), __VA_ARGS__);
-
-/* Macros of the above functions using the global variables. */
-#define acceptToken(t) accept_t(t, definitionNode, saveNode &&addChild, context)
-#define expectToken(t, s) \
-    expect_t(t, s, definitionNode, saveNode &&addChild, context)
-#define expectTokenDetailed(t, ...) \
-    EXPECT_T(t, definitionNode, saveNode &&addChild, context, __VA_ARGS__)
-#define acceptDefinition(f) \
-    accept_d(f, definitionNode, saveNode &&addChild, context)
-#define expectDefinition(f, s) \
-    expect_d(f, s, definitionNode, saveNode &&addChild, context)
-#define expectDefinitionDetailed(f, ...) \
-    EXPECT_D(f, definitionNode, saveNode &&addChild, context, __VA_ARGS__)
 
 /*
 === LANGUAGE DEFINITIONS ========================
 
 * Notation is in BNF form.
 
-* Meta-Variables beginning in an upper-case are
-  represented as tokens in code.
+* Meta-Variables beginning in an upper-case are represented as tokens in code.
 
 * Lower-case is represented as functions.
+
+* NOTE: The grammar is technically a LL(1) grammar, meaning that at any given
+  time, you only need to look ahead one token to know what node you're making.
+  Because of this, we first check the current token before proceeding with the
+  definition every time.
 
 */
 
 /* <lineIdentifier> ::= <Line><IntegerLiteral> */
-META(lineIdentifier)
+static SyntaxResult lineIdentifier(SyntaxContext *context) {
+    SyntaxResult out;
+    out.node = d_syntax_create_node(STX_lineIdentifier, NULL, context->lineNum);
+    out.success = true;
 
-if (acceptToken(TK_LINE)) {
-    START_ADD
-    expectToken(TK_INTEGERLITERAL,
-                "Integer expected after line declaration (#)");
-    END_ADD
+    VERBOSE(5, "ENTER\tlineIdentifier\tWITH\t%i\n",
+            context->currentToken->type);
 
-    ACCEPT(lineIdentifier);
-} else {
-    DECLINE(lineIdentifier);
-}
+    if (context->currentToken->type == TK_LINE) {
+        nextToken(context);
 
-END_META
+        if (context->currentToken->type == TK_INTEGERLITERAL) {
 
-/* <listOfLineIdentifier> ::=
- * <lineIdentifier>|<lineIdentifier><Comma><lineIdentifier>|... */
-META(listOfLineIdentifier)
+            SyntaxNode *literal = d_syntax_create_node(
+                STX_TOKEN, context->currentToken, context->lineNum);
+            d_syntax_add_child(out.node, literal);
 
-START_ADD
-if (acceptDefinition(lineIdentifier)) {
-    END_ADD
-    if (acceptToken(TK_COMMA)) {
-        do {
-            START_ADD
-            expectDefinition(lineIdentifier,
-                             "Expected line identifier after comma (,)");
-            END_ADD
+            nextToken(context);
 
-        } while (acceptToken(TK_COMMA));
+        } else {
+            syntax_error(
+                "Expected integer literal to follow the line symbol (#)",
+                context);
+            fail_definition(&out);
+        }
+    } else {
+        syntax_error(
+            "Expected line identifier to start with the line symbol (#)",
+            context);
+        fail_definition(&out);
     }
 
-    ACCEPT(listOfLineIdentifier);
-} else {
-    DECLINE(listOfLineIdentifier);
+    return out;
 }
 
-END_META
+/* <listOfLineIdentifier> ::= <lineIdentifier>(<Comma><lineIdentifier>)* */
+static SyntaxResult listOfLineIdentifier(SyntaxContext *context) {
+    SyntaxResult out;
+    out.node =
+        d_syntax_create_node(STX_listOfLineIdentifier, NULL, context->lineNum);
+    out.success = true;
+
+    VERBOSE(5, "ENTER\tlistOfLineIdentifier\tWITH\t%i\n",
+            context->currentToken->type);
+
+    if (context->currentToken->type == TK_LINE) {
+
+        SyntaxResult identifier = lineIdentifier(context);
+
+        if (identifier.success) {
+
+            d_syntax_add_child(out.node, identifier.node);
+
+            // Great, we got at least one line identifier! Now, as long as the
+            // current token is a comma, a line identifier should follow.
+            while (context->currentToken->type == TK_COMMA) {
+                nextToken(context);
+
+                identifier = lineIdentifier(context);
+
+                if (identifier.success) {
+                    d_syntax_add_child(out.node, identifier.node);
+                } else {
+                    syntax_error("Expected line identifier to follow comma (,)",
+                                 context);
+                    fail_definition(&out);
+                    break;
+                }
+            }
+
+        } else {
+            syntax_error("Expected list of line identifiers to start with a "
+                         "line identifier",
+                         context);
+            fail_definition(&out);
+        }
+    } else {
+        syntax_error("Expected list of line identifiers to start with the line "
+                     "symbol (#)",
+                     context);
+        fail_definition(&out);
+    }
+
+    return out;
+}
 
 /* <dataType> ::= <IntegerType>|... */
-META(dataType)
+static bool is_data_type(LexType type) {
+    return (type == TK_INTEGERTYPE || type == TK_FLOATTYPE ||
+            type == TK_STRINGTYPE || type == TK_BOOLEANTYPE);
+}
 
-START_ADD
+static SyntaxResult dataType(SyntaxContext *context) {
+    SyntaxResult out;
+    out.node    = d_syntax_create_node(STX_dataType, NULL, context->lineNum);
+    out.success = true;
 
-START_SWITCH
+    VERBOSE(5, "ENTER\tdataType\tWITH\t%i\n", context->currentToken->type);
 
-SWITCH_IF(TK_EXECUTIONTYPE)
-SWITCH_IF(TK_INTEGERTYPE)
-SWITCH_IF(TK_FLOATTYPE)
-SWITCH_IF(TK_STRINGTYPE)
-SWITCH_IF(TK_BOOLEANTYPE)
+    if (is_data_type(context->currentToken->type)) {
+        SyntaxNode *type = d_syntax_create_node(
+            STX_TOKEN, context->currentToken, context->lineNum);
+        d_syntax_add_child(out.node, type);
 
-SWITCH_THEN(dataType)
+        nextToken(context);
+    } else {
+        syntax_error("Expected a data type keyword", context);
+        fail_definition(&out);
+    }
 
-END_SWITCH(dataType)
-
-END_META
+    return out;
+}
 
 /* <literal> ::=
  * <IntegerLiteral>|<FloatLiteral>|<StringLiteral>|<BooleanLiteral> */
-META(literal)
-
-START_ADD
-
-START_SWITCH
-
-SWITCH_IF(TK_INTEGERLITERAL)
-SWITCH_IF(TK_FLOATLITERAL)
-SWITCH_IF(TK_STRINGLITERAL)
-SWITCH_IF(TK_BOOLEANLITERAL)
-
-SWITCH_THEN(literal)
-
-END_SWITCH(literal)
-
-END_META
-
-/* <oneeos> ::= <EosNL>|<EosSC> */
-META(oneeos)
-
-START_SWITCH
-
-SWITCH_IF(TK_EOSNL)
-SWITCH_IF(TK_EOSSC)
-
-SWITCH_THEN(oneeos)
-
-END_SWITCH(oneeos)
-
-END_META
-
-/* <eos> ::= <oneeos>|<oneeos><oneeos>|... */
-META(eos)
-
-if (acceptDefinition(oneeos)) {
-    while (acceptDefinition(oneeos)) {
-    }
-    ACCEPT(eos);
-} else {
-    DECLINE(eos);
+static bool is_literal(LexType type) {
+    return (type == TK_INTEGERLITERAL || type == TK_FLOATLITERAL ||
+            type == TK_STRINGLITERAL || type == TK_BOOLEANLITERAL);
 }
 
-END_META
+static SyntaxResult literal(SyntaxContext *context) {
+    SyntaxResult out;
+    out.node    = d_syntax_create_node(STX_literal, NULL, context->lineNum);
+    out.success = true;
+
+    VERBOSE(5, "ENTER\tliteral\tWITH\t%i\n", context->currentToken->type);
+
+    if (is_literal(context->currentToken->type)) {
+        SyntaxNode *literal = d_syntax_create_node(
+            STX_TOKEN, context->currentToken, context->lineNum);
+        d_syntax_add_child(out.node, literal);
+
+        nextToken(context);
+    } else {
+        syntax_error("Expected a literal", context);
+        fail_definition(&out);
+    }
+
+    return out;
+}
 
 /* <argument> ::= <Name>|<literal>|<lineIdentifier> */
-META(argument)
-
-START_ADD
-
-if (acceptToken(TK_NAME) || acceptDefinition(literal) ||
-    acceptDefinition(lineIdentifier)) {
-    ACCEPT(argument);
-} else {
-    DECLINE(argument);
+static bool is_argument(LexType type) {
+    return (type == TK_NAME || is_literal(type) || type == TK_LINE);
 }
 
-END_META
+static SyntaxResult argument(SyntaxContext *context) {
+    SyntaxResult out;
+    out.node    = d_syntax_create_node(STX_argument, NULL, context->lineNum);
+    out.success = true;
 
-/* <propertyArgument> ::= <Name>|<literal>|<listOfDataType> */
-META(propertyArgument)
+    VERBOSE(5, "ENTER\targument\tWITH\t%i\n", context->currentToken->type);
 
-START_ADD
+    if (context->currentToken->type == TK_NAME) {
+        SyntaxNode *name = d_syntax_create_node(
+            STX_TOKEN, context->currentToken, context->lineNum);
+        d_syntax_add_child(out.node, name);
 
-if (acceptToken(TK_NAME) || acceptDefinition(literal) ||
-    acceptDefinition(dataType)) {
-    ACCEPT(propertyArgument);
-} else {
-    DECLINE(propertyArgument);
-}
+        nextToken(context);
+    } else if (is_literal(context->currentToken->type)) {
+        SyntaxResult lit = literal(context);
 
-END_META
+        if (lit.success) {
+            d_syntax_add_child(out.node, lit.node);
+        } else {
+            syntax_error("Invalid literal argument", context);
+            fail_definition(&out);
+        }
+    } else if (context->currentToken->type == TK_LINE) {
+        SyntaxResult line = lineIdentifier(context);
 
-/* <listOfArguments> ::= <argument>|<argument><Comma><argument>|... */
-META(listOfArguments)
-
-START_ADD
-
-if (acceptDefinition(argument)) {
-    END_ADD
-
-    if (acceptToken(TK_COMMA)) {
-        do {
-            START_ADD
-            expectDefinition(
-                argument, "Argument is not a name, literal or line identifier");
-            END_ADD
-
-        } while (acceptToken(TK_COMMA));
+        if (line.success) {
+            d_syntax_add_child(out.node, line.node);
+        } else {
+            syntax_error("Invalid line identifier argument", context);
+            fail_definition(&out);
+        }
+    } else {
+        syntax_error("Invalid argument: not a name, literal or line identifier",
+                     context);
+        fail_definition(&out);
     }
 
-    ACCEPT(listOfArguments);
-
-} else {
-    DECLINE(listOfArguments);
+    return out;
 }
 
-END_META
+/* <propertyArgument> ::= <Name>|<literal>|<dataType> */
+static bool is_property_argument(LexType type) {
+    return (type == TK_NAME || is_literal(type) || is_data_type(type));
+}
+
+static SyntaxResult propertyArgument(SyntaxContext *context) {
+    SyntaxResult out;
+    out.node =
+        d_syntax_create_node(STX_propertyArgument, NULL, context->lineNum);
+    out.success = true;
+
+    VERBOSE(5, "ENTER\tpropertyArgument\tWITH\t%i\n",
+            context->currentToken->type);
+
+    if (context->currentToken->type == TK_NAME) {
+        SyntaxNode *name = d_syntax_create_node(
+            STX_TOKEN, context->currentToken, context->lineNum);
+        d_syntax_add_child(out.node, name);
+
+        nextToken(context);
+    } else if (is_literal(context->currentToken->type)) {
+        SyntaxResult lit = literal(context);
+
+        if (lit.success) {
+            d_syntax_add_child(out.node, lit.node);
+        } else {
+            syntax_error("Invalid literal property argument", context);
+            fail_definition(&out);
+        }
+    } else if (is_data_type(context->currentToken->type)) {
+        SyntaxResult type = dataType(context);
+
+        if (type.success) {
+            d_syntax_add_child(out.node, type.node);
+        } else {
+            syntax_error("Invalid data type property argument", context);
+            fail_definition(&out);
+        }
+    } else {
+        syntax_error("Invalid property argument: not a name, literal or data "
+                     "type keyword",
+                     context);
+        fail_definition(&out);
+    }
+
+    return out;
+}
+
+/* <listOfArguments> ::= <argument>(<Comma><argument>)* */
+static SyntaxResult listOfArguments(SyntaxContext *context) {
+    SyntaxResult out;
+    out.node =
+        d_syntax_create_node(STX_listOfArguments, NULL, context->lineNum);
+    out.success = true;
+
+    VERBOSE(5, "ENTER\tlistOfArguments\tWITH\t%i\n",
+            context->currentToken->type);
+
+    SyntaxResult arg = argument(context);
+
+    if (arg.success) {
+
+        d_syntax_add_child(out.node, arg.node);
+
+        // This will be similar to the list of line identifiers.
+        while (context->currentToken->type == TK_COMMA) {
+            nextToken(context);
+
+            arg = argument(context);
+
+            if (arg.success) {
+                d_syntax_add_child(out.node, arg.node);
+            } else {
+                syntax_error("Expected an argument to follow a comma (,)",
+                             context);
+                fail_definition(&out);
+                break;
+            }
+        }
+    } else {
+        syntax_error("Expected an argument to start a list of arguments",
+                     context);
+        fail_definition(&out);
+    }
+
+    return out;
+}
 
 /* <listOfPropertyArguments> ::=
- * <propertyArgument>|<propertyArgument><Comma><propertyArgument>|... */
-META(listOfPropertyArguments)
+ * <propertyArgument>(<Comma><propertyArgument>)* */
+static SyntaxResult listOfPropertyArguments(SyntaxContext *context) {
+    SyntaxResult out;
+    out.node    = d_syntax_create_node(STX_listOfPropertyArguments, NULL,
+                                    context->lineNum);
+    out.success = true;
 
-START_ADD
+    VERBOSE(5, "ENTER\tlistOfPropertyArguments\tWITH\t%i\n",
+            context->currentToken->type);
 
-if (acceptDefinition(propertyArgument)) {
-    END_ADD
+    SyntaxResult arg = propertyArgument(context);
 
-    if (acceptToken(TK_COMMA)) {
-        do {
-            START_ADD
-            expectDefinition(
-                propertyArgument,
-                "Property argument is not a name, literal, or data type");
-            END_ADD
+    if (arg.success) {
 
-        } while (acceptToken(TK_COMMA));
+        d_syntax_add_child(out.node, arg.node);
+
+        // This will be similar to the list of line identifiers.
+        while (context->currentToken->type == TK_COMMA) {
+            nextToken(context);
+
+            arg = propertyArgument(context);
+
+            if (arg.success) {
+                d_syntax_add_child(out.node, arg.node);
+            } else {
+                syntax_error(
+                    "Expected a property argument to follow a comma (,)",
+                    context);
+                fail_definition(&out);
+                break;
+            }
+        }
+    } else {
+        syntax_error("Expected a property argument to start a list of property "
+                     "arguments",
+                     context);
+        fail_definition(&out);
     }
 
-    ACCEPT(listOfPropertyArguments);
-
-} else {
-    DECLINE(listOfPropertyArguments);
+    return out;
 }
 
-END_META
-
-/* <call> ::= <Lbracket><listOfArguments><Rbracket> */
-META(call)
-
-if (acceptToken(TK_LBRACKET)) {
-    START_ADD
-    acceptDefinition(listOfArguments); // There dosen't nessesarily have to be
-                                       // anything in the backets.
-    END_ADD
-
-    expectToken(TK_RBRACKET, "Expected ) symbol at end of call");
-    ACCEPT(call);
-} else {
-    DECLINE(call);
+/* <eos> ::= (<EosNL>|<EosSC>)(<EosNL>|<EosSC>)* */
+static bool is_eos(LexType type) {
+    return (type == TK_EOSNL || type == TK_EOSSC);
 }
 
-END_META
+// Ultimately we don't want to add eos nodes to the tree.
+static bool eos(SyntaxContext *context) {
+    if (is_eos(context->currentToken->type)) {
 
-/* <propertyCall> ::= <Lbracket><listOfPropertyArguments><Rbracket> */
-META(propertyCall)
+        nextToken(context);
 
-if (acceptToken(TK_LBRACKET)) {
-    START_ADD
-    acceptDefinition(listOfPropertyArguments); // There dosen't nessesarily have
-                                               // to be anything in the backets.
-    END_ADD
+        while (is_eos(context->currentToken->type)) {
+            nextToken(context);
+        }
 
-    expectToken(TK_RBRACKET, "Expected ) symbol at end of call");
-    ACCEPT(propertyCall);
-} else {
-    DECLINE(propertyCall);
+        return true;
+    } else {
+        return false;
+    }
 }
-
-END_META
-
-/* <expression> ::= <Name>|<Name><call> */
-META(expression)
-
-START_ADD
-
-if (acceptToken(TK_NAME)) {
-    acceptDefinition(call);
-    ACCEPT(expression);
-} else {
-    DECLINE(expression);
-}
-
-END_META
-
-/* <propertyExpression> ::= <Name>|<Name><propertyCall> */
-META(propertyExpression)
-
-START_ADD
-
-if (acceptToken(TK_NAME)) {
-    acceptDefinition(propertyCall);
-    ACCEPT(propertyExpression);
-} else {
-    DECLINE(propertyExpression);
-}
-
-END_META
 
 /* <statement> ::=
- * <expression><eos>|<expression><Output><listofLineIdentifier><eos> */
-META(statement)
+ * <Name>((<Lbracket>(<listOfArguments>|NULL)<Rbracket>)|NULL)((<Output><listOfLineIdentifier>)|NULL)<eos>
+ */
 
-START_ADD
+static SyntaxResult statement(SyntaxContext *context) {
+    SyntaxResult out;
+    out.node    = d_syntax_create_node(STX_statement, NULL, context->lineNum);
+    out.success = true;
 
-if (acceptDefinition(expression)) {
-    END_ADD
+    VERBOSE(5, "ENTER\tstatement\tWITH\t%i\n", context->currentToken->type);
 
-    if (acceptDefinition(eos)) {
-        ACCEPT(statement);
+    if (context->currentToken->type == TK_NAME) {
+        SyntaxNode *name = d_syntax_create_node(
+            STX_TOKEN, context->currentToken, context->lineNum);
+        d_syntax_add_child(out.node, name);
+
+        nextToken(context);
+
+        if (context->currentToken->type == TK_LBRACKET) {
+            nextToken(context);
+
+            if (is_argument(context->currentToken->type)) {
+                SyntaxResult argList = listOfArguments(context);
+
+                if (argList.success) {
+                    d_syntax_add_child(out.node, argList.node);
+                } else {
+                    syntax_error("Invalid list of arguments", context);
+                    fail_definition(&out);
+                }
+            }
+
+            if (context->currentToken->type == TK_RBRACKET) {
+                nextToken(context);
+            } else {
+                syntax_error(
+                    "Expected list of arguments to end with a right bracket",
+                    context);
+                fail_definition(&out);
+            }
+        }
+
+        if (context->currentToken->type == TK_OUTPUT) {
+            nextToken(context);
+
+            SyntaxResult lineList = listOfLineIdentifier(context);
+
+            if (lineList.success) {
+                d_syntax_add_child(out.node, lineList.node);
+            } else {
+                syntax_error(
+                    "Invalid list of line identifiers after output (~)",
+                    context);
+                fail_definition(&out);
+            }
+        }
+
+        if (!eos(context)) {
+            syntax_error(
+                "Expected end-of-statement (\\n, ;) after the statement",
+                context);
+            fail_definition(&out);
+        }
+    } else {
+        syntax_error("Expected statement to start with a name", context);
+        fail_definition(&out);
     }
 
-    else if (acceptToken(TK_OUTPUT)) {
-        START_ADD
-        expectDefinition(listOfLineIdentifier,
-                         "Expected line identifier(s) after ~ symbol");
-        END_ADD
+    return out;
+}
 
-        expectDefinition(eos, "Expected end-of-statement symbol (either "
-                              "newline or semi-colon ;) after statement");
+/* <propertyStatement> ::=
+ * <Lproperty><Name>(<Lbracket>(<listOfPropertyArguments>|NULL)<Rbracket>|NULL)<Rproperty><eos>
+ */
+static SyntaxResult propertyStatement(SyntaxContext *context) {
+    SyntaxResult out;
+    out.node =
+        d_syntax_create_node(STX_propertyStatement, NULL, context->lineNum);
+    out.success = true;
 
-        ACCEPT(statement);
+    VERBOSE(5, "ENTER\tpropertyStatement\tWITH\t%i\n",
+            context->currentToken->type);
+
+    if (context->currentToken->type == TK_LPROPERTY) {
+        nextToken(context);
+
+        if (context->currentToken->type == TK_NAME) {
+            SyntaxNode *name = d_syntax_create_node(
+                STX_TOKEN, context->currentToken, context->lineNum);
+            d_syntax_add_child(out.node, name);
+
+            nextToken(context);
+
+            if (context->currentToken->type == TK_LBRACKET) {
+                nextToken(context);
+
+                if (is_property_argument(context->currentToken->type)) {
+                    SyntaxResult argList = listOfPropertyArguments(context);
+
+                    if (argList.success) {
+                        d_syntax_add_child(out.node, argList.node);
+                    } else {
+                        syntax_error("Invalid list of property arguments",
+                                     context);
+                        fail_definition(&out);
+                    }
+                }
+
+                if (context->currentToken->type == TK_RBRACKET) {
+                    nextToken(context);
+                } else {
+                    syntax_error("Expected list of property arguments to end "
+                                 "with a right bracket",
+                                 context);
+                    fail_definition(&out);
+                }
+            }
+
+            if (context->currentToken->type == TK_RPROPERTY) {
+                nextToken(context);
+
+                if (!eos(context)) {
+                    syntax_error("Expected end-of-statement (\\n, ;) after the "
+                                 "property statement",
+                                 context);
+                    fail_definition(&out);
+                }
+            } else {
+                syntax_error("Expected property statement to end with a right "
+                             "squared bracket (])",
+                             context);
+                fail_definition(&out);
+            }
+        } else {
+            syntax_error("Expected property statement to start with a name",
+                         context);
+            fail_definition(&out);
+        }
+    } else {
+        syntax_error("Expected property statement to start with a left squared "
+                     "bracket ([)",
+                     context);
+        fail_definition(&out);
     }
 
-    else {
-        error("Expected end-of-statement symbol (either newline or semi-colon "
-              ";) or ~ symbol after expression, got neither",
-              context);
-        DECLINE(statement);
+    return out;
+}
+
+/* <program> ::= (NULL|<eos>)(<statement>|<propertyStatement>)* */
+static bool is_statement(LexType type) {
+    return (type == TK_NAME || type == TK_LPROPERTY);
+}
+
+static SyntaxResult program(SyntaxContext *context) {
+    SyntaxResult out;
+    out.node    = d_syntax_create_node(STX_program, NULL, context->lineNum);
+    out.success = true;
+
+    VERBOSE(5, "ENTER\tprogram\tWITH\t%i\n", context->currentToken->type);
+
+    // If there are end-of-statements here, then ignore all of them.
+    eos(context);
+
+    // If there's nothing left... then... yeah, can't do much.
+    if ((int)context->currentToken->type == -1) {
+        return out;
     }
-} else {
-    DECLINE(statement);
-}
 
-END_META
+    while (is_statement(context->currentToken->type)) {
+        SyntaxResult s;
+        if (context->currentToken->type == TK_NAME) {
+            s = statement(context);
 
-/* <propertyStatement> ::= <Lproperty><propertyExpression><Rproperty><eos> */
-META(propertyStatement)
+            if (s.success) {
+                d_syntax_add_child(out.node, s.node);
+            } else {
+                syntax_error("Invalid statement", context);
+                fail_definition(&out);
+                break;
+            }
+        } else if (context->currentToken->type == TK_LPROPERTY) {
+            s = propertyStatement(context);
 
-if (acceptToken(TK_LPROPERTY)) {
-    START_ADD
-    expectDefinition(propertyExpression,
-                     "Expected property expression inside property statement");
-    END_ADD
-
-    expectToken(TK_RPROPERTY, "Expected ] symbol at end of property");
-    expectDefinition(eos, "Expected end-of-statement symbol (either newline or "
-                          "semi-colon ;) at end of property");
-
-    ACCEPT(propertyStatement);
-} else {
-    DECLINE(propertyStatement);
-}
-
-END_META
-
-/* <generalStatement> ::= (<statement>|<propertyStatement>)(<eos> | NULL) */
-META(generalStatement)
-
-START_ADD
-
-if (acceptDefinition(statement)) {
-    END_ADD
-
-    while (acceptDefinition(eos)) {
+            if (s.success) {
+                d_syntax_add_child(out.node, s.node);
+            } else {
+                syntax_error("Invalid property statement", context);
+                fail_definition(&out);
+                break;
+            }
+        }
     }
-    ACCEPT(generalStatement);
-} else if (acceptDefinition(propertyStatement)) {
-    END_ADD
 
-    acceptDefinition(eos);
-    ACCEPT(generalStatement);
-} else {
-    error("Statement is neither a general statement or a property statement",
-          context);
-    DECLINE(generalStatement);
+    // This SHOULD be the end of the token stream.
+    if (out.success && (int)context->currentToken->type != -1) {
+        syntax_error("Expected statement to start with a name or a left square "
+                     "bracket ([) for a property",
+                     context);
+        fail_definition(&out);
+    }
+
+    return out;
 }
-
-END_META
-
-/* <program> ::= (<eos> |
- * NULL)(<generalStatement>|<generalStatement><generalStatement>|...) */
-META(program)
-
-acceptDefinition(eos);
-
-// If there's nothing here... well... can't really do much.
-if (context->currentType == -1) {
-    DECLINE(program);
-}
-
-START_ADD
-
-if (acceptDefinition(generalStatement)) {
-    do {
-        // If we've reached the end of the lex stream, we need to stop.
-        if (context->currentType == -1)
-            break;
-
-    } while (acceptDefinition(generalStatement));
-
-    ACCEPT(program);
-} else
-    DECLINE(program);
-
-END_META
 
 /*
 === END OF LANGUAGE DEFINITIONS =================
@@ -947,5 +984,5 @@ SyntaxResult d_syntax_parse(LexStream stream, const char *filePath) {
     // Set currentToken to the first token.
     nextToken(&context);
 
-    return program(&context, true);
+    return program(&context);
 }

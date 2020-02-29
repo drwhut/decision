@@ -1,41 +1,41 @@
 Start~#1
 
-< Dividing 2 positive integers >
+> Dividing 2 positive integers
 Divide(725, 42)~#2
 Print(#1, #2)~#3
 
-< Dividing a negative integer from a positive integer >
+> Dividing a negative integer from a positive integer
 Divide(15, -5)~#4
 Print(#3, #4)~#5
 
-< Dividing a positive integer from a negative integer >
+> Dividing a positive integer from a negative integer
 Divide(-20, 100)~#6
 Print(#5, #6)~#7
 
-< Dividing 2 negative integers >
+> Dividing 2 negative integers
 Divide(-5, -7)~#8
 Print(#7, #8)~#9
 
-< Dividing 2 positive floats >
+> Dividing 2 positive floats
 Divide(0.5762, 0.1399)~#10
 Print(#9, #10)~#11
 
-< Dividing a negative float from a positive float >
+> Dividing a negative float from a positive float
 Divide(123.456, -64.32)~#12
 Print(#11, #12)~#13
 
-< Dividing a positive float from a negative float >
+> Dividing a positive float from a negative float
 Divide(-7.09, 10.12)~#14
 Print(#13, #14)~#15
 
-< Dividing 2 negative floats >
+> Dividing 2 negative floats
 Divide(-12000.0, -6014.25)~#16
 Print(#15, #16)~#17
 
-< Dividing a float from an integer >
+> Dividing a float from an integer
 Divide(12, 5.3)~#18
 Print(#17, #18)~#19
 
-< Dividing an integer from a float >
+> Dividing an integer from a float
 Divide(4.23, 1)~#20
 Print(#19, #20)~#21

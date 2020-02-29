@@ -1,6 +1,6 @@
 /*
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,8 +19,6 @@
 #ifndef ASSERT_H
 #define ASSERT_H
 
-#include <dcfg.h>
-
 #include <stdio.h>
 #include <string.h>
 
@@ -34,13 +32,8 @@ int flag;
  * \def START_CAPTURE_STDOUT
  * \brief Start redirecting output from STDOUT to a file called stdout.txt
  */
-#ifdef DECISION_SAFE_FUNCTIONS
-#define START_CAPTURE_STDOUT() \
-    { freopen_s(&fp, "stdout.txt", "w", stdout); }
-#else
 #define START_CAPTURE_STDOUT() \
     { freopen("stdout.txt", "w", stdout); }
-#endif // DECISION_SAFE_FUNCTIONS
 
 /**
  * \def STOP_CAPTURE_STDOUT
@@ -53,13 +46,8 @@ int flag;
  * \def OPEN_CAPTURED_STDOUT()
  * \brief Open stdout.txt
  */
-#ifdef DECISION_SAFE_FUNCTIONS
-#define OPEN_CAPTURED_STDOUT() \
-    { fopen_s(&fp, "stdout.txt", "r"); }
-#else
 #define OPEN_CAPTURED_STDOUT() \
     { fp = fopen("stdout.txt", "r"); }
-#endif // DECISION_SAFE_FUNCTIONS
 
 /**
  * \def ASSERT_CAPTURED_STDOUT(against)

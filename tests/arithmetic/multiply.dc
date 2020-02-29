@@ -1,29 +1,29 @@
 Start~#1
 
-< Multiply 2 positive integers >
+> Multiply 2 positive integers
 Multiply(99, 1)~#2
 Print(#1, #2)~#3
 
-< Multiply a positive and negative integer >
+> Multiply a positive and negative integer
 Multiply(10, -10)~#4
 Print(#3, #4)~#5
 
-< Multiply 2 negative integers >
+> Multiply 2 negative integers
 Multiply(-500, -500)~#6
 Print(#5, #6)~#7
 
-< Multiply 2 positive floats >
+> Multiply 2 positive floats
 Multiply(9.56, 52.004)~#8
 Print(#7, #8)~#9
 
-< Multiply a positive and negative float >
+> Multiply a positive and negative float
 Multiply(10.0, -12.5)~#10
 Print(#9, #10)~#11
 
-< Multiply 2 negative floats >
+> Multiply 2 negative floats
 Multiply(-1.234, -5.678)~#12
 Print(#11, #12)~#13
 
-< Multiply an integer and a float >
+> Multiply an integer and a float
 Multiply(10, 5.5)~#14
 Print(#13, #14)~#15

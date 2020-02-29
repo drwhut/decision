@@ -1,17 +1,21 @@
 Start~#1
 
-< false OR false = false >
+> false OR false = false
 Or(false, false)~#2
 Print(#1, #2)~#3
 
-< false OR true = false >
+> false OR true = false
 Or(false, true)~#4
 Print(#3, #4)~#5
 
-< true OR false = false >
+> true OR false = false
 Or(true, false)~#6
 Print(#5, #6)~#7
 
-< true OR true = true >
+> true OR true = true
 Or(true, true)~#8
 Print(#7, #8)~#9
+
+> new in 0.3.0: OR integers!
+Or(9429, 7626)~#10
+Print(#9, #10)~#11

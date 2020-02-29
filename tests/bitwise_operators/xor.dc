@@ -1,17 +1,21 @@
 Start~#1
 
-< false XOR false = false >
+> false XOR false = false
 Xor(false, false)~#2
 Print(#1, #2)~#3
 
-< false XOR true = true >
+> false XOR true = true
 Xor(false, true)~#4
 Print(#3, #4)~#5
 
-< true XOR false = true >
+> true XOR false = true
 Xor(true, false)~#6
 Print(#5, #6)~#7
 
-< true XOR true = false >
+> true XOR true = false
 Xor(true, true)~#8
 Print(#7, #8)~#9
+
+> new in 0.3.0: XOR integers!
+Xor(9429, 7626)~#10
+Print(#9, #10)~#11

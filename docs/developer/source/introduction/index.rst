@@ -1,6 +1,6 @@
 ..
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ Decision is being developed on
 When is Decision?
 =================
 
-Decision is currently in version 0.2.0
+Decision is currently in version 0.3.0
 
 The version format is ``[Major Build].[Minor Build].[Patch]``, where an
 increase in the major build indicates a major rework, an increase in the minor

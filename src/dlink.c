@@ -1,6 +1,6 @@
 /*
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -67,10 +67,9 @@ void d_link_meta_list_push(LinkMetaList *list, LinkMeta item) {
     size_t newSize = list->size + 1;
 
     if (list->list != NULL) {
-        list->list =
-            (LinkMeta *)d_realloc(list->list, newSize * sizeof(LinkMeta));
+        list->list = d_realloc(list->list, newSize * sizeof(LinkMeta));
     } else {
-        list->list = (LinkMeta *)d_malloc(newSize * sizeof(LinkMeta));
+        list->list = d_calloc(newSize, sizeof(LinkMeta));
     }
 
     list->list[newSize - 1] = item;
@@ -97,25 +96,17 @@ void d_link_free_list(LinkMetaList *list) {
 }
 
 /**
- * \fn void d_link_replace_load_ins(char *ins, char *ptr)
- * \brief Change a LOADUI/ORI instruction combination to load a specific
- * pointer.
+ * \fn void d_link_replace_fimmediate(char *ins, char *ptr)
+ * \brief Change an instruction's full immediate to point somewhere.
  *
  * **NOTE:** If you don't like the fact that you can't run 32-bit Decision code
  * on 64-bit machines and vice versa, blame it on this function.
  *
- * \param ins A pointer to first byte of the LOADUI instruction.
- * \param ptr The memory address for the instructions to load.
+ * \param ins A pointer to first byte of the instruction.
+ * \param ptr The memory address for the instruction to load.
  */
-void d_link_replace_load_ins(char *ins, char *ptr) {
-    // LOADUI
-    *(immediate_t *)(ins + 2) =
-        (immediate_t)((dint)ptr >> IMMEDIATE_SIZE * 8) & IMMEDIATE_MASK;
-
-    ins += d_vm_ins_size(OP_LOADUI);
-
-    // ORI
-    *(immediate_t *)(ins + 2) = (immediate_t)((dint)ptr & IMMEDIATE_MASK);
+void d_link_replace_fimmediate(char *ins, char *ptr) {
+    *(fimmediate_t *)(ins + 1) = (fimmediate_t)ptr;
 }
 
 /**
@@ -172,7 +163,7 @@ void d_link_precalculate_ptr(struct _sheet *sheet) {
                     }
                 } else if (meta->type == LINK_CFUNCTION) {
                     CFunction *cFunc = (CFunction *)meta->meta;
-                    meta->_ptr = (char *)cFunc->function;
+                    meta->_ptr       = (char *)cFunc;
                 }
             }
         }
@@ -218,7 +209,7 @@ void d_link_self(Sheet *sheet) {
                     }
                 }
 
-                d_link_replace_load_ins(ins, dataPtr);
+                d_link_replace_fimmediate(ins, dataPtr);
             }
             // Functions need to link to an instruction in the text section.
             else if (meta.type == LINK_FUNCTION) {
@@ -235,12 +226,11 @@ void d_link_self(Sheet *sheet) {
                     textPtr = meta._ptr;
                 }
 
-                d_link_replace_load_ins(ins, textPtr);
+                d_link_replace_fimmediate(ins, textPtr);
             }
             // C functions need to link to the C function pointer.
             else if (meta.type == LINK_CFUNCTION) {
-                CFunction *cFunc = (CFunction *)meta.meta;
-                d_link_replace_load_ins(ins, (char *)cFunc->function);
+                d_link_replace_fimmediate(ins, meta._ptr);
             }
         }
 
@@ -257,7 +247,7 @@ void d_link_self(Sheet *sheet) {
 
                 // Firstly, we need to find where the variable pointer is
                 // stored in data.
-                LinkMeta varMeta = (LinkMeta){0, NULL, 0};
+                LinkMeta varMeta = (LinkMeta){NULL, NULL, NULL, 0};
                 bool varFound    = false;
                 for (size_t i = 0; i < sheet->_link.size; i++) {
                     varMeta = sheet->_link.list[i];
@@ -273,14 +263,9 @@ void d_link_self(Sheet *sheet) {
                     // We've found the variable! Now where is it stored?
                     char *strVarPtr = sheet->_data + (size_t)varMeta._ptr;
                     char *strVarDefaultValue = sheet->_data + (size_t)meta._ptr;
-                    size_t defaultValueLength = strlen(strVarDefaultValue);
-
-                    // Now we malloc, copy the default value into the new
-                    // location, and store the new pointer.
-                    char *newPtr = (char *)d_malloc(defaultValueLength + 1);
-                    memcpy(newPtr, strVarDefaultValue, defaultValueLength + 1);
-
-                    memcpy(strVarPtr, &newPtr, sizeof(dint));
+                    
+                    // Now we store the default value's pointer into the variable.
+                    memcpy(strVarPtr, &strVarDefaultValue, sizeof(dint));
                 }
             }
         }
@@ -339,7 +324,8 @@ static void *recursive_find_link_meta(Sheet *sheet, LinkMeta *linkMeta) {
                         for (size_t var = 0; var < include->numVariables;
                              var++) {
                             if (strcmp(includeLinkMeta.name,
-                                       include->variables[var].name) == 0) {
+                                       include->variables[var]
+                                           .variableMeta.name) == 0) {
                                 return &(include->variables[var]);
                             }
                         }
@@ -349,7 +335,8 @@ static void *recursive_find_link_meta(Sheet *sheet, LinkMeta *linkMeta) {
                         for (size_t func = 0; func < include->numFunctions;
                              func++) {
                             if (strcmp(includeLinkMeta.name,
-                                       include->functions[func].name) == 0) {
+                                       include->functions[func]
+                                           .functionDefinition.name) == 0) {
                                 return &(include->functions[func]);
                             }
                         }

@@ -1,86 +1,86 @@
 Start~#1
 
-< Counting from positive integer to positive integer in steps of positive integer >
+> Counting from positive integer to positive integer in steps of positive integer
 For(#1, 1, 10, 1)~#2, #3, #4
 Print(#2, #3)
 Print(#4, "done")~#5
 
-< Counting from positive integer to positive integer in steps of negative integer >
+> Counting from positive integer to positive integer in steps of negative integer
 For(#5, 10, 1, -1)~#6, #7, #8
 Print(#6, #7)
 Print(#8, "done")~#9
 
-< Counting from positive integer to negative integer in steps of positive integer >
+> Counting from positive integer to negative integer in steps of positive integer
 For(#9, 5, -5, 1)~#10, #11, #12
 Print(#10, #11)
 Print(#12, "done")~#13
 
-< Counting from positive integer to negative integer in steps of negative integer >
+> Counting from positive integer to negative integer in steps of negative integer
 For(#13, 5, -5, -1)~#14, #15, #16
 Print(#14, #15)
 Print(#16, "done")~#17
 
-< Counting from negative integer to positive integer in steps of positive integer >
+> Counting from negative integer to positive integer in steps of positive integer
 For(#17, -5, 5, 2)~#18, #19, #20
 Print(#18, #19)
 Print(#20, "done")~#21
 
-< Counting from negative integer to positive integer in steps of negative integer >
+> Counting from negative integer to positive integer in steps of negative integer
 For(#21, -5, 5, -1)~#22, #23, #24
 Print(#22, #23)
 Print(#24, "done")~#25
 
-< Counting from negative integer to negative integer in steps of positive integer >
+> Counting from negative integer to negative integer in steps of positive integer
 For(#25, -10, -5, 1)~#26, #27, #28
 Print(#26, #27)
 Print(#28, "done")~#29
 
-< Counting from negative integer to negative integer in steps of negative integer >
+> Counting from negative integer to negative integer in steps of negative integer
 For(#29, -1, -10, -1)~#30, #31, #32
 Print(#30, #31)
 Print(#32, "done")~#33
 
-< Counting from positive float to positive float in steps of positive float >
+> Counting from positive float to positive float in steps of positive float
 For(#33, 0.0, 10.0, 0.5)~#34, #35, #36
 Print(#34, #35)
 Print(#36, "done")~#37
 
-< Counting from positive float to positive float in steps of negative float >
+> Counting from positive float to positive float in steps of negative float
 For(#37, 5.0, 1.0, -0.5)~#38, #39, #40
 Print(#38, #39)
 Print(#40, "done")~#41
 
-< Counting from positive float to negative float in steps of positive float >
+> Counting from positive float to negative float in steps of positive float
 For(#41, 1.0, -1.0, -0.25)~#42, #43, #44
 Print(#42, #43)
 Print(#44, "done")~#45
 
-< Counting from positive float to negative float in steps of negative float >
+> Counting from positive float to negative float in steps of negative float
 For(#45, 10.0, -10.0, -2.5)~#46, #47, #48
 Print(#46, #47)
 Print(#48, "done")~#49
 
-< Counting from negative float to positive float in steps of positive float >
+> Counting from negative float to positive float in steps of positive float
 For(#49, -1000.0, 1000.0, 125.25)~#50, #51, #52
 Print(#50, #51)
 Print(#52, "done")~#53
 
-< Counting from negative float to positive float in steps of negative float >
+> Counting from negative float to positive float in steps of negative float
 For(#53, -1.0, 1.0, -0.5)~#54, #55, #56
 Print(#54, #55)
 Print(#56, "done")~#57
 
-< Counting from negative float to negative float in steps of positive float >
+> Counting from negative float to negative float in steps of positive float
 For(#57, -100.0, -10.0, 12.5)~#58, #59, #60
 Print(#58, #59)
 Print(#60, "done")~#61
 
-< Counting from negative float to negative float in steps of negative float >
+> Counting from negative float to negative float in steps of negative float
 For(#61, -10.0, -100.0, -20.125)~#62, #63, #64
 Print(#62, #63)
 Print(#64, "done")~#65
 
-< Counting with a mixture of positive integers and floats >
+> Counting with a mixture of positive integers and floats
 For(#65, 1, 10, 0.5)~#66, #67, #68
 Print(#66, #67)
 Print(#68, "done")~#69

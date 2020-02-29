@@ -1,29 +1,29 @@
 Start~#1
 
-[Variable(myIntegerVar, Integer, 69)]
-[Variable(myFloatVar, Float, 420.69)]
+[Variable(myIntegerVar, Integer, 69, "Because I'm sensible.")]
+[Variable(myFloatVar, Float, 420.69, "Just to show I'm REALLY sensible.")]
 [Variable(myStringVar, String, "Hello, world!")]
 [Variable(myBooleanVar, Boolean, true)]
 
-< setting and printing an integer variable >
+> setting and printing an integer variable
 myIntegerVar~#2
 Add(#2, 1)~#3
 Set(myIntegerVar, #1, #3)~#4
 Print(#4, #2)~#5
 
-< setting and printing a float variable >
+> setting and printing a float variable
 myFloatVar~#6
 Divide(#6, 2)~#7
 Set(myFloatVar, #5, #7)~#8
 Print(#8, #6)~#9
 
-< setting and printing a string variable >
-< TODO: Implement a node to manipulate strings >
+> setting and printing a string variable
+> TODO: Implement a node to manipulate strings
 myStringVar~#10
 Set(myStringVar, #9, "Goodbye, world!")~#11
 Print(#11, #10)~#12
 
-< setting and printing a boolean variable >
+> setting and printing a boolean variable
 myBooleanVar~#13
 Xor(#13, true)~#14
 Set(myBooleanVar, #12, #14)~#15

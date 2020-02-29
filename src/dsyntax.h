@@ -1,6 +1,6 @@
 /*
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -25,8 +25,8 @@
 #ifndef DSYNTAX_H
 #define DSYNTAX_H
 
-#include <stdbool.h>
 #include "dcfg.h"
+#include <stdbool.h>
 
 #include <stddef.h>
 
@@ -55,20 +55,13 @@ typedef enum _syntaxDefinition {
     STX_listOfLineIdentifier,    // = 2
     STX_dataType,                // = 3
     STX_literal,                 // = 4
-    STX_oneeos,                  // = 5
-    STX_eos,                     // = 6
-    STX_argument,                // = 7
-    STX_propertyArgument,        // = 8
-    STX_listOfArguments,         // = 9
-    STX_listOfPropertyArguments, // = 10
-    STX_call,                    // = 11
-    STX_propertyCall,            // = 12
-    STX_expression,              // = 13
-    STX_propertyExpression,      // = 14
-    STX_statement,               // = 15
-    STX_propertyStatement,       // = 16
-    STX_generalStatement,        // = 17
-    STX_program                  // = 18
+    STX_argument,                // = 5
+    STX_propertyArgument,        // = 6
+    STX_listOfArguments,         // = 7
+    STX_listOfPropertyArguments, // = 8
+    STX_statement,               // = 9
+    STX_propertyStatement,       // = 10
+    STX_program                  // = 11
 } SyntaxDefinition;
 
 /**
@@ -79,11 +72,11 @@ typedef enum _syntaxDefinition {
  * \typedef struct _syntaxNode SyntaxNode
  */
 typedef struct _syntaxNode {
-    SyntaxDefinition definition;
     struct _lexToken *info; ///< Only defined if `definition == STX_TOKEN`.
     struct _syntaxNode *child;
     struct _syntaxNode *sibling;
     size_t onLineNum;
+    SyntaxDefinition definition;
 } SyntaxNode;
 
 /**
@@ -93,8 +86,8 @@ typedef struct _syntaxNode {
  * \typedef struct _syntaxResult SyntaxResult
  */
 typedef struct _syntaxResult {
-    bool success;
     SyntaxNode *node;
+    bool success;
 } SyntaxResult;
 
 /**
@@ -196,7 +189,7 @@ d_syntax_get_child_by_definition(SyntaxNode *parent,
  *
  * \param root The root node to search from.
  * \param definition The definition we want our found nodes to have.
- * \param traverseChildrenOfFound If we find a node that we want, should w
+ * \param traverseChildrenOfFound If we find a node that we want, should we
  * also traverse the children of that found node?
  */
 DECISION_API SyntaxSearchResult

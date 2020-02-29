@@ -1,6 +1,6 @@
 /*
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,8 +24,8 @@
 #ifndef DLEX_H
 #define DLEX_H
 
-#include <stdbool.h>
 #include "dcfg.h"
+#include <stdbool.h>
 
 #include <stddef.h>
 
@@ -116,15 +116,18 @@ typedef enum _lexType {
 
 /**
  * \union _lexData
- * \brief A union for storing data in a lexical token.
+ * \brief A union for storing the variable data types in Decision.
+ * 
+ * This is usually used in conjunction with `DType` to determine which element
+ * to get data from.
  *
  * \typedef union _lexData LexData
  */
 typedef union _lexData {
-    char *stringValue;
     dint integerValue;
     dfloat floatValue;
     bool booleanValue;
+    char *stringValue;
 } LexData;
 
 /**
@@ -147,8 +150,8 @@ typedef struct _lexToken {
  * \typedef struct _lexStream LexStream
  */
 typedef struct _lexStream {
-    size_t numTokens;
     LexToken *tokenArray;
+    size_t numTokens;
 } LexStream;
 
 /*

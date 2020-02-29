@@ -1,6 +1,6 @@
 ..
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,7 +28,8 @@ exploring some of the other features Decision has to offer at your own pace:
    comments.rst
    arithmetic.rst
    conditions.rst
-   condition_arithmetic.rst
+   boolean_operations.rst
+   bitwise_operations.rst
    changing_flow_with_conditions.rst
    string_manipulation.rst
    variables.rst

@@ -1,6 +1,6 @@
 ..
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -97,17 +97,11 @@ Installation
 
    By default, this step will create a Visual Studio solution for 32-bit
    Windows (x86). If you want to create a Visual Studio solution for 64-bit
-   Windows (x64), you need to tell CMake to use a different "generator":
+   Windows (x64), you need to specify this:
 
    .. code-block::
 
-      cmake -DCOMPILER_32=OFF -G "Visual Studio 15 2017 Win64" ..
-    
-   For example, this is the 64-bit version of Visual Studio 2017. If you are
-   using a different version of Visual Studio, you can find out what needs to
-   go inbetween the quotes by running the first command, and CMake should say
-   what generator it is using. Then it is just a case of adding "Win64" to the
-   end.
+      cmake -DCOMPILER_32=OFF -A x64 ..
 
 4. Build the appropiate executable with one of the following commands:
 
@@ -151,7 +145,7 @@ git (Optional)
     If you want to clone the GitHub repository rather than downloading a
     tarball of the source code, you can use git to do so.
 
-.. note::
+.. tip::
 
    On Ubuntu, you can install all the dependencies you need by running these
    commands:
@@ -227,32 +221,30 @@ argument when creating the CMake project:
 
    cmake -DCOMPILER_32=ON ..
 
-.. note::
+.. warning::
 
    This option will only work properly on 32-bit machines! Applying this
    option on 64-bit machines will not work since it will not be able to store
    full 64-bit pointers.
 
-Build a DLL
-^^^^^^^^^^^
+Shared Library
+^^^^^^^^^^^^^^
 
-On Linux, both the static library (.a) and the shared library (.so) are built.
-On Windows however, only the static library (.lib) is built by default.
-If you want to create a DLL instead of a static library on Windows, add
-this argument when creating the CMake project:
+By default, a static library for the compiler is generated (.lib/.a). If you
+want to generate a shared library instead (.dll/.so), add this argument:
 
 .. code-block::
 
-   cmake -DCOMPILER_DLL=ON ..
+   cmake -DCOMPILER_SHARED=ON ..
 
 Enable C API Tests
 ^^^^^^^^^^^^^^^^^^
 
 If you want CMake to generate tests testing Decision's C API, add this argument:
 
-```bash
-cmake -DCOMPILER_C_TESTS=ON ..
-```
+.. code-block::
+
+   cmake -DCOMPILER_C_TESTS=ON ..
 
 Note that this option will generate a lot more executables alongside the
 compiler executable. See ``tests/README.md`` for more details.

@@ -1,13 +1,13 @@
 Start~#1
 
-< false literal >
+> false literal
 While(#1, false)~#2, #3
 Print(#2, "false literal")
 
-< true liter- nah i'm just joking that would go horribly wrong >
+> true liter- nah i'm just joking that would go horribly wrong
 
-< counting from 1 to 10 with a variable >
-[Variable(i, Integer, 1)]
+> counting from 1 to 10 with a variable
+[Variable(i, Integer, 1, "The number to print.")]
 
 i~#4
 LessThanOrEqual(#4, 10)~#5

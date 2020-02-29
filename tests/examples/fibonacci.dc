@@ -1,6 +1,6 @@
-< This subroutine prints the first n fibonacci numbers. >
-[Subroutine(Fibonacci)]
-[FunctionInput(Fibonacci, Integer)]
+> This subroutine prints the first n fibonacci numbers.
+[Subroutine(Fibonacci, "Print the fibonacci numbers.")]
+[FunctionInput(Fibonacci, n, Integer, 10, "The number of fibonacci numbers to print.")]
 
 [Variable(_fib1, Integer, 0)]
 [Variable(_fib2, Integer, 1)]
@@ -10,17 +10,17 @@ Define(Fibonacci)~#1, #2
 Set(_fib1, #1, 0)~#3
 Set(_fib2, #3, 1)~#4
 
-< The first fibonacci number >
+> The first fibonacci number
 MoreThanOrEqual(#2, 1)~#5
 IfThen(#4, #5)~#6
 Print(#6, 0)~#7
 
-< The second fibonacci number >
+> The second fibonacci number
 MoreThanOrEqual(#2, 2)~#8
 IfThen(#7, #8)~#9
 Print(#9, 1)~#10
 
-< The rest of the fibonacci numbers >
+> The rest of the fibonacci numbers
 MoreThanOrEqual(#2, 3)~#11
 IfThen(#10, #11)~#12
 
@@ -29,11 +29,11 @@ _fib1~#16
 _fib2~#17
 Add(#16, #17)~#18
 Print(#13, #18)~#19
-Set(_temp, #19, #17)~#20 < _temp = _fib2 >
-Set(_fib2, #20, #18)~#21 < _fib2 = _fib1 + _fib2 >
+Set(_temp, #19, #17)~#20 > _temp = _fib2
+Set(_fib2, #20, #18)~#21 > _fib2 = _fib1 + _fib2
 _temp~#22
-Set(_fib1, #21, #22)     < _fib1 = _temp >
+Set(_fib1, #21, #22)     > _fib1 = _temp
 
-< Using the Fibonacci subroutine to print the first 50 fibonacci numbers >
+> Using the Fibonacci subroutine to print the first 50 fibonacci numbers
 Start~#100
 Fibonacci(#100, 25)

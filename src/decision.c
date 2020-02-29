@@ -1,6 +1,6 @@
 /*
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@
 #include "dlex.h"
 #include "dlink.h"
 #include "dmalloc.h"
+#include "dobj.h"
 #include "doptimize.h"
 #include "dsemantic.h"
 #include "dsheet.h"
@@ -33,63 +34,34 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* String constant for displaying the version and copyright notice. */
-static const char *VERSION =
-    "Decision " DECISION_VERSION "\n"
-    "Copyright (C) 2019  Benjamin Beddows\n"
-    "This program comes with ABSOLUTELY NO WARRANTY.\n"
-    "This is free software, and you are welcome to redistribute it under the\n"
-    "conditions of the GNU GPLv3: "
-    "<https://www.gnu.org/licenses/gpl-3.0.html>\n";
+/* Definition of the verbose level. */
+char verboseLevel = 0;
 
-/* String constant for the contents of the help screen. */
-static const char *HELP =
-    "USAGE: decision [option]... <FILE>\n"
-    "Run a Decision source file or object file FILE.\n"
-    "\n"
-    "OPTIONS:\n"
-    "  -c, --compile:                    Compile all source file(s) into .dco\n"
-    "                                      object files.\n"
-    "  -D, --disassemble:                Disassemble a given object file.\n"
-    "  -h, -?, --help:                   Display this screen and exit.\n"
-    "  -V[=LEVEL], --verbose[=LEVEL]:    Output verbose debugging information "
-    "as\n"
-    "                                      source code is being compiled. See\n"
-    "                                      VERBOSE LEVELS for different levels "
-    "of\n"
-    "                                      information.\n"
-    "  -v, --version:                    Output version information and exit.\n"
-    "\n"
-    "VERBOSE LEVELS:\n"
-    "  Each level has the properties of the levels before it.\n"
-    "  The default level is 3, if no level is given, or it is invalid.\n"
-    "  0:    No verbose output.\n"
-    "  1:    State vaguely what is happening at each stage.\n"
-    "  2:    Show detailed information about the sheet after it is checked.\n"
-    "  3:    Show the compiled bytecode after linkage (before running).\n"
-    "  4:    Show other data like the syntax tree, lexical stream, etc.\n"
-    "  5:    Explain in great detail what is happening at each stage.\n"
-    "\n";
-
-/* Definition of the VERBOSE_LEVEL extern. */
-char VERBOSE_LEVEL = 0;
-
-/*
-    void print_version()
-    Display the version number to the screen.
-    TODO: Add license, copyright, etc.
-*/
-static void print_version() {
-    printf("%s", VERSION);
+/**
+ * \fn char d_get_verbose_level()
+ * \brief Get the current verbose level.
+ *
+ * \return The verbose level. It will be a number between 0 and 5.
+ */
+char d_get_verbose_level() {
+    return verboseLevel;
 }
 
-/*
-    void print_help()
-    Display the list of arguments to the screen, in case the user didn't
-    provide any, or actually want to see it.
-*/
-static void print_help() {
-    printf("%s", HELP);
+/**
+ * \fn void d_set_verbose_level(char level)
+ * \brief Set the current verbose level.
+ *
+ * \param level The verbose level to set. If the number is bigger than 5,
+ * then the verbose level is set to 5.
+ */
+void d_set_verbose_level(char level) {
+    if (level > 5) {
+        level = 5;
+    } else if (level < 0) {
+        level = 0;
+    }
+
+    verboseLevel = level;
 }
 
 /*
@@ -108,31 +80,18 @@ static const char *load_string_from_file(const char *filePath, size_t *size,
                                          bool binary) {
     FILE *f;
 
-#ifdef DECISION_SAFE_FUNCTIONS
-    if (fopen_s(&f, filePath, (binary) ? "rb" : "r") != 0) {
-        printf("Can't open the file!\n");
-        return NULL;
-    }
-    if (f == NULL) {
-        return NULL;
-    }
-#else
     f = fopen(filePath, (binary) ? "rb" : "r");
     if (f == NULL) {
         printf("Can't open the file!\n");
         return NULL;
     }
-#endif // DECISION_SAFE_FUNCTIONS
 
     fseek(f, 0, SEEK_END);
     size_t fSize = ftell(f);
     *size        = fSize;
     fseek(f, 0, SEEK_SET);
 
-    char *string = (char *)d_malloc(fSize + 2);
-
-    // There were problems on Windows with trailing rogue charatcers.
-    memset(string, 0, fSize + 2);
+    char *string = d_calloc(fSize + 2, sizeof(char));
 
     fread(string, fSize, 1, f);
 
@@ -169,21 +128,11 @@ static void save_object_to_file(const char *filePath, const char *content,
                                 size_t len) {
     FILE *f;
 
-#ifdef DECISION_SAFE_FUNCTIONS
-    if (fopen_s(&f, filePath, "wb") != 0) {
-        printf("Can't open the file!\n");
-        return;
-    }
-    if (f == NULL) {
-        return;
-    }
-#else
     f = fopen(filePath, "wb");
     if (f == NULL) {
         printf("Can't open the file!\n");
         return;
     }
-#endif // DECISION_SAFE_FUNCTIONS
 
     fwrite(content, sizeof(char), len, f);
 
@@ -204,9 +153,10 @@ bool d_run_sheet(Sheet *sheet) {
         if (sheet->_isLinked) {
             if (sheet->_main > 0) // A Start function exists.
             {
-                DVM vm;
-                d_vm_reset(&vm);
-                return d_vm_run(&vm, sheet->_text + sheet->_main);
+                DVM vm       = d_vm_create();
+                bool success = d_vm_run(&vm, sheet->_text + sheet->_main);
+                d_vm_free(&vm);
+                return success;
             } else {
                 printf("Fatal: Sheet %s has no Start function defined",
                        sheet->filePath);
@@ -225,9 +175,9 @@ bool d_run_sheet(Sheet *sheet) {
  * \fn bool d_run_function(DVM *vm, Sheet *sheet, const char *funcName)
  * \brief Run the specified function/subroutine in a given sheet, given the
  * sheet has gone through `d_codegen_compile`.
- * 
+ *
  * \return If the function/subroutine ran without any errors.
- * 
+ *
  * \param vm The VM to run the function on. The reason it is a seperate
  * argument is because it allows you to push and pop arguments and return values
  * seperately.
@@ -278,21 +228,24 @@ bool d_run_function(DVM *vm, Sheet *sheet, const char *funcName) {
             // where this sheet is and run it there.
             if (funcPtr == NULL) {
                 AllNameDefinitions nameDefs =
-                    d_semantic_get_name_definitions(sheet, funcName);
+                    d_get_name_definitions(sheet, funcName);
 
-                NameDefinition definition;
-                if (d_semantic_select_name_definition(funcName, nameDefs,
-                                                      &definition)) {
+                if (nameDefs.numDefinitions == 1) {
+                    NameDefinition definition = nameDefs.definitions[0];
                     if (definition.type == NAME_FUNCTION) {
                         Sheet *extSheet = definition.sheet;
                         return d_run_function(vm, extSheet, funcName);
                     }
-                } else {
+                } else if (nameDefs.numDefinitions == 0) {
                     printf("Fatal: Sheet %s has no function %s defined",
+                           sheet->filePath, funcName);
+                } else {
+                    printf("Fatal: Sheet %s has multiple definitions of the "
+                           "function %s defined",
                            sheet->filePath, funcName);
                 }
 
-                d_semantic_free_name_definitions(nameDefs);
+                d_free_name_definitions(&nameDefs);
             } else {
                 // We know where it lives, so we can run it!
                 return d_vm_run(vm, funcPtr);
@@ -308,7 +261,8 @@ bool d_run_function(DVM *vm, Sheet *sheet, const char *funcName) {
 }
 
 /**
- * \fn Sheet *d_load_string(const char *source, const char *name)
+ * \fn Sheet *d_load_string(const char *source, const char *name,
+ *                          CompileOptions *options)
  * \brief Take Decision source code and compile it into bytecode, but do not
  * run it.
  *
@@ -316,17 +270,36 @@ bool d_run_function(DVM *vm, Sheet *sheet, const char *funcName) {
  *
  * \param source The source code to compile.
  * \param name The name of the sheet. If NULL, it is set to `"source"`.
+ * \param options A set of compile options. If NULL, the default settings are
+ * used.
  */
-Sheet *d_load_string(const char *source, const char *name) {
+Sheet *d_load_string(const char *source, const char *name,
+                     CompileOptions *options) {
     // If name is NULL, set a name.
     name = (name != NULL) ? name : "source";
 
     // Represent the sheet in memory, and check for errors along the way.
     Sheet *sheet = d_sheet_create(name);
 
+    // By default, have no initial includes, and don't compile in debug mode.
+    CompileOptions opts = DEFAULT_COMPILE_OPTIONS;
+
+    if (options != NULL) {
+        opts = *options;
+    }
+
+    if (opts.includes != NULL) {
+        Sheet **include = opts.includes;
+
+        while (*include) {
+            d_sheet_add_include(sheet, *include);
+            include++;
+        }
+    }
+
     VERBOSE(1, "--- STAGE 1: Creating lexical stream...\n")
     LexStream stream = d_lex_create_stream(source, name);
-    if (VERBOSE_LEVEL >= 4)
+    if (d_get_verbose_level() >= 4)
         d_lex_dump_stream(stream);
 
     if (stream.numTokens > 0) {
@@ -338,12 +311,12 @@ Sheet *d_load_string(const char *source, const char *name) {
         // Syntax analysis may have thrown errors, in which case semantic
         // analysis is unreliable.
         if (result.success) {
-            if (VERBOSE_LEVEL >= 4)
+            if (d_get_verbose_level() >= 4)
                 d_syntax_dump_tree(root);
 
             VERBOSE(1, "--- STAGE 3: Checking semantics...\n")
-            d_semantic_scan(sheet, root);
-            if (VERBOSE_LEVEL >= 2)
+            d_semantic_scan(sheet, root, opts.priors, opts.debug);
+            if (d_get_verbose_level() >= 2)
                 d_sheet_dump(sheet);
 
             // After checking the sheet, see if we got any errors.
@@ -353,13 +326,29 @@ Sheet *d_load_string(const char *source, const char *name) {
             // Compile only if there were no errors.
             if (!hasErrors) {
                 VERBOSE(1, "--- STAGE 4: Generating bytecode...\n")
-                d_codegen_compile(sheet);
+                d_codegen_compile(sheet, opts.debug);
 
-                VERBOSE(1, "--- STAGE 5: Optimising bytecode...\n")
-                d_optimize_all(sheet);
+                // Do not optimise the bytecode if we are debugging!
+                if (opts.debug) {
+                    VERBOSE(
+                        5,
+                        "--- Skipping optimisation, compiling in debug mode.\n")
+                } else {
+                    VERBOSE(1, "--- STAGE 5: Optimising bytecode...\n")
+                    d_optimize_all(sheet);
+                }
 
                 VERBOSE(1, "--- STAGE 6: Linking...\n")
                 d_link_sheet(sheet);
+
+                // Dump the compiled content.
+                if (d_get_verbose_level() >= 3) {
+                    d_asm_dump_all(sheet);
+
+                    if (opts.debug) {
+                        d_debug_dump_info(sheet->_debugInfo);
+                    }
+                }
             }
 
             // Only free the tree if syntax analysis was successful, as
@@ -382,7 +371,8 @@ Sheet *d_load_string(const char *source, const char *name) {
 }
 
 /**
- * \fn bool d_run_string(const char *source, const char *name)
+ * \fn bool d_run_string(const char *source, const char *name,
+ *                       CompileOptions *options)
  * \brief Take Decision source code and compile it into bytecode. If it
  * compiled successfully, run it in the virtual machine.
  *
@@ -390,15 +380,15 @@ Sheet *d_load_string(const char *source, const char *name) {
  *
  * \param source The source code the compile.
  * \param name The name of the sheet. If `NULL`, it is set to `"source"`.
+ * \param options A set of compile options. If NULL, the default settings are
+ * used.
  */
-bool d_run_string(const char *source, const char *name) {
-    Sheet *sheet   = d_load_string(source, name);
+bool d_run_string(const char *source, const char *name,
+                  CompileOptions *options) {
+    Sheet *sheet   = d_load_string(source, name, options);
     bool hadErrors = sheet->hasErrors;
 
     if (!hadErrors) {
-        if (VERBOSE_LEVEL >= 3)
-            d_asm_dump_all(sheet);
-
         hadErrors = !d_run_sheet(sheet);
     }
 
@@ -408,7 +398,8 @@ bool d_run_string(const char *source, const char *name) {
 }
 
 /**
- * \fn bool d_compile_string(const char *source, const char *filePath)
+ * \fn bool d_compile_string(const char *source, const char *filePath,
+ *                           CompileOptions *options)
  * \brief Take Decision source code and compile it into bytecode. Then save
  * it into a binary file if it compiled successfully.
  *
@@ -416,14 +407,17 @@ bool d_run_string(const char *source, const char *name) {
  *
  * \param source The source code to compile.
  * \param filePath Where to write the object file to.
+ * \param options A set of compile options. If NULL, the default settings are
+ * used.
  */
-bool d_compile_string(const char *source, const char *filePath) {
-    Sheet *sheet   = d_load_string(source, NULL);
+bool d_compile_string(const char *source, const char *filePath,
+                      CompileOptions *options) {
+    Sheet *sheet   = d_load_string(source, NULL, options);
     bool hadErrors = sheet->hasErrors;
 
     if (!hadErrors) {
         size_t objSize;
-        const char *obj = d_asm_generate_object(sheet, &objSize);
+        const char *obj = d_obj_generate(sheet, &objSize);
         save_object_to_file(filePath, obj, objSize);
 
         free((char *)obj);
@@ -435,21 +429,23 @@ bool d_compile_string(const char *source, const char *filePath) {
 }
 
 /**
- * \fn Sheet *d_load_source_file(const char *filePath)
+ * \fn Sheet *d_load_source_file(const char *filePath, CompileOptions *options)
  * \brief Take Decision source code from a file and compile it into bytecode,
  * but do not run it.
  *
  * \return A malloc'd sheet containing all of the compilation info.
  *
  * \param filePath The file path of the source file to compile.
+ * \param options A set of compile options. If NULL, the default settings are
+ * used.
  */
-Sheet *d_load_source_file(const char *filePath) {
+Sheet *d_load_source_file(const char *filePath, CompileOptions *options) {
     size_t _size; // Not needed.
     const char *source = load_string_from_file(filePath, &_size, false);
     Sheet *sheet       = NULL;
 
     if (source != NULL) {
-        sheet = d_load_string(source, filePath);
+        sheet = d_load_string(source, filePath, options);
         free((void *)source);
     } else {
         // We errored loading the file.
@@ -461,22 +457,21 @@ Sheet *d_load_source_file(const char *filePath) {
 }
 
 /**
- * \fn bool d_run_source_file(const char *filePath)
+ * \fn bool d_run_source_file(const char *filePath, CompileOptions *options)
  * \brief Take Decision source code in a file and compile it into bytecode. If
  * it compiled successfully, run it in the virtual machine.
  *
  * \return If the code compiled/ran without any errors.
  *
  * \param filePath The file path of the source file to compile.
+ * \param options A set of compile options. If NULL, the default settings are
+ * used.
  */
-bool d_run_source_file(const char *filePath) {
-    Sheet *sheet   = d_load_source_file(filePath);
+bool d_run_source_file(const char *filePath, CompileOptions *options) {
+    Sheet *sheet   = d_load_source_file(filePath, options);
     bool hadErrors = sheet->hasErrors;
 
     if (!hadErrors) {
-        if (VERBOSE_LEVEL >= 3)
-            d_asm_dump_all(sheet);
-
         hadErrors = !d_run_sheet(sheet);
     }
 
@@ -486,7 +481,8 @@ bool d_run_source_file(const char *filePath) {
 }
 
 /**
- * \fn bool d_compile_file(const char *filePathIn, const char *filePathOut)
+ * \fn bool d_compile_file(const char *filePathIn, const char *filePathOut
+ *                         CompileOptions *options)
  * \brief Take Decision source code from a file and compile it into bytecode.
  * If it compiled successfully, save it into a binary file.
  *
@@ -494,14 +490,17 @@ bool d_run_source_file(const char *filePath) {
  *
  * \param filePathIn The file path of the source file to compile.
  * \param filePathOut Where to write the object file to.
+ * \param options A set of compile options. If NULL, the default settings are
+ * used.
  */
-bool d_compile_file(const char *filePathIn, const char *filePathOut) {
-    Sheet *sheet   = d_load_source_file(filePathIn);
+bool d_compile_file(const char *filePathIn, const char *filePathOut,
+                    CompileOptions *options) {
+    Sheet *sheet   = d_load_source_file(filePathIn, options);
     bool hadErrors = sheet->hasErrors;
 
     if (!hadErrors) {
         size_t objSize;
-        const char *obj = d_asm_generate_object(sheet, &objSize);
+        const char *obj = d_obj_generate(sheet, &objSize);
         save_object_to_file(filePathOut, obj, objSize);
 
         free((char *)obj);
@@ -513,26 +512,43 @@ bool d_compile_file(const char *filePathIn, const char *filePathOut) {
 }
 
 /**
- * \fn Sheet *d_load_object_file(const char *filePath)
+ * \fn Sheet *d_load_object_file(const char *filePath, CompileOptions *options)
  * \brief Take a Decision object file and load it into memory.
  *
  * \return A malloc'd sheet object containing all of the compilation info.
  *
  * \param filePath The file path of the object file.
+ * \param options A set of compile options. If NULL, the default settings are
+ * used. The debug setting is ignored, as object files cannot be debugged.
  */
-Sheet *d_load_object_file(const char *filePath) {
+Sheet *d_load_object_file(const char *filePath, CompileOptions *options) {
     size_t size;
     const char *obj = load_string_from_file(filePath, &size, true);
     Sheet *out      = NULL;
 
+    // Ignore the debug option.
+    Sheet **includes = NULL;
+    if (options != NULL) {
+        includes = options->includes;
+    }
+
+    Sheet **priors = NULL;
+    if (options != NULL) {
+        priors = options->priors;
+    }
+
     if (obj != NULL) {
-        out = d_asm_load_object(obj, size, filePath);
+        out = d_obj_load(obj, size, filePath, includes, priors);
         free((char *)obj);
 
         out->hasErrors = d_error_report();
 
         if (!out->hasErrors) {
             d_link_sheet(out);
+        }
+
+        if (d_get_verbose_level() >= 3) {
+            d_asm_dump_all(out);
         }
     } else {
         // We errored loading the file.
@@ -544,22 +560,21 @@ Sheet *d_load_object_file(const char *filePath) {
 }
 
 /**
- * \fn bool d_run_object_file(const char *filePath)
+ * \fn bool d_run_object_file(const char *filePath, CompileOptions *options)
  * \brief Take a Decision object file, load it into memory, and run it in the
  * virtual machine.
  *
  * \return If the code ran without any errors.
  *
  * \param filePath The file path of the object file.
+ * \param options A set of compile options. If NULL, the default settings are
+ * used. The debug setting is ignored, as object files cannot be debugged.
  */
-bool d_run_object_file(const char *filePath) {
-    Sheet *sheet   = d_load_object_file(filePath);
+bool d_run_object_file(const char *filePath, CompileOptions *options) {
+    Sheet *sheet   = d_load_object_file(filePath, options);
     bool hadErrors = sheet->hasErrors;
 
     if (!hadErrors) {
-        if (VERBOSE_LEVEL >= 3)
-            d_asm_dump_all(sheet);
-
         hadErrors = !d_run_sheet(sheet);
     }
 
@@ -602,15 +617,17 @@ short d_is_object_file(const char *filePath) {
 }
 
 /**
- * \fn Sheet *d_load_file(const char *filePath)
+ * \fn Sheet *d_load_file(const char *filePath, CompileOptions *options)
  * \brief Take a Decision file, decide whether it is a source or an object file
  * based on its contents, and load it into memory.
  *
  * \return A malloc'd sheet object containing all of the compilation info.
  *
  * \param filePath The file path of the file to load.
+ * \param options A set of compile options. If NULL, the default settings are
+ * used.
  */
-Sheet *d_load_file(const char *filePath) {
+Sheet *d_load_file(const char *filePath, CompileOptions *options) {
     short fileType = d_is_object_file(filePath);
 
     Sheet *out;
@@ -618,13 +635,13 @@ Sheet *d_load_file(const char *filePath) {
     switch (fileType) {
         case 0:
             // It is a source file.
-            out = d_load_source_file(filePath);
+            out = d_load_source_file(filePath, options);
 
             break;
 
         case 1:
             // It is an object file.
-            out = d_load_object_file(filePath);
+            out = d_load_object_file(filePath, options);
 
             break;
 
@@ -640,24 +657,21 @@ Sheet *d_load_file(const char *filePath) {
 }
 
 /**
- * \fn bool d_run_file(const char *filePath)
+ * \fn bool d_run_file(const char *filePath, CompileOptions *options)
  * \brief Take a Decision file, decide whether it is a source or an object file
  * based on its contents, and run it in the virtual machine.
  *
  * \return If the code compiled/ran without any errors.
  *
  * \param filePath The file path of the file to load.
+ * \param options A set of compile options. If NULL, the default settings are
+ * used.
  */
-bool d_run_file(const char *filePath) {
-    Sheet *sheet   = d_load_file(filePath);
+bool d_run_file(const char *filePath, CompileOptions *options) {
+    Sheet *sheet   = d_load_file(filePath, options);
     bool hadErrors = sheet->hasErrors;
 
     if (!hadErrors) {
-        d_link_sheet(sheet);
-
-        if (VERBOSE_LEVEL >= 3)
-            d_asm_dump_all(sheet);
-
         hadErrors = !d_run_sheet(sheet);
     }
 
@@ -665,158 +679,3 @@ bool d_run_file(const char *filePath) {
 
     return hadErrors;
 }
-
-/* Macro to help check an argument in main(). */
-#define ARG(test) strcmp(arg, #test) == 0
-
-#ifndef DECISION_LIBRARY
-int main(int argc, char *argv[]) {
-    char *filePath   = NULL;
-    bool compile     = false;
-    bool disassemble = false;
-
-    for (int i = 1; i < argc; i++) {
-        char *arg = argv[i];
-
-        // -c, --compile
-        if (ARG(-c) || ARG(--compile)) {
-            compile = true;
-        }
-        // -D, --disassemble
-        else if (ARG(-D) || ARG(--disassemble)) {
-            disassemble = true;
-        }
-        // -h, -?, --help
-        else if (ARG(-h) || ARG(-?) || ARG(--help))
-        {
-            print_help();
-            return 0;
-        }
-        // -V, --verbose
-        else if (strncmp(arg, "-V", 2) == 0 ||
-                 strncmp(arg, "--verbose", 9) == 0) {
-            // The default verbose level.
-            VERBOSE_LEVEL = 3;
-
-            size_t flagSize = (strncmp(arg, "-V", 2) == 0) ? 2 : 9;
-
-            // The +2 is for the = and integer.
-            if (strlen(arg) == flagSize + 2) {
-                if (arg[flagSize] == '=') {
-                    switch (arg[flagSize + 1]) {
-                        case '0':
-                            VERBOSE_LEVEL = 0;
-                            break;
-                        case '1':
-                            VERBOSE_LEVEL = 1;
-                            break;
-                        case '2':
-                            VERBOSE_LEVEL = 2;
-                            break;
-                        case '3':
-                            VERBOSE_LEVEL = 3;
-                            break;
-                        case '4':
-                            VERBOSE_LEVEL = 4;
-                            break;
-                        case '5':
-                            VERBOSE_LEVEL = 5;
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            }
-
-            printf("Verbose level set to %d.\n", VERBOSE_LEVEL);
-        }
-        // -v, --version
-        else if (ARG(-v) || ARG(--version)) {
-            print_version();
-            return 0;
-        } else {
-            // If it's something we don't recognise, assume it's the source
-            // file.
-            if (filePath != NULL && !compile) {
-                // A "file" has already been given.
-                printf("More than one file has been given!\n");
-                return 1;
-            }
-
-            filePath = argv[i];
-
-            if (compile) {
-                // We want to change the file path so it has an extension of
-                // .dco, instead of .dc
-                // If it's a different extension, just add it on.
-                bool dcExtension = false;
-                if (strlen(filePath) >= 3) {
-                    char *extension = filePath + strlen(filePath) - 3;
-                    if (strncmp(extension, ".dc", 3) == 0)
-                        dcExtension = true;
-                }
-
-                size_t addedSpace     = (dcExtension) ? 1 : 4;
-                size_t filePathLen    = strlen(filePath);
-                size_t objFilePathLen = filePathLen + addedSpace;
-
-                // Copy the filePath into a bigger char array.
-                char *objFilePath = (char *)d_malloc(objFilePathLen + 1);
-                memcpy(objFilePath, filePath, filePathLen);
-
-                if (dcExtension) {
-                    // The only difference is that there is an 'o' at the end
-                    // of the file path.
-                    objFilePath[objFilePathLen - 1] = 'o';
-                } else {
-                    // We want to put the extension AT THE END of the old file
-                    // path.
-                    memcpy(objFilePath + filePathLen, ".dco", 4);
-                }
-
-                objFilePath[objFilePathLen] = 0;
-
-                // Now we have our new objFilePath, let's compile!
-                d_compile_file((const char *)filePath,
-                               (const char *)objFilePath);
-
-                free(objFilePath);
-            }
-        }
-    }
-
-    if (filePath != NULL) {
-        if (!compile) {
-            // If the file path ends in .dco, it's an object file.
-            bool isObjectFile = false;
-            if (strlen(filePath) >= 4) {
-                char *extension = filePath + strlen(filePath) - 4;
-                if (strncmp(extension, ".dco", 4) == 0)
-                    isObjectFile = true;
-            }
-
-            if (isObjectFile) {
-                if (disassemble) {
-                    Sheet *sheet = d_load_object_file((const char *)filePath);
-                    d_asm_dump_all(sheet);
-                    d_sheet_free(sheet);
-
-                    return 0;
-                } else
-                    return d_run_object_file((const char *)filePath);
-            } else {
-                // Check that we are not disassembling a source file.
-                if (disassemble) {
-                    printf("Cannot disassemble any file other than a Decision "
-                           "object file!\n");
-                    return 1;
-                } else
-                    return d_run_source_file((const char *)filePath);
-            }
-        }
-    } else {
-        print_help();
-        return 1;
-    }
-}
-#endif // DECISION_LIBRARY

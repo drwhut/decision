@@ -1,0 +1,23 @@
+[Variable(num1, Integer, 1052)]
+[Variable(num2, Integer, 516)]
+
+[Variable(gcf, Integer, 1)]
+
+> A program to calculate the greatest common factor of num1 and num2,
+> given that num1 is greater than num2.
+Start~#1
+
+num1~#2
+num2~#3
+
+For(#1, 2, #3, 1)~#4, #5, #6
+Mod(#2, #5)~#7
+Mod(#3, #5)~#8
+Equal(#7, 0)~#9
+Equal(#8, 0)~#10
+And(#9, #10)~#11 > #5 is a factor of num1 AND num2
+IfThen(#4, #11)~#12
+Set(gcf, #12, #5)
+
+gcf~#13
+Print(#6, #13)

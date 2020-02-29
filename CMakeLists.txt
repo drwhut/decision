@@ -1,6 +1,6 @@
 #[[
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,7 +19,9 @@
 cmake_minimum_required(VERSION 2.6)
 project(Decision)
 
-set (Decision_VERSION 0.2.0)
+set (Decision_VERSION_MAJOR 0)
+set (Decision_VERSION_MINOR 3)
+set (Decision_VERSION_PATCH 0)
 
 # Since the built files are added in the src/ directory,
 # the files by default would go into a src/ directory.

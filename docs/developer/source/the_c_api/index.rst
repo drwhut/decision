@@ -1,6 +1,6 @@
 ..
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ The C API
 *********
 
 Since Decision is made in C, if you are writing a program in either C or C++,
-you can include Decision as en embeddable programming language! This chapter
+you can include Decision as an embeddable programming language! This chapter
 describes in detail how you can do so, and what you can do once you've
 embedded it into your program.
 
@@ -30,3 +30,4 @@ embedded it into your program.
    embedding_decision.rst
    running_decision_from_c.rst
    running_c_from_decision.rst
+   debugging_decision_code.rst

@@ -1,6 +1,6 @@
 /*
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,16 +28,16 @@
 #include <stdio.h>
 
 void myHalf(DVM *vm) {
-    dfloat input  = d_vm_pop_stack_float(vm);
+    dfloat input  = d_vm_get_float(vm, 1);
     dfloat output = input / 2;
-    d_vm_push_stack_float(vm, output);
+    d_vm_push_float(vm, output);
 }
 
 char *reasonStr;
 
 void myCanDrive(DVM *vm) {
-    dint age        = d_vm_pop_stack(vm);
-    dint hasLicense = d_vm_pop_stack(vm);
+    dint age        = d_vm_get(vm, 1);
+    dint hasLicense = d_vm_get(vm, 2);
 
     dint canDrive = 0;
 
@@ -52,8 +52,8 @@ void myCanDrive(DVM *vm) {
         reasonStr = "You are not old enough to drive.";
     }
 
-    d_vm_push_stack_ptr(vm, reasonStr);
-    d_vm_push_stack(vm, canDrive);
+    d_vm_push_ptr(vm, reasonStr);
+    d_vm_push(vm, canDrive);
 }
 
 dint recursive_factorial(dint n) {
@@ -65,31 +65,50 @@ dint recursive_factorial(dint n) {
 }
 
 void myFactorial(DVM *vm) {
-    dint input  = d_vm_pop_stack(vm);
+    dint input  = d_vm_get(vm, 1);
     dint output = recursive_factorial(input);
-    d_vm_push_stack(vm, output);
+    d_vm_push(vm, output);
 }
 
 int main() {
-    DType halfInputs[]  = {TYPE_FLOAT, TYPE_NONE};
-    DType halfOutputs[] = {TYPE_FLOAT, TYPE_NONE};
 
-    // d_create_c_function
-    d_create_c_function("Half", &myHalf, halfInputs, halfOutputs);
+    SocketMeta halfSockets[] = {
+        {"number", "The number to half", TYPE_FLOAT, {0}},
+        {"half", "The number halved", TYPE_FLOAT, {0}}};
 
-    DType canDriveInputs[]  = {TYPE_INT, TYPE_BOOL, TYPE_NONE};
-    DType canDriveOutputs[] = {TYPE_BOOL, TYPE_STRING, TYPE_NONE};
+    CFunction halfFunction = d_create_c_function(
+        &myHalf, "Half", "Half a number.", halfSockets, 1, 1);
 
-    // d_create_c_function
-    d_create_c_function("CanDrive", &myCanDrive, canDriveInputs,
-                        canDriveOutputs);
+    SocketMeta canDriveSockets[] = {
+        {"age", "The age of the person.", TYPE_INT, {0}},
+        {"hasLicense", "Has the person got a driving license?", TYPE_BOOL, {0}},
+        {"canDrive", "If the person can drive.", TYPE_BOOL, {0}},
+        {"reason", "If the person cannot drive, why?", TYPE_STRING, {0}}};
 
-    DType factorialInputs[]  = {TYPE_INT, TYPE_NONE};
-    DType factorialOutputs[] = {TYPE_INT, TYPE_NONE};
+    CFunction canDriveFunction = d_create_c_function(
+        &myCanDrive, "CanDrive", "Determine if a person can drive.",
+        canDriveSockets, 2, 2);
 
-    // d_create_c_subroutine
-    d_create_c_subroutine("Factorial", &myFactorial, factorialInputs,
-                          factorialOutputs);
+    SocketMeta factorialSockets[] = {
+        {"n", "The number to get the factorial of.", TYPE_INT, {0}},
+        {"nFactorial", "The factorial of n, n!", TYPE_INT, {0}}};
+
+    CFunction factorialSubroutine = d_create_c_subroutine(
+        &myFactorial, "Factorial", "Calculate the factorial of an integer.",
+        factorialSockets, 1, 1);
+
+    Sheet *library     = d_sheet_create("MyFunctions");
+    library->allowFree = false;
+
+    d_sheet_add_c_function(library, halfFunction);
+    d_sheet_add_c_function(library, canDriveFunction);
+    d_sheet_add_c_function(library, factorialSubroutine);
+
+    Sheet *includeList[] = {NULL, NULL};
+    includeList[0]       = library;
+
+    CompileOptions options = DEFAULT_COMPILE_OPTIONS;
+    options.includes       = includeList;
 
     char *src = "Start~#1\n"
                 "Half(100.125)~#2\n"
@@ -98,43 +117,37 @@ int main() {
                 "Print(#3, #4)~#6\n"
                 "Print(#6, #5)~#7\n"
                 "Factorial(#7, 10)~#8, #9\n"
-                "Print(#8, #9)\n";
+                "Print(#9, #8)\n";
 
     char *answer = "50.0625\nfalse\nYou do not have a license.\n3628800\n";
-    
+
     // d_run_string
     START_CAPTURE_STDOUT()
-    d_run_string(src, NULL);
+    d_run_string(src, NULL, &options);
     STOP_CAPTURE_STDOUT()
     ASSERT_CAPTURED_STDOUT(answer)
 
-    FILE *file;
-
-#ifdef DECISION_SAFE_FUNCTIONS
-    fopen_s(&file, "main.dc", "w");
-#else
-    file = fopen("main.dc", "w");
-#endif // DECISION_SAFE_FUNCTIONS
+    FILE *file = fopen("main.dc", "w");
 
     fprintf(file, "%s", src);
     fclose(file);
 
     // d_run_file
     START_CAPTURE_STDOUT()
-    d_run_file("main.dc");
+    d_run_file("main.dc", &options);
     STOP_CAPTURE_STDOUT()
     ASSERT_CAPTURED_STDOUT(answer)
 
     // d_compile_string
-    d_compile_string(src, "main.dco");
+    d_compile_string(src, "main.dco", &options);
 
     // d_run_file
     START_CAPTURE_STDOUT()
-    d_run_file("main.dco");
+    d_run_file("main.dco", &options);
     STOP_CAPTURE_STDOUT()
     ASSERT_CAPTURED_STDOUT(answer)
-    
-    d_free_c_functions();
+
+    d_sheet_free(library);
 
     return 0;
 }

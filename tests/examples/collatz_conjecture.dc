@@ -1,10 +1,8 @@
-<
-    This function takes an integer, and if it is even, it halves it, and if it
-    is odd, it multiplies it by 3 and adds 1 to it.
->
-[Function(Collatz)]
-[FunctionInput(Collatz, Integer)]
-[FunctionOutput(Collatz, Integer)]
+> This function takes an integer, and if it is even, it halves it, and if it is
+> odd, it multiplies it by 3 and adds 1 to it.
+[Function(Collatz, "Gets the next number in the collatz sequence.")]
+[FunctionInput(Collatz, number, Integer, 1)]
+[FunctionOutput(Collatz, next, Integer, "The next number in the collatz sequence.")]
 
 Define(Collatz)~#1
 Mod(#1, 2)~#2
@@ -18,12 +16,10 @@ Add(#5, 1)~#6
 Ternary(#3, #4, #6)~#7
 Return(Collatz, #7)
 
-<
-    This subroutine keeps applying the Collatz function to an integer until the
-    integer reaches 1.
->
-[Subroutine(PrintCollatz)]
-[FunctionInput(PrintCollatz, Integer)]
+> This subroutine keeps applying the Collatz function to an integer until the
+> integer reaches 1.
+[Subroutine(PrintCollatz, "Keep printing the collatz sequence until 1 is printed.")]
+[FunctionInput(PrintCollatz, start, Integer, 1, "The number to start the collatz sequence from.")]
 
 [Variable(_collatz, Integer, 100)]
 
@@ -36,6 +32,6 @@ Collatz(#12)~#15
 Set(_collatz, #14, #15)~#16
 Print(#16, #12)
 
-< Using the PrintCollatz subroutine. >
+> Using the PrintCollatz subroutine.
 Start~#100
 PrintCollatz(#100, 100)

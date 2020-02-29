@@ -1,6 +1,6 @@
 /*
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -53,5 +53,16 @@ DECISION_API void *d_malloc(size_t size);
  * \param size The size of the new allocation.
  */
 DECISION_API void *d_realloc(void *ptr, size_t size);
+
+/**
+ * \fn void *d_calloc(size_t num, size_t size)
+ * \brief A wrapper function for `calloc` with error checking.
+ * 
+ * \return A pointer to the allocated memory.
+ * 
+ * \param num The number of elements to allocate.
+ * \param size The size of each element.
+ */
+DECISION_API void *d_calloc(size_t num, size_t size);
 
 #endif // DMALLOC_H

@@ -1,6 +1,6 @@
 /*
     Decision
-    Copyright (C) 2019  Benjamin Beddows
+    Copyright (C) 2019-2020  Benjamin Beddows
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -60,7 +60,6 @@ typedef enum _linkType {
  * \typedef struct _linkMeta LinkMeta
  */
 typedef struct _linkMeta {
-    LinkType type;    ///< The type of object we are linking.
     const char *name; ///< The name of the object we are linking.
 
     void *meta; ///< A generic pointer to the metadata of the thing we are
@@ -75,6 +74,8 @@ typedef struct _linkMeta {
                 ///< index of the function in the text section instead.
                 ///< Otherwise, it is `-1`, which implies that the thing we
                 ///< want to link is in another castle... sorry, Mario.
+
+    LinkType type; ///< The type of object we are linking.
 } LinkMeta;
 
 /**
@@ -131,17 +132,16 @@ DECISION_API void d_link_meta_list_push(LinkMetaList *list, LinkMeta item);
 DECISION_API void d_link_free_list(LinkMetaList *list);
 
 /**
- * \fn void d_link_replace_load_ins(char *ins, char *ptr)
- * \brief Change a LOADUI/ORI instruction combination to load a specific
- * pointer.
+ * \fn void d_link_replace_fimmediate(char *ins, char *ptr)
+ * \brief Change an instruction's full immediate to point somewhere.
  *
  * **NOTE:** If you don't like the fact that you can't run 32-bit Decision code
  * on 64-bit machines and vice versa, blame it on this function.
  *
- * \param ins A pointer to first byte of the LOADUI instruction.
- * \param ptr The memory address for the instructions to load.
+ * \param ins A pointer to first byte of the instruction.
+ * \param ptr The memory address for the instruction to load.
  */
-DECISION_API void d_link_replace_load_ins(char *ins, char *ptr);
+DECISION_API void d_link_replace_fimmediate(char *ins, char *ptr);
 
 /**
  * \fn void d_link_precalculate_ptr(Sheet *sheet)
