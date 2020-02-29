@@ -43,11 +43,16 @@
  * \typedef struct _socketMeta SocketMeta
  */
 typedef struct _socketMeta {
-    const char *name;
-    const char *description;
+    const char *name; ///< The name of the socket.
 
-    DType type;
-    LexData defaultValue; ///< If there is no input wire, use this value.
+    const char *description; ///< The socket description. Can be `NULL`.
+
+    DType type; ///< The data type of the socket. Can be vague.
+
+    LexData defaultValue; ///< The default value of the socket. Although it is
+                          ///< not used by the compiler, it can be used by
+                          ///< other programs to place a value in the socket
+                          ///< by default.
 } SocketMeta;
 
 /**
@@ -57,15 +62,20 @@ typedef struct _socketMeta {
  * \typedef struct _nodeDefinition NodeDefinition
  */
 typedef struct _nodeDefinition {
-    const char *name;
-    const char *description;
+    const char *name; ///< The name of the node.
 
-    const SocketMeta *sockets;
-    size_t numSockets;
-    size_t startOutputIndex; ///< Any socket before this index is an
-                             ///< input socket, the rest are output
-                             ///< sockets.
-    bool infiniteInputs;
+    const char *description; ///< The node description. Can be `NULL`.
+
+    const SocketMeta *sockets; ///< An array of the node's sockets.
+
+    size_t numSockets; ///< The number of sockets the node has.
+
+    size_t startOutputIndex; ///< Any socket before this index is an input
+                             ///< socket, the rest are output sockets. This is
+                             ///< also equivalent to the number of input
+                             ///< sockets the node has.
+
+    bool infiniteInputs; ///< Can the node has infinite inputs?
 } NodeDefinition;
 
 /**
@@ -75,41 +85,48 @@ typedef struct _nodeDefinition {
  * \typedef struct _nodeSocket NodeSocket
  */
 typedef struct _nodeSocket {
-    size_t nodeIndex;
-    size_t socketIndex;
+    size_t nodeIndex; ///< The node index in the graph.
+
+    size_t socketIndex; ///< The socket index in the node.
 } NodeSocket;
 
 /**
- * \struct _sheetWire
+ * \struct _wire
  * \brief A struct for connecting two sockets together, effectively an edge of
  * a graph.
  *
- * \typedef struct _sheetWire SheetWire
+ * \typedef struct _wire Wire
  */
-typedef struct _sheetWire {
-    NodeSocket socketFrom;
-    NodeSocket socketTo;
+typedef struct _wire {
+    NodeSocket socketFrom; ///< The output socket.
+
+    NodeSocket socketTo; ///< The input socket.
 } Wire;
 
 /**
- * \struct _sheetNode
+ * \struct _node
  * \brief A struct for storing node data.
  *
- * \typedef struct _sheetNode SheetNode
+ * \typedef struct _node SheetNode
  */
-typedef struct _sheetNode {
-    const NodeDefinition *definition;
-    size_t lineNum;
+typedef struct _node {
+    const NodeDefinition *definition; ///< The definition of the node. This is
+                                      ///< where you would get details like the
+                                      ///< node's name.
+
+    size_t lineNum; ///< What line is the node on in the original source code?
 
     int *_stackPositions; ///< Used by Code Generation.
 
-    DType *reducedTypes;     ///< Needs to be malloc'd, and have as many
-                             ///< elements as sockets. Can be NULL if the types
-                             ///< are the same as in *definition.
-    LexData *literalValues;  ///< Needs to be malloc'd, and have
-                             ///< `startOutputIndex` elements. Can be NULL if
-                             ///< the default values are the same as in
-                             ///< *definition.
+    DType *reducedTypes; ///< Needs to be malloc'd, and have as many elements as
+                         ///< sockets. Can be `NULL` if the types are the same
+                         ///< as in *definition.
+
+    LexData *literalValues; ///< Needs to be malloc'd, and have
+                            ///< `startOutputIndex` elements. Can be `NULL` if
+                            ///< the default values are the same as in
+                            ///< *definition.
+
     size_t startOutputIndex; ///< This will by default be the same value as in
                              ///< the definition, but in the event that the
                              ///< definition allows for infinite inputs, this
@@ -125,19 +142,21 @@ typedef struct _sheetNode {
 } Node;
 
 /**
- * \struct Graph
+ * \struct _graph
  * \brief A collection of nodes and wires. Essentially a representation of the
  * code that the user wrote.
  *
  * \typedef struct _graph Graph
  */
 typedef struct _graph {
-    Node *nodes;
-    size_t numNodes;
+    Node *nodes; ///< The array of nodes.
+
+    size_t numNodes; ///< The number of nodes in the `nodes` array.
 
     Wire *wires; ///< This list will be stored in lexicographical order,
                  ///< so binary search can be performed on it.
-    size_t numWires;
+
+    size_t numWires; ///< The number of wires in the `wires` array.
 } Graph;
 
 /**

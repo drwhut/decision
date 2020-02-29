@@ -116,7 +116,10 @@ typedef enum _lexType {
 
 /**
  * \union _lexData
- * \brief A union for storing data in a lexical token.
+ * \brief A union for storing the variable data types in Decision.
+ * 
+ * This is usually used in conjunction with `DType` to determine which element
+ * to get data from.
  *
  * \typedef union _lexData LexData
  */

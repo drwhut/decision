@@ -59,24 +59,40 @@ typedef struct _insToLink {
  * \typedef struct _sheetVariable SheetVariable.
  */
 typedef struct _sheetVariable {
-    const NodeDefinition getterDefinition;
+    const NodeDefinition getterDefinition; ///< The definition of the variable's
+                                           ///< getter node. This is determined
+                                           ///< automatically when a variable
+                                           ///< is added to a sheet.
 
-    const SocketMeta variableMeta;
+    const SocketMeta variableMeta; ///< The variable metadata, i.e. it's name,
+                                   ///< it's type, etc.
 
-    struct _sheet *sheet;
+    struct _sheet *sheet; ///< The sheet the variable belongs to.
 } SheetVariable;
 
 /**
  * \struct _sheetFunction
  * \brief A struct for storing function data.
+ * 
+ * Note that if you want to know if the function is a subroutine, you can use
+ * `d_is_subroutine`.
  *
  * \typedef struct _sheetFunction SheetFunction.
  */
 typedef struct _sheetFunction {
-    const NodeDefinition functionDefinition;
+    const NodeDefinition functionDefinition; ///< The definition of the
+                                             ///< function, i.e. it's name,
+                                             ///< it's sockets, etc.
 
-    const NodeDefinition defineDefinition;
-    const NodeDefinition returnDefinition;
+    const NodeDefinition defineDefinition; ///< The definition of the function's
+                                           ///< Define node. This is determined
+                                           ///< automatically when adding a
+                                           ///< function to a sheet.
+
+    const NodeDefinition returnDefinition; ///< The definition of the function's
+                                           ///< Return node. This is determined
+                                           ///< automatically when adding a
+                                           ///< function to a sheet.
 
     size_t defineNodeIndex; ///< Used in Semantic Analysis.
     size_t numDefineNodes;  ///< Used in Semantic Analysis.
@@ -84,7 +100,7 @@ typedef struct _sheetFunction {
     size_t lastReturnNodeIndex; ///< Used in Semantic Analysis.
     size_t numReturnNodes;      ///< Used in Semantic Analysis.
 
-    struct _sheet *sheet;
+    struct _sheet *sheet; ///< The sheet the function belongs to.
 } SheetFunction;
 
 /**
@@ -97,45 +113,49 @@ typedef struct _sheet {
     Graph graph; ///< Can be empty if the sheet came from a Decision object
                  ///< file.
 
-    DebugInfo _debugInfo;
+    DebugInfo _debugInfo; ///< If the sheet is compiled in debug mode, this
+                          ///< will contain debugging information.
 
-    LinkMetaList _link;
+    LinkMetaList _link; ///< What can be linked in this sheet?
 
-    const char *filePath;
+    const char *filePath; ///< Essentially the name of the sheet.
+
     const char *includePath; ///< i.e. what was the argument of the Include
                              ///< property that included this sheet. Default
                              ///< value is `NULL`.
 
-    struct _sheet **includes;
-    size_t numIncludes;
+    struct _sheet **includes; ///< The list of included sheets.
+    size_t numIncludes;       ///< The number of included sheets.
 
-    SheetVariable *variables;
-    size_t numVariables;
-    SheetFunction *functions;
-    size_t numFunctions;
-    CFunction *cFunctions;
-    size_t numCFunctions;
+    SheetVariable *variables; ///< The list of variables defined in this sheet.
+    size_t numVariables;      ///< The number of variables in this sheet.
+    SheetFunction *functions; ///< The list of functions defined in this sheet.
+    size_t numFunctions;      ///< The number of functions in this sheet.
+    CFunction *cFunctions;    ///< The list of C functions defined in this
+                              ///< sheet.
+    size_t numCFunctions;     ///< The number of C functions in this sheet.
 
     size_t _main; ///< Points to the index of the first instruction of Start,
                   ///< *not* the `RET` instruction one before.
 
-    char *_text;
-    size_t _textSize;
-    char *_data;
-    size_t _dataSize;
+    char *_text;      ///< The compiled bytecode.
+    size_t _textSize; ///< The number of bytes the compiled bytecode has.
+    char *_data;      ///< The compiled data section.
+    size_t _dataSize; ///< The number of bytes the data section has.
 
-    InstructionToLink *_insLinkList;
-    size_t _insLinkListSize;
+    InstructionToLink *_insLinkList; ///< A list of which instructions should
+                                     ///< link to which items.
+    size_t _insLinkListSize;         ///< The number of instructions to link.
 
-    size_t numStarts;
+    size_t numStarts;   ///< Used by Semantic Analysis.
     int startNodeIndex; ///< If this value is `-1`, then no Start node exists.
 
-    bool hasErrors;
+    bool hasErrors; ///< If true, the sheet cannot be run.
 
     bool allowFree; ///< Allow sheets that include this sheet to free it?
 
-    bool _isCompiled;
-    bool _isLinked;
+    bool _isCompiled; ///< Has the sheet been compiled?
+    bool _isLinked;   ///< Has the sheet been linked?
 
 } Sheet;
 
