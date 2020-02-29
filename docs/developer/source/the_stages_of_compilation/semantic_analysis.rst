@@ -28,27 +28,6 @@ in terms of the nodes, their connections, and their definitions. During this
 stage, we build up a representation of the sheet in memory (``Sheet``, defined
 in ``dsheet.h``), and check for errors using that structure.
 
-Structures
-==========
-
-This stage of the compilation doesn't have any data structures we care about.
-Instead, we are working with data structures from ``dsheet.h``:
-
-``SheetSocket``
-    A structure representing a node's socket.
-
-``SheetNode``
-    A structure representing a node.
-
-``SheetVariable``
-    A structure representing a sheet's global variable.
-
-``SheetFunction``
-    A structure representing a sheet's function *or* subroutine.
-
-``Sheet``
-    A structure representing a sheet.
-
 Property Scanning
 =================
 
@@ -96,32 +75,24 @@ connection, etc.
 .. doxygenfunction:: d_semantic_scan_nodes
    :no-link:
 
-Takes ``sheet`` and creates a list of ``SheetNode*`` in the sheet, which have
-a list of ``SheetSocket*`` within them. Each ``SheetSocket`` has a list of
-``SheetSocket*`` within them as well, to represent the connections.
+Takes ``sheet`` and creates a list of ``Node`` in the sheet's graph, as well as
+a list of ``Wire`` to connect the sockets of the nodes.
 
-When we find out what the name of the node is (by looking at the name of the
-node in the syntax tree, then extracting the name from the child token node),
-we call:
+When we want to find out where the name of something is defined, we can use:
 
-.. doxygenfunction:: d_semantic_get_node_properties
+.. doxygenfunction:: d_get_name_definitions
    :no-link:
 
-to get the specification of the node's input and output data types. This
-function in turn calls:
+This gets all the places a name is defined. Ideally, there should only be one
+definition of a name. If there is more than one, then we error saying that we
+can't pick a definition, and if there is none, then we error saying the name
+is not defined.
 
-.. doxygenfunction:: d_semantic_get_name_definitions
+If we know there is only one definition of a name, then we can go straight
+to the name's definition with this function:
+
+.. doxygenfunction:: d_get_definition
    :no-link:
-
-to find out all of the locations where a name is defined, and what they are
-defined as (Variable, Function, etc.). It then uses the function:
-
-.. doxygenfunction:: d_semantic_select_name_definition
-   :no-link:
-
-to select the best candidate among the potentially many name definitions.
-This allows the user to specify which they want a function's functionality
-to come from.
 
 .. note::
 
@@ -136,31 +107,18 @@ Remember that the sheets can include other sheets, so we need to check
 included sheets recursively to see if there are names that are defined that
 we can use.
 
-You can use a ``NodeTrueProperties`` struct to find out if a node will be an
-execution node or not with the function:
-
-.. doxygenfunction:: d_semantic_is_execution_node
-   :no-link:
-
-This function is used to set the ``isExecution`` property of the ``SheetNode``
-struct.
-
-.. note::
-
-   An execution node is a node that has at least one execution socket.
-
 You can free an ``AllNameDefinitions`` struct with:
 
-.. doxygenfunction:: d_semantic_free_name_definitions
+.. doxygenfunction:: d_free_name_definitions
    :no-link:
 
 The act of checking the data type matching of connections is done when we add
 a connection to a socket with the function:
 
-.. doxygenfunction:: d_semantic_free_name_definitions
+.. doxygenfunction:: d_graph_add_wire
    :no-link:
 
-which is defined in ``dsheet.h``.
+which is defined in ``dgraph.h``.
 
 Reducing Data Types
 ===================
@@ -237,10 +195,12 @@ types, and hope to god we don't get 0, i.e.
 
 .. code-block:: c
 
-   (type1 & type 2) != TYPE_NONE
+   (type1 & type2) != 0
 
-Feel free to look at ``dtype.h`` to see the enumerator of data types,
-``DType``.
+Here is what the ``DType`` enum looks like:
+
+.. doxygenenum:: _dType
+   :no-link:
 
 Detecting Loops
 ===============
@@ -276,17 +236,35 @@ user of any redundant nodes while we're checking for loops as well.
 
 This function goes through all of the nodes and finds nodes with no input
 sockets (except for names). These nodes are the start of a path of execution.
-We each of these nodes, we call the function:
+We each of these nodes, we enter a function with the node with no input sockets
+``start``, we get the outputs of the node and recursively call the function
+again, and again. We are essentially checking every possible path through the
+graph from the starting node using depth-first search. As we are checking each
+path, we are adding the latest node into ``pathArray``, which acts as a stack,
+and represents the current path we've taken. Thus, if the node we've just added
+is already in ``pathArray``, we have a cycle!
 
-.. doxygenfunction:: d_semantic_detect_loops
+Checking Subroutine Returns
+===========================
+
+Last but not least, once we have verified that there are no loops in the graph,
+we need to check that every subroutine in the sheet has a Return node at the
+end of every possible execution path.
+
+The reason we need to check this is because execution paths can *branch*, e.g.
+with an IfThenElse node. If an execution path doesn't end with a Return, then
+we don't know what return values the subroutine should return!
+
+Functions don't have this problem, as they have one and only one Return node.
+
+This check is done with the function:
+
+.. doxygenfunction:: d_semantic_check_subroutine_returns
    :no-link:
 
-With the node with no input sockets ``start``, we get the outputs of the node
-and recursively call the function again, and again. We are essentially
-checking every possible path through the graph from the starting node. As we
-are checking each path, we are adding the latest node into ``pathArray``,
-which acts as a stack, and represents the current path we've taken. Thus, if
-the node we've just added is already in ``pathArray``, we have a cycle!
+It calls a recursive function that checks every possible execution path with
+depth-first search, similar to how ``d_semantic_detect_loops`` works, but this
+time it only traverses execution wires.
 
 Conclusion
 ==========
