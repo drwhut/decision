@@ -20,7 +20,7 @@ The C API
 *********
 
 Since Decision is made in C, if you are writing a program in either C or C++,
-you can include Decision as en embeddable programming language! This chapter
+you can include Decision as an embeddable programming language! This chapter
 describes in detail how you can do so, and what you can do once you've
 embedded it into your program.
 
