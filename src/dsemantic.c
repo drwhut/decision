@@ -299,6 +299,10 @@ static void add_property_Include(Sheet *sheet, size_t lineNum,
                 Sheet *includedSheet = d_sheet_add_include_from_path(
                     sheet, token->data.stringValue, priors, debugInclude);
 
+                // We can safely free the string literal, as the file path
+                // will have been copied in d_sheet_create.
+                free(token->data.stringValue);
+
                 if (includedSheet->hasErrors) {
                     ERROR_COMPILER(sheet->filePath, lineNum, true,
                                    "Included sheet %s produced errors",

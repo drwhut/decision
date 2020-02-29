@@ -887,8 +887,11 @@ Sheet *d_obj_load(const char *obj, size_t size, const char *filePath,
 
             LinkMeta varLinkMeta = out->_link.list[metaLinkIndex];
 
-            // Reference the name of the function from the link meta list.
-            varMeta.name = varLinkMeta.name;
+            // Copy the name of the function from the link meta list.
+            size_t nameSize = strlen(varLinkMeta.name) + 1;
+            char *name      = d_calloc(nameSize, sizeof(char));
+            strcpy(name, varLinkMeta.name);
+            varMeta.name = name;
 
             // Reference the default value from the data section.
             char *ptr = out->_data + (size_t)varLinkMeta._ptr;
@@ -896,7 +899,32 @@ Sheet *d_obj_load(const char *obj, size_t size, const char *filePath,
             if (varMeta.type == TYPE_BOOL) {
                 varMeta.defaultValue.integerValue = *ptr;
             } else if (varMeta.type == TYPE_STRING) {
-                varMeta.defaultValue.stringValue = (char *)(*(dint *)ptr);
+                // If it's a string, the default value will be somewhere else
+                // in the data section. We just need to find out where.
+                // Once we find it, we will need to copy it.
+                LinkMeta valMeta  = (LinkMeta){NULL, NULL, NULL, 0};
+                bool valMetaFound = false;
+
+                for (size_t j = 0; j < out->_link.size; j++) {
+                    LinkMeta testMeta = out->_link.list[j];
+
+                    if (testMeta.type == LINK_VARIABLE_STRING_DEFAULT_VALUE && strcmp(testMeta.name, varMeta.name) == 0) {
+                        valMeta = testMeta;
+                        valMetaFound = true;
+                        break;
+                    }
+                }
+
+                if (valMetaFound) {
+                    ptr = out->_data + (size_t)valMeta._ptr;
+                    size_t valLen = strlen(ptr) + 1;
+                    char *val = d_calloc(valLen, sizeof(char));
+                    strcpy(val, ptr);
+
+                    varMeta.defaultValue.stringValue = val;
+                } else {
+                    varMeta.defaultValue.stringValue = NULL;   
+                }
             } else {
                 varMeta.defaultValue.integerValue = *(dint *)ptr;
             }

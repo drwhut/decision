@@ -400,10 +400,21 @@ void d_sheet_free(Sheet *sheet) {
             for (size_t i = 0; i < sheet->numVariables; i++) {
                 SheetVariable var = sheet->variables[i];
 
-                // Free the variable description. The name will be freed by the
-                // link meta list.
+                // Free the variable name.
+                if (var.variableMeta.name != NULL) {
+                    free((char *)var.variableMeta.name);
+                }
+
+                // Free the variable description.
                 if (var.variableMeta.description != NULL) {
                     free((char *)var.variableMeta.description);
+                }
+
+                // If the variable is a string...
+                if (var.variableMeta.type == TYPE_STRING) {
+                    if (var.variableMeta.defaultValue.stringValue != NULL) {
+                        free((char *)var.variableMeta.defaultValue.stringValue);
+                    }
                 }
 
                 // Free the getter definition.
@@ -442,20 +453,6 @@ void d_sheet_free(Sheet *sheet) {
             sheet->numCFunctions = 0;
         }
 
-        if (sheet->includes != NULL) {
-            for (size_t i = 0; i < sheet->numIncludes; i++) {
-                Sheet *include = sheet->includes[i];
-
-                if (include->allowFree) {
-                    d_sheet_free(include);
-                }
-            }
-
-            free(sheet->includes);
-            sheet->includes    = NULL;
-            sheet->numIncludes = 0;
-        }
-
         if (sheet->_text != NULL) {
             free(sheet->_text);
             sheet->_text     = NULL;
@@ -465,6 +462,9 @@ void d_sheet_free(Sheet *sheet) {
         // Before we free the data section, we need to free any string variables
         // that will have been malloc'd. These pointers should only be malloc'd
         // when linking has taken place.
+        // NOTE: It has been changed so that string variables only point to the
+        // data section right now. In a future release, this will be redone.
+        /*
         if (sheet->_isLinked) {
             for (size_t i = 0; i < sheet->_link.size; i++) {
                 LinkMeta meta = sheet->_link.list[i];
@@ -493,6 +493,7 @@ void d_sheet_free(Sheet *sheet) {
                 }
             }
         }
+        */
 
         if (sheet->_data != NULL) {
             free(sheet->_data);
@@ -508,6 +509,20 @@ void d_sheet_free(Sheet *sheet) {
             free(sheet->_insLinkList);
             sheet->_insLinkList     = NULL;
             sheet->_insLinkListSize = 0;
+        }
+
+        if (sheet->includes != NULL) {
+            for (size_t i = 0; i < sheet->numIncludes; i++) {
+                Sheet *include = sheet->includes[i];
+
+                if (include->allowFree) {
+                    d_sheet_free(include);
+                }
+            }
+
+            free(sheet->includes);
+            sheet->includes    = NULL;
+            sheet->numIncludes = 0;
         }
 
         free(sheet);

@@ -1265,7 +1265,7 @@ BCode d_generate_nonexecution_node(BuildContext *context, size_t nodeIndex) {
                     BCode copyBool = d_bytecode_ins(OP_GETFI);
                     d_bytecode_set_fimmediate(copyBool, 1, 0);
                     d_concat_bytecode(&out, &copyBool);
-                    d_free_bytecode(&boolCode);
+                    d_free_bytecode(&copyBool);
                 }
             }
 

@@ -263,15 +263,9 @@ void d_link_self(Sheet *sheet) {
                     // We've found the variable! Now where is it stored?
                     char *strVarPtr = sheet->_data + (size_t)varMeta._ptr;
                     char *strVarDefaultValue = sheet->_data + (size_t)meta._ptr;
-                    size_t defaultValueLength = strlen(strVarDefaultValue);
-
-                    // Now we malloc, copy the default value into the new
-                    // location, and store the new pointer.
-                    char *newPtr =
-                        d_calloc(defaultValueLength + 1, sizeof(char));
-                    memcpy(newPtr, strVarDefaultValue, defaultValueLength + 1);
-
-                    memcpy(strVarPtr, &newPtr, sizeof(dint));
+                    
+                    // Now we store the default value's pointer into the variable.
+                    memcpy(strVarPtr, &strVarDefaultValue, sizeof(dint));
                 }
             }
         }

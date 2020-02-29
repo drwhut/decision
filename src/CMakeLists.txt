@@ -148,6 +148,6 @@ else(COMPILER_SHARED)
 endif(COMPILER_SHARED)
 
 # Export symbols for debugging on Linux.
-# target_compile_options(decision PRIVATE -g)
+target_compile_options(decision PRIVATE -g)
 # target_compile_options(decisionLibStatic PRIVATE -g)
-# target_compile_options(decisionLibShared PRIVATE -g)
+target_compile_options(decisionLibShared PRIVATE -g)

@@ -721,11 +721,7 @@ void d_graph_free(Graph *graph) {
 
     for (size_t i = 0; i < graph->numNodes; i++) {
         Node node = graph->nodes[i];
-
-        if (node.reducedTypes != NULL) {
-            free(node.reducedTypes);
-        }
-
+ 
         if (node.literalValues != NULL) {
             for (size_t j = 0; j < node.startOutputIndex; j++) {
                 if (node.reducedTypes[j] == TYPE_STRING) {
@@ -734,6 +730,10 @@ void d_graph_free(Graph *graph) {
             }
 
             free(node.literalValues);
+        }
+
+        if (node.reducedTypes != NULL) {
+            free(node.reducedTypes);
         }
 
         if (node._stackPositions != NULL) {
@@ -776,6 +776,12 @@ void d_definition_free(const NodeDefinition nodeDef, bool freeSocketStrs) {
 
                 free((char *)meta.name);
                 free((char *)meta.description);
+
+                if (meta.type == TYPE_STRING) {
+                    if (meta.defaultValue.stringValue != NULL) {
+                        free((char *)meta.defaultValue.stringValue);
+                    }
+                }
             }
         }
 
