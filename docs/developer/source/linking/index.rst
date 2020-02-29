@@ -103,18 +103,18 @@ it, and to manipulate it's contents:
 .. doxygenfunction:: d_link_free_list
    :no-link:
 
-.. doxygenfunction:: d_link_replace_load_ins
+.. doxygenfunction:: d_link_replace_fimmediate
    :no-link:
 
 This function is what actually changes the instructions in ``.text`` to point
 to the correct items. Since we use pointers to set links, the instructions
 need to load either 32-bit or 64-bit addresses into a register. This is always
-done with a ``LOADUI`` / ``ORI`` combination.
+done with a ``PUSHF`` combination.
 
 .. doxygenfunction:: d_link_self
    :no-link:
 
 Takes a compiled sheet, gets the information it needs to link from the
 ``.lmeta`` and ``.link`` sections, and uses it to call
-``d_link_replace_load_ins`` to replace all of the instructions that need
+``d_link_replace_fimmediate`` to replace all of the instructions that need
 linking.

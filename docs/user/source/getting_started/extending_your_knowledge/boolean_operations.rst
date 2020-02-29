@@ -15,11 +15,11 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-Condition Arithmetic
-====================
+Boolean Operations
+==================
 
-Since conditions are just booleans, you can perform some simple bitwise
-operations on conditions:
+Since conditions are just booleans, you can perform some simple operations on
+conditions:
 
 And
 ---

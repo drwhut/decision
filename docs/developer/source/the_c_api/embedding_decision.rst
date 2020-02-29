@@ -36,13 +36,6 @@ file in the root of the project, and more detailed instructions in the
 When you build Decision, not only do you get the executable you probably
 intended, but you also get a compiled library as well!
 
-.. note::
-
-   On Linux, you get both the static (.a) and dynamic (.so) libraries, whereas
-   on Windows by default you get the static (.lib) library. To get the
-   dynamic (.dll) library, you need to specify an argument when using
-   ``cmake``, see ``README.md`` for more details.
-
 So if you have the header files and the libraries at hand, here is how you can
 embed Decision into your program:
 

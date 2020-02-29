@@ -147,22 +147,6 @@ Arguably the most useful function however is:
 Concatenates ``after`` onto the end of ``base``, which makes building up the
 bytecode simple.
 
-There is an alternate function for attaching bytecode to one another:
-
-.. doxygenfunction:: d_insert_bytecode
-   :no-link:
-
-Takes some bytecode ``insertCode`` and inserts it into the bytecode ``base``,
-starting at the index ``insertIndex``, i.e. the bytecode at index
-``insertIndex`` of ``base`` after the function is called should be the
-start of the bytecode ``insertCode``.
-
-.. note::
-
-   ``d_insert_bytecode`` is a lot more expensive computationally than
-   ``d_concat_bytecode``, and thus should be used sparingly. This is because
-   it needs to fix data like links and relative jumps after the insertion.
-
 ``BuildContext``
     Contains useful information used by the code generator to help make the
     most efficient bytecode possible. Only one instance is made at the
@@ -184,12 +168,12 @@ Sockets
 One important thing to note is how a node knows which input corresponds to
 which element in the stack.
 
-Inside the ``SheetSocket`` structure defined in ``dsheet.h``, there is a
-property called ``_stackIndex``. Only Code Generation uses this property.
-If the socket is connected, it will be set to the index of the socket's value
-in the stack at that time. If there is no connection, then an index may or may
-not be assigned for the literal value, depending on if we want to use the
-literal value as an immediate or not.
+Inside the ``Node`` structure defined in ``dgraph.h``, there is a property
+called ``_stackPositions``. Only Code Generation uses this property.
+If the socket is connected, the socket's entry will be set to the index of the
+socket's value in the stack at that time. If there is no connection, then an
+index may or may not be assigned for the literal value, depending on if we want
+to use the literal value as an immediate or not.
 
 .. note::
 
@@ -364,5 +348,3 @@ Object Sections
 * ``.func``: Essentially a list of ``SheetFunction``.
 * ``.var``: Essentially a list of ``SheetVariable``.
 * ``.incl``: A list of paths to sheets that this sheet includes.
-* ``.c``: A list of specifications of C functions the sheet uses.
-  See :ref:`running-c-from-decision`.

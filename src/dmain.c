@@ -87,7 +87,7 @@ static void print_help() {
 }
 
 /* Macro to help check an argument in main(). */
-#define ARG(test) strcmp(arg, #test) == 0
+#define ARG(test) strcmp(arg, test) == 0
 
 int main(int argc, char *argv[]) {
 
@@ -99,20 +99,20 @@ int main(int argc, char *argv[]) {
         char *arg = argv[i];
 
         // -c, --compile
-        if (ARG(-c) || ARG(--compile)) {
+        if (ARG("-c") || ARG("--compile")) {
             compile = true;
         }
         // -D, --disassemble
-        else if (ARG(-D) || ARG(--disassemble)) {
+        else if (ARG("-D") || ARG("--disassemble")) {
             disassemble = true;
         }
         // --export-core
-        else if (ARG(--export - core)) {
+        else if (ARG("--export-core")) {
             d_core_dump_json();
             return 0;
         }
         // -h, -?, --help
-        else if (ARG(-h) || ARG(-?) || ARG(--help))
+        else if (ARG("-h") || ARG("-?") || ARG("--help"))
         {
             print_help();
             return 0;
@@ -156,7 +156,7 @@ int main(int argc, char *argv[]) {
             printf("Verbose level set to %d.\n", VERBOSE_LEVEL);
         }
         // -v, --version
-        else if (ARG(-v) || ARG(--version)) {
+        else if (ARG("-v") || ARG("--version")) {
             print_version();
             return 0;
         } else {

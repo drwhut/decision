@@ -259,6 +259,8 @@ int main() {
     STOP_CAPTURE_STDOUT()
     ASSERT_CAPTURED_STDOUT(answer)
 
+    d_debug_stop_session(&session);
+
     d_sheet_free(sheet);
     return 0;
 }

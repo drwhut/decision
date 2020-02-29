@@ -31,27 +31,27 @@ functions, subroutines, and variables**.
 
    > my_math.dc
 
-   [Function(IsEven)]
-   [FunctionInput(IsEven, Integer)]
-   [FunctionOutput(IsEven, Boolean)]
+   [Function(IsEven, "Check if an integer is even.")]
+   [FunctionInput(IsEven, num, Integer, 0, "The number to check.")]
+   [FunctionOutput(IsEven, even, Boolean, "Is the number even?")]
 
    Define(IsEven)~#1
    Mod(#1, 2)~#2
    Return(IsEven, #2)
 
-   [Function(IsOdd)]
-   [FunctionInput(IsOdd, Integer)]
-   [FunctionOutput(IsOdd, Boolean)]
+   [Function(IsOdd, "Check if an integer is odd.")]
+   [FunctionInput(IsOdd, num, Integer, 0, "The number to check.")]
+   [FunctionOutput(IsOdd, odd, Boolean, "Is the number odd?")]
 
    Define(IsOdd)~#3
    IsEven(#3)~#4
    Not(#4)~#5
    Return(IsOdd, #5)
 
-   [Variable(PI, Float, 3.14159)]
+   [Variable(PI, Float, 3.14159, "You know, THAT number?")]
 
-   [Subroutine(AreaOfCircle)]
-   [FunctionInput(AreaOfCircle, Float)]
+   [Subroutine(AreaOfCircle, "Print the area of a circle, given it's radius.")]
+   [FunctionInput(AreaOfCircle, radius, Float, 1.0, "The radius of the circle.")]
 
    Define(AreaOfCircle)~#10, #11
    PI~#12

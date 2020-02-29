@@ -326,7 +326,7 @@ void d_allocate_variable(BuildContext *context, SheetVariable *variable,
 */
 
 /**
- * \fn BCode d_push_literal(BuildContext *context, NodeSocket socket
+ * \fn BCode d_push_literal(BuildContext *context, NodeSocket socket,
  *                          bool cvtFloat)
  * \brief Generate bytecode to push a literal onto the stack.
  *
@@ -1060,14 +1060,14 @@ BCode d_push_argument(BuildContext *context, NodeSocket socket) {
 }
 
 /**
- * \fn BCode d_generate_return(BuildContext *context, Node *returnNode)
+ * \fn BCode d_generate_return(BuildContext *context, size_t returnNodeIndex)
  * \brief Given a Return node, generate the bytecode to return from the
  * function/subroutine with the return values.
  *
  * \return Bytecode to return from the function/subroutine.
  *
  * \param context The context needed to generate the bytecode.
- * \param returnNode The Return node to return with.
+ * \param returnNodeIndex The Return node to return with.
  */
 BCode d_generate_return(BuildContext *context, size_t returnNodeIndex) {
     Node node                    = context->graph.nodes[returnNodeIndex];
@@ -2166,14 +2166,14 @@ BCode d_generate_execution_node(BuildContext *context, size_t nodeIndex,
 }
 
 /**
- * \fn BCode d_generate_start(BuildContext *context, Node *startNode)
+ * \fn BCode d_generate_start(BuildContext *context, size_t startNodeIndex)
  * \brief Given a Start node, generate the bytecode for the sequence starting
  * from this node.
  *
  * \return The bytecode generated for the Start function.
  *
  * \param context The context needed to generate the bytecode.
- * \param startNode A pointer to the Start node.
+ * \param startNodeIndex The Start node index.
  */
 BCode d_generate_start(BuildContext *context, size_t startNodeIndex) {
     // As the first instruction, place a RET, which acts as a safety barrier

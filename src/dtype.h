@@ -34,11 +34,13 @@
 
 /**
  * \enum _dType
- * \brief An enum for the data types.
+ * \brief An enum for the data types in Decision.
  *
  * The values go up in powers of 2. This is so that we can combine data types
- * to make *vague* data types, e.g. `Multiply` should be able to take
- * `Integer`s *or* `Float`s.
+ * to make *vague* data types, e.g. a number is `TYPE_INTEGER | TYPE_FLOAT`.
+ * 
+ * Note that there are several macros for common vague data types, e.g.
+ * `TYPE_NUMBER`, `TYPE_BITWISE`, `TYPE_VAR_ANY`, ...
  *
  * \typedef enum _dType DType
  */

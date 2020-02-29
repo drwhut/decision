@@ -28,7 +28,8 @@ exploring some of the other features Decision has to offer at your own pace:
    comments.rst
    arithmetic.rst
    conditions.rst
-   condition_arithmetic.rst
+   boolean_operations.rst
+   bitwise_operations.rst
    changing_flow_with_conditions.rst
    string_manipulation.rst
    variables.rst

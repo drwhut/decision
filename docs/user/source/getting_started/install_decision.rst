@@ -145,7 +145,7 @@ git (Optional)
     If you want to clone the GitHub repository rather than downloading a
     tarball of the source code, you can use git to do so.
 
-.. note::
+.. tip::
 
    On Ubuntu, you can install all the dependencies you need by running these
    commands:
@@ -221,7 +221,7 @@ argument when creating the CMake project:
 
    cmake -DCOMPILER_32=ON ..
 
-.. note::
+.. warning::
 
    This option will only work properly on 32-bit machines! Applying this
    option on 64-bit machines will not work since it will not be able to store
@@ -242,9 +242,9 @@ Enable C API Tests
 
 If you want CMake to generate tests testing Decision's C API, add this argument:
 
-```bash
-cmake -DCOMPILER_C_TESTS=ON ..
-```
+.. code-block::
+
+   cmake -DCOMPILER_C_TESTS=ON ..
 
 Note that this option will generate a lot more executables alongside the
 compiler executable. See ``tests/README.md`` for more details.

@@ -31,6 +31,7 @@ This developer manual is designed for developers who:
 
    introduction/index.rst
    the_language/index.rst
+   common_data_structures/index.rst
    the_stages_of_compilation/index.rst
    linking/index.rst
    the_virtual_machine/index.rst
