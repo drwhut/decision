@@ -260,6 +260,14 @@ void d_optimize_all(Sheet *sheet) {
         }
         VERBOSE(5, "done.\n");
 
+        // d_optimise_push_pop_consecutive
+        VERBOSE(5, "- Checking for stack items being immediately poped... ");
+        bool pushPop = d_optimize_push_pop_consecutive(sheet);
+        if (pushPop) {
+            repeat = true;
+        }
+        VERBOSE(5, "done.\n");
+
         // d_optimize_useless
         VERBOSE(5, "- Checking for useless instructions... ");
         bool useless = d_optimize_useless(sheet);
@@ -334,6 +342,90 @@ bool d_optimize_not_consecutive(Sheet *sheet) {
         if (firstSize == 0) {
             printf("Fatal: (internal:d_optimize_not_consecutive) Byte %zu of "
                    "part-optimized bytecode for sheet %s is not a valid opcode",
+                   i, sheet->filePath);
+            exit(1);
+        }
+
+        if (!deleted) {
+            i += firstSize;
+        }
+    }
+
+    return optimized;
+}
+
+/**
+ * \fn bool d_optimize_push_pop_consecutive(Sheet *sheet)
+ * \brief Try and find POP instructions immediately following PUSH instructions.
+ *
+ * \return If we were able to optimise.
+ *
+ * \param sheet The sheet containing the bytecode to optimise.
+ */
+bool d_optimize_push_pop_consecutive(Sheet *sheet) {
+    bool optimized = false;
+
+    for (size_t i = 0; i < sheet->_textSize;) {
+        DIns firstOpcode              = sheet->_text[i];
+        const unsigned char firstSize = d_vm_ins_size(firstOpcode);
+        bool deleted                  = false;
+
+        if (i + firstSize >= sheet->_textSize)
+            break;
+
+        if (firstOpcode == OP_PUSHB || firstOpcode == OP_PUSHH ||
+            firstOpcode == OP_PUSHF) {
+            DIns secondOpcode = (sheet->_text[i + firstSize]);
+
+            if (secondOpcode == OP_POP) {
+                // We can delete both instructions.
+                d_optimize_remove_bytecode(
+                    sheet, i, (size_t)(firstSize + d_vm_ins_size(OP_POP)));
+                optimized = true;
+                deleted   = true;
+            } else if (secondOpcode == OP_POPB || secondOpcode == OP_POPH ||
+                       secondOpcode == OP_POPF) {
+                // How many items does the pop instruction pop?
+                size_t numItemsPoped = 0;
+
+                char *numPopedPtr = sheet->_text + i + firstSize + 1;
+
+                if (secondOpcode == OP_POPB) {
+                    numItemsPoped = *(bimmediate_t *)(numPopedPtr);
+                } else if (secondOpcode == OP_POPH) {
+                    numItemsPoped = *(himmediate_t *)(numPopedPtr);
+                } else if (secondOpcode == OP_POPF) {
+                    numItemsPoped = *(fimmediate_t *)(numPopedPtr);
+                }
+
+                if (numItemsPoped > 0) {
+                    // We can delete the push instruction, and decrement the
+                    // number of pops in the POP instruction.
+                    numItemsPoped--;
+
+                    if (secondOpcode == OP_POPB) {
+                        *(bimmediate_t *)(numPopedPtr) =
+                            (bimmediate_t)numItemsPoped;
+                    } else if (secondOpcode == OP_POPH) {
+                        *(himmediate_t *)(numPopedPtr) =
+                            (himmediate_t)numItemsPoped;
+                    } else if (secondOpcode == OP_POPF) {
+                        *(fimmediate_t *)(numPopedPtr) =
+                            (fimmediate_t)numItemsPoped;
+                    }
+
+                    d_optimize_remove_bytecode(sheet, i, (size_t)firstSize);
+                    optimized = true;
+                    deleted   = true;
+                }
+            }
+        }
+
+        // If we've gone wrong somewhere, error and exit.
+        if (firstSize == 0) {
+            printf("Fatal: (internal:d_optimize_push_pop_consecutive) Byte "
+                   "%zu of part-optimized bytecode for sheet %s is not a valid "
+                   "opcode",
                    i, sheet->filePath);
             exit(1);
         }

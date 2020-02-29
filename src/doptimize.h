@@ -83,6 +83,16 @@ DECISION_API void d_optimize_all(struct _sheet *sheet);
 DECISION_API bool d_optimize_not_consecutive(struct _sheet *sheet);
 
 /**
+ * \fn bool d_optimize_push_pop_consecutive(Sheet *sheet)
+ * \brief Try and find POP instructions immediately following PUSH instructions.
+ *
+ * \return If we were able to optimise.
+ *
+ * \param sheet The sheet containing the bytecode to optimise.
+ */
+DECISION_API bool d_optimize_push_pop_consecutive(struct _sheet *sheet);
+
+/**
  * \fn d_optimize_useless(Sheet *sheet)
  * \brief Try and find useless instructions in the bytecode, e.g. poping 0
  * items.
