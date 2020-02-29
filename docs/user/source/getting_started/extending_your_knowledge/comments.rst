@@ -40,3 +40,5 @@ as long as the symbol isn't in a string!
 .. code-block::
 
    $ decision comment.dc
+
+   So, 2 > 1? Wow.
