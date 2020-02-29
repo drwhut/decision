@@ -68,7 +68,7 @@ like this:
        dfloat output = sin(input) // sin defined in math.h
 
        // Push the return value back onto the stack.
-       d_vm_push_float(vm);
+       d_vm_push_float(vm, output);
    }
 
 Notice that the ``mySin`` function doesn't return anything, and it takes a
@@ -99,10 +99,9 @@ defined in ``dcfunc.h``:
 .. doxygenfunction:: d_create_c_function
    :no-link:
 
-You should then free the list of created C functions at the end of your program
-with:
+You can then add the C function to a sheet with:
 
-.. doxygenfunction:: d_free_c_functions
+.. doxygenfunction:: d_sheet_add_c_function
    :no-link:
 
 Here is an example that uses the ``mySin`` function that we defined earlier:
@@ -120,27 +119,51 @@ Here is an example that uses the ``mySin`` function that we defined earlier:
        // Get the "first" argument from the stack.
        dfloat input = d_vm_get_float(vm, 1);
 
-       dfloat output = sin(input) // sin defined in math.h
+       dfloat output = sin(input); // sin defined in math.h
 
        // Push the return value back onto the stack.
-       d_vm_push_float(vm);
+       d_vm_push_float(vm, output);
    }
 
    int main() {
-       // Sin has 1 Float input.
-       DType sinInputs[] = {TYPE_FLOAT, TYPE_NONE};
+       // The Sin function sockets.
+       SocketMeta sinSockets[] = {
+           {"theta", "The number to take the sin of, in radians.", TYPE_FLOAT, {0}},
+           {"sin", "The sin of theta.", TYPE_FLOAT, {0}}
+       };
 
-       // Sin has 1 Float output.
-       DType sinOutputs[] = {TYPE_FLOAT, TYPE_NONE};
+       // If a socket's default value you want to set isn't an integer, you will
+       // need to set it outside the array, like this:
+       sinSockets[0].defaultValue.floatValue = 1.0;
 
-       // Create the C function.
-       d_create_c_function("Sin", &mySin, sinInputs, sinOutputs);
+       // The Sin function has 1 input and 1 output.
+       CFunction sinFunction = d_create_c_function(&mySin, "Sin", "Get the sin of a number.",
+           sinSockets, 1, 1);
+         
+       // Create a "library" sheet to store the C function in.
+       Sheet *library = d_sheet_create("MathStuff");
 
-       // Run source code that calls the function.
-       d_run_string("Start~#1; Sin(1.0)~#2; Print(#1, #2);", "source");
+       // Make sure other sheets do not free this library when they are freed.
+       library->allowFree = false;
+      
+       // Add the C function to the sheet.
+       d_sheet_add_c_function(library, sinFunction);
 
-       // Free the function we defined earlier.
-       d_free_c_functions();
+       // Create a list of sheets with the sheet that has the C function in.
+       // It needs to end with a NULL entry!
+       Sheet *includeList[] = {NULL, NULL};
+       includeList[0]       = library;
+
+       // Set the compile options so the sheet that we want to run, so the sheet
+       // can find the definition of "Sin" during compile time.
+       CompileOptions options = DEFAULT_COMPILE_OPTIONS;
+       options.includes       = includeList;
+
+       // Run a Decision string which uses Sin!
+       d_run_string("Start~#1; Sin(1.57)~#2; Print(#1, #2);", NULL, &options);
+
+       // Free the library sheet.
+       d_sheet_free(library);
 
        return 0;
    }
@@ -156,14 +179,8 @@ defined in ``dcfunc.h``:
 
 .. note::
 
-   This function automatically prepends the standard input and output
-   Execution sockets for you.
-
-Like before, you should then free the list of created C functions at the end of
-your program with:
-
-.. doxygenfunction:: d_free_c_functions
-   :no-link:
+   This function automatically prepends a **before** input execution socket and
+   appends an **after** output execution socket for you.
 
 Here is an example of a subroutine that reads the contents of a given file:
 
@@ -205,20 +222,44 @@ Here is an example of a subroutine that reads the contents of a given file:
    }
 
    int main() {
-       // ReadFile has 1 String input.
-       DType readFileInputs[] = {TYPE_STRING, TYPE_NONE};
+       // The ReadFile subroutine non-execution sockets.
+       SocketMeta readFileSockets[] = {
+           {"file", "The name of the file to open.", TYPE_STRING, {0}},
+           {"content", "The content of the file.", TYPE_STRING, {0}}
+       }
 
-       // ReadFile has 1 String output.
-       DType readFileOutputs[] = {TYPE_STRING, TYPE_NONE};
+       // Again, if you want to set a non-integer socket's default value...
+       readFileSockets[0].defaultValue.stringValue = "file.txt";
 
-       // Create the C subroutine.
-       d_create_c_subroutine("ReadFile", &myReadFile, readFileInputs, readFileOutputs);
+       // The ReadFile subroutine has 1 input and 1 output.
+       CFunction readFileSubroutine = d_create_c_subroutine(&myReadFile, "ReadFile",
+           "Read the contents of a file.", readFileSockets, 1, 1);
+      
+       // Create a "library" sheet to store the C function in.
+       Sheet *library = d_sheet_create("FileThings");
 
-       // Run source code that calls the subrotune.
-       d_run_string("Start~#1; ReadFile(#1, 'hello.txt')~#2, #3; Print(#2, #3);", "source");
+       // Make sure other sheets do not free this library when they are freed.
+       library->allowFree = false;
+      
+       // Add the C function to the sheet.
+       d_sheet_add_c_function(library, readFileSubroutine);
 
-       // Free the subroutine we defined earlier.
-       d_free_c_functions();
+       // Create a list of sheets with the sheet that has the C function in.
+       // It needs to end with a NULL entry!
+       Sheet *includeList[] = {NULL, NULL};
+       includeList[0]       = library;
+
+       // Set the compile options so the sheet that we want to run, so the sheet
+       // can find the definition of "ReadFile" during compile time.
+       CompileOptions options = DEFAULT_COMPILE_OPTIONS;
+       options.includes       = includeList;
+
+       // Run source code that calls the ReadFile subroutine!
+       d_run_string("Start~#1; ReadFile(#1, 'hello.txt')~#2, #3; Print(#3, #2);",
+           NULL, &options);
+
+       // Free the library sheet.
+       d_sheet_free(library);
 
        return 0;
    }

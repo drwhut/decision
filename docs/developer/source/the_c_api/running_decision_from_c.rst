@@ -55,7 +55,7 @@ You can then run any compiled ``Sheet`` with:
 
    int main() {
        // Load the string.
-       Sheet *sheet = d_load_string("Start~#1 ; Print(#1, 'Hello, world!')", NULL);
+       Sheet *sheet = d_load_string("Start~#1 ; Print(#1, 'Hello, world!')", NULL, NULL);
 
        // Run the sheet.
        d_run_sheet(sheet);
@@ -80,7 +80,7 @@ To run a Decision source code string directly, use:
 
    int main() {
        // Run the string.
-       d_run_string("Start~#1 ; Print(#1, 'Hello, world!')", NULL);
+       d_run_string("Start~#1 ; Print(#1, 'Hello, world!')", NULL, NULL);
 
        return 0;
    }
@@ -103,7 +103,7 @@ To load a Decision file from the disk into a ``Sheet``, use:
 
    int main() {
        // Load the sheet into memory.
-       Sheet *sheet = d_load_file("hello_world.dc");
+       Sheet *sheet = d_load_file("hello_world.dc", NULL);
 
        // Run the sheet.
        d_run_sheet(sheet);
@@ -128,7 +128,7 @@ To run a Decision file directly, use:
 
    int main() {
        // Run the file.
-       d_run_file("hello_world.dc");
+       d_run_file("hello_world.dc", NULL);
 
        return 0;
    }
@@ -211,7 +211,7 @@ Finally, you can call the function or subroutine itself using:
 
    int main() {
        // Load the sheet into memory.
-       Sheet *sheet = d_load_file("decision.dc");
+       Sheet *sheet = d_load_file("decision.dc", NULL);
 
        // Create a Decision Virtual Machine.
        DVM vm = d_vm_create();

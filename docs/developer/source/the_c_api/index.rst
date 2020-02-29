@@ -30,3 +30,4 @@ embedded it into your program.
    embedding_decision.rst
    running_decision_from_c.rst
    running_c_from_decision.rst
+   debugging_decision_code.rst
