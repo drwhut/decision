@@ -231,9 +231,6 @@ that have no connections, i.e. *redundant* nodes.
 .. doxygenfunction:: d_semantic_detect_loops
    :no-link:
 
-Takes ``sheet`` and detects if there are any loops in it. We also warn the
-user of any redundant nodes while we're checking for loops as well.
-
 This function goes through all of the nodes and finds nodes with no input
 sockets (except for names). These nodes are the start of a path of execution.
 We each of these nodes, we enter a function with the node with no input sockets
