@@ -244,10 +244,6 @@ size_t d_allocate_string_literal_in_data(BuildContext *context, BCode *linkCode,
         dataIndex = (size_t)context->linkMetaList.list[indexInList]._ptr;
     }
 
-    // Now that the string has been copied into the LinkMetaList (see
-    // d_add_link_to_ins), we can free the string literal!
-    // free(stringLiteral);
-
     return dataIndex;
 }
 

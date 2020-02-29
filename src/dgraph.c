@@ -727,6 +727,12 @@ void d_graph_free(Graph *graph) {
         }
 
         if (node.literalValues != NULL) {
+            for (size_t j = 0; j < node.startOutputIndex; j++) {
+                if (node.reducedTypes[j] == TYPE_STRING) {
+                    free(node.literalValues[j].stringValue);
+                }
+            }
+
             free(node.literalValues);
         }
 
