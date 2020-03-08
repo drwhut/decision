@@ -1702,16 +1702,35 @@ void d_vm_dump(DVM *vm) {
     // Print off the stack.
     printf("\nstack (size = %" DINT_PRINTF_u "):\n", vm->stackSize);
 
-    dint *ptr = vm->stackPtr;
+    StackEntry *ptr = vm->stackPtr;
 
     while (ptr >= vm->basePtr) {
-        dint offset       = ptr - vm->stackPtr;
-        dint intValue     = *ptr;
-        dfloat floatValue = *((dfloat *)ptr);
+        dint offset = ptr - vm->stackPtr;
+        printf("%" DINT_PRINTF_d "\t= ", offset);
 
-        printf("%" DINT_PRINTF_d "\t= %" DINT_PRINTF_d "\t|\t0x%" DINT_PRINTF_x
-               "\t|\t%f",
-               offset, intValue, intValue, floatValue);
+        switch(ptr->type) {
+            case TYPE_INT:
+                printf("%" DINT_PRINTF_d " (Integer)", ptr->data.i);
+                break;
+            case TYPE_FLOAT:
+                printf("%g (Float)", ptr->data.f);
+                break;
+            case TYPE_STRING:
+                printf("%s (String)", (char *)ptr->data.p);
+                break;
+            case TYPE_BOOL:
+                printf("%s (Boolean)", (ptr->data.b) ? "true" : "false");
+                break;
+            case TYPE_PTR:
+                printf("%p (Pointer)", ptr->data.p);
+                break;
+            case TYPE_NONE:
+                printf("(None)");
+                break;
+            default:
+                printf("(Unknown)");
+                break;
+        }
 
         if (ptr == vm->framePtr) {
             printf("\t< frame ptr");
