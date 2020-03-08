@@ -45,13 +45,14 @@
  * \typedef enum _dType DType
  */
 typedef enum _dType {
-    TYPE_NONE      = 0,
-    TYPE_EXECUTION = 1,
-    TYPE_INT       = 2,
-    TYPE_FLOAT     = 4,
-    TYPE_STRING    = 8,
-    TYPE_BOOL      = 16,
-    TYPE_NAME      = 32,
+    TYPE_NONE      = 0,  ///< "None of the above".
+    TYPE_EXECUTION = 1,  ///< The Execution type.
+    TYPE_INT       = 2,  ///< The Integer type.
+    TYPE_FLOAT     = 4,  ///< The Float type.
+    TYPE_STRING    = 8,  ///< The String type.
+    TYPE_BOOL      = 16, ///< The Boolean type.
+    TYPE_NAME      = 32, ///< Used by Semantic Analysis.
+    TYPE_PTR       = 64, ///< Used by Code Generation and the VM.
 } DType;
 
 /**

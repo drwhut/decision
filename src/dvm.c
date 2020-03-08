@@ -30,7 +30,6 @@ static const unsigned char VM_INS_SIZE[NUM_OPCODES] = {
     1,                                     // OP_RET
     1 + BIMMEDIATE_SIZE,                   // OP_RETN
     1,                                     // OP_ADD
-    1,                                     // OP_ADDF
     1 + BIMMEDIATE_SIZE,                   // OP_ADDBI
     1 + HIMMEDIATE_SIZE,                   // OP_ADDHI
     1 + FIMMEDIATE_SIZE,                   // OP_ADDFI
@@ -47,23 +46,23 @@ static const unsigned char VM_INS_SIZE[NUM_OPCODES] = {
     1 + HIMMEDIATE_SIZE + BIMMEDIATE_SIZE, // OP_CALLRH
     1 + FIMMEDIATE_SIZE + BIMMEDIATE_SIZE, // OP_CALLRF
     1,                                     // OP_CEQ
-    1,                                     // OP_CEQF
     1,                                     // OP_CLEQ
-    1,                                     // OP_CLEQF
     1,                                     // OP_CLT
-    1,                                     // OP_CLTF
     1,                                     // OP_CMEQ
-    1,                                     // OP_MEQF
     1,                                     // OP_CMT
-    1,                                     // OP_CMTF
     1,                                     // OP_CVTF
     1,                                     // OP_CVTI
-    1,                                     // OP_DEREF
-    1 + FIMMEDIATE_SIZE,                   // OP_DEREFI
+    1,                                     // OP_DEREFI
+    1 + FIMMEDIATE_SIZE,                   // OP_DEREFII
+    1,                                     // OP_DEREFF
+    1 + FIMMEDIATE_SIZE,                   // OP_DEREFFI
+    1,                                     // OP_DEREFS
+    1 + FIMMEDIATE_SIZE,                   // OP_DEREFSI
     1,                                     // OP_DEREFB
     1 + FIMMEDIATE_SIZE,                   // OP_DEREFBI
+    1,                                     // OP_DEREFP
+    1 + FIMMEDIATE_SIZE,                   // OP_DEREFPI
     1,                                     // OP_DIV
-    1,                                     // OP_DIVF
     1 + BIMMEDIATE_SIZE,                   // OP_DIVBI
     1 + HIMMEDIATE_SIZE,                   // OP_DIVHI
     1 + FIMMEDIATE_SIZE,                   // OP_DIVFI
@@ -84,12 +83,12 @@ static const unsigned char VM_INS_SIZE[NUM_OPCODES] = {
     1 + BIMMEDIATE_SIZE,                   // OP_JRCONBI
     1 + HIMMEDIATE_SIZE,                   // OP_JRCONHI
     1 + FIMMEDIATE_SIZE,                   // OP_JRCONFI
+    1,                                     // OP_MARK
     1,                                     // OP_MOD
     1 + BIMMEDIATE_SIZE,                   // OP_MODBI
     1 + HIMMEDIATE_SIZE,                   // OP_MODHI
     1 + FIMMEDIATE_SIZE,                   // OP_MODFI
     1,                                     // OP_MUL
-    1,                                     // OP_MULF
     1 + BIMMEDIATE_SIZE,                   // OP_MULBI
     1 + HIMMEDIATE_SIZE,                   // OP_MULHI
     1 + FIMMEDIATE_SIZE,                   // OP_MULFI
@@ -102,16 +101,22 @@ static const unsigned char VM_INS_SIZE[NUM_OPCODES] = {
     1 + BIMMEDIATE_SIZE,                   // OP_POPB
     1 + HIMMEDIATE_SIZE,                   // OP_POPH
     1 + FIMMEDIATE_SIZE,                   // OP_POPF
-    1 + BIMMEDIATE_SIZE,                   // OP_PUSHB
-    1 + HIMMEDIATE_SIZE,                   // OP_PUSHH
+    1 + BIMMEDIATE_SIZE,                   // OP_PUSHIB
+    1 + HIMMEDIATE_SIZE,                   // OP_PUSHIH
+    1 + FIMMEDIATE_SIZE,                   // OP_PUSHIF
     1 + FIMMEDIATE_SIZE,                   // OP_PUSHF
+    1 + FIMMEDIATE_SIZE,                   // OP_PUSHS
+    1 + BIMMEDIATE_SIZE,                   // OP_PUSHB
+    1 + FIMMEDIATE_SIZE,                   // OP_PUSHP
     1 + BIMMEDIATE_SIZE,                   // OP_PUSHNB
     1 + HIMMEDIATE_SIZE,                   // OP_PUSHNH
     1 + FIMMEDIATE_SIZE,                   // OP_PUSHNF
-    1,                                     // OP_SETADR
+    1,                                     // OP_SETADRI
+    1,                                     // OP_SETADRF
+    1,                                     // OP_SETADRS
     1,                                     // OP_SETADRB
+    1,                                     // OP_SETADRP
     1,                                     // OP_SUB
-    1,                                     // OP_SUBF
     1 + BIMMEDIATE_SIZE,                   // OP_SUBBI
     1 + HIMMEDIATE_SIZE,                   // OP_SUBHI
     1 + FIMMEDIATE_SIZE,                   // OP_SUBFI

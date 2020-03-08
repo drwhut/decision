@@ -1,3 +1,6 @@
+**NOTE:** This update changes how the VM stores data, and thus object files
+created with versions of Decision older than this update will no longer load.
+
 * The VM stack now stores the type of each entry alongside the data itself, as
 well as a flag which, if true, means the entry will be freed when it is poped
 from the stack by the VM.

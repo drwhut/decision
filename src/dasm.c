@@ -217,22 +217,24 @@ void d_concat_bytecode(BCode *base, BCode *after) {
 /* A macro constant to state the number of columns d_asm_data_dump prints. */
 #define DATA_DUMP_NUM_COLS 16
 
+// clang-format off
+
 /* An array of mnemonics, where the index matches the opcode. */
 static const char *MNEMONICS[NUM_OPCODES] = {
-    "RET",     "RETN",   "ADD",    "ADDF",   "ADDBI",   "ADDHI",   "ADDFI",
-    "AND",     "ANDBI",  "ANDHI",  "ANDFI",  "CALL",    "CALLC",   "CALLCI",
-    "CALLI",   "CALLR",  "CALLRB", "CALLRH", "CALLRF",  "CEQ",     "CEQF",
-    "CLEQ",    "CLEQF",  "CLT",    "CLTF",   "CMEQ",    "CMEQF",   "CMT",
-    "CMTF",    "CVTF",   "CVTI",   "DEREF",  "DEREFI",  "DEREFB",  "DEREFBI",
-    "DIV",     "DIVF",   "DIVBI",  "DIVHI",  "DIVFI",   "GET",     "GETBI",
-    "GETHI",   "GETFI",  "INV",    "J",      "JCON",    "JCONI",   "JI",
-    "JR",      "JRBI",   "JRHI",   "JRFI",   "JRCON",   "JRCONBI", "JRCONHI",
-    "JRCONFI", "MOD",    "MODBI",  "MODHI",  "MODFI",   "MUL",     "MULF",
-    "MULBI",   "MULHI",  "MULFI",  "NOT",    "OR",      "ORBI",    "ORHI",
-    "ORFI",    "POP",    "POPB",   "POPH",   "POPF",    "PUSHB",   "PUSHH",
-    "PUSHF",   "PUSHNB", "PUSHNH", "PUSHNF", "SETADR",  "SETADRB", "SUB",
-    "SUBF",    "SUBBI",  "SUBHI",  "SUBFI",  "SYSCALL", "XOR",     "XORBI",
-    "XORHI",   "XORFI"};
+    "RET", "RETN", "ADD", "ADDBI", "ADDHI", "ADDFI", "AND", "ANDBI", "ANDHI",
+    "ANDFI", "CALL", "CALLC", "CALLCI", "CALLI", "CALLR", "CALLRB", "CALLRH",
+    "CALLRF", "CEQ", "CLEQ", "CLT", "CMEQ", "CMT", "CVTF", "CVTI", "DEREFI",
+    "DEREFII", "DEREFF", "DEREFFI", "DEREFS", "DEREFSI", "DEREFB", "DEREFBI",
+    "DEREFP", "DEREFPI", "DIV", "DIVBI", "DIVHI", "DIVFI", "GET", "GETBI",
+    "GETHI", "GETFI", "INV", "J", "JCON", "JCONI", "JI", "JR", "JRBI", "JRHI",
+    "JRFI", "JRCON", "JRCONBI", "JRCONHI", "JRCONFI", "MARK", "MOD", "MODBI",
+    "MODHI", "MODFI", "MUL", "MULBI", "MULHI", "MULFI", "NOT", "OR", "ORBI",
+    "ORHI", "ORFI", "POP", "POPB", "POPH", "POPF", "PUSHIB", "PUSHIH", "PUSHIF",
+    "PUSHF", "PUSHS", "PUSHB", "PUSHP", "PUSHNB", "PUSHNH", "PUSHNF", "SETADRI",
+    "SETADRF", "SETADRS", "SETADRB", "SETADRP", "SUB", "SUBBI", "SUBHI",
+    "SUBFI", "SYSCALL", "XOR", "XORBI", "XORHI", "XORFI"};
+
+// clang-format on
 
 /**
  * \fn void d_asm_text_dump(char *code, size_t size)
@@ -291,6 +293,7 @@ DECISION_API void d_asm_text_dump(char *code, size_t size) {
             case OP_MULBI:
             case OP_ORBI:
             case OP_POPB:
+            case OP_PUSHIB:
             case OP_PUSHB:
             case OP_PUSHNB:
             case OP_SUBBI:
@@ -312,7 +315,7 @@ DECISION_API void d_asm_text_dump(char *code, size_t size) {
             case OP_MULHI:
             case OP_ORHI:
             case OP_POPH:
-            case OP_PUSHH:
+            case OP_PUSHIH:
             case OP_PUSHNH:
             case OP_SUBHI:
             case OP_XORHI:;
@@ -324,8 +327,11 @@ DECISION_API void d_asm_text_dump(char *code, size_t size) {
             // Full Immediate.
             case OP_ADDFI:
             case OP_ANDFI:
-            case OP_DEREFI:
+            case OP_DEREFII:
+            case OP_DEREFFI:
+            case OP_DEREFSI:
             case OP_DEREFBI:
+            case OP_DEREFPI:
             case OP_DIVFI:
             case OP_GETFI:
             case OP_JCONI:
@@ -336,7 +342,10 @@ DECISION_API void d_asm_text_dump(char *code, size_t size) {
             case OP_MULFI:
             case OP_ORFI:
             case OP_POPF:
+            case OP_PUSHIF:
             case OP_PUSHF:
+            case OP_PUSHS:
+            case OP_PUSHP:
             case OP_PUSHNF:
             case OP_SUBFI:
             case OP_XORFI:;

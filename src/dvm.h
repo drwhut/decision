@@ -45,96 +45,102 @@ typedef enum _dIns {
     OP_RET     = 0,  ///< Equivalent to RETN 0.
     OP_RETN    = 1,  ///< pop(stackFrame w/ I(1) return values)
     OP_ADD     = 2,  ///< push(pop() + pop())
-    OP_ADDF    = 3,  ///< pushFloat(popFloat() + popFloat())
-    OP_ADDBI   = 4,  ///< push(pop() + I(1))
-    OP_ADDHI   = 5,  ///< push(pop() + I(|M|/2))
-    OP_ADDFI   = 6,  ///< push(pop() + I(|M|))
-    OP_AND     = 7,  ///< push(pop() & pop())
-    OP_ANDBI   = 8,  ///< push(pop() & I(1))
-    OP_ANDHI   = 9,  ///< push(pop() & I(|M|/2))
-    OP_ANDFI   = 10, ///< push(pop() & I(|M|))
-    OP_CALL    = 11, ///< pc = pop(); push(stackFrame w/ I(1) arguments)
-    OP_CALLC   = 12, ///< (*pop())(this) w/ I(1) arguments
-    OP_CALLCI  = 13, ///< (*I(|M|))(this) w/ I(1) arguments
-    OP_CALLI   = 14, ///< pc = I(|M|); push(stackFrame w/ I(1) arguments)
-    OP_CALLR   = 15, ///< pc += pop(); push(stackFrame w/ I(1) arguments)
-    OP_CALLRB  = 16, ///< pc += I(1); push(stackFrame w/ I(1) arguments)
-    OP_CALLRH  = 17, ///< pc += I(|M|/2); push(stackFrame w/ I(1) arguments)
-    OP_CALLRF  = 18, ///< pc += I(|M|); push(stackFrame w/ I(1) arguments)
-    OP_CEQ     = 19, ///< push(pop() == pop())
-    OP_CEQF    = 20, ///< push(popFloat() == popFloat())
-    OP_CLEQ    = 21, ///< push(pop() <= pop())
-    OP_CLEQF   = 22, ///< push(popFloat() <= popFloat())
-    OP_CLT     = 23, ///< push(pop() < pop())
-    OP_CLTF    = 24, ///< push(popFloat() < popFloat())
-    OP_CMEQ    = 25, ///< push(pop() >= pop())
-    OP_CMEQF   = 26, ///< push(popFloat() >= popFloat())
-    OP_CMT     = 27, ///< push(pop() > pop())
-    OP_CMTF    = 28, ///< push(popFloat() > popFloat())
-    OP_CVTF    = 29, ///< push((dfloat)pop())
-    OP_CVTI    = 30, ///< push((dint)pop())
-    OP_DEREF   = 31, ///< push(*pop())
-    OP_DEREFI  = 32, ///< push(*I(|M|))
-    OP_DEREFB  = 33, ///< push(*((uint8_t *)pop()))
-    OP_DEREFBI = 34, ///< push(*((uint8_t *)I(|M|)))
-    OP_DIV     = 35, ///< push(pop() / pop())
-    OP_DIVF    = 36, ///< pushFloat(popFloat() / popFloat())
-    OP_DIVBI   = 37, ///< push(pop() / I(1))
-    OP_DIVHI   = 38, ///< push(pop() / I(|M|/2))
-    OP_DIVFI   = 39, ///< push(pop() / I(|M|))
-    OP_GET     = 40, ///< push(get(pop()))
-    OP_GETBI   = 41, ///< push(get(I(1)))
-    OP_GETHI   = 42, ///< push(get(I(|M|/2)))
-    OP_GETFI   = 43, ///< push(get(I(|M|)))
-    OP_INV     = 44, ///< push(~pop())
-    OP_J       = 45, ///< pc = pop()
-    OP_JCON    = 46, ///< IF pop() THEN pc = pop() ELSE pop()
-    OP_JCONI   = 47, ///< IF pop() THEN pc = I(|M|)
-    OP_JI      = 48, ///< pc = I(|M|)
-    OP_JR      = 49, ///< pc += pop()
-    OP_JRBI    = 50, ///< pc += I(1)
-    OP_JRHI    = 51, ///< pc += I(|M|/2)
-    OP_JRFI    = 52, ///< pc += I(|M|)
-    OP_JRCON   = 53, ///< IF pop() THEN pc += pop() ELSE pop()
-    OP_JRCONBI = 54, ///< IF pop() THEN pc += I(1)
-    OP_JRCONHI = 55, ///< IF pop() THEN pc += I(|M|/2)
-    OP_JRCONFI = 56, ///< IF pop() THEN pc += I(|M|)
-    OP_MOD     = 57, ///< push(pop() % pop())
-    OP_MODBI   = 58, ///< push(pop() % I(1))
-    OP_MODHI   = 59, ///< push(pop() % I(|M|/2))
-    OP_MODFI   = 60, ///< push(pop() % I(|M|))
+    OP_ADDBI   = 3,  ///< push(pop() + I(1))
+    OP_ADDHI   = 4,  ///< push(pop() + I(|M|/2))
+    OP_ADDFI   = 5,  ///< push(pop() + I(|M|))
+    OP_AND     = 6,  ///< push(pop() & pop())
+    OP_ANDBI   = 7,  ///< push(pop() & I(1))
+    OP_ANDHI   = 8,  ///< push(pop() & I(|M|/2))
+    OP_ANDFI   = 9,  ///< push(pop() & I(|M|))
+    OP_CALL    = 10, ///< pc = popPtr(); push(stackFrame w/ I(1) arguments)
+    OP_CALLC   = 11, ///< (*popPtr())(this) w/ I(1) arguments
+    OP_CALLCI  = 12, ///< (*I(|M|))(this) w/ I(1) arguments
+    OP_CALLI   = 13, ///< pc = I(|M|); push(stackFrame w/ I(1) arguments)
+    OP_CALLR   = 14, ///< pc += popInt(); push(stackFrame w/ I(1) arguments)
+    OP_CALLRB  = 15, ///< pc += I(1); push(stackFrame w/ I(1) arguments)
+    OP_CALLRH  = 16, ///< pc += I(|M|/2); push(stackFrame w/ I(1) arguments)
+    OP_CALLRF  = 17, ///< pc += I(|M|); push(stackFrame w/ I(1) arguments)
+    OP_CEQ     = 18, ///< pushBool(pop() == pop())
+    OP_CLEQ    = 19, ///< pushBool(pop() <= pop())
+    OP_CLT     = 20, ///< pushBool(pop() < pop())
+    OP_CMEQ    = 21, ///< pushBool(pop() >= pop())
+    OP_CMT     = 22, ///< pushBool(pop() > pop())
+    OP_CVTF    = 23, ///< pushFloat((dfloat)pop())
+    OP_CVTI    = 24, ///< pushInt((dint)pop())
+    OP_DEREFI  = 25, ///< pushInt(*popPtr())
+    OP_DEREFII = 26, ///< pushInt(*I(|M|))
+    OP_DEREFF  = 27, ///< pushFloat(*popPtr())
+    OP_DEREFFI = 28, ///< pushFloat(*I(|M|))
+    OP_DEREFS  = 29, ///< pushString(*popPtr())
+    OP_DEREFSI = 30, ///< pushString(*I(|M|))
+    OP_DEREFB  = 31, ///< pushBool(*(int8_t *)popPtr())
+    OP_DEREFBI = 32, ///< pushBool(*(int8_t *)I(|M|))
+    OP_DEREFP  = 33, ///< pushPtr(*popPtr())
+    OP_DEREFPI = 34, ///< pushPtr(*I(|M|))
+    OP_DIV     = 35, ///< pushFloat(pop() / pop())
+    OP_DIVBI   = 36, ///< pushFloat(pop() / I(1))
+    OP_DIVHI   = 37, ///< pushFloat(pop() / I(|M|/2))
+    OP_DIVFI   = 38, ///< pushFloat(pop() / I(|M|))
+    OP_GET     = 39, ///< push(get(popInt()))
+    OP_GETBI   = 40, ///< push(get(I(1)))
+    OP_GETHI   = 41, ///< push(get(I(|M|/2)))
+    OP_GETFI   = 42, ///< push(get(I(|M|)))
+    OP_INV     = 43, ///< pushInt(~popInt())
+    OP_J       = 44, ///< pc = popPtr()
+    OP_JCON    = 45, ///< IF popBool() THEN pc = popPtr() ELSE popPtr()
+    OP_JCONI   = 46, ///< IF popBool() THEN pc = I(|M|)
+    OP_JI      = 47, ///< pc = I(|M|)
+    OP_JR      = 48, ///< pc += popInt()
+    OP_JRBI    = 49, ///< pc += I(1)
+    OP_JRHI    = 50, ///< pc += I(|M|/2)
+    OP_JRFI    = 51, ///< pc += I(|M|)
+    OP_JRCON   = 52, ///< IF popBool() THEN pc += popInt() ELSE popInt()
+    OP_JRCONBI = 53, ///< IF popBool() THEN pc += I(1)
+    OP_JRCONHI = 54, ///< IF popBool() THEN pc += I(|M|/2)
+    OP_JRCONFI = 55, ///< IF popBool() THEN pc += I(|M|)
+    OP_MARK    = 56, ///< Mark the value at the top of the stack to be freed
+                     ///< when the VM pops it.
+    OP_MOD     = 57, ///< pushInt(popInt() % popInt())
+    OP_MODBI   = 58, ///< pushInt(popInt() % I(1))
+    OP_MODHI   = 59, ///< pushInt(popInt() % I(|M|/2))
+    OP_MODFI   = 60, ///< pushInt(popInt() % I(|M|))
     OP_MUL     = 61, ///< push(pop() * pop())
-    OP_MULF    = 62, ///< pushFloat(popFloat() * popFloat())
-    OP_MULBI   = 63, ///< push(pop() * I(1))
-    OP_MULHI   = 64, ///< push(pop() * I(|M|/2))
-    OP_MULFI   = 65, ///< push(pop() * I(|M|))
-    OP_NOT     = 66, ///< push(!pop())
-    OP_OR      = 67, ///< push(pop() | pop())
-    OP_ORBI    = 68, ///< push(pop() | I(1))
-    OP_ORHI    = 69, ///< push(pop() | I(|M|/2))
-    OP_ORFI    = 70, ///< push(pop() | I(|M|))
-    OP_POP     = 71, ///< pop() once
-    OP_POPB    = 72, ///< pop() I(1) times
-    OP_POPH    = 73, ///< pop() I(|M|/2) times
-    OP_POPF    = 74, ///< pop() I(|M|) times
-    OP_PUSHB   = 75, ///< push(I(1))
-    OP_PUSHH   = 76, ///< push(I(|M|/2))
-    OP_PUSHF   = 77, ///< push(I(|M|))
-    OP_PUSHNB  = 78, ///< push(0) I(1) times
-    OP_PUSHNH  = 79, ///< push(0) I(|M|/2) times
-    OP_PUSHNF  = 80, ///< push(0) I(|M|) times
-    OP_SETADR  = 81, ///< *((dint *)pop()) = pop()
-    OP_SETADRB = 82, ///< *((uint8_t *)pop()) = pop()
-    OP_SUB     = 83, ///< push(pop() - pop())
-    OP_SUBF    = 84, ///< pushFloat(popFloat() - popFloat())
-    OP_SUBBI   = 85, ///< push(pop() - I(1))
-    OP_SUBHI   = 86, ///< push(pop() - I(|M|/2))
-    OP_SUBFI   = 87, ///< push(pop() - I(|M|))
-    OP_SYSCALL = 88, ///< push(syscall(I(1), pop(), pop(), pop()))
-    OP_XOR     = 89, ///< push(pop() ^ pop())
-    OP_XORBI   = 90, ///< push(pop() ^ I(1))
-    OP_XORHI   = 91, ///< push(pop() ^ I(|M|/2))
-    OP_XORFI   = 92, ///< push(pop() ^ I(|M|))
+    OP_MULBI   = 62, ///< push(pop() * I(1))
+    OP_MULHI   = 63, ///< push(pop() * I(|M|/2))
+    OP_MULFI   = 64, ///< push(pop() * I(|M|))
+    OP_NOT     = 65, ///< pushBool(!popBool())
+    OP_OR      = 66, ///< push(pop() | pop())
+    OP_ORBI    = 67, ///< push(pop() | I(1))
+    OP_ORHI    = 68, ///< push(pop() | I(|M|/2))
+    OP_ORFI    = 69, ///< push(pop() | I(|M|))
+    OP_POP     = 70, ///< pop() once
+    OP_POPB    = 71, ///< pop() I(1) times
+    OP_POPH    = 72, ///< pop() I(|M|/2) times
+    OP_POPF    = 73, ///< pop() I(|M|) times
+    OP_PUSHIB  = 74, ///< pushInt(I(1))
+    OP_PUSHIH  = 75, ///< pushInt(I(|M|/2))
+    OP_PUSHIF  = 76, ///< pushInt(I(|M|))
+    OP_PUSHF   = 77, ///< pushFloat(I(|M|))
+    OP_PUSHS   = 78, ///< pushString(I(|M|))
+    OP_PUSHB   = 79, ///< pushBool(I(1))
+    OP_PUSHP   = 80, ///< pushPtr(I(|M|))
+    OP_PUSHNB  = 81, ///< push(0) I(1) times
+    OP_PUSHNH  = 82, ///< push(0) I(|M|/2) times
+    OP_PUSHNF  = 83, ///< push(0) I(|M|) times
+    OP_SETADRI = 84, ///< *((dint *)popPtr()) = popInt()
+    OP_SETADRF = 85, ///< *((dfloat *)popPtr()) = popFloat()
+    OP_SETADRS = 86, ///< *((dint *)popPtr()) = (dint)popString()
+    OP_SETADRB = 87, ///< *((uint8_t *)popPtr()) = (popBool() ? 1 : 0)
+    OP_SETADRP = 88, ///< *((dint *)popPtr()) = (dint)popPtr()
+    OP_SUB     = 89, ///< push(pop() - pop())
+    OP_SUBBI   = 90, ///< push(pop() - I(1))
+    OP_SUBHI   = 91, ///< push(pop() - I(|M|/2))
+    OP_SUBFI   = 92, ///< push(pop() - I(|M|))
+    OP_SYSCALL = 93, ///< push(syscall(I(1), pop(), pop())
+    OP_XOR     = 94, ///< push(pop() ^ pop())
+    OP_XORBI   = 95, ///< push(pop() ^ I(1))
+    OP_XORHI   = 96, ///< push(pop() ^ I(|M|/2))
+    OP_XORFI   = 97, ///< push(pop() ^ I(|M|))
 } DIns;
 
 /**
@@ -151,26 +157,20 @@ typedef enum _dIns {
  */
 typedef enum _dSyscall {
     SYS_PRINT = 0, ///< Print a value to `stdout`.
-                   ///< * `arg0`: `0`: `Integer`, `1`: `Float`, `2`: `String`,
-                   ///< `3`: `Boolean`.
-                   ///< * `arg1`: If set to `1`, it will print a newline at the
-                   ///< end, otherwise it will not.
-                   ///< * `arg2`: The value to print.
-                   ///< * Returns: The value 0.
+                   ///< * `arg1` (Boolean): Print a newline after?
+                   ///< * `arg2` (Any): The value to print.
+                   ///< * Returns (None): The value 0.
 
     SYS_STRCMP = 1, ///< Compare two strings.
-                    ///< * `arg0`: `0`: Equal, `1`: Less Than or Equal,
-                    ///< `2`: Less Than, `3`: More Than or Equal,
-                    ///< `4`: More Than.
-                    ///< * `arg1`: The first string pointer.
-                    ///< * `arg2`: The second string pointer.
-                    ///< * Returns: 1 if true, 0 if false.
+                    ///< * `arg1` (String): The first string pointer.
+                    ///< * `arg2` (String): The second string pointer.
+                    ///< * Returns (Integer): 1 if `arg1` > `arg2`, -1 if `arg1`
+                    ///< < `arg2`, and 0 otherwise.
 
     SYS_STRLEN = 2, ///< Get the length of a string.
-                    ///< * `arg0`: Unused.
                     ///< * `arg1`: Unused.
-                    ///< * `arg2`: The string to get the length of.
-                    ///< * Returns: The length of the string.
+                    ///< * `arg2` (String): The string to get the length of.
+                    ///< * Returns (Integer): The length of the string.
 } DSyscall;
 
 /**

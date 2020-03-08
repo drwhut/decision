@@ -168,9 +168,9 @@ those descriptions are.
 
 * ``push(item)`` and ``pop()`` are self-explanitory, they push and pop the
   stack respectively.
-
-* ``pushFloat(float)`` and ``popFloat()`` push and pop in floating-point
-  format to distinguish from integers.
+  
+  * There are also more specific operations for the different data types, e.g.
+    ``pushFloat(float)``, ``popBool()``, ...
 
 * ``I(n)`` means an immediate of ``n`` bytes.
 
@@ -185,8 +185,8 @@ those descriptions are.
 
 * ``pc`` means the program counter.
 
-* ``syscall(call, arg0, arg1, arg2)`` means run a system call ``call`` with the
-  3 given arguments.
+* ``syscall(call, arg1, arg2)`` means run a system call ``call`` with the 2
+  given arguments.
 
 ############
 Stack Frames
