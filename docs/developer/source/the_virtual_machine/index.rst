@@ -309,7 +309,7 @@ Getting values
 If you want to retrieve values from the stack without manipulating the stack,
 use:
 
-.. doxygenfunction:: d_vm_get
+.. doxygenfunction:: d_vm_get_int
    :no-link:
 
 .. doxygenfunction:: d_vm_get_float
@@ -318,19 +318,25 @@ use:
 .. doxygenfunction:: d_vm_get_ptr
    :no-link:
 
+.. doxygenfunction:: d_vm_get_bool
+   :no-link:
+
 Inserting values
 ----------------
 
 If you want to insert items into the stack at a given index (not nessesarily at
 the top of the stack), use:
 
-.. doxygenfunction:: d_vm_insert
+.. doxygenfunction:: d_vm_insert_int
    :no-link:
 
 .. doxygenfunction:: d_vm_insert_float
    :no-link:
 
-.. doxygenfunction:: d_vm_insert_ptr
+.. doxygenfunction:: d_vm_insert_str
+   :no-link:
+
+.. doxygenfunction:: d_vm_insert_bool
    :no-link:
 
 Poping values
@@ -338,13 +344,16 @@ Poping values
 
 If you want to pop values from the top of the stack, use:
 
-.. doxygenfunction:: d_vm_pop
+.. doxygenfunction:: d_vm_pop_int
    :no-link:
 
 .. doxygenfunction:: d_vm_pop_float
    :no-link:
 
 .. doxygenfunction:: d_vm_pop_ptr
+   :no-link:
+
+.. doxygenfunction:: d_vm_pop_bool
    :no-link:
 
 If you want to pop a variable number of items from the stack without getting
@@ -358,13 +367,16 @@ Pushing values
 
 If you want to push values to the top of the stack, use:
 
-.. doxygenfunction:: d_vm_push
+.. doxygenfunction:: d_vm_push_int
    :no-link:
 
 .. doxygenfunction:: d_vm_push_float
    :no-link:
 
-.. doxygenfunction:: d_vm_push_ptr
+.. doxygenfunction:: d_vm_push_str
+   :no-link:
+
+.. doxygenfunction:: d_vm_push_bool
    :no-link:
 
 If you want to push a variable number of `0`s to the top of the stack, use:
@@ -391,11 +403,22 @@ Setting values
 
 If you want to set a value in the stack (not nessesarily at the top), use:
 
-.. doxygenfunction:: d_vm_set
+.. doxygenfunction:: d_vm_set_int
    :no-link:
 
 .. doxygenfunction:: d_vm_set_float
    :no-link:
 
-.. doxygenfunction:: d_vm_set_ptr
+.. doxygenfunction:: d_vm_set_str
+   :no-link:
+
+.. doxygenfunction:: d_vm_set_bool
+   :no-link:
+
+Type checking
+-------------
+
+If you want to check the type of a value in the stack, use:
+
+.. doxygenfunction:: d_vm_type
    :no-link:

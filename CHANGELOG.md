@@ -1,3 +1,7 @@
+* The VM stack now stores the type of each entry alongside the data itself, as
+well as a flag which, if true, means the entry will be freed when it is poped
+from the stack by the VM.
+
 # Decision v0.3.0 - 29th February 2020
 
 **NOTE:** This update changes some of the fundamental definitions of items in

@@ -192,6 +192,26 @@ typedef enum _dSyscall {
 #define VM_STACK_SIZE_SCALE_DEC 0.5
 
 /**
+ * \struct _stackEntry
+ * \brief A entry in the VM stack which contains some data, and the data type
+ * of that data.
+ *
+ * \typedef struct _stackEntry StackEntry
+ */
+typedef struct _stackEntry {
+    union {
+        dint i;
+        dfloat f;
+        void *p;
+        bool b;
+    } data;       ///< The data in the entry.
+    uint8_t type; ///< The data type of the entry.
+
+    bool free; ///< When this entry is poped from the stack, should the pointer
+               ///< be freed?
+} StackEntry;
+
+/**
  * \enum _DVM
  * \brief The Decision VM structure.
  *
@@ -200,9 +220,9 @@ typedef enum _dSyscall {
 typedef struct _DVM {
     char *pc; ///< The program counter.
 
-    dint *basePtr;  ///< A pointer to the base of the stack.
-    dint *stackPtr; ///< A pointer to the top of the stack.
-    dint *framePtr; ///< A pointer to the start of the stack frame.
+    StackEntry *basePtr;  ///< A pointer to the base of the stack.
+    StackEntry *stackPtr; ///< A pointer to the top of the stack.
+    StackEntry *framePtr; ///< A pointer to the start of the stack frame.
 
     duint stackSize; ///< The current size of the stack.
 
@@ -271,7 +291,7 @@ typedef struct _DVM {
 DECISION_API size_t d_vm_frame(DVM *vm);
 
 /**
- * \fn dint d_vm_get(DVM *vm, dint index)
+ * \fn dint d_vm_get_int(DVM *vm, dint index)
  * \brief Get an integer from a value in the stack at a particular index.
  *
  * * If `index` is positive, it will index relative to the start of the stack
@@ -283,7 +303,7 @@ DECISION_API size_t d_vm_frame(DVM *vm);
  * \param vm The VM whose stack to retrieve from.
  * \param index The index of the stack.
  */
-DECISION_API dint d_vm_get(DVM *vm, dint index);
+DECISION_API dint d_vm_get_int(DVM *vm, dint index);
 
 /**
  * \fn dfloat d_vm_get_float(DVM *vm, dint index)
@@ -316,7 +336,22 @@ DECISION_API dfloat d_vm_get_float(DVM *vm, dint index);
 DECISION_API void *d_vm_get_ptr(DVM *vm, dint index);
 
 /**
- * \fn void d_vm_insert(DVM *vm, dint index, dint value)
+ * \fn bool d_vm_get_bool(DVM *vm, dint index)
+ * \brief Get a boolean from a value in the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \return The boolean value of the stack at the given index.
+ *
+ * \param vm The VM whose stack to retrieve from.
+ * \param index The index of the stack.
+ */
+DECISION_API bool d_vm_get_bool(DVM *vm, dint index);
+
+/**
+ * \fn void d_vm_insert_int(DVM *vm, dint index, dint value)
  * \brief Insert an integer into the stack at a particular index.
  *
  * * If `index` is positive, it will index relative to the start of the stack
@@ -328,7 +363,7 @@ DECISION_API void *d_vm_get_ptr(DVM *vm, dint index);
  * this location when the function returns.
  * \param value The value to insert into the stack.
  */
-DECISION_API void d_vm_insert(DVM *vm, dint index, dint value);
+DECISION_API void d_vm_insert_int(DVM *vm, dint index, dint value);
 
 /**
  * \fn void d_vm_insert_float(DVM *vm, dint index, dfloat value)
@@ -346,29 +381,36 @@ DECISION_API void d_vm_insert(DVM *vm, dint index, dint value);
 DECISION_API void d_vm_insert_float(DVM *vm, dint index, dfloat value);
 
 /**
- * \fn void d_vm_insert_ptr(DVM *vm, dint index, void *ptr)
- * \brief Insert a pointer into the stack at a particular index.
+ * \fn void d_vm_insert_str(DVM *vm, dint index, char *str, bool mark)
+ * \brief Insert a string into the stack at a particular index.
  *
  * * If `index` is positive, it will index relative to the start of the stack
  * frame.
  * * If `index` is non-positive, it will index relative to the top of the stack.
  *
  * \param vm The VM whose stack to insert to.
- * \param index The index of the stack to insert to, i.e. `ptr` will be at this
+ * \param index The index of the stack to insert to, i.e. `str` will be at this
  * location when the function returns.
- * \param ptr The pointer to insert into the stack.
+ * \param str The string to insert into the stack.
+ * \param mark Mark this string to be freed when it is poped from the stack by
+ * the VM.
  */
-DECISION_API void d_vm_insert_ptr(DVM *vm, dint index, void *ptr);
+DECISION_API void d_vm_insert_str(DVM *vm, dint index, char *str, bool mark);
 
 /**
- * \fn dint d_vm_pop(DVM *vm)
- * \brief Pop an integer from the top of the stack.
+ * \fn void d_vm_insert_bool(DVM *vm, dint index, bool value)
+ * \brief Insert a boolean into the stack at a particular index.
  *
- * \return The integer at the top of the stack.
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
  *
- * \param vm The VM whose stack to pop from.
+ * \param vm The VM whose stack to insert to.
+ * \param index The index of the stack to insert to, i.e. `value` will be at
+ * this location when the function returns.
+ * \param value The value to insert into the stack.
  */
-DECISION_API dint d_vm_pop(DVM *vm);
+DECISION_API void d_vm_insert_bool(DVM *vm, dint index, bool value);
 
 /**
  * \fn void d_vm_popn(DVM *vm, size_t n)
@@ -378,6 +420,16 @@ DECISION_API dint d_vm_pop(DVM *vm);
  * \param n The number of elements to pop.
  */
 DECISION_API void d_vm_popn(DVM *vm, size_t n);
+
+/**
+ * \fn dint d_vm_pop_int(DVM *vm)
+ * \brief Pop an integer from the top of the stack.
+ *
+ * \return The integer at the top of the stack.
+ *
+ * \param vm The VM whose stack to pop from.
+ */
+DECISION_API dint d_vm_pop_int(DVM *vm);
 
 /**
  * \fn dfloat d_vm_pop_float(DVM *vm)
@@ -400,22 +452,33 @@ DECISION_API dfloat d_vm_pop_float(DVM *vm);
 DECISION_API void *d_vm_pop_ptr(DVM *vm);
 
 /**
- * \fn void d_vm_push(DVM *vm, dint value)
- * \brief Push an integer value onto the stack.
+ * \fn bool d_vm_pop_bool(DVM *vm)
+ * \brief Pop a boolean from the top of the stack.
  *
- * \param vm The VM whose stack to push onto.
- * \param value The value to push onto the stack.
+ * \return The boolean at the top of the stack.
+ *
+ * \param vm The VM whose stack to pop from.
  */
-DECISION_API void d_vm_push(DVM *vm, dint value);
+DECISION_API bool d_vm_pop_bool(DVM *vm);
 
 /**
  * \fn void d_vm_pushn(DVM *vm, size_t n)
- * \brief Push `0` onto the stack `n` times.
+ * \brief Push `0` onto the stack `n` times. The new entries will not have any
+ * type associated with them.
  *
  * \param vm The VM whose stack to push onto.
  * \param n The number of items to push onto the stack.
  */
 DECISION_API void d_vm_pushn(DVM *vm, size_t n);
+
+/**
+ * \fn void d_vm_push_int(DVM *vm, dint value)
+ * \brief Push an integer value onto the stack.
+ *
+ * \param vm The VM whose stack to push onto.
+ * \param value The value to push onto the stack.
+ */
+DECISION_API void d_vm_push_int(DVM *vm, dint value);
 
 /**
  * \fn void d_vm_push_float(DVM *vm, dfloat value)
@@ -427,13 +490,24 @@ DECISION_API void d_vm_pushn(DVM *vm, size_t n);
 DECISION_API void d_vm_push_float(DVM *vm, dfloat value);
 
 /**
- * \fn void d_vm_push_ptr(DVM *vm, void *ptr)
- * \brief Push a pointer onto the stack.
+ * \fn void d_vm_push_str(DVM *vm, char *str, bool mark)
+ * \brief Push a string onto the stack.
  *
  * \param vm The VM whose stack to push onto.
- * \param ptr The pointer to push onto the stack.
+ * \param ptr The string to push onto the stack.
+ * \param mark Mark this string to be freed when it is poped from the stack by
+ * the VM.
  */
-DECISION_API void d_vm_push_ptr(DVM *vm, void *ptr);
+DECISION_API void d_vm_push_str(DVM *vm, char *str, bool mark);
+
+/**
+ * \fn void d_vm_push_bool(DVM *vm, bool value)
+ * \brief Push a boolean value onto the stack.
+ *
+ * \param vm The VM whose stack to push onto.
+ * \param value The value to push onto the stack.
+ */
+DECISION_API void d_vm_push_bool(DVM *vm, bool value);
 
 /**
  * \fn void d_vm_remove(DVM *vm, dint index)
@@ -464,8 +538,9 @@ DECISION_API void d_vm_remove(DVM *vm, dint index);
 DECISION_API void d_vm_remove_len(DVM *vm, dint index, size_t len);
 
 /**
- * \fn void d_vm_set(DVM *vm, dint index, dint value)
- * \brief Set the value of an element in the stack at a particular index.
+ * \fn void d_vm_set_int(DVM *vm, dint index, dint value)
+ * \brief Set the value of an element in the stack at a particular index to be
+ * a given integer.
  *
  * * If `index` is positive, it will index relative to the start of the stack
  * frame.
@@ -473,13 +548,14 @@ DECISION_API void d_vm_remove_len(DVM *vm, dint index, size_t len);
  *
  * \param vm The VM whose stack to set the element of.
  * \param index The index of the stack.
- * \param value The value to set.
+ * \param value The integer value to set.
  */
-DECISION_API void d_vm_set(DVM *vm, dint index, dint value);
+DECISION_API void d_vm_set_int(DVM *vm, dint index, dint value);
 
 /**
  * \fn void d_vm_set_float(DVM *vm, dint index, dfloat value)
- * \brief Set the value of an element in the stack at a particular index.
+ * \brief Set the value of an element in the stack at a particular index to be
+ * a given float.
  *
  * * If `index` is positive, it will index relative to the start of the stack
  * frame.
@@ -487,13 +563,14 @@ DECISION_API void d_vm_set(DVM *vm, dint index, dint value);
  *
  * \param vm The VM whose stack to set the element of.
  * \param index The index of the stack.
- * \param value The value to set.
+ * \param value The float value to set.
  */
 DECISION_API void d_vm_set_float(DVM *vm, dint index, dfloat value);
 
 /**
- * \fn void d_vm_set_ptr(DVM *vm, dint index, void *ptr)
- * \brief Set the value of an element in the stack at a particular index.
+ * \fn void d_vm_set_str(DVM *vm, dint index, char *str, bool mark)
+ * \brief Set the value of an element in the stack at a particular index to be
+ * a given string.
  *
  * * If `index` is positive, it will index relative to the start of the stack
  * frame.
@@ -501,9 +578,26 @@ DECISION_API void d_vm_set_float(DVM *vm, dint index, dfloat value);
  *
  * \param vm The VM whose stack to set the element of.
  * \param index The index of the stack.
- * \param ptr The value to set.
+ * \param str The string value to set.
+ * \param mark Mark this string to be freed when it is poped from the stack by
+ * the VM.
  */
-DECISION_API void d_vm_set_ptr(DVM *vm, dint index, void *ptr);
+DECISION_API void d_vm_set_str(DVM *vm, dint index, char *str, bool mark);
+
+/**
+ * \fn void d_vm_set_bool(DVM *vm, dint index, bool value)
+ * \brief Set the value of an element in the stack at a particular index to be
+ * a given boolean.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \param vm The VM whose stack to set the element of.
+ * \param index The index of the stack.
+ * \param value The boolean value to set.
+ */
+DECISION_API void d_vm_set_bool(DVM *vm, dint index, bool value);
 
 /**
  * \fn size_t d_vm_top(DVM *vm)
@@ -514,6 +608,21 @@ DECISION_API void d_vm_set_ptr(DVM *vm, dint index, void *ptr);
  * \param vm The VM whose stack to query.
  */
 DECISION_API size_t d_vm_top(DVM *vm);
+
+/**
+ * \fn DType d_vm_type(DVM *vm, dint index)
+ * \brief Get the type of the stack element at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \return The type of the stack element at the given index.
+ *
+ * \param vm The VM whose stack to get the element from.
+ * \param index The index of the stack.
+ */
+DECISION_API DType d_vm_type(DVM *vm, dint index);
 
 /*
 === VM FUNCTIONS ==========================================

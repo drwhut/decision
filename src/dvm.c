@@ -130,17 +130,41 @@ static const unsigned char VM_INS_SIZE[NUM_OPCODES] = {
  * \fn static void vm_set_stack_size_to(DVM *vm, duint size)
  * \brief Set the VM's stack size.
  *
+ * If the size of the stack will decrease due to this operation, then it will
+ * free marked stack entries that are about to be poped.
+ *
  * \param vm The VM whose stack to set the size of.
  * \param size The size the stack should be set to, i.e. how many elements can
  * it contain?
  */
 static void vm_set_stack_size_to(DVM *vm, duint size) {
-    vm->stackSize = size;
+    // Before we set the stack size, we need to check if the size is about to
+    // decrease, and if it is, we need to free marked entries so we don't lose
+    // them forever!
+    // NOTE: This assumes that entries that never got reached by the stack
+    // pointer have been zero'd.
+    if (size < vm->stackSize) {
+        StackEntry *entry  = vm->basePtr + vm->stackSize;
+        StackEntry *newTop = vm->basePtr + size;
 
-    const size_t newAlloc = size * sizeof(dint);
+        while (entry > newTop) {
+            if (entry->free) {
+                if (entry->data.p != NULL) {
+                    free(entry->data.p);
+                }
+            }
 
-    if (vm->basePtr == NULL) {
-        vm->basePtr = d_calloc(size, sizeof(dint));
+            entry--;
+        }
+    }
+
+    if (size == 0) {
+        if (vm->basePtr != NULL) {
+            free(vm->basePtr);
+            vm->basePtr = NULL;
+        }
+    } else if (vm->basePtr == NULL) {
+        vm->basePtr = d_calloc(size, sizeof(StackEntry));
     } else {
         // The problem with reallocing the base pointer is that it can move,
         // which would invalidate both the stack pointer and the frame
@@ -148,11 +172,20 @@ static void vm_set_stack_size_to(DVM *vm, duint size) {
         ptrdiff_t stackDiff = vm->stackPtr - vm->basePtr;
         ptrdiff_t frameDiff = vm->framePtr - vm->basePtr;
 
-        vm->basePtr = d_realloc(vm->basePtr, newAlloc);
+        vm->basePtr = d_realloc(vm->basePtr, size * sizeof(StackEntry));
 
         vm->stackPtr = vm->basePtr + stackDiff;
         vm->framePtr = vm->basePtr + frameDiff;
+
+        // It's good practice to zero-out the new memory.
+        const int numNewEntries = size - vm->stackSize;
+        if (numNewEntries > 0) {
+            memset(vm->basePtr + vm->stackSize, 0,
+                   numNewEntries * sizeof(StackEntry));
+        }
     }
+
+    vm->stackSize = size;
 }
 
 /**
@@ -202,45 +235,32 @@ static void vm_decrease_stack_size(DVM *vm) {
 
 /**
  * \def VM_GET_FRAME(vm, index)
- * \brief Get the value of the stack at the index, relative to the frame
+ * \brief Get the entry of the stack at the index, relative to the frame
  * pointer.
  */
 #define VM_GET_FRAME(vm, index) (*VM_GET_FRAME_PTR(vm, index))
 
 /**
  * \def VM_GET_STACK(vm, index)
- * \brief Get the value of the stack at the index, relative to the stack
+ * \brief Get the entry of the stack at the index, relative to the stack
  * pointer.
  */
 #define VM_GET_STACK(vm, index) (*VM_GET_STACK_PTR(vm, index))
 
 /**
- * \def VM_GET_FRAME_FLOAT_PTR(vm, index)
- * \brief Get a float pointer relative to the VM's frame pointer.
+ * \def VM_GET_PTR(vm, index)
+ * \brief Get a pointer relative to the VM's frame or stack pointer, depending
+ * on the index.
  */
-#define VM_GET_FRAME_FLOAT_PTR(vm, index) \
-    ((dfloat *)VM_GET_FRAME_PTR(vm, index))
+#define VM_GET_PTR(vm, index) \
+    (((index) > 0) ? VM_GET_FRAME_PTR(vm, index) : VM_GET_STACK_PTR(vm, index))
 
 /**
- * \def VM_GET_STACK_FLOAT_PTR(vm, index)
- * \brief Get a float pointer relative to the VM's stack pointer.
+ * \def VM_GET(vm, index)
+ * \brief Get the entry of the stack at the index.
  */
-#define VM_GET_STACK_FLOAT_PTR(vm, index) \
-    ((dfloat *)VM_GET_STACK_PTR(vm, index))
-
-/**
- * \def VM_GET_FRAME_FLOAT(vm, index)
- * \brief Get the float value of the stack at the index, relative to the frame
- * pointer.
- */
-#define VM_GET_FRAME_FLOAT(vm, index) (*VM_GET_STACK_FLOAT_PTR(vm, index))
-
-/**
- * \def VM_GET_STACK_FLOAT(vm, index)
- * \brief Get the float value of the stack at the index, relative to the stack
- * pointer.
- */
-#define VM_GET_STACK_FLOAT(vm, index) (*VM_GET_STACK_FLOAT_PTR(vm, index))
+#define VM_GET(vm, index) \
+    (((index) > 0) ? VM_GET_FRAME(vm, index) : VM_GET_STACK(vm, index))
 
 /**
  * \fn size_t d_vm_frame(DVM *vm)
@@ -259,7 +279,7 @@ size_t d_vm_frame(DVM *vm) {
 }
 
 /**
- * \fn dint d_vm_get(DVM *vm, dint index)
+ * \fn dint d_vm_get_int(DVM *vm, dint index)
  * \brief Get an integer from a value in the stack at a particular index.
  *
  * * If `index` is non-negative, it will index relative to the start of the
@@ -271,14 +291,8 @@ size_t d_vm_frame(DVM *vm) {
  * \param vm The VM whose stack to retrieve from.
  * \param index The index of the stack.
  */
-dint d_vm_get(DVM *vm, dint index) {
-    if (index > 0) {
-        // Get the value relative to the frame pointer.
-        return VM_GET_FRAME(vm, index);
-    } else {
-        // Get the value relative to the stack pointer.
-        return VM_GET_STACK(vm, index);
-    }
+dint d_vm_get_int(DVM *vm, dint index) {
+    return VM_GET(vm, index).data.i;
 }
 
 /**
@@ -295,9 +309,7 @@ dint d_vm_get(DVM *vm, dint index) {
  * \param index The index of the stack.
  */
 dfloat d_vm_get_float(DVM *vm, dint index) {
-    dint value = d_vm_get(vm, index);
-
-    return *((dfloat *)(&value));
+    return VM_GET(vm, index).data.f;
 }
 
 /**
@@ -314,9 +326,24 @@ dfloat d_vm_get_float(DVM *vm, dint index) {
  * \param index The index of the stack.
  */
 void *d_vm_get_ptr(DVM *vm, dint index) {
-    dint value = d_vm_get(vm, index);
+    return VM_GET(vm, index).data.p;
+}
 
-    return (void *)value;
+/**
+ * \fn bool d_vm_get_bool(DVM *vm, dint index)
+ * \brief Get a boolean from a value in the stack at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \return The boolean value of the stack at the given index.
+ *
+ * \param vm The VM whose stack to retrieve from.
+ * \param index The index of the stack.
+ */
+bool d_vm_get_bool(DVM *vm, dint index) {
+    return VM_GET(vm, index).data.b;
 }
 
 /**
@@ -324,15 +351,49 @@ void *d_vm_get_ptr(DVM *vm, dint index) {
  * \brief A helper macro for for inserting a length of items onto the stack,
  * without the checks.
  */
-#define VM_INSERT_LEN(vm, baseIndex, len, numMove)                         \
-    {                                                                      \
-        d_vm_pushn(vm, len);                                               \
-        dint *_insertPtr = (vm)->basePtr + (baseIndex);                    \
-        memmove(_insertPtr + (len), _insertPtr, (numMove) * sizeof(dint)); \
+#define VM_INSERT_LEN(vm, baseIndex, len, numMove)      \
+    {                                                   \
+        d_vm_pushn(vm, len);                            \
+        dint *_insertPtr = (vm)->basePtr + (baseIndex); \
+        memmove(_insertPtr + (len), _insertPtr,         \
+                (numMove) * sizeof(StackEntry));        \
     }
 
 /**
- * \fn void d_vm_insert(DVM *vm, dint index, dint value)
+ * \fn static void insert_generic(DVM *vm, dint index, StackEntry entry)
+ * \brief Insert a stack entry into the stack at a particular index.
+ *
+ * \param vm The VM whose stack to insert to.
+ * \param index The index of the stack to insert to, i.e. `entry` will be at
+ * this location when the function returns.
+ * \param value The entry to insert into the stack.
+ */
+static void insert_generic(DVM *vm, dint index, StackEntry entry) {
+    if (index == 0) {
+        // If the index is 0, then we want to insert the entry to the top of
+        // the stack, and move whatever is already there up one place.
+        d_vm_push(vm, 0);
+        *VM_GET_STACK_PTR(vm, 0)  = VM_GET_STACK(vm, -1);
+        *VM_GET_STACK_PTR(vm, -1) = entry;
+    } else {
+        dint *insertPtr = VM_GET_PTR(vm, index);
+
+        if (insertPtr >= vm->basePtr && insertPtr <= vm->stackPtr) {
+            const size_t numElemsToMove = ((vm->stackPtr - insertPtr) + 1);
+            ptrdiff_t baseIndex         = insertPtr - vm->basePtr;
+
+            VM_INSERT_LEN(vm, baseIndex, 1, numElemsToMove)
+
+            // Need to use this rather than reuse insertPtr, since inserting
+            // may have increased the capacity of the stack, and thus could
+            // have changed the base pointer.
+            *(vm->basePtr + baseIndex) = entry;
+        }
+    }
+}
+
+/**
+ * \fn void d_vm_insert_int(DVM *vm, dint index, dint value)
  * \brief Insert an integer into the stack at a particular index.
  *
  * * If `index` is positive, it will index relative to the start of the stack
@@ -344,36 +405,11 @@ void *d_vm_get_ptr(DVM *vm, dint index) {
  * this location when the function returns.
  * \param value The value to insert into the stack.
  */
-void d_vm_insert(DVM *vm, dint index, dint value) {
-    if (index == 0) {
-        // If the index is 0, then we want to insert the value to the top of
-        // the stack, and move whatever is already there up one place.
-        d_vm_push(vm, 0);
-        *VM_GET_STACK_PTR(vm, 0)  = VM_GET_STACK(vm, -1);
-        *VM_GET_STACK_PTR(vm, -1) = value;
-    } else {
-        dint *insertPtr;
+void d_vm_insert_int(DVM *vm, dint index, dint value) {
+    StackEntry entry = {{0}, TYPE_INT, false};
+    entry.data.i     = value;
 
-        if (index > 0) {
-            // Get the position relative to the frame pointer.
-            insertPtr = VM_GET_FRAME_PTR(vm, index);
-        } else {
-            // Get the position relative to the stack pointer.
-            insertPtr = VM_GET_STACK_PTR(vm, index);
-        }
-
-        if (insertPtr >= vm->basePtr && insertPtr <= vm->stackPtr) {
-            const size_t numElemsToMove = ((vm->stackPtr - insertPtr) + 1);
-            ptrdiff_t baseIndex         = insertPtr - vm->basePtr;
-
-            VM_INSERT_LEN(vm, baseIndex, 1, numElemsToMove)
-
-            // Need to use this rather than reuse insertPtr, since inserting
-            // may have increased the capacity of the stack, and thus could
-            // have changed the base pointer.
-            *(vm->basePtr + baseIndex) = value;
-        }
-    }
+    insert_generic(vm, index, entry);
 }
 
 /**
@@ -390,42 +426,53 @@ void d_vm_insert(DVM *vm, dint index, dint value) {
  * \param value The value to insert into the stack.
  */
 void d_vm_insert_float(DVM *vm, dint index, dfloat value) {
-    dint intValue = *((dint *)(&value));
+    StackEntry entry = {{0}, TYPE_FLOAT, false};
+    entry.data.f     = value;
 
-    d_vm_insert(vm, index, intValue);
+    insert_generic(vm, index, entry);
 }
 
 /**
- * \fn void d_vm_insert_ptr(DVM *vm, dint index, void *ptr)
- * \brief Insert a pointer into the stack at a particular index.
+ * \fn void d_vm_insert_str(DVM *vm, dint index, char *str, bool mark)
+ * \brief Insert a string into the stack at a particular index.
  *
  * * If `index` is positive, it will index relative to the start of the stack
  * frame.
  * * If `index` is non-positive, it will index relative to the top of the stack.
  *
  * \param vm The VM whose stack to insert to.
- * \param index The index of the stack to insert to, i.e. `ptr` will be at this
+ * \param index The index of the stack to insert to, i.e. `str` will be at this
  * location when the function returns.
- * \param value The pointer to insert into the stack.
+ * \param str The string to insert into the stack.
+ * \param mark Mark this string to be freed when it is poped from the stack by
+ * the VM.
  */
-void d_vm_insert_ptr(DVM *vm, dint index, void *ptr) {
-    dint value = (dint)ptr;
+void d_vm_insert_str(DVM *vm, dint index, char *str, bool mark) {
+    StackEntry entry = {{0}, TYPE_STRING, false};
+    entry.data.p     = str;
+    entry.free       = mark;
 
-    d_vm_insert(vm, index, value);
+    insert_generic(vm, index, entry);
 }
 
 /**
- * \fn dint d_vm_pop(DVM *vm)
- * \brief Pop an integer from the top of the stack.
+ * \fn void d_vm_insert_bool(DVM *vm, dint index, bool value)
+ * \brief Insert a boolean into the stack at a particular index.
  *
- * \return The integer at the top of the stack.
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
  *
- * \param vm The VM whose stack to pop from.
+ * \param vm The VM whose stack to insert to.
+ * \param index The index of the stack to insert to, i.e. `value` will be at
+ * this location when the function returns.
+ * \param value The value to insert into the stack.
  */
-dint d_vm_pop(DVM *vm) {
-    dint value = d_vm_get(vm, 0);
-    d_vm_popn(vm, 1);
-    return value;
+void d_vm_insert_bool(DVM *vm, dint index, bool value) {
+    StackEntry entry = {{0}, TYPE_BOOL, false};
+    entry.data.b     = value;
+
+    insert_generic(vm, index, entry);
 }
 
 /**
@@ -449,6 +496,20 @@ void d_vm_popn(DVM *vm, size_t n) {
             vm_decrease_stack_size(vm);
         }
     }
+}
+
+/**
+ * \fn dint d_vm_pop_int(DVM *vm)
+ * \brief Pop an integer from the top of the stack.
+ *
+ * \return The integer at the top of the stack.
+ *
+ * \param vm The VM whose stack to pop from.
+ */
+dint d_vm_pop_int(DVM *vm) {
+    dint value = d_vm_get_int(vm, 0);
+    d_vm_popn(vm, 1);
+    return value;
 }
 
 /**
@@ -480,23 +541,23 @@ void *d_vm_pop_ptr(DVM *vm) {
 }
 
 /**
- * \fn void d_vm_push(DVM *vm, dint value)
- * \brief Push an integer value onto the stack.
+ * \fn bool d_vm_pop_bool(DVM *vm)
+ * \brief Pop a boolean from the top of the stack.
  *
- * \param vm The VM whose stack to push onto.
- * \param value The value to push onto the stack.
+ * \return The boolean at the top of the stack.
+ *
+ * \param vm The VM whose stack to pop from.
  */
-void d_vm_push(DVM *vm, dint value) {
-    if (d_vm_top(vm) >= vm->stackSize) {
-        vm_increase_stack_size(vm);
-    }
-
-    *(++vm->stackPtr) = value;
+bool d_vm_pop_bool(DVM *vm) {
+    bool value = d_vm_get_bool(vm, 0);
+    d_vm_popn(vm, 1);
+    return value;
 }
 
 /**
  * \fn void d_vm_pushn(DVM *vm, size_t n)
- * \brief Push `0` onto the stack `n` times.
+ * \brief Push `0` onto the stack `n` times. The new entries will not have any
+ * type associated with them.
  *
  * \param vm The VM whose stack to push onto.
  * \param n The number of items to push onto the stack.
@@ -511,10 +572,39 @@ void d_vm_pushn(DVM *vm, size_t n) {
                                  (duint)(newSize * VM_STACK_SIZE_SCALE_INC));
         }
 
-        memset(vm->stackPtr + 1, 0, n * sizeof(dint));
+        memset(vm->stackPtr + 1, 0, n * sizeof(StackEntry));
 
         vm->stackPtr = vm->stackPtr + n;
     }
+}
+
+/**
+ * \fn static void push_generic(DVM *vm, StackEntry entry)
+ * \brief Push an entry onto the stack.
+ *
+ * \param vm The VM whose stack to push onto.
+ * \param value The value to push onto the stack.
+ */
+static void push_generic(DVM *vm, StackEntry entry) {
+    if (d_vm_top(vm) >= vm->stackSize) {
+        vm_increase_stack_size(vm);
+    }
+
+    *(++vm->stackPtr) = entry;
+}
+
+/**
+ * \fn void d_vm_push_int(DVM *vm, dint value)
+ * \brief Push an integer value onto the stack.
+ *
+ * \param vm The VM whose stack to push onto.
+ * \param value The value to push onto the stack.
+ */
+void d_vm_push_int(DVM *vm, dint value) {
+    StackEntry entry = {{0}, TYPE_INT, false};
+    entry.data.i     = value;
+
+    push_generic(vm, entry);
 }
 
 /**
@@ -525,22 +615,41 @@ void d_vm_pushn(DVM *vm, size_t n) {
  * \param value The value to push onto the stack.
  */
 void d_vm_push_float(DVM *vm, dfloat value) {
-    dint intValue = *((dint *)(&value));
+    StackEntry entry = {{0}, TYPE_FLOAT, false};
+    entry.data.f     = value;
 
-    d_vm_push(vm, intValue);
+    push_generic(vm, entry);
 }
 
 /**
- * \fn void d_vm_push_ptr(DVM *vm, void *ptr)
- * \brief Push a pointer onto the stack.
+ * \fn void d_vm_push_str(DVM *vm, char *str, bool mark)
+ * \brief Push a string onto the stack.
  *
  * \param vm The VM whose stack to push onto.
- * \param ptr The pointer to push onto the stack.
+ * \param ptr The string to push onto the stack.
+ * \param mark Mark this string to be freed when it is poped from the stack by
+ * the VM.
  */
-void d_vm_push_ptr(DVM *vm, void *ptr) {
-    dint value = (dint)ptr;
+void d_vm_push_str(DVM *vm, char *str, bool mark) {
+    StackEntry entry = {{0}, TYPE_STRING, false};
+    entry.data.p     = str;
+    entry.free       = mark;
 
-    d_vm_push(vm, value);
+    push_generic(vm, entry);
+}
+
+/**
+ * \fn void d_vm_push_bool(DVM *vm, bool value)
+ * \brief Push a boolean value onto the stack.
+ *
+ * \param vm The VM whose stack to push onto.
+ * \param value The value to push onto the stack.
+ */
+void d_vm_push_bool(DVM *vm, bool value) {
+    StackEntry entry = {{0}, TYPE_BOOL, false};
+    entry.data.b     = value;
+
+    push_generic(vm, entry);
 }
 
 /**
@@ -563,10 +672,10 @@ void d_vm_remove(DVM *vm, dint index) {
  * \brief A helper macro for removing a length of items in the stack, without
  * any of the checks.
  */
-#define VM_REMOVE_LEN(vm, ptr, len, numMove)                     \
-    {                                                            \
-        memmove((ptr), (ptr) + (len), (numMove) * sizeof(dint)); \
-        d_vm_popn(vm, len);                                      \
+#define VM_REMOVE_LEN(vm, ptr, len, numMove)                           \
+    {                                                                  \
+        memmove((ptr), (ptr) + (len), (numMove) * sizeof(StackEntry)); \
+        d_vm_popn(vm, len);                                            \
     }
 
 /**
@@ -587,15 +696,7 @@ void d_vm_remove_len(DVM *vm, dint index, size_t len) {
         if (index == 0) {
             d_vm_popn(vm, 1);
         } else {
-            dint *removePtr;
-
-            if (index > 0) {
-                // Get the position relative to the frame pointer.
-                removePtr = VM_GET_FRAME_PTR(vm, index);
-            } else {
-                // Get the position relative to the stack pointer.
-                removePtr = VM_GET_STACK_PTR(vm, index);
-            }
+            dint *removePtr = VM_GET_PTR(vm, index);
 
             if (removePtr >= vm->basePtr && removePtr <= vm->stackPtr) {
                 const size_t max = (vm->stackPtr - removePtr) + 1;
@@ -611,8 +712,9 @@ void d_vm_remove_len(DVM *vm, dint index, size_t len) {
 }
 
 /**
- * \fn void d_vm_set(DVM *vm, dint index, dint value)
- * \brief Set the value of an element in the stack at a particular index.
+ * \fn void d_vm_set_int(DVM *vm, dint index, dint value)
+ * \brief Set the value of an element in the stack at a particular index to be
+ * a given integer.
  *
  * * If `index` is positive, it will index relative to the start of the stack
  * frame.
@@ -620,21 +722,19 @@ void d_vm_remove_len(DVM *vm, dint index, size_t len) {
  *
  * \param vm The VM whose stack to set the element of.
  * \param index The index of the stack.
- * \param value The value to set.
+ * \param value The integer value to set.
  */
 void d_vm_set(DVM *vm, dint index, dint value) {
-    if (index > 0) {
-        // Set the value relative to the frame pointer.
-        *VM_GET_FRAME_PTR(vm, index) = value;
-    } else {
-        // Set the value relative to the stack pointer.
-        *VM_GET_STACK_PTR(vm, index) = value;
-    }
+    StackEntry *entry = VM_GET_PTR(vm, index);
+    entry->data.i     = value;
+    entry->type       = TYPE_INT;
+    entry->free       = false;
 }
 
 /**
  * \fn void d_vm_set_float(DVM *vm, dint index, dfloat value)
- * \brief Set the value of an element in the stack at a particular index.
+ * \brief Set the value of an element in the stack at a particular index to be
+ * a given float.
  *
  * * If `index` is positive, it will index relative to the start of the stack
  * frame.
@@ -642,17 +742,19 @@ void d_vm_set(DVM *vm, dint index, dint value) {
  *
  * \param vm The VM whose stack to set the element of.
  * \param index The index of the stack.
- * \param value The value to set.
+ * \param value The float value to set.
  */
 void d_vm_set_float(DVM *vm, dint index, dfloat value) {
-    dint intValue = *((dint *)(&value));
-
-    d_vm_set(vm, index, intValue);
+    StackEntry *entry = VM_GET_PTR(vm, index);
+    entry->data.f     = value;
+    entry->type       = TYPE_FLOAT;
+    entry->free       = false;
 }
 
 /**
- * \fn void d_vm_set_ptr(DVM *vm, dint index, void *ptr)
- * \brief Set the value of an element in the stack at a particular index.
+ * \fn void d_vm_set_str(DVM *vm, dint index, char *str, bool mark)
+ * \brief Set the value of an element in the stack at a particular index to be
+ * a given string.
  *
  * * If `index` is positive, it will index relative to the start of the stack
  * frame.
@@ -660,12 +762,35 @@ void d_vm_set_float(DVM *vm, dint index, dfloat value) {
  *
  * \param vm The VM whose stack to set the element of.
  * \param index The index of the stack.
- * \param ptr The value to set.
+ * \param str The string value to set.
+ * \param mark Mark this string to be freed when it is poped from the stack by
+ * the VM.
  */
-void d_vm_set_ptr(DVM *vm, dint index, void *ptr) {
-    dint value = (dint)ptr;
+void d_vm_set_str(DVM *vm, dint index, char *str, bool mark) {
+    StackEntry *entry = VM_GET_PTR(vm, index);
+    entry->data.p     = str;
+    entry->type       = TYPE_STRING;
+    entry->free       = mark;
+}
 
-    d_vm_set(vm, index, value);
+/**
+ * \fn void d_vm_set_bool(DVM *vm, dint index, bool value)
+ * \brief Set the value of an element in the stack at a particular index to be
+ * a given boolean.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \param vm The VM whose stack to set the element of.
+ * \param index The index of the stack.
+ * \param value The boolean value to set.
+ */
+void d_vm_set_bool(DVM *vm, dint index, bool value) {
+    StackEntry *entry = VM_GET_PTR(vm, index);
+    entry->data.b     = value;
+    entry->type       = TYPE_BOOL;
+    entry->free       = false;
 }
 
 /**
@@ -682,6 +807,27 @@ size_t d_vm_top(DVM *vm) {
     }
 
     return (size_t)((vm->stackPtr - vm->basePtr) + 1);
+}
+
+/**
+ * \fn DType d_vm_type(DVM *vm, dint index)
+ * \brief Get the type of the stack element at a particular index.
+ *
+ * * If `index` is positive, it will index relative to the start of the stack
+ * frame.
+ * * If `index` is non-positive, it will index relative to the top of the stack.
+ *
+ * \return The type of the stack element at the given index.
+ *
+ * \param vm The VM whose stack to get the element from.
+ * \param index The index of the stack.
+ */
+DType d_vm_type(DVM *vm, dint index) {
+    if (vm->basePtr == NULL) {
+        return TYPE_NONE;
+    }
+
+    return VM_GET(vm, index).type;
 }
 
 /*
@@ -733,6 +879,7 @@ void d_vm_reset(DVM *vm) {
     vm->pc      = 0;
     vm->_inc_pc = 0;
 
+    vm->stackSize = 0;
     vm_set_stack_size_to(vm, VM_STACK_SIZE_MIN);
 
     dint *ptr    = vm->basePtr - 1;
@@ -751,10 +898,8 @@ void d_vm_reset(DVM *vm) {
  * \param vm The Decision VM to free.
  */
 void d_vm_free(DVM *vm) {
-    if (vm->basePtr != NULL) {
-        free(vm->basePtr);
-        vm->basePtr = NULL;
-    }
+    // This should free the stack for us.
+    vm_set_stack_size_to(vm, 0);
 }
 
 /**
