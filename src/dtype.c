@@ -70,6 +70,8 @@ const char *d_type_name(DType type) {
             return "Boolean";
         case TYPE_NAME:
             return "Name";
+        case TYPE_PTR:
+            return "Pointer";
         // Vague types:
         case TYPE_NUMBER:
             return "Number; Integer/Float";

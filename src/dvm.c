@@ -955,163 +955,6 @@ void d_vm_runtime_error(DVM *vm, const char *error) {
 #define GET_FIMMEDIATE(offset) GET_IMMEDIATE(fimmediate_t, offset)
 
 /**
- * \def OP_1_1_I(sym, fun)
- * \brief A helper macro for opcodes with 1 input and 1 output involving
- * integers, and an immediate.
- */
-#define OP_1_1_I(sym, fun)                   \
-    {                                        \
-        dint *top = VM_GET_STACK_PTR(vm, 0); \
-        *top      = *top sym fun(1);         \
-    }
-
-/**
- * \def OP_2_1(sym)
- * \brief A helper macro for opcodes with 2 inputs and 1 output involving
- * integers.
- */
-#define OP_2_1(sym)                                                  \
-    {                                                                \
-        dint value = (VM_GET_STACK(vm, 0) sym VM_GET_STACK(vm, -1)); \
-        *VM_GET_STACK_PTR(vm, -1) = value;                           \
-        d_vm_popn(vm, 1);                                            \
-    }
-
-/**
- * \def OP_2_1_F(sym)
- * \brief A helper macro for opcodes with 2 inputs and 1 output involving
- * floats.
- */
-#define OP_2_1_F(sym)                                                   \
-    {                                                                   \
-        dfloat value =                                                  \
-            (VM_GET_STACK_FLOAT(vm, 0) sym VM_GET_STACK_FLOAT(vm, -1)); \
-        *VM_GET_STACK_FLOAT_PTR(vm, -1) = value;                        \
-        d_vm_popn(vm, 1);                                               \
-    }
-
-/**
- * \def OP_2_1_C(sym)
- * \brief A helper macro for opcodes with 2 inputs and 1 output involving
- * comparisons with floats.
- */
-#define OP_2_1_C(sym)                                                   \
-    {                                                                   \
-        dint value =                                                    \
-            (VM_GET_STACK_FLOAT(vm, 0) sym VM_GET_STACK_FLOAT(vm, -1)); \
-        *VM_GET_STACK_PTR(vm, -1) = value;                              \
-        d_vm_popn(vm, 1);                                               \
-    }
-
-/**
- * \def CALL_GENERIC(sym, newPC, offset)
- * \brief A generic helper macro for call opcodes.
- */
-#define CALL_GENERIC(sym, newPC, offset)                                  \
-    {                                                                     \
-        const uint8_t numArguments = (uint8_t)GET_BIMMEDIATE(offset);     \
-        char *returnAdr = vm->pc + VM_INS_SIZE[(unsigned char)*(vm->pc)]; \
-        vm->pc sym newPC;                                                 \
-        dint *insertPtr     = vm->stackPtr - numArguments + 1;            \
-        ptrdiff_t baseIndex = insertPtr - vm->basePtr;                    \
-        VM_INSERT_LEN(vm, baseIndex, 2, numArguments)                     \
-        insertPtr  = vm->basePtr + baseIndex;                             \
-        *insertPtr = (dint)(vm->framePtr - vm->basePtr);                  \
-        insertPtr++;                                                      \
-        *insertPtr   = (dint)returnAdr;                                   \
-        vm->framePtr = insertPtr;                                         \
-        vm->_inc_pc  = 0;                                                 \
-    }
-
-/**
- * \def CALL_1_0(sym)
- * \brief A helper macro for call opcodes with 1 input and 0 outputs.
- *
- * **NOTE:** Here we just decrement the stack pointer instead of using
- * `d_vm_popn`, since `VM_INSERT_LEN` pushed 2 times, it makes an overall
- * difference of 1 element being pushed on, so the stack should not have to be
- * decreased in size. This is simply an optimisation.
- */
-#define CALL_1_0(sym)                              \
-    {                                              \
-        CALL_GENERIC(sym, VM_GET_STACK(vm, 0), 1); \
-        vm->stackPtr--;                            \
-    }
-
-/**
- * \def CALL_0_0_BI(sym)
- * \brief A helper macro for call opcodes with 0 inputs and 0 outputs,
- * involving a byte immediate.
- */
-#define CALL_0_0_BI(sym) \
-    CALL_GENERIC(sym, GET_BIMMEDIATE(1), 1 + BIMMEDIATE_SIZE)
-
-/**
- * \def CALL_0_0_HI(sym)
- * \brief A helper macro for call opcodes with 0 inputs and 0 outputs,
- * involving a half immediate.
- */
-#define CALL_0_0_HI(sym) \
-    CALL_GENERIC(sym, GET_HIMMEDIATE(1), 1 + HIMMEDIATE_SIZE)
-
-/**
- * \def CALL_0_0_FI(sym)
- * \brief A helper macro for call opcodes with 0 inputs and 0 outputs,
- * involving a full immediate.
- */
-#define CALL_0_0_FI(sym) \
-    CALL_GENERIC(sym, GET_FIMMEDIATE(1), 1 + FIMMEDIATE_SIZE)
-
-/**
- * \def J_0_0_I(sym)
- * \brief A helper macro for jump opcodes with 0 inputs and 0 outputs, and an
- * immediate.
- */
-#define J_0_0_I(sym, fun)  \
-    {                      \
-        vm->pc sym fun(1); \
-        vm->_inc_pc = 0;   \
-    }
-
-/**
- * \def J_1_0(sym)
- * \brief A helper macro for jump opcodes with 1 input and 0 outputs.
- */
-#define J_1_0(sym)                      \
-    {                                   \
-        vm->pc sym VM_GET_STACK(vm, 0); \
-        d_vm_popn(vm, 1);               \
-        vm->_inc_pc = 0;                \
-    }
-
-/**
- * \def JCON_1_0_I(sym, fun)
- * \brief A helper macro for jump condition opcodes with 1 input and 0 outputs,
- * and an immediate.
- */
-#define JCON_1_0_I(sym, fun)       \
-    {                              \
-        if (VM_GET_STACK(vm, 0)) { \
-            vm->pc sym fun(1);     \
-            vm->_inc_pc = 0;       \
-        }                          \
-        d_vm_popn(vm, 1);          \
-    }
-
-/**
- * \def JCON_2_0(sym)
- * \brief A helper macro for jump condition opcodes with 2 inputs and 0 outputs.
- */
-#define JCON_2_0(sym)                        \
-    {                                        \
-        if (VM_GET_STACK(vm, 0)) {           \
-            vm->pc sym VM_GET_STACK(vm, -1); \
-            vm->_inc_pc = 0;                 \
-        }                                    \
-        d_vm_popn(vm, 2);                    \
-    }
-
-/**
  * \fn void d_vm_parse_ins_at_pc(DVM *vm)
  * \brief Given a Decision VM, at it's current position in the program, parse
  * the instruction at that position.
@@ -1128,6 +971,9 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
     // However, if we're about to perform a jump, we need to set this value to
     // 0.
     vm->_inc_pc = VM_INS_SIZE[opcode];
+
+    StackEntry *entry0 = vm->stackPtr;
+    StackEntry *entry1 = vm->stackPtr - 1;
 
     // Do stuff depending on what the opcode is.
     switch (opcode) {
@@ -1146,13 +992,22 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
 
                 // The frame pointer is now pointing at the saved program
                 // counter, i.e. the return address.
-                dint *ptr = vm->framePtr;
-                vm->pc    = (char *)(*ptr);
+                StackEntry *ptr = vm->framePtr;
+                if (ptr->type != TYPE_PTR) {
+                    d_vm_runtime_error(vm, "Return address is not a pointer");
+                    break;
+                }
+                vm->pc = ptr->data.p;
 
                 // The element before that is the saved frame pointer
                 // difference of the last stack frame.
                 ptr--;
-                vm->framePtr = vm->basePtr + *ptr;
+                if (ptr->type != TYPE_INT) {
+                    d_vm_runtime_error(vm,
+                                       "Saved frame offset is not an integer");
+                    break;
+                }
+                vm->framePtr = vm->basePtr + ptr->data.i;
 
                 // Now this position is where the return values should go.
                 const size_t lenRemove =
@@ -1165,43 +1020,206 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             break;
 
         case OP_ADD:;
-            OP_2_1(+)
-            break;
-
-        case OP_ADDF:;
-            OP_2_1_F(+)
+            if (entry0->type == TYPE_FLOAT) {
+                if (entry1->type == TYPE_FLOAT) {
+                    entry1->data.f += entry0->data.f;
+                } else if (entry1->type == TYPE_INT) {
+                    entry1->data.f = entry0->data.f + entry1->data.i;
+                    entry1->type   = TYPE_FLOAT;
+                } else {
+                    ERROR_RUNTIME(vm, "Cannot ADD %s and %s",
+                                  d_type_name(entry0->type),
+                                  d_type_name(entry1->type));
+                    break;
+                }
+            } else if (entry0->type == TYPE_INT) {
+                if (entry1->type == TYPE_FLOAT) {
+                    entry1->data.f += entry0->data.i;
+                } else if (entry1->type == TYPE_INT) {
+                    entry1->data.i += entry0->data.i;
+                } else {
+                    ERROR_RUNTIME(vm, "Cannot ADD %s and %s",
+                                  d_type_name(entry0->type),
+                                  d_type_name(entry1->type));
+                    break;
+                }
+            } else {
+                ERROR_RUNTIME(vm, "Cannot ADD %s and %s",
+                              d_type_name(entry0->type),
+                              d_type_name(entry1->type));
+                break;
+            }
+            d_vm_popn(vm, 1);
             break;
 
         case OP_ADDBI:;
-            OP_1_1_I(+, GET_BIMMEDIATE)
+            if (entry0->type == TYPE_FLOAT) {
+                entry0->data.f += GET_BIMMEDIATE(1);
+            } else if (entry0->type == TYPE_INT) {
+                entry0->data.i += GET_BIMMEDIATE(1);
+            } else {
+                ERROR_RUNTIME(vm, "Cannot ADDBI %s", d_type_name(entry0->type));
+                break;
+            }
             break;
 
         case OP_ADDHI:;
-            OP_1_1_I(+, GET_HIMMEDIATE)
+            if (entry0->type == TYPE_FLOAT) {
+                entry0->data.f += GET_HIMMEDIATE(1);
+            } else if (entry0->type == TYPE_INT) {
+                entry0->data.i += GET_HIMMEDIATE(1);
+            } else {
+                ERROR_RUNTIME(vm, "Cannot ADDHI %s", d_type_name(entry0->type));
+                break;
+            }
             break;
 
         case OP_ADDFI:;
-            OP_1_1_I(+, GET_FIMMEDIATE)
+            if (entry0->type == TYPE_FLOAT) {
+                entry0->data.f += GET_FIMMEDIATE(1);
+            } else if (entry0->type == TYPE_INT) {
+                entry0->data.i += GET_FIMMEDIATE(1);
+            } else {
+                ERROR_RUNTIME(vm, "Cannot ADDFI %s", d_type_name(entry0->type));
+                break;
+            }
             break;
 
         case OP_AND:;
-            OP_2_1(&)
+            if (entry0->type == TYPE_INT) {
+                if (entry1->type == TYPE_INT) {
+                    entry1->data.i &= entry0->data.i;
+                } else {
+                    ERROR_RUNTIME(vm, "Cannot AND %s and %s",
+                                  d_type_name(entry0->type),
+                                  d_type_name(entry1->type));
+                    break;
+                }
+            } else if (entry0->type == TYPE_BOOL) {
+                if (entry1->type == TYPE_BOOL) {
+                    entry1->data.b &= entry0->data.b;
+                } else {
+                    ERROR_RUNTIME(vm, "Cannot AND %s and %s",
+                                  d_type_name(entry0->type),
+                                  d_type_name(entry1->type));
+                    break;
+                }
+            } else {
+                ERROR_RUNTIME(vm, "Cannot AND %s and %s",
+                              d_type_name(entry0->type),
+                              d_type_name(entry1->type));
+                break;
+            }
+            d_vm_popn(vm, 1);
             break;
 
         case OP_ANDBI:;
-            OP_1_1_I(&, GET_BIMMEDIATE)
+            if (entry0->type == TYPE_INT) {
+                entry0->data.i &= GET_BIMMEDIATE(1);
+            } else if (entry0->type == TYPE_BOOL) {
+                entry0->data.b &= !!(GET_BIMMEDIATE(1));
+            } else {
+                ERROR_RUNTIME(vm, "Cannot ANDBI %s", d_type_name(entry0->type));
+                break;
+            }
             break;
 
         case OP_ANDHI:;
-            OP_1_1_I(&, GET_HIMMEDIATE)
+            if (entry0->type == TYPE_INT) {
+                entry0->data.i &= GET_HIMMEDIATE(1);
+            } else if (entry0->type == TYPE_BOOL) {
+                entry0->data.b &= !!(GET_HIMMEDIATE(1));
+            } else {
+                ERROR_RUNTIME(vm, "Cannot ANDHI %s", d_type_name(entry0->type));
+                break;
+            }
             break;
 
         case OP_ANDFI:;
-            OP_1_1_I(&, GET_FIMMEDIATE)
+            if (entry0->type == TYPE_INT) {
+                entry0->data.i &= GET_FIMMEDIATE(1);
+            } else if (entry0->type == TYPE_BOOL) {
+                entry0->data.b &= !!(GET_FIMMEDIATE(1));
+            } else {
+                ERROR_RUNTIME(vm, "Cannot ANDFI %s", d_type_name(entry0->type));
+                break;
+            }
             break;
 
-        case OP_CALL:;
-            CALL_1_0(= (char *))
+        case OP_CALL:
+        case OP_CALLI:
+        case OP_CALLR:
+        case OP_CALLRB:
+        case OP_CALLRH:
+        case OP_CALLRF:;
+            // Get the number of arguments.
+            size_t offset = 1;
+
+            if (opcode == OP_CALLRB) {
+                offset += BIMMEDIATE_SIZE;
+            } else if (opcode == OP_CALLRH) {
+                offset += HIMMEDIATE_SIZE;
+            } else if (opcode == OP_CALLRF) {
+                offset += FIMMEDIATE_SIZE;
+            }
+
+            const uint8_t numArguments = (uint8_t)GET_BIMMEDIATE(offset);
+
+            // Get the address that the PC should be set to when the call
+            // returns.
+            char *retAdr = vm->pc + VM_INS_SIZE[(unsigned char)*(vm->pc)];
+
+            // Manipulate the PC.
+            if (opcode == OP_CALL) {
+                if (entry0->type == TYPE_PTR) {
+                    vm->pc = entry0->data.p;
+
+                    // The stack is about to get inserted to, so don't bother
+                    // using d_vm_popn.
+                    vm->stackPtr--;
+                } else {
+                    d_vm_runtime_error(vm, "CALL argument is not a pointer");
+                    break;
+                }
+            } else if (opcode == OP_CALLI) {
+                vm->pc = GET_FIMMEDIATE(1);
+            } else if (opcode == OP_CALLR) {
+                if (entry0->type == TYPE_INT) {
+                    vm->pc += entry0->data.i;
+
+                    // The stack is about to get inserted to, so don't bother
+                    // using d_vm_popn.
+                    vm->stackPtr--;
+                } else {
+                    d_vm_runtime_error(vm, "CALLR argument is not an integer");
+                    break;
+                }
+            } else if (opcode == OP_CALLRB) {
+                vm->pc += GET_BIMMEDIATE(1);
+            } else if (opcode == OP_CALLRH) {
+                vm->pc += GET_HIMMEDIATE(1);
+            } else if (opcode == OP_CALLRF) {
+                vm->pc += GET_FIMMEDIATE(1);
+            }
+
+            StackEntry *insertPtr = vm->stackPtr - numArguments + 1;
+            ptrdiff_t baseIndex   = insertPtr - vm->basePtr;
+
+            // Insert the frame pointer offset and the return address.
+            VM_INSERT_LEN(vm, baseIndex, 2, numArguments);
+            insertPtr = vm->basePtr + baseIndex;
+
+            insertPtr->data.i = (dint)(vm->framePtr - vm->basePtr);
+            insertPtr->type   = TYPE_INT;
+            insertPtr->free   = false;
+
+            insertPtr++;
+            insertPtr->data.p = retAdr;
+            insertPtr->type   = TYPE_PTR;
+            insertPtr->free   = false;
+
+            vm->framePtr = insertPtr;
+            vm->_inc_pc  = 0;
             break;
 
         case OP_CALLC:
@@ -1210,7 +1228,7 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             uint8_t numArgs;
 
             if (opcode == OP_CALLC) {
-                cFunc = (CFunction *)VM_GET_STACK(vm, 0);
+                cFunc = (CFunction *)entry0->data.p;
                 d_vm_popn(vm, 1);
 
                 numArgs = (uint8_t)GET_BIMMEDIATE(1);
@@ -1233,72 +1251,199 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             vm->framePtr = savedFramePtr;
             break;
 
-        case OP_CALLI:;
-            CALL_0_0_FI(= (char *))
-            break;
-
-        case OP_CALLR:;
-            CALL_1_0(+=)
-            break;
-
-        case OP_CALLRB:;
-            CALL_0_0_BI(+=)
-            break;
-
-        case OP_CALLRH:;
-            CALL_0_0_HI(+=)
-            break;
-
-        case OP_CALLRF:;
-            CALL_0_0_FI(+=)
-            break;
-
         case OP_CEQ:;
-            OP_2_1(==)
-            break;
-
-        case OP_CEQF:;
-            OP_2_1_C(==)
+            if (entry0->type == TYPE_FLOAT) {
+                if (entry1->type == TYPE_FLOAT) {
+                    entry1->data.b = (entry0->data.f == entry0->data.f);
+                } else if (entry1->type == TYPE_INT) {
+                    entry1->data.b = (entry0->data.f == (dfloat)entry0->data.i);
+                } else {
+                    ERROR_RUNTIME(vm, "Cannot CEQ %s and %s",
+                                  d_type_name(entry0->type),
+                                  d_type_name(entry1->type));
+                    break;
+                }
+            } else if (entry0->type == TYPE_INT) {
+                if (entry1->type == TYPE_FLOAT) {
+                    entry1->data.b = ((dfloat)entry0->data.i == entry0->data.f);
+                } else if (entry1->type == TYPE_INT) {
+                    entry1->data.b = (entry0->data.i == entry0->data.i);
+                } else {
+                    ERROR_RUNTIME(vm, "Cannot CEQ %s and %s",
+                                  d_type_name(entry0->type),
+                                  d_type_name(entry1->type));
+                    break;
+                }
+            // Booleans should only be comparable via equals!
+            } else if (entry0->type == TYPE_BOOL) {
+                if (entry1->type == TYPE_BOOL) {
+                    entry1->data.b = (entry0->data.b == entry0->data.b);
+                } else {
+                    ERROR_RUNTIME(vm, "Cannot CEQ %s and %s",
+                                  d_type_name(entry0->type),
+                                  d_type_name(entry1->type));
+                    break;
+                }
+            } else {
+                ERROR_RUNTIME(vm, "Cannot CEQ %s and %s",
+                              d_type_name(entry0->type),
+                              d_type_name(entry1->type));
+                break;
+            }
+            entry1->type = TYPE_BOOL;
+            d_vm_popn(vm, 1);
             break;
 
         case OP_CLEQ:;
-            OP_2_1(<=)
-            break;
-
-        case OP_CLEQF:;
-            OP_2_1_C(<=)
+            if (entry0->type == TYPE_FLOAT) {
+                if (entry1->type == TYPE_FLOAT) {
+                    entry1->data.b = (entry0->data.f <= entry0->data.f);
+                } else if (entry1->type == TYPE_INT) {
+                    entry1->data.b = (entry0->data.f <= (dfloat)entry0->data.i);
+                } else {
+                    ERROR_RUNTIME(vm, "Cannot CLEQ %s and %s",
+                                  d_type_name(entry0->type),
+                                  d_type_name(entry1->type));
+                    break;
+                }
+            } else if (entry0->type == TYPE_INT) {
+                if (entry1->type == TYPE_FLOAT) {
+                    entry1->data.b = ((dfloat)entry0->data.i <= entry0->data.f);
+                } else if (entry1->type == TYPE_INT) {
+                    entry1->data.b = (entry0->data.i <= entry0->data.i);
+                } else {
+                    ERROR_RUNTIME(vm, "Cannot CLEQ %s and %s",
+                                  d_type_name(entry0->type),
+                                  d_type_name(entry1->type));
+                    break;
+                }
+            } else {
+                ERROR_RUNTIME(vm, "Cannot CLEQ %s and %s",
+                              d_type_name(entry0->type),
+                              d_type_name(entry1->type));
+                break;
+            }
+            entry1->type = TYPE_BOOL;
+            d_vm_popn(vm, 1);
             break;
 
         case OP_CLT:;
-            OP_2_1(<)
-            break;
-
-        case OP_CLTF:;
-            OP_2_1_C(<)
+            if (entry0->type == TYPE_FLOAT) {
+                if (entry1->type == TYPE_FLOAT) {
+                    entry1->data.b = (entry0->data.f < entry0->data.f);
+                } else if (entry1->type == TYPE_INT) {
+                    entry1->data.b = (entry0->data.f < (dfloat)entry0->data.i);
+                } else {
+                    ERROR_RUNTIME(vm, "Cannot CLT %s and %s",
+                                  d_type_name(entry0->type),
+                                  d_type_name(entry1->type));
+                    break;
+                }
+            } else if (entry0->type == TYPE_INT) {
+                if (entry1->type == TYPE_FLOAT) {
+                    entry1->data.b = ((dfloat)entry0->data.i < entry0->data.f);
+                } else if (entry1->type == TYPE_INT) {
+                    entry1->data.b = (entry0->data.i < entry0->data.i);
+                } else {
+                    ERROR_RUNTIME(vm, "Cannot CLT %s and %s",
+                                  d_type_name(entry0->type),
+                                  d_type_name(entry1->type));
+                    break;
+                }
+            } else {
+                ERROR_RUNTIME(vm, "Cannot CLT %s and %s",
+                              d_type_name(entry0->type),
+                              d_type_name(entry1->type));
+                break;
+            }
+            entry1->type = TYPE_BOOL;
+            d_vm_popn(vm, 1);
             break;
 
         case OP_CMEQ:;
-            OP_2_1(>=)
-            break;
-
-        case OP_CMEQF:;
-            OP_2_1_C(>=)
+            if (entry0->type == TYPE_FLOAT) {
+                if (entry1->type == TYPE_FLOAT) {
+                    entry1->data.b = (entry0->data.f >= entry0->data.f);
+                } else if (entry1->type == TYPE_INT) {
+                    entry1->data.b = (entry0->data.f >= (dfloat)entry0->data.i);
+                } else {
+                    ERROR_RUNTIME(vm, "Cannot CMEQ %s and %s",
+                                  d_type_name(entry0->type),
+                                  d_type_name(entry1->type));
+                    break;
+                }
+            } else if (entry0->type == TYPE_INT) {
+                if (entry1->type == TYPE_FLOAT) {
+                    entry1->data.b = ((dfloat)entry0->data.i >= entry0->data.f);
+                } else if (entry1->type == TYPE_INT) {
+                    entry1->data.b = (entry0->data.i >= entry0->data.i);
+                } else {
+                    ERROR_RUNTIME(vm, "Cannot CMEQ %s and %s",
+                                  d_type_name(entry0->type),
+                                  d_type_name(entry1->type));
+                    break;
+                }
+            } else {
+                ERROR_RUNTIME(vm, "Cannot CMEQ %s and %s",
+                              d_type_name(entry0->type),
+                              d_type_name(entry1->type));
+                break;
+            }
+            entry1->type = TYPE_BOOL;
+            d_vm_popn(vm, 1);
             break;
 
         case OP_CMT:;
-            OP_2_1(>)
-            break;
-
-        case OP_CMTF:;
-            OP_2_1_C(>)
+            if (entry0->type == TYPE_FLOAT) {
+                if (entry1->type == TYPE_FLOAT) {
+                    entry1->data.b = (entry0->data.f > entry0->data.f);
+                } else if (entry1->type == TYPE_INT) {
+                    entry1->data.b = (entry0->data.f > (dfloat)entry0->data.i);
+                } else {
+                    ERROR_RUNTIME(vm, "Cannot CMT %s and %s",
+                                  d_type_name(entry0->type),
+                                  d_type_name(entry1->type));
+                    break;
+                }
+            } else if (entry0->type == TYPE_INT) {
+                if (entry1->type == TYPE_FLOAT) {
+                    entry1->data.b = ((dfloat)entry0->data.i > entry0->data.f);
+                } else if (entry1->type == TYPE_INT) {
+                    entry1->data.b = (entry0->data.i > entry0->data.i);
+                } else {
+                    ERROR_RUNTIME(vm, "Cannot CMT %s and %s",
+                                  d_type_name(entry0->type),
+                                  d_type_name(entry1->type));
+                    break;
+                }
+            } else {
+                ERROR_RUNTIME(vm, "Cannot CMT %s and %s",
+                              d_type_name(entry0->type),
+                              d_type_name(entry1->type));
+                break;
+            }
+            entry1->type = TYPE_BOOL;
+            d_vm_popn(vm, 1);
             break;
 
         case OP_CVTF:;
-            *VM_GET_STACK_FLOAT_PTR(vm, 0) = (dfloat)VM_GET_STACK(vm, 0);
+            if (entry0->type == TYPE_INT) {
+                entry0->data.f = (dfloat)entry0->data.i;
+                entry0->type   = TYPE_FLOAT;
+            } else {
+                d_vm_runtime_error(vm, "CVTF argument is not an integer");
+                break;
+            }
             break;
 
         case OP_CVTI:;
-            *VM_GET_STACK_PTR(vm, 0) = (dint)VM_GET_STACK_FLOAT(vm, 0);
+            if (entry0->type == TYPE_FLOAT) {
+                entry0->data.i = (dint)entry0->data.f;
+                entry0->type   = TYPE_INT;
+            } else {
+                d_vm_runtime_error(vm, "CVTI argument is not a float");
+                break;
+            }
             break;
 
         case OP_DEREF:;
@@ -1633,7 +1778,7 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             break;
 
         default:
-            ERROR_RUNTIME(vm, "unknown opcode %d", opcode);
+            ERROR_RUNTIME(vm, "Unknown opcode %d", opcode);
             break;
     }
 }
@@ -1708,7 +1853,7 @@ void d_vm_dump(DVM *vm) {
         dint offset = ptr - vm->stackPtr;
         printf("%" DINT_PRINTF_d "\t= ", offset);
 
-        switch(ptr->type) {
+        switch (ptr->type) {
             case TYPE_INT:
                 printf("%" DINT_PRINTF_d " (Integer)", ptr->data.i);
                 break;
