@@ -52,16 +52,8 @@ static const unsigned char VM_INS_SIZE[NUM_OPCODES] = {
     1,                                     // OP_CMT
     1,                                     // OP_CVTF
     1,                                     // OP_CVTI
-    1,                                     // OP_DEREFI
-    1 + FIMMEDIATE_SIZE,                   // OP_DEREFII
-    1,                                     // OP_DEREFF
-    1 + FIMMEDIATE_SIZE,                   // OP_DEREFFI
-    1,                                     // OP_DEREFS
-    1 + FIMMEDIATE_SIZE,                   // OP_DEREFSI
-    1,                                     // OP_DEREFB
-    1 + FIMMEDIATE_SIZE,                   // OP_DEREFBI
-    1,                                     // OP_DEREFP
-    1 + FIMMEDIATE_SIZE,                   // OP_DEREFPI
+    1,                                     // OP_DEREF
+    1 + FIMMEDIATE_SIZE,                   // OP_DEREFI
     1,                                     // OP_DIV
     1 + BIMMEDIATE_SIZE,                   // OP_DIVBI
     1 + HIMMEDIATE_SIZE,                   // OP_DIVHI
@@ -111,11 +103,8 @@ static const unsigned char VM_INS_SIZE[NUM_OPCODES] = {
     1 + BIMMEDIATE_SIZE,                   // OP_PUSHNB
     1 + HIMMEDIATE_SIZE,                   // OP_PUSHNH
     1 + FIMMEDIATE_SIZE,                   // OP_PUSHNF
-    1,                                     // OP_SETADRI
-    1,                                     // OP_SETADRF
-    1,                                     // OP_SETADRS
-    1,                                     // OP_SETADRB
-    1,                                     // OP_SETADRP
+    1,                                     // OP_SETADR
+    1 + FIMMEDIATE_SIZE,                   // OP_SETADR
     1,                                     // OP_SUB
     1 + BIMMEDIATE_SIZE,                   // OP_SUBBI
     1 + HIMMEDIATE_SIZE,                   // OP_SUBHI
@@ -1274,7 +1263,7 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
                                   d_type_name(entry1->type));
                     break;
                 }
-            // Booleans should only be comparable via equals!
+                // Booleans should only be comparable via equals!
             } else if (entry0->type == TYPE_BOOL) {
                 if (entry1->type == TYPE_BOOL) {
                     entry1->data.b = (entry0->data.b == entry0->data.b);
