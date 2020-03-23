@@ -911,14 +911,6 @@ void d_vm_runtime_error(DVM *vm, const char *error) {
     vm->runtimeError = true;
 }
 
-/*
-    NOTE: The following helper macros are used extensively in
-    d_vm_parse_ins_at_pc. Since this function is going to be called a LOT,
-    these helper macros need to be as efficient as possible. This means things
-    like using as few functions as possible, making as less calculations as
-    possible, etc.
-*/
-
 /**
  * \def GET_IMMEDIATE(tm, offset)
  * \brief A helper macro for getting a generic immediate value.
@@ -1436,129 +1428,261 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             break;
 
         case OP_DEREF:;
-            *VM_GET_STACK_PTR(vm, 0) = *((dint *)VM_GET_STACK(vm, 0));
+            if (entry0->type == TYPE_PTR) {
+                *entry0 = *(StackEntry *)entry0->data.p;
+            } else {
+                d_vm_runtime_error(vm, "DEREF argument is not a pointer");
+                break;
+            }
             break;
 
         case OP_DEREFI:;
             d_vm_pushn(vm, 1);
-            *VM_GET_STACK_PTR(vm, 0) = *((dint *)GET_FIMMEDIATE(1));
-            break;
-
-        case OP_DEREFB:;
-            *VM_GET_STACK_PTR(vm, 0) = *((uint8_t *)VM_GET_STACK(vm, 0));
-            break;
-
-        case OP_DEREFBI:;
-            d_vm_pushn(vm, 1);
-            *VM_GET_STACK_PTR(vm, 0) = *((uint8_t *)GET_FIMMEDIATE(1));
+            *(vm->stackPtr) = *(StackEntry *)GET_FIMMEDIATE(1);
             break;
 
         case OP_DIV:;
-            if (VM_GET_STACK(vm, -1) == 0) {
+            if ((entry1->type == TYPE_FLOAT && entry1->data.f == 0.0) ||
+                (entry1->type == TYPE_INT && entry1->data.i == 0)) {
                 d_vm_runtime_error(vm, "Division by 0");
-            } else {
-                OP_2_1(/)
+                break;
             }
-            break;
 
-        case OP_DIVF:;
-            if (VM_GET_STACK_FLOAT(vm, -1) == 0.0) {
-                d_vm_runtime_error(vm, "Division by 0");
+            if (entry0->type == TYPE_FLOAT) {
+                if (entry1->type == TYPE_FLOAT) {
+                    entry1->data.f = entry0->data.f / entry1->data.f;
+                } else if (entry1->type == TYPE_INT) {
+                    entry1->data.f = entry0->data.f / entry1->data.i;
+                    entry1->type   = TYPE_FLOAT;
+                } else {
+                    ERROR_RUNTIME(vm, "Cannot DIV %s and %s",
+                                  d_type_name(entry0->type),
+                                  d_type_name(entry1->type));
+                    break;
+                }
+            } else if (entry0->type == TYPE_INT) {
+                if (entry1->type == TYPE_FLOAT) {
+                    entry1->data.f = entry0->data.i / entry1->data.f;
+                } else if (entry1->type == TYPE_INT) {
+                    entry1->data.f = (dfloat)entry0->data.i / entry1->data.i;
+                    entry1->type   = TYPE_FLOAT;
+                } else {
+                    ERROR_RUNTIME(vm, "Cannot DIV %s and %s",
+                                  d_type_name(entry0->type),
+                                  d_type_name(entry1->type));
+                    break;
+                }
             } else {
-                OP_2_1_F(/)
+                ERROR_RUNTIME(vm, "Cannot DIV %s and %s",
+                              d_type_name(entry0->type),
+                              d_type_name(entry1->type));
+                break;
             }
+            d_vm_popn(vm, 1);
             break;
 
         case OP_DIVBI:;
             if (GET_BIMMEDIATE(1) == 0) {
                 d_vm_runtime_error(vm, "Division by 0");
+                break;
+            }
+
+            if (entry0->type == TYPE_FLOAT) {
+                entry0->data.f /= GET_BIMMEDIATE(1);
+            } else if (entry0->type == TYPE_INT) {
+                entry0->data.f = (dfloat)entry0->data.i / GET_BIMMEDIATE(1);
+                entry0->type   = TYPE_FLOAT;
             } else {
-                OP_1_1_I(/, GET_BIMMEDIATE)
+                ERROR_RUNTIME(vm, "Cannot DIVBI %s", d_type_name(entry0->type));
+                break;
             }
             break;
 
         case OP_DIVHI:;
             if (GET_HIMMEDIATE(1) == 0) {
                 d_vm_runtime_error(vm, "Division by 0");
+                break;
+            }
+
+            if (entry0->type == TYPE_FLOAT) {
+                entry0->data.f /= GET_HIMMEDIATE(1);
+            } else if (entry0->type == TYPE_INT) {
+                entry0->data.f = (dfloat)entry0->data.i / GET_HIMMEDIATE(1);
+                entry0->type   = TYPE_FLOAT;
             } else {
-                OP_1_1_I(/, GET_HIMMEDIATE)
+                ERROR_RUNTIME(vm, "Cannot DIVHI %s", d_type_name(entry0->type));
+                break;
             }
             break;
 
         case OP_DIVFI:;
             if (GET_FIMMEDIATE(1) == 0) {
                 d_vm_runtime_error(vm, "Division by 0");
+                break;
+            }
+
+            if (entry0->type == TYPE_FLOAT) {
+                entry0->data.f /= GET_FIMMEDIATE(1);
+            } else if (entry0->type == TYPE_INT) {
+                entry0->data.f = (dfloat)entry0->data.i / GET_FIMMEDIATE(1);
+                entry0->type   = TYPE_FLOAT;
             } else {
-                OP_1_1_I(/, GET_FIMMEDIATE)
+                ERROR_RUNTIME(vm, "Cannot DIVFI %s", d_type_name(entry0->type));
+                break;
             }
             break;
 
         case OP_GET:;
-            *VM_GET_STACK_PTR(vm, 0) = d_vm_get(vm, VM_GET_STACK(vm, 0));
+            if (entry0->type == TYPE_INT) {
+                *entry0 = VM_GET(vm, entry0->data.i);
+            } else {
+                d_vm_runtime_error(vm, "GET argument is not an integer");
+                break;
+            }
             break;
 
         case OP_GETBI:;
-            d_vm_push(vm, d_vm_get(vm, GET_BIMMEDIATE(1)));
+            push_generic(vm, VM_GET(vm, GET_BIMMEDIATE(1)));
             break;
 
         case OP_GETHI:;
-            d_vm_push(vm, d_vm_get(vm, GET_HIMMEDIATE(1)));
+            push_generic(vm, VM_GET(vm, GET_HIMMEDIATE(1)));
             break;
 
         case OP_GETFI:;
-            d_vm_push(vm, d_vm_get(vm, GET_FIMMEDIATE(1)));
+            push_generic(vm, VM_GET(vm, GET_FIMMEDIATE(1)));
             break;
 
         case OP_INV:;
-            *VM_GET_STACK_PTR(vm, 0) = ~VM_GET_STACK(vm, 0);
+            if (entry0->type == TYPE_INT) {
+                entry0->data.i = ~entry0->data.i;
+            } else {
+                d_vm_runtime_error(vm, "INV argument is not an integer");
+                break;
+            }
             break;
 
         case OP_J:;
-            J_1_0(= (char *))
+            if (entry0->type == TYPE_PTR) {
+                vm->pc = entry0->data.p;
+                d_vm_popn(vm, 1);
+            } else {
+                d_vm_runtime_error(vm, "J argument is not a pointer");
+                break;
+            }
             break;
 
         case OP_JCON:;
-            JCON_2_0(= (char *))
+            if (entry0->type == TYPE_BOOL) {
+                if (entry1->type == TYPE_PTR) {
+                    if (entry0->data.b) {
+                        vm->pc = entry1->data.p;
+                    }
+                    d_vm_popn(vm, 2);
+                } else {
+                    d_vm_runtime_error(vm, "JCON argument 2 is not a pointer");
+                    break;
+                }
+            } else {
+                d_vm_runtime_error(vm, "JCON argument 1 is not a boolean");
+                break;
+            }
             break;
 
         case OP_JCONI:;
-            JCON_1_0_I(= (char *), GET_FIMMEDIATE)
+            if (entry0->type == TYPE_BOOL) {
+                if (entry0->data.b) {
+                    vm->pc = (char *)GET_FIMMEDIATE(1);
+                }
+                d_vm_popn(vm, 1);
+            } else {
+                d_vm_runtime_error(vm, "JCONI argument is not a boolean");
+                break;
+            }
             break;
 
         case OP_JI:;
-            J_0_0_I(= (char *), GET_FIMMEDIATE)
+            vm->pc = (char *)GET_FIMMEDIATE(1);
             break;
 
         case OP_JR:;
-            J_1_0(+=)
+            if (entry0->type == TYPE_INT) {
+                vm->pc += entry0->data.i;
+                d_vm_popn(vm, 1);
+            } else {
+                d_vm_runtime_error(vm, "JR argument is not an integer");
+                break;
+            }
             break;
 
         case OP_JRBI:;
-            J_0_0_I(+=, GET_BIMMEDIATE)
+            vm->pc += GET_BIMMEDIATE(1);
             break;
 
         case OP_JRHI:;
-            J_0_0_I(+=, GET_HIMMEDIATE)
+            vm->pc += GET_HIMMEDIATE(1);
             break;
 
         case OP_JRFI:;
-            J_0_0_I(+=, GET_FIMMEDIATE)
+            vm->pc += GET_FIMMEDIATE(1);
             break;
 
         case OP_JRCON:;
-            JCON_2_0(+=)
+            if (entry0->type == TYPE_BOOL) {
+                if (entry1->type == TYPE_INT) {
+                    if (entry0->data.b) {
+                        vm->pc += entry1->data.i;
+                    }
+                    d_vm_popn(vm, 2);
+                } else {
+                    d_vm_runtime_error(vm,
+                                       "JRCON argument 2 is not an integer");
+                    break;
+                }
+            } else {
+                d_vm_runtime_error(vm, "JRCON argument 1 is not a boolean");
+                break;
+            }
             break;
 
         case OP_JRCONBI:;
-            JCON_1_0_I(+=, GET_BIMMEDIATE)
+            if (entry0->type == TYPE_BOOL) {
+                if (entry0->data.b) {
+                    vm->pc += GET_BIMMEDIATE(1);
+                }
+                d_vm_popn(vm, 1);
+            } else {
+                d_vm_runtime_error(vm, "JRCONBI argument is not a boolean");
+                break;
+            }
             break;
 
         case OP_JRCONHI:;
-            JCON_1_0_I(+=, GET_HIMMEDIATE)
+            if (entry0->type == TYPE_BOOL) {
+                if (entry0->data.b) {
+                    vm->pc += GET_HIMMEDIATE(1);
+                }
+                d_vm_popn(vm, 1);
+            } else {
+                d_vm_runtime_error(vm, "JRCONHI argument is not a boolean");
+                break;
+            }
             break;
 
         case OP_JRCONFI:;
-            JCON_1_0_I(+=, GET_FIMMEDIATE)
+            if (entry0->type == TYPE_BOOL) {
+                if (entry0->data.b) {
+                    vm->pc += GET_FIMMEDIATE(1);
+                }
+                d_vm_popn(vm, 1);
+            } else {
+                d_vm_runtime_error(vm, "JRCONFI argument is not a boolean");
+                break;
+            }
+            break;
+        
+        case OP_MARK:;
+            entry0->free = true;
             break;
 
         case OP_MOD:;
