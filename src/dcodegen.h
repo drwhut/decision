@@ -164,18 +164,15 @@ DECISION_API void d_allocate_variable(BuildContext *context,
 */
 
 /**
- * \fn BCode d_push_literal(BuildContext *context, NodeSocket socket,
- *                          bool cvtFloat)
+ * \fn BCode d_push_literal(BuildContext *context, NodeSocket socket)
  * \brief Generate bytecode to push a literal onto the stack.
  *
  * \return Bytecode to push the socket's literal onto the stack.
  *
  * \param context The context needed to build the bytecode.
  * \param socket The socket of the literal to push onto the stack.
- * \param cvtFloat Converts the literal to a float if possible.
  */
-DECISION_API BCode d_push_literal(BuildContext *context, NodeSocket socket,
-                                  bool cvtFloat);
+DECISION_API BCode d_push_literal(BuildContext *context, NodeSocket socket);
 
 /**
  * \fn BCode d_push_variable(BuildContext *context, size_t nodeIndex)
@@ -190,8 +187,7 @@ DECISION_API BCode d_push_literal(BuildContext *context, NodeSocket socket,
 DECISION_API BCode d_push_variable(BuildContext *context, size_t nodeIndex);
 
 /**
- * \fn BCode d_push_input(BuildContext *context, NodeSocket socket,
- *                        bool forceFloat)
+ * \fn BCode d_push_input(BuildContext *context, NodeSocket socket)
  * \brief Given an input socket, generate bytecode to push the value of the
  * input to the top of the stack.
  *
@@ -199,15 +195,12 @@ DECISION_API BCode d_push_variable(BuildContext *context, size_t nodeIndex);
  *
  * \param context The context needed to build the bytecode.
  * \param socket The input socket to get the value for.
- * \param forceFloat Force integers to be converted to floats.
  */
-DECISION_API BCode d_push_input(BuildContext *context, NodeSocket socket,
-                                bool forceFloat);
+DECISION_API BCode d_push_input(BuildContext *context, NodeSocket socket);
 
 /**
  * \fn BCode d_push_node_inputs(BuildContext *context, size_t nodeIndex,
- *                              bool order, bool ignoreLiterals,
- *                              bool forceFloat)
+ *                              bool order, bool ignoreLiterals)
  * \brief Given a node, generate bytecode to push the values of the
  * inputs to the top of the stack.
  *
@@ -220,16 +213,13 @@ DECISION_API BCode d_push_input(BuildContext *context, NodeSocket socket,
  * input is at the top. If false, the inputs are pushed in reverse order, such
  * that the first input is at the top.
  * \param ignoreLiterals Do not generate bytecode for non-float literal inputs.
- * \param forceFloat Force integers to be converted to floats.
  */
 DECISION_API BCode d_push_node_inputs(BuildContext *context, size_t nodeIndex,
-                                      bool order, bool ignoreLiterals,
-                                      bool forceFloat);
+                                      bool order, bool ignoreLiterals);
 
 /**
  * \fn BCode d_generate_operator(BuildContext *context, size_t nodeIndex,
- *                               DIns opcode, DIns fopcode, DIns fiopcode,
- *                               bool forceFloat)
+ *                               DIns opcode, DIns fopcode, DIns fiopcode)
  * \brief Given an operator node, generate the bytecode for it.
  *
  * \return Bytecode to get the output of an operator.
@@ -239,11 +229,10 @@ DECISION_API BCode d_push_node_inputs(BuildContext *context, size_t nodeIndex,
  * \param opcode The operator instruction.
  * \param fopcode The float variant of the instruction.
  * \param fiopcode The full immediate variant of the instruction.
- * \param forceFloat Should the output always be a float?
  */
 DECISION_API BCode d_generate_operator(BuildContext *context, size_t nodeIndex,
-                                       DIns opcode, DIns fopcode, DIns fiopcode,
-                                       bool forceFloat);
+                                       DIns opcode, DIns fopcode,
+                                       DIns fiopcode);
 
 /**
  * \fn BCode d_generate_comparator(BuildContext *context, size_t nodeIndex,
