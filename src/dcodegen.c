@@ -322,17 +322,15 @@ void d_allocate_variable(BuildContext *context, SheetVariable *variable,
 */
 
 /**
- * \fn BCode d_push_literal(BuildContext *context, NodeSocket socket,
- *                          bool cvtFloat)
+ * \fn BCode d_push_literal(BuildContext *context, NodeSocket socket)
  * \brief Generate bytecode to push a literal onto the stack.
  *
  * \return Bytecode to push the socket's literal onto the stack.
  *
  * \param context The context needed to build the bytecode.
  * \param socket The socket of the literal to push onto the stack.
- * \param cvtFloat Converts the literal to a float if possible.
  */
-BCode d_push_literal(BuildContext *context, NodeSocket socket, bool cvtFloat) {
+BCode d_push_literal(BuildContext *context, NodeSocket socket) {
     SocketMeta meta = d_get_socket_meta(context->graph, socket);
 
     VERBOSE(
@@ -340,20 +338,26 @@ BCode d_push_literal(BuildContext *context, NodeSocket socket, bool cvtFloat) {
         "Generating bytecode to get literal value of type %s from node %s...\n",
         d_type_name(meta.type), meta.name);
 
-    // Even for floats, we want the integer representation of them.
-    dint intLiteral = meta.defaultValue.integerValue;
+    BCode out = d_malloc_bytecode(0);
 
-    BCode out = d_bytecode_ins(OP_PUSHF);
-    d_bytecode_set_fimmediate(out, 1, (fimmediate_t)intLiteral);
-
-    if (meta.type == TYPE_INT && cvtFloat) {
-        BCode cvtf = d_bytecode_ins(OP_CVTF);
-        d_concat_bytecode(&out, &cvtf);
-        d_free_bytecode(&cvtf);
+    if (meta.type == TYPE_INT) {
+        out = d_bytecode_ins(OP_PUSHIF);
+        d_bytecode_set_fimmediate(out, 1, meta.defaultValue.integerValue);
+    } else if (meta.type == TYPE_FLOAT) {
+        // Even though this is a float, we still need to input the integer
+        // representation of the float.
+        out = d_bytecode_ins(OP_PUSHF);
+        d_bytecode_set_fimmediate(out, 1, meta.defaultValue.integerValue);
     } else if (meta.type == TYPE_STRING) {
+        out = d_bytecode_ins(OP_PUSHS);
+        d_bytecode_set_fimmediate(out, 1, meta.defaultValue.integerValue);
+
         // The literal string needs to go into the data section.
         d_allocate_string_literal_in_data(context, &out, 0,
                                           meta.defaultValue.stringValue);
+    } else if (meta.type == TYPE_BOOL) {
+        out = d_bytecode_ins(OP_PUSHB);
+        d_bytecode_set_byte(out, 1, meta.defaultValue.booleanValue);
     }
 
     // Set the socket's stack index so we know where the value lives.
