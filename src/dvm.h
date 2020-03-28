@@ -125,7 +125,7 @@ typedef enum _dIns {
     OP_SUBBI   = 79, ///< push(pop() - I(1))
     OP_SUBHI   = 80, ///< push(pop() - I(|M|/2))
     OP_SUBFI   = 81, ///< push(pop() - I(|M|))
-    OP_SYSCALL = 82, ///< push(syscall(I(1), pop(), pop())
+    OP_SYSCALL = 82, ///< push(syscall(I(1), pop(), pop()))
     OP_XOR     = 83, ///< push(pop() ^ pop())
     OP_XORBI   = 84, ///< push(pop() ^ I(1))
     OP_XORHI   = 85, ///< push(pop() ^ I(|M|/2))

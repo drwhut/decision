@@ -1680,65 +1680,184 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
                 break;
             }
             break;
-        
+
         case OP_MARK:;
             entry0->free = true;
             break;
 
         case OP_MOD:;
-            OP_2_1(%)
+            if (entry0->type == TYPE_INT) {
+                if (entry1->type == TYPE_INT) {
+                    entry1->data.i = entry0->data.i % entry1->data.i;
+                    d_vm_popn(vm, 1);
+                } else {
+                    d_vm_runtime_error(vm, "MOD argument 2 is not an integer");
+                    break;
+                }
+            } else {
+                d_vm_runtime_error(vm, "MOD argument 1 is not an integer");
+                break;
+            }
             break;
 
         case OP_MODBI:;
-            OP_1_1_I(%, GET_BIMMEDIATE)
+            if (entry0->type == TYPE_INT) {
+                entry0->data.i %= GET_BIMMEDIATE(1);
+            } else {
+                d_vm_runtime_error(vm, "MODBI argument is not an integer");
+            }
             break;
 
         case OP_MODHI:;
-            OP_1_1_I(%, GET_HIMMEDIATE)
+            if (entry0->type == TYPE_INT) {
+                entry0->data.i %= GET_HIMMEDIATE(1);
+            } else {
+                d_vm_runtime_error(vm, "MODHI argument is not an integer");
+            }
             break;
 
         case OP_MODFI:;
-            OP_1_1_I(%, GET_FIMMEDIATE)
+            if (entry0->type == TYPE_INT) {
+                entry0->data.i %= GET_FIMMEDIATE(1);
+            } else {
+                d_vm_runtime_error(vm, "MODFI argument is not an integer");
+            }
             break;
 
         case OP_MUL:;
-            OP_2_1(*)
-            break;
-
-        case OP_MULF:;
-            OP_2_1_F(*)
+            if (entry0->type == TYPE_FLOAT) {
+                if (entry1->type == TYPE_FLOAT) {
+                    entry1->data.f *= entry0->data.f;
+                } else if (entry1->type == TYPE_INT) {
+                    entry1->data.f = entry0->data.f * entry1->data.i;
+                    entry1->type   = TYPE_FLOAT;
+                } else {
+                    ERROR_RUNTIME(vm, "Cannot MUL %s and %s",
+                                  d_type_name(entry0->type),
+                                  d_type_name(entry1->type));
+                    break;
+                }
+            } else if (entry0->type == TYPE_INT) {
+                if (entry1->type == TYPE_FLOAT) {
+                    entry1->data.f *= entry0->data.i;
+                } else if (entry1->type == TYPE_INT) {
+                    entry1->data.i *= entry0->data.i;
+                } else {
+                    ERROR_RUNTIME(vm, "Cannot MUL %s and %s",
+                                  d_type_name(entry0->type),
+                                  d_type_name(entry1->type));
+                    break;
+                }
+            } else {
+                ERROR_RUNTIME(vm, "Cannot MUL %s and %s",
+                              d_type_name(entry0->type),
+                              d_type_name(entry1->type));
+                break;
+            }
+            d_vm_popn(vm, 1);
             break;
 
         case OP_MULBI:;
-            OP_1_1_I(*, GET_BIMMEDIATE)
+            if (entry0->type == TYPE_FLOAT) {
+                entry0->data.f *= GET_BIMMEDIATE(1);
+            } else if (entry0->type == TYPE_INT) {
+                entry0->data.i *= GET_BIMMEDIATE(1);
+            } else {
+                ERROR_RUNTIME(vm, "Cannot MULBI %s", d_type_name(entry0->type));
+                break;
+            }
             break;
 
         case OP_MULHI:;
-            OP_1_1_I(*, GET_HIMMEDIATE)
+            if (entry0->type == TYPE_FLOAT) {
+                entry0->data.f *= GET_HIMMEDIATE(1);
+            } else if (entry0->type == TYPE_INT) {
+                entry0->data.i *= GET_HIMMEDIATE(1);
+            } else {
+                ERROR_RUNTIME(vm, "Cannot MULHI %s", d_type_name(entry0->type));
+                break;
+            }
             break;
 
         case OP_MULFI:;
-            OP_1_1_I(*, GET_FIMMEDIATE)
+            if (entry0->type == TYPE_FLOAT) {
+                entry0->data.f *= GET_FIMMEDIATE(1);
+            } else if (entry0->type == TYPE_INT) {
+                entry0->data.i *= GET_FIMMEDIATE(1);
+            } else {
+                ERROR_RUNTIME(vm, "Cannot MULFI %s", d_type_name(entry0->type));
+                break;
+            }
             break;
 
         case OP_NOT:;
-            *VM_GET_STACK_PTR(vm, 0) = !VM_GET_STACK(vm, 0);
+            if (entry0->type == TYPE_BOOL) {
+                entry0->data.b = !entry0->data.b;
+            } else {
+                d_vm_runtime_error(vm, "NOT argument is not a boolean");
+                break;
+            }
             break;
 
         case OP_OR:;
-            OP_2_1(|)
+            if (entry0->type == TYPE_INT) {
+                if (entry1->type == TYPE_INT) {
+                    entry1->data.i |= entry0->data.i;
+                } else {
+                    ERROR_RUNTIME(vm, "Cannot OR %s and %s",
+                                  d_type_name(entry0->type),
+                                  d_type_name(entry1->type));
+                    break;
+                }
+            } else if (entry0->type == TYPE_BOOL) {
+                if (entry1->type == TYPE_BOOL) {
+                    entry1->data.b |= entry0->data.b;
+                } else {
+                    ERROR_RUNTIME(vm, "Cannot OR %s and %s",
+                                  d_type_name(entry0->type),
+                                  d_type_name(entry1->type));
+                    break;
+                }
+            } else {
+                ERROR_RUNTIME(vm, "Cannot OR %s and %s",
+                              d_type_name(entry0->type),
+                              d_type_name(entry1->type));
+                break;
+            }
+            d_vm_popn(vm, 1);
             break;
 
         case OP_ORBI:;
-            OP_1_1_I(|, GET_BIMMEDIATE)
+            if (entry0->type == TYPE_INT) {
+                entry0->data.i |= GET_BIMMEDIATE(1);
+            } else if (entry0->type == TYPE_BOOL) {
+                entry0->data.b |= !!(GET_BIMMEDIATE(1));
+            } else {
+                ERROR_RUNTIME(vm, "Cannot ORBI %s", d_type_name(entry0->type));
+                break;
+            }
             break;
 
         case OP_ORHI:;
-            OP_1_1_I(|, GET_HIMMEDIATE)
+            if (entry0->type == TYPE_INT) {
+                entry0->data.i |= GET_HIMMEDIATE(1);
+            } else if (entry0->type == TYPE_BOOL) {
+                entry0->data.b |= !!(GET_HIMMEDIATE(1));
+            } else {
+                ERROR_RUNTIME(vm, "Cannot ORHI %s", d_type_name(entry0->type));
+                break;
+            }
             break;
 
         case OP_ORFI:;
-            OP_1_1_I(|, GET_FIMMEDIATE)
+            if (entry0->type == TYPE_INT) {
+                entry0->data.i |= GET_FIMMEDIATE(1);
+            } else if (entry0->type == TYPE_BOOL) {
+                entry0->data.b |= !!(GET_FIMMEDIATE(1));
+            } else {
+                ERROR_RUNTIME(vm, "Cannot ORFI %s", d_type_name(entry0->type));
+                break;
+            }
             break;
 
         case OP_POP:;
@@ -1757,16 +1876,53 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             d_vm_popn(vm, GET_FIMMEDIATE(1));
             break;
 
-        case OP_PUSHB:;
-            d_vm_push(vm, GET_BIMMEDIATE(1));
+        case OP_PUSHIB:;
+            d_vm_pushn(vm, 1);
+            vm->stackPtr->data.i = GET_BIMMEDIATE(1);
+            vm->stackPtr->type   = TYPE_INT;
+            vm->stackPtr->free   = false;
             break;
 
-        case OP_PUSHH:;
-            d_vm_push(vm, GET_HIMMEDIATE(1));
+        case OP_PUSHIH:;
+            d_vm_pushn(vm, 1);
+            vm->stackPtr->data.i = GET_HIMMEDIATE(1);
+            vm->stackPtr->type   = TYPE_INT;
+            vm->stackPtr->free   = false;
+            break;
+
+        case OP_PUSHIF:;
+            d_vm_pushn(vm, 1);
+            vm->stackPtr->data.i = GET_FIMMEDIATE(1);
+            vm->stackPtr->type   = TYPE_INT;
+            vm->stackPtr->free   = false;
             break;
 
         case OP_PUSHF:;
-            d_vm_push(vm, GET_FIMMEDIATE(1));
+            d_vm_pushn(vm, 1);
+            vm->stackPtr->data.f = *(dfloat *)(vm->pc + 1);
+            vm->stackPtr->type   = TYPE_FLOAT;
+            vm->stackPtr->free   = false;
+            break;
+
+        case OP_PUSHS:;
+            d_vm_pushn(vm, 1);
+            vm->stackPtr->data.p = *(void **)(vm->pc + 1);
+            vm->stackPtr->type   = TYPE_STRING;
+            vm->stackPtr->free   = false;
+            break;
+
+        case OP_PUSHB:;
+            d_vm_pushn(vm, 1);
+            vm->stackPtr->data.b = !!(*(char *)(vm->pc + 1));
+            vm->stackPtr->type   = TYPE_BOOL;
+            vm->stackPtr->free   = false;
+            break;
+
+        case OP_PUSHP:;
+            d_vm_pushn(vm, 1);
+            vm->stackPtr->data.b = *(void **)(vm->pc + 1);
+            vm->stackPtr->type   = TYPE_PTR;
+            vm->stackPtr->free   = false;
             break;
 
         case OP_PUSHNB:;
@@ -1782,112 +1938,220 @@ void d_vm_parse_ins_at_pc(DVM *vm) {
             break;
 
         case OP_SETADR:;
-            *((dint *)VM_GET_STACK(vm, 0)) = VM_GET_STACK(vm, -1);
-            d_vm_popn(vm, 2);
+            if (entry0->type == TYPE_PTR) {
+                *(StackEntry *)(entry0->data.p) = *entry1;
+                d_vm_popn(vm, 2);
+            } else {
+                d_vm_runtime_error(vm, "SETADR argument 1 is not a pointer");
+                break;
+            }
             break;
 
-        case OP_SETADRB:;
-            *((uint8_t *)VM_GET_STACK(vm, 0)) = (uint8_t)VM_GET_STACK(vm, -1);
-            d_vm_popn(vm, 2);
+        case OP_SETADRI:;
+            *(StackEntry *)GET_FIMMEDIATE(1) = *entry0;
+            d_vm_popn(vm, 1);
             break;
 
         case OP_SUB:;
-            OP_2_1(-)
-            break;
-
-        case OP_SUBF:;
-            OP_2_1_F(-)
+            if (entry0->type == TYPE_FLOAT) {
+                if (entry1->type == TYPE_FLOAT) {
+                    entry1->data.f -= entry0->data.f;
+                } else if (entry1->type == TYPE_INT) {
+                    entry1->data.f = entry0->data.f - entry1->data.i;
+                    entry1->type   = TYPE_FLOAT;
+                } else {
+                    ERROR_RUNTIME(vm, "Cannot SUB %s and %s",
+                                  d_type_name(entry0->type),
+                                  d_type_name(entry1->type));
+                    break;
+                }
+            } else if (entry0->type == TYPE_INT) {
+                if (entry1->type == TYPE_FLOAT) {
+                    entry1->data.f -= entry0->data.i;
+                } else if (entry1->type == TYPE_INT) {
+                    entry1->data.i -= entry0->data.i;
+                } else {
+                    ERROR_RUNTIME(vm, "Cannot SUB %s and %s",
+                                  d_type_name(entry0->type),
+                                  d_type_name(entry1->type));
+                    break;
+                }
+            } else {
+                ERROR_RUNTIME(vm, "Cannot SUB %s and %s",
+                              d_type_name(entry0->type),
+                              d_type_name(entry1->type));
+                break;
+            }
+            d_vm_popn(vm, 1);
             break;
 
         case OP_SUBBI:;
-            OP_1_1_I(-, GET_BIMMEDIATE)
+            if (entry0->type == TYPE_FLOAT) {
+                entry0->data.f -= GET_BIMMEDIATE(1);
+            } else if (entry0->type == TYPE_INT) {
+                entry0->data.i -= GET_BIMMEDIATE(1);
+            } else {
+                ERROR_RUNTIME(vm, "Cannot SUBBI %s", d_type_name(entry0->type));
+                break;
+            }
             break;
 
         case OP_SUBHI:;
-            OP_1_1_I(-, GET_HIMMEDIATE)
+            if (entry0->type == TYPE_FLOAT) {
+                entry0->data.f -= GET_HIMMEDIATE(1);
+            } else if (entry0->type == TYPE_INT) {
+                entry0->data.i -= GET_HIMMEDIATE(1);
+            } else {
+                ERROR_RUNTIME(vm, "Cannot SUBHI %s", d_type_name(entry0->type));
+                break;
+            }
             break;
 
         case OP_SUBFI:;
-            OP_1_1_I(-, GET_FIMMEDIATE)
+            if (entry0->type == TYPE_FLOAT) {
+                entry0->data.f -= GET_FIMMEDIATE(1);
+            } else if (entry0->type == TYPE_INT) {
+                entry0->data.i -= GET_FIMMEDIATE(1);
+            } else {
+                ERROR_RUNTIME(vm, "Cannot SUBFI %s", d_type_name(entry0->type));
+                break;
+            }
             break;
 
         case OP_SYSCALL:;
-            dint result;
             switch (GET_BIMMEDIATE(1)) {
                 case SYS_PRINT:;
-                    switch (VM_GET_STACK(vm, 0)) {
-                        case 0: // Integer
-                            printf("%" DINT_PRINTF_d, VM_GET_STACK(vm, -2));
-                            break;
-                        case 1: // Float
-                            printf("%g", VM_GET_STACK_FLOAT(vm, -2));
-                            break;
-                        case 2: // String
-                            printf("%s", (char *)VM_GET_STACK(vm, -2));
-                            break;
-                        case 3: // Boolean
-                            printf("%s",
-                                   VM_GET_STACK(vm, -2) ? "true" : "false");
-                            break;
+                    if (entry0->type != TYPE_BOOL) {
+                        d_vm_runtime_error(vm,
+                                           "PRINT argument 1 is not a boolean");
+                        break;
                     }
 
-                    if (VM_GET_STACK(vm, -1)) {
+                    if (entry1->type == TYPE_INT) {
+                        printf("%" DINT_PRINTF_d, entry1->data.i);
+                    } else if (entry1->type == TYPE_FLOAT) {
+                        printf("%g", entry1->data.f);
+                    } else if (entry1->type == TYPE_STRING) {
+                        printf("%s", (char *)entry1->data.p);
+                    } else if (entry1->type == TYPE_BOOL) {
+                        printf("%s", (entry1->data.b) ? "true" : "false");
+                    }
+
+                    if (entry0->data.b) {
                         printf("\n");
                     }
 
-                    *VM_GET_STACK_PTR(vm, -2) = 0;
+                    entry1->data.i = 0;
+                    entry1->type   = TYPE_NONE;
+                    entry1->free   = false;
+
                     break;
 
                 case SYS_STRCMP:;
-                    result = strcmp((char *)VM_GET_STACK(vm, -1),
-                                    (char *)VM_GET_STACK(vm, -2));
-
-                    switch (VM_GET_STACK(vm, 0)) {
-                        case 0:
-                            result = (result == 0);
-                            break;
-                        case 1:
-                            result = (result <= 0);
-                            break;
-                        case 2:
-                            result = (result < 0);
-                            break;
-                        case 3:
-                            result = (result >= 0);
-                            break;
-                        case 4:
-                            result = (result > 0);
-                            break;
-                        default:
-                            result = 0;
-                            break;
+                    if (entry0->type != TYPE_STRING) {
+                        d_vm_runtime_error(vm,
+                                           "STRCMP argument 1 is not a string");
+                        break;
                     }
 
-                    *VM_GET_STACK_PTR(vm, -2) = result;
+                    if (entry1->type != TYPE_STRING) {
+                        d_vm_runtime_error(vm,
+                                           "STRCMP argument 2 is not a string");
+                        break;
+                    }
+
+                    short cmp =
+                        strcmp((char *)entry0->data.p, (char *)entry1->data.p);
+
+                    if (cmp > 0) {
+                        entry1->data.i = 1;
+                    } else if (cmp < 0) {
+                        entry1->data.i = -1;
+                    } else {
+                        entry1->data.i = 0;
+                    }
+
+                    entry1->type = TYPE_INT;
+                    entry1->free = false;
+
                     break;
 
                 case SYS_STRLEN:;
-                    result = strlen((char *)VM_GET_STACK(vm, -2));
-                    *VM_GET_STACK_PTR(vm, -2) = result;
+                    if (entry1->type != TYPE_STRING) {
+                        d_vm_runtime_error(vm,
+                                           "STRLEN argument 2 is not a string");
+                        break;
+                    }
+
+                    size_t len     = strlen((char *)entry1->data.p);
+                    entry1->data.i = len;
+                    entry1->type   = TYPE_INT;
+                    entry1->free   = false;
+
                     break;
             }
-            d_vm_popn(vm, 2);
+            d_vm_popn(vm, 1);
             break;
 
         case OP_XOR:;
-            OP_2_1(^)
+            if (entry0->type == TYPE_INT) {
+                if (entry1->type == TYPE_INT) {
+                    entry1->data.i ^= entry0->data.i;
+                } else {
+                    ERROR_RUNTIME(vm, "Cannot XOR %s and %s",
+                                  d_type_name(entry0->type),
+                                  d_type_name(entry1->type));
+                    break;
+                }
+            } else if (entry0->type == TYPE_BOOL) {
+                if (entry1->type == TYPE_BOOL) {
+                    entry1->data.b ^= entry0->data.b;
+                } else {
+                    ERROR_RUNTIME(vm, "Cannot XOR %s and %s",
+                                  d_type_name(entry0->type),
+                                  d_type_name(entry1->type));
+                    break;
+                }
+            } else {
+                ERROR_RUNTIME(vm, "Cannot XOR %s and %s",
+                              d_type_name(entry0->type),
+                              d_type_name(entry1->type));
+                break;
+            }
+            d_vm_popn(vm, 1);
             break;
 
         case OP_XORBI:;
-            OP_1_1_I(^, GET_BIMMEDIATE)
+            if (entry0->type == TYPE_INT) {
+                entry0->data.i ^= GET_BIMMEDIATE(1);
+            } else if (entry0->type == TYPE_BOOL) {
+                entry0->data.b ^= !!(GET_BIMMEDIATE(1));
+            } else {
+                ERROR_RUNTIME(vm, "Cannot XORBI %s", d_type_name(entry0->type));
+                break;
+            }
             break;
 
         case OP_XORHI:;
-            OP_1_1_I(^, GET_HIMMEDIATE)
+            if (entry0->type == TYPE_INT) {
+                entry0->data.i ^= GET_HIMMEDIATE(1);
+            } else if (entry0->type == TYPE_BOOL) {
+                entry0->data.b ^= !!(GET_HIMMEDIATE(1));
+            } else {
+                ERROR_RUNTIME(vm, "Cannot XORHI %s", d_type_name(entry0->type));
+                break;
+            }
             break;
 
         case OP_XORFI:;
-            OP_1_1_I(^, GET_FIMMEDIATE)
+            if (entry0->type == TYPE_INT) {
+                entry0->data.i ^= GET_FIMMEDIATE(1);
+            } else if (entry0->type == TYPE_BOOL) {
+                entry0->data.b ^= !!(GET_FIMMEDIATE(1));
+            } else {
+                ERROR_RUNTIME(vm, "Cannot XORFI %s", d_type_name(entry0->type));
+                break;
+            }
             break;
 
         default:
@@ -1988,6 +2252,10 @@ void d_vm_dump(DVM *vm) {
             default:
                 printf("(Unknown)");
                 break;
+        }
+
+        if (ptr->free) {
+            printf(" [FREE]");
         }
 
         if (ptr == vm->framePtr) {
